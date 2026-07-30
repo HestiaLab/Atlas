@@ -36,6 +36,33 @@ Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> v
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
 Atlas.Core.Items.DocumentState.IsPinned.get -> bool
 Atlas.Core.Items.DocumentState.IsPreview.get -> bool
+Atlas.Core.Layout.ResolvedSplitLayout
+Atlas.Core.Layout.ResolvedSplitLayout.EffectiveConstraints.get -> Atlas.Core.Layout.SplitConstraints
+Atlas.Core.Layout.ResolvedSplitLayout.FirstExtent.get -> double
+Atlas.Core.Layout.ResolvedSplitLayout.IsClamped.get -> bool
+Atlas.Core.Layout.ResolvedSplitLayout.ResolvedSplitLayout() -> void
+Atlas.Core.Layout.ResolvedSplitLayout.SecondExtent.get -> double
+Atlas.Core.Layout.SplitAnchor
+Atlas.Core.Layout.SplitAnchor.First = 0 -> Atlas.Core.Layout.SplitAnchor
+Atlas.Core.Layout.SplitAnchor.Second = 1 -> Atlas.Core.Layout.SplitAnchor
+Atlas.Core.Layout.SplitBasis
+Atlas.Core.Layout.SplitBasis.Anchor.get -> Atlas.Core.Layout.SplitAnchor?
+Atlas.Core.Layout.SplitBasis.Equals(Atlas.Core.Layout.SplitBasis other) -> bool
+Atlas.Core.Layout.SplitBasis.Kind.get -> Atlas.Core.Layout.SplitBasisKind
+Atlas.Core.Layout.SplitBasis.SplitBasis() -> void
+Atlas.Core.Layout.SplitBasis.Value.get -> double
+Atlas.Core.Layout.SplitBasisKind
+Atlas.Core.Layout.SplitBasisKind.FixedPixels = 0 -> Atlas.Core.Layout.SplitBasisKind
+Atlas.Core.Layout.SplitBasisKind.Proportional = 1 -> Atlas.Core.Layout.SplitBasisKind
+Atlas.Core.Layout.SplitConstraints
+Atlas.Core.Layout.SplitConstraints.Equals(Atlas.Core.Layout.SplitConstraints other) -> bool
+Atlas.Core.Layout.SplitConstraints.FirstMaximum.get -> double?
+Atlas.Core.Layout.SplitConstraints.FirstMinimum.get -> double
+Atlas.Core.Layout.SplitConstraints.SecondMaximum.get -> double?
+Atlas.Core.Layout.SplitConstraints.SecondMinimum.get -> double
+Atlas.Core.Layout.SplitConstraints.SplitConstraints() -> void
+Atlas.Core.Layout.SplitConstraints.SplitConstraints(double firstMinimum = 0, double? firstMaximum = null, double secondMinimum = 0, double? secondMaximum = null) -> void
+Atlas.Core.Layout.SplitLayoutResolver
 Atlas.Core.LayoutNodeId
 Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
@@ -53,6 +80,10 @@ override Atlas.Core.Items.ContentReference.Equals(object? obj) -> bool
 override Atlas.Core.Items.ContentReference.GetHashCode() -> int
 override Atlas.Core.Items.DocumentState.Equals(object? obj) -> bool
 override Atlas.Core.Items.DocumentState.GetHashCode() -> int
+override Atlas.Core.Layout.SplitBasis.Equals(object? obj) -> bool
+override Atlas.Core.Layout.SplitBasis.GetHashCode() -> int
+override Atlas.Core.Layout.SplitConstraints.Equals(object? obj) -> bool
+override Atlas.Core.Layout.SplitConstraints.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.Equals(object? obj) -> bool
 override Atlas.Core.LayoutNodeId.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.ToString() -> string!
@@ -70,6 +101,13 @@ static Atlas.Core.Items.DockItemCapabilityPresets.PreviewDocument.get -> Atlas.C
 static Atlas.Core.Items.DockItemCapabilityPresets.Tool.get -> Atlas.Core.Items.DockItemCapabilities
 static Atlas.Core.Items.DocumentState.operator !=(Atlas.Core.Items.DocumentState left, Atlas.Core.Items.DocumentState right) -> bool
 static Atlas.Core.Items.DocumentState.operator ==(Atlas.Core.Items.DocumentState left, Atlas.Core.Items.DocumentState right) -> bool
+static Atlas.Core.Layout.SplitBasis.FixedPixels(double pixels, Atlas.Core.Layout.SplitAnchor anchor) -> Atlas.Core.Layout.SplitBasis
+static Atlas.Core.Layout.SplitBasis.Proportional(double firstRatio) -> Atlas.Core.Layout.SplitBasis
+static Atlas.Core.Layout.SplitBasis.operator !=(Atlas.Core.Layout.SplitBasis left, Atlas.Core.Layout.SplitBasis right) -> bool
+static Atlas.Core.Layout.SplitBasis.operator ==(Atlas.Core.Layout.SplitBasis left, Atlas.Core.Layout.SplitBasis right) -> bool
+static Atlas.Core.Layout.SplitConstraints.operator !=(Atlas.Core.Layout.SplitConstraints left, Atlas.Core.Layout.SplitConstraints right) -> bool
+static Atlas.Core.Layout.SplitConstraints.operator ==(Atlas.Core.Layout.SplitConstraints left, Atlas.Core.Layout.SplitConstraints right) -> bool
+static Atlas.Core.Layout.SplitLayoutResolver.Resolve(double availableExtent, Atlas.Core.Layout.SplitBasis basis, Atlas.Core.Layout.SplitConstraints constraints) -> Atlas.Core.Layout.ResolvedSplitLayout
 static Atlas.Core.LayoutNodeId.operator !=(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.LayoutNodeId.operator ==(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.WorkspaceId.operator !=(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool
