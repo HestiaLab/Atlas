@@ -1,6 +1,7 @@
 using System.Reflection;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Placement;
 using Xunit;
 
 namespace Atlas.Core.Tests.Model.Layout;
@@ -135,7 +136,8 @@ public sealed class LayoutNodeTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             original,
-            original[0]);
+            original[0],
+            logicalRegion: LogicalRegion.InlineStartUpper);
 
         original[0] = new DockItemId("changed");
 
@@ -152,7 +154,8 @@ public sealed class LayoutNodeTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Collapsed,
             Array.Empty<DockItemId>(),
-            selectedItemId: null);
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartUpper);
 
         Assert.Empty(node.ItemIds);
         Assert.Null(node.SelectedItemId);
@@ -194,7 +197,8 @@ public sealed class LayoutNodeTests
                 GroupRetentionPolicy.Persistent,
                 GroupVisibility.Expanded,
                 Array.Empty<DockItemId>(),
-                first));
+                first,
+                logicalRegion: LogicalRegion.InlineStartUpper));
     }
 
     [Fact]
@@ -209,7 +213,8 @@ public sealed class LayoutNodeTests
                 GroupRetentionPolicy.Persistent,
                 GroupVisibility.Expanded,
                 null!,
-                first));
+                first,
+                logicalRegion: LogicalRegion.InlineStartUpper));
         Assert.Throws<ArgumentOutOfRangeException>(
             () => new GroupNode(
                 new LayoutNodeId("group"),
@@ -286,6 +291,7 @@ public sealed class LayoutNodeTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             itemIds,
-            selectedItemId);
+            selectedItemId,
+            logicalRegion: LogicalRegion.InlineStartUpper);
     }
 }

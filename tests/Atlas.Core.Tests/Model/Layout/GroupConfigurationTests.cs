@@ -1,5 +1,6 @@
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Placement;
 using Xunit;
 
 namespace Atlas.Core.Tests.Model.Layout;
@@ -85,6 +86,31 @@ public sealed class GroupConfigurationTests
                 new[] { itemId },
                 itemId,
                 new EditorGroupState()));
+    }
+
+    [Fact]
+    public void Tool_group_requires_region_and_document_group_rejects_it()
+    {
+        var toolId = new DockItemId("tool");
+        var documentId = new DockItemId("document");
+
+        Assert.Throws<ArgumentException>(
+            () => new GroupNode(
+                new LayoutNodeId("tools"),
+                DockItemKind.Tool,
+                GroupRetentionPolicy.Persistent,
+                GroupVisibility.Expanded,
+                new[] { toolId },
+                toolId));
+        Assert.Throws<ArgumentException>(
+            () => new GroupNode(
+                new LayoutNodeId("documents"),
+                DockItemKind.Document,
+                GroupRetentionPolicy.Persistent,
+                GroupVisibility.Expanded,
+                new[] { documentId },
+                documentId,
+                logicalRegion: LogicalRegion.InlineStartUpper));
     }
 
     [Fact]

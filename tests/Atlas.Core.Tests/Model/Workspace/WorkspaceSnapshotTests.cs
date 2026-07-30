@@ -34,7 +34,8 @@ public sealed class WorkspaceSnapshotTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             new[] { item.Id },
-            item.Id);
+            item.Id,
+            logicalRegion: LogicalRegion.InlineStartUpper);
         var toolbar = new ToolBarState(
             LogicalSide.InlineStart,
             ToolBarVisibility.Expanded);
@@ -176,7 +177,8 @@ public sealed class WorkspaceSnapshotTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
-            selectedItemId: null);
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartUpper);
     }
 
     private static KeyValuePair<TKey, TValue>[] Pair<TKey, TValue>(TKey key, TValue value)
