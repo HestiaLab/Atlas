@@ -98,6 +98,19 @@ public sealed class WorkspaceSnapshot
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
     }
 
+    internal WorkspaceSnapshot WithRevision(long revision)
+    {
+        return new WorkspaceSnapshot(
+            Id,
+            revision,
+            RootNodeId,
+            Nodes,
+            Items,
+            ToolBars,
+            ToolBarOrders,
+            AutoHideStrips);
+    }
+
     private static IReadOnlyDictionary<TKey, TValue> Copy<TKey, TValue>(
         IEnumerable<KeyValuePair<TKey, TValue>> source,
         string parameterName)

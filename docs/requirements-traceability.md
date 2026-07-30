@@ -52,6 +52,7 @@
 | REQ-F-017~019、REQ-F-031~032、REQ-F-048、REQ-F-069、REQ-F-124、REQ-F-133 | DES-DOM-008、DES-DOM-011 | P1 | `Atlas.Core/Validation` | `WorkspaceInvariantValidatorTests`：empty tree、cycle、multi-parent、orphan、placement、kind、pin prefix、MRU、DockBack、ToolBar order | In Progress | P1-WP-08 实现纯跨索引 invariant validator；transaction rollback、normalization 和 typed operation failure 在 P2 承担 |
 | — | DES-DOM-002~011 | P1 | `Atlas.Core` | 149 Core tests + architecture isolation；solution build/test/format、TypeScript typecheck/test/bundle、Core/Blazor pack | Verified | P1 Phase Exit Gate 已满足，Core public API baseline 冻结供 P2 使用；不将跨 Phase 的 Requirement AC 提前标为 Verified |
 | REQ-F-101~103、REQ-F-110~115 | DES-OP-001、DES-OP-006、DES-OP-009 | P2 | `Atlas.Core/Operations`、`Atlas.Core/Results`、`Atlas.Core/Changes` | `OperationContractTests`：稳定 operation/error code、typed result、精确 change set、防御复制、只读公共合同 | In Progress | P2-WP-01 建立 operation、workspace、result、error、change/event 公共合同；事务执行、并发、历史与具体 operation 行为由后续 P2 work package 承担 |
+| REQ-F-041、REQ-F-110、REQ-F-133、REQ-F-156 | DES-OP-002~006 | P2 | `Atlas.Core/Operations/Engine` | `WorkspaceTransactionTests`：success/no-change/failure/stale/cancel、invariant rollback、monotonic undo/redo、redo branch、subscriber isolation/reentrancy、dispose | In Progress | P2-WP-02 实现内部 transaction/history/event 内核；尚未冻结的具体 operation、guard 与 command/query 公共签名未提前公开 |
 
 ## 更新规则
 
