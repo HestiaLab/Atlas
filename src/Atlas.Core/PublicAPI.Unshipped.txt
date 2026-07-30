@@ -36,6 +36,11 @@ Atlas.Core.IAtlasWorkspace.ExecuteAsync(Atlas.Core.Operations.LayoutOperation! o
 Atlas.Core.IAtlasWorkspace.Id.get -> Atlas.Core.WorkspaceId
 Atlas.Core.IAtlasWorkspace.RedoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.IAtlasWorkspace.UndoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Items.ContentDeduplicationMode.ActivateExisting = 0 -> Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Items.ContentDeduplicationMode.AllowMultiple = 1 -> Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Items.ContentDeduplicationMode.RejectDuplicate = 3 -> Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Items.ContentDeduplicationMode.ReplaceExisting = 2 -> Atlas.Core.Items.ContentDeduplicationMode
 Atlas.Core.Items.ContentReference
 Atlas.Core.Items.ContentReference.ContentReference() -> void
 Atlas.Core.Items.ContentReference.ContentReference(string! kind, string! resourceId) -> void
@@ -182,6 +187,12 @@ Atlas.Core.Operations.MoveToolOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.MoveToolOperation.MoveToolOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId targetGroupId, int? targetIndex = null, long? baseRevision = null) -> void
 Atlas.Core.Operations.MoveToolOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Operations.MoveToolOperation.TargetIndex.get -> int?
+Atlas.Core.Operations.OpenItemOperation
+Atlas.Core.Operations.OpenItemOperation.DeduplicationMode.get -> Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Operations.OpenItemOperation.Item.get -> Atlas.Core.Items.DockItem!
+Atlas.Core.Operations.OpenItemOperation.OpenItemOperation(Atlas.Core.Items.DockItem! item, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null) -> void
+Atlas.Core.Operations.OpenItemOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.OpenItemOperation.TargetIndex.get -> int?
 Atlas.Core.Operations.ReorderItemOperation
 Atlas.Core.Operations.ReorderItemOperation.GroupId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Operations.ReorderItemOperation.ItemId.get -> Atlas.Core.DockItemId
