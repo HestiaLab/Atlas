@@ -103,7 +103,10 @@ internal sealed class WorkspacePatch
     {
         return before.Keys
             .Intersect(after.Keys)
-            .Where(key => !ReferenceEquals(before[key], after[key]));
+            .Where(
+                key => !EqualityComparer<TValue>.Default.Equals(
+                    before[key],
+                    after[key]));
     }
 
     private static IEnumerable<TKey> ChangedKeys<TKey, TValue>(
@@ -124,6 +127,6 @@ internal sealed class WorkspacePatch
         return left.Count == right.Count
             && left.All(
                 pair => right.TryGetValue(pair.Key, out var value)
-                    && ReferenceEquals(pair.Value, value));
+                    && EqualityComparer<TValue>.Default.Equals(pair.Value, value));
     }
 }

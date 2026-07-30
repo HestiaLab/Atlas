@@ -59,6 +59,7 @@
 | REQ-F-101 | DES-OP-006、DES-OP-009 | P2 | `Atlas.Core/Results` | `OperationContractTests`：`TARGET_NOT_FOUND = 15` 数值稳定性 | In Progress | 维护者于 2026-07-31 批准新增错误码；仅用于目标 Group/View/Node 缺失，不替代 `ITEM_NOT_FOUND` |
 | REQ-F-022、REQ-F-069~071、REQ-F-140、REQ-F-142、REQ-F-151、REQ-F-156 | DES-OP-001、DES-OP-004~007 | P2 | `Atlas.Core/Operations/Engine` | `MoveToolOperationTests`：显式跨 Group move、selection/order、Dynamic normalization、NoChange、missing/policy/capability failure、Undo | In Progress | P2-WP-06 实现显式目标 Tool move；不选择 ToolBar/RegionBody/Scaffold 默认投放策略，因此 DEV-GATE-002 保持 Open |
 | REQ-F-012、REQ-F-104、REQ-F-141、REQ-F-156 | DES-DOM-010、DES-OP-001~002、DES-OP-005、DES-OP-009 | P2 | `Atlas.Core/Operations/Engine` | `GroupVisibilityOperationTests`：collapse/expand、NoChange、missing/document target failure、Undo/Redo | In Progress | P2-WP-07 实现 Tool Group committed visibility；空间像素重分配仍由纯 resolver/后续 Splitter projection 承担 |
+| REQ-F-020~024、REQ-F-140、REQ-F-149、REQ-F-151、REQ-F-156 | DES-DOM-009、DES-OP-007、DES-RND-006 | P2 | `Atlas.Core/Operations/Engine` | `ToolBarOperationTests`：visibility、toolbar-only ordering、Group order independence、NoChange、missing/policy failure | In Progress | P2-WP-08 实现 ToolBar committed state operations；Razor projection 与交互在 P3/P5 承担 |
 
 ## 更新规则
 

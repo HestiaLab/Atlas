@@ -34,6 +34,10 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             SetGroupVisibilityOperation visibility => GroupVisibilityPlanner.Plan(
                 snapshot,
                 visibility),
+            SetToolBarVisibilityOperation toolbarVisibility =>
+                ToolBarOperationPlanner.PlanVisibility(snapshot, toolbarVisibility),
+            ReorderToolBarEntryOperation toolbarReorder =>
+                ToolBarOperationPlanner.PlanReorder(snapshot, toolbarReorder),
             CloseItemOperation close => await PlanCloseAsync(
                 snapshot,
                 close,
