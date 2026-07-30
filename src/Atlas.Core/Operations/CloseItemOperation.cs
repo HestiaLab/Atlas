@@ -1,8 +1,10 @@
 namespace Atlas.Core.Operations;
 
-internal sealed class CloseItemOperation : LayoutOperation
+/// <summary>Closes an existing workspace item after capability and guard checks.</summary>
+public sealed class CloseItemOperation : LayoutOperation
 {
-    internal CloseItemOperation(DockItemId itemId, long? baseRevision = null)
+    /// <summary>Initializes a close operation.</summary>
+    public CloseItemOperation(DockItemId itemId, long? baseRevision = null)
         : base(LayoutOperationKind.CloseItem, baseRevision)
     {
         if (itemId == default)
@@ -15,5 +17,6 @@ internal sealed class CloseItemOperation : LayoutOperation
         ItemId = itemId;
     }
 
-    internal DockItemId ItemId { get; }
+    /// <summary>Gets the item to close.</summary>
+    public DockItemId ItemId { get; }
 }

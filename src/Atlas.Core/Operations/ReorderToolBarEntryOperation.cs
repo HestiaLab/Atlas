@@ -2,9 +2,11 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Operations;
 
-internal sealed class ReorderToolBarEntryOperation : LayoutOperation
+/// <summary>Reorders a toolbar entry without changing item placement.</summary>
+public sealed class ReorderToolBarEntryOperation : LayoutOperation
 {
-    internal ReorderToolBarEntryOperation(
+    /// <summary>Initializes a toolbar-only reorder operation.</summary>
+    public ReorderToolBarEntryOperation(
         DockItemId itemId,
         LogicalRegion logicalRegion,
         int targetIndex,
@@ -40,9 +42,12 @@ internal sealed class ReorderToolBarEntryOperation : LayoutOperation
         TargetIndex = targetIndex;
     }
 
-    internal DockItemId ItemId { get; }
+    /// <summary>Gets the tool item represented by the entry.</summary>
+    public DockItemId ItemId { get; }
 
-    internal LogicalRegion LogicalRegion { get; }
+    /// <summary>Gets the logical toolbar region.</summary>
+    public LogicalRegion LogicalRegion { get; }
 
-    internal int TargetIndex { get; }
+    /// <summary>Gets the target entry index.</summary>
+    public int TargetIndex { get; }
 }

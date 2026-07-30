@@ -63,6 +63,7 @@
 | REQ-F-039、REQ-F-143、REQ-F-156 | DES-DOM-004、DES-OP-001~002 | P2 | `Atlas.Core/Operations/Engine` | `ItemPresentationOperationTests`：title/icon update、identity/content/capability preservation、default title、NoChange、missing failure、Undo | In Progress | P2-WP-09 只更新 committed presentation；Razor header/template 渲染在 P3 承担 |
 | REQ-F-073~078、REQ-F-133、REQ-F-156 | DES-DOM-003、DES-DOM-010、DES-OP-001~005、DES-INT-007 | P2 | `Atlas.Core/Operations/Engine` | `ResizeSplitOperationTests`：basis commit、NoChange、missing/non-split failure、Undo/Redo | In Progress | P2-WP-10 只提交已解析的 committed basis；pointer/keyboard preview、hysteresis 与 coalescing 在 P4 承担 |
 | REQ-F-027~030、REQ-F-041、REQ-F-046、REQ-F-101~108、REQ-F-110~115 | DES-OP-001~009 | P2 | Core public API | [ADR-0002](./adr/0002-core-operation-api-freeze.md) | In Progress | 维护者于 2026-07-31 批准 API freeze；正在公开 operation/factory/guard/command/query 并固定 lifecycle 与 `DUPLICATE_CONTENT_IDENTITY` |
+| REQ-F-029、REQ-F-035、REQ-F-041、REQ-F-069、REQ-F-073、REQ-F-103~104、REQ-F-140、REQ-F-143、REQ-F-151 | DES-OP-001、DES-OP-003、DES-OP-006~007 | P2 | `Atlas.Core/Operations` | Public API analyzer + 192 Core behavior tests | Implemented | ADR-0002 已批准的 concrete operation 与 close guard/resolver 已公开并进入 API baseline；factory/commands/queries 尚待完成 |
 
 ## 更新规则
 

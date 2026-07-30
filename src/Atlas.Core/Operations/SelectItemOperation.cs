@@ -1,8 +1,10 @@
 namespace Atlas.Core.Operations;
 
-internal sealed class SelectItemOperation : LayoutOperation
+/// <summary>Selects and activates an existing workspace item.</summary>
+public sealed class SelectItemOperation : LayoutOperation
 {
-    internal SelectItemOperation(DockItemId itemId, long? baseRevision = null)
+    /// <summary>Initializes a select operation.</summary>
+    public SelectItemOperation(DockItemId itemId, long? baseRevision = null)
         : base(LayoutOperationKind.SelectItem, baseRevision)
     {
         if (itemId == default)
@@ -15,5 +17,6 @@ internal sealed class SelectItemOperation : LayoutOperation
         ItemId = itemId;
     }
 
-    internal DockItemId ItemId { get; }
+    /// <summary>Gets the item to select.</summary>
+    public DockItemId ItemId { get; }
 }

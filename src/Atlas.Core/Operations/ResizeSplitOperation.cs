@@ -2,9 +2,11 @@ using Atlas.Core.Layout;
 
 namespace Atlas.Core.Operations;
 
-internal sealed class ResizeSplitOperation : LayoutOperation
+/// <summary>Commits a resolved sizing basis for an existing split.</summary>
+public sealed class ResizeSplitOperation : LayoutOperation
 {
-    internal ResizeSplitOperation(
+    /// <summary>Initializes a split resize operation.</summary>
+    public ResizeSplitOperation(
         LayoutNodeId splitId,
         SplitBasis basis,
         long? baseRevision = null)
@@ -28,7 +30,9 @@ internal sealed class ResizeSplitOperation : LayoutOperation
         Basis = basis;
     }
 
-    internal LayoutNodeId SplitId { get; }
+    /// <summary>Gets the split to resize.</summary>
+    public LayoutNodeId SplitId { get; }
 
-    internal SplitBasis Basis { get; }
+    /// <summary>Gets the resolved basis to commit.</summary>
+    public SplitBasis Basis { get; }
 }

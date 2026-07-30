@@ -1,8 +1,10 @@
 namespace Atlas.Core.Operations;
 
-internal sealed class MoveToolOperation : LayoutOperation
+/// <summary>Moves a tool item to an explicit target tool group.</summary>
+public sealed class MoveToolOperation : LayoutOperation
 {
-    internal MoveToolOperation(
+    /// <summary>Initializes an explicit tool move operation.</summary>
+    public MoveToolOperation(
         DockItemId itemId,
         LayoutNodeId targetGroupId,
         int? targetIndex = null,
@@ -36,9 +38,12 @@ internal sealed class MoveToolOperation : LayoutOperation
         TargetIndex = targetIndex;
     }
 
-    internal DockItemId ItemId { get; }
+    /// <summary>Gets the tool item to move.</summary>
+    public DockItemId ItemId { get; }
 
-    internal LayoutNodeId TargetGroupId { get; }
+    /// <summary>Gets the target tool group.</summary>
+    public LayoutNodeId TargetGroupId { get; }
 
-    internal int? TargetIndex { get; }
+    /// <summary>Gets the optional target insertion index.</summary>
+    public int? TargetIndex { get; }
 }

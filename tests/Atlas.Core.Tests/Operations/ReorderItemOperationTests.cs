@@ -22,7 +22,7 @@ public sealed class ReorderItemOperationTests
         await using var workspace = CreateDocumentWorkspace(items);
 
         var result = await workspace.ExecuteAsync(
-            new ReorderItemOperation(items[0].Id, targetIndex: 2));
+            new ReorderItemOperation(items[0].Id, new LayoutNodeId("group"), targetIndex: 2));
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
@@ -50,7 +50,7 @@ public sealed class ReorderItemOperationTests
         await using var workspace = CreateToolWorkspace(items);
 
         await workspace.ExecuteAsync(
-            new ReorderItemOperation(items[2].Id, targetIndex: 0));
+            new ReorderItemOperation(items[2].Id, new LayoutNodeId("group"), targetIndex: 0));
 
         var expected = new[] { items[2].Id, items[0].Id, items[1].Id };
         Assert.Equal(expected, CurrentGroup(workspace).ItemIds);
@@ -67,9 +67,9 @@ public sealed class ReorderItemOperationTests
         await using var workspace = CreateDocumentWorkspace(new[] { pinned, unpinned });
 
         var prefix = await workspace.ExecuteAsync(
-            new ReorderItemOperation(unpinned.Id, targetIndex: 0));
+            new ReorderItemOperation(unpinned.Id, new LayoutNodeId("group"), targetIndex: 0));
         var range = await workspace.ExecuteAsync(
-            new ReorderItemOperation(pinned.Id, targetIndex: 2));
+            new ReorderItemOperation(pinned.Id, new LayoutNodeId("group"), targetIndex: 2));
 
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, prefix.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, range.Error!.Code);
@@ -89,9 +89,9 @@ public sealed class ReorderItemOperationTests
         await using var workspace = CreateDocumentWorkspace(new[] { movable, fixedItem });
 
         var noChange = await workspace.ExecuteAsync(
-            new ReorderItemOperation(movable.Id, targetIndex: 0));
+            new ReorderItemOperation(movable.Id, new LayoutNodeId("group"), targetIndex: 0));
         var rejected = await workspace.ExecuteAsync(
-            new ReorderItemOperation(fixedItem.Id, targetIndex: 0));
+            new ReorderItemOperation(fixedItem.Id, new LayoutNodeId("group"), targetIndex: 0));
 
         Assert.Equal(WorkspaceResultStatus.NoChange, noChange.Status);
         Assert.Equal(WorkspaceErrorCode.CapabilityRejected, rejected.Error!.Code);

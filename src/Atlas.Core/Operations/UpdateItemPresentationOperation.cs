@@ -1,8 +1,10 @@
 namespace Atlas.Core.Operations;
 
-internal sealed class UpdateItemPresentationOperation : LayoutOperation
+/// <summary>Updates UI-independent title and icon metadata for an item.</summary>
+public sealed class UpdateItemPresentationOperation : LayoutOperation
 {
-    internal UpdateItemPresentationOperation(
+    /// <summary>Initializes an item presentation operation.</summary>
+    public UpdateItemPresentationOperation(
         DockItemId itemId,
         string? title,
         string? iconKey,
@@ -35,9 +37,12 @@ internal sealed class UpdateItemPresentationOperation : LayoutOperation
         IconKey = iconKey;
     }
 
-    internal DockItemId ItemId { get; }
+    /// <summary>Gets the item to update.</summary>
+    public DockItemId ItemId { get; }
 
-    internal string? Title { get; }
+    /// <summary>Gets the requested title, or null to restore the identity default.</summary>
+    public string? Title { get; }
 
-    internal string? IconKey { get; }
+    /// <summary>Gets the requested icon key, or null to clear it.</summary>
+    public string? IconKey { get; }
 }

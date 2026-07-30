@@ -2,9 +2,11 @@ using Atlas.Core.Layout;
 
 namespace Atlas.Core.Operations;
 
-internal sealed class SetGroupVisibilityOperation : LayoutOperation
+/// <summary>Changes committed visibility for a tool group.</summary>
+public sealed class SetGroupVisibilityOperation : LayoutOperation
 {
-    internal SetGroupVisibilityOperation(
+    /// <summary>Initializes a group visibility operation.</summary>
+    public SetGroupVisibilityOperation(
         LayoutNodeId groupId,
         GroupVisibility visibility,
         long? baseRevision = null)
@@ -30,7 +32,9 @@ internal sealed class SetGroupVisibilityOperation : LayoutOperation
         Visibility = visibility;
     }
 
-    internal LayoutNodeId GroupId { get; }
+    /// <summary>Gets the target group.</summary>
+    public LayoutNodeId GroupId { get; }
 
-    internal GroupVisibility Visibility { get; }
+    /// <summary>Gets the requested committed visibility.</summary>
+    public GroupVisibility Visibility { get; }
 }

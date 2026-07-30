@@ -2,9 +2,11 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Operations;
 
-internal sealed class SetToolBarVisibilityOperation : LayoutOperation
+/// <summary>Changes committed visibility for one logical toolbar.</summary>
+public sealed class SetToolBarVisibilityOperation : LayoutOperation
 {
-    internal SetToolBarVisibilityOperation(
+    /// <summary>Initializes a toolbar visibility operation.</summary>
+    public SetToolBarVisibilityOperation(
         LogicalSide side,
         ToolBarVisibility visibility,
         long? baseRevision = null)
@@ -28,7 +30,9 @@ internal sealed class SetToolBarVisibilityOperation : LayoutOperation
         Visibility = visibility;
     }
 
-    internal LogicalSide Side { get; }
+    /// <summary>Gets the logical toolbar side.</summary>
+    public LogicalSide Side { get; }
 
-    internal ToolBarVisibility Visibility { get; }
+    /// <summary>Gets the requested toolbar visibility.</summary>
+    public ToolBarVisibility Visibility { get; }
 }

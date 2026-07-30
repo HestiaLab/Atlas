@@ -147,6 +147,16 @@ Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
 Atlas.Core.LayoutNodeId.LayoutNodeId(string! value) -> void
 Atlas.Core.LayoutNodeId.Value.get -> string!
+Atlas.Core.Operations.CloseItemOperation
+Atlas.Core.Operations.CloseItemOperation.CloseItemOperation(Atlas.Core.DockItemId itemId, long? baseRevision = null) -> void
+Atlas.Core.Operations.CloseItemOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.DockItemCloseContext
+Atlas.Core.Operations.DockItemCloseContext.Item.get -> Atlas.Core.Items.DockItem!
+Atlas.Core.Operations.DockItemCloseContext.Snapshot.get -> Atlas.Core.WorkspaceSnapshot!
+Atlas.Core.Operations.IDockItemCloseGuard
+Atlas.Core.Operations.IDockItemCloseGuard.CanCloseAsync(Atlas.Core.Operations.DockItemCloseContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
+Atlas.Core.Operations.IDockItemCloseGuardResolver
+Atlas.Core.Operations.IDockItemCloseGuardResolver.Resolve(Atlas.Core.Items.DockItem! item) -> Atlas.Core.Operations.IDockItemCloseGuard?
 Atlas.Core.Operations.LayoutOperation
 Atlas.Core.Operations.LayoutOperation.BaseRevision.get -> long?
 Atlas.Core.Operations.LayoutOperation.Kind.get -> Atlas.Core.Operations.LayoutOperationKind
@@ -167,6 +177,41 @@ Atlas.Core.Operations.LayoutOperationKind.SetGroupVisibility = 7 -> Atlas.Core.O
 Atlas.Core.Operations.LayoutOperationKind.SetToolBarVisibility = 14 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.SplitItem = 5 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.UpdateItemPresentation = 10 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.MoveToolOperation
+Atlas.Core.Operations.MoveToolOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.MoveToolOperation.MoveToolOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId targetGroupId, int? targetIndex = null, long? baseRevision = null) -> void
+Atlas.Core.Operations.MoveToolOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.MoveToolOperation.TargetIndex.get -> int?
+Atlas.Core.Operations.ReorderItemOperation
+Atlas.Core.Operations.ReorderItemOperation.GroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.ReorderItemOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.ReorderItemOperation.ReorderItemOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId groupId, int targetIndex, long? baseRevision = null) -> void
+Atlas.Core.Operations.ReorderItemOperation.TargetIndex.get -> int
+Atlas.Core.Operations.ReorderToolBarEntryOperation
+Atlas.Core.Operations.ReorderToolBarEntryOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.ReorderToolBarEntryOperation.LogicalRegion.get -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Operations.ReorderToolBarEntryOperation.ReorderToolBarEntryOperation(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.LogicalRegion logicalRegion, int targetIndex, long? baseRevision = null) -> void
+Atlas.Core.Operations.ReorderToolBarEntryOperation.TargetIndex.get -> int
+Atlas.Core.Operations.ResizeSplitOperation
+Atlas.Core.Operations.ResizeSplitOperation.Basis.get -> Atlas.Core.Layout.SplitBasis
+Atlas.Core.Operations.ResizeSplitOperation.ResizeSplitOperation(Atlas.Core.LayoutNodeId splitId, Atlas.Core.Layout.SplitBasis basis, long? baseRevision = null) -> void
+Atlas.Core.Operations.ResizeSplitOperation.SplitId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.SelectItemOperation
+Atlas.Core.Operations.SelectItemOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.SelectItemOperation.SelectItemOperation(Atlas.Core.DockItemId itemId, long? baseRevision = null) -> void
+Atlas.Core.Operations.SetGroupVisibilityOperation
+Atlas.Core.Operations.SetGroupVisibilityOperation.GroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.SetGroupVisibilityOperation.SetGroupVisibilityOperation(Atlas.Core.LayoutNodeId groupId, Atlas.Core.Layout.GroupVisibility visibility, long? baseRevision = null) -> void
+Atlas.Core.Operations.SetGroupVisibilityOperation.Visibility.get -> Atlas.Core.Layout.GroupVisibility
+Atlas.Core.Operations.SetToolBarVisibilityOperation
+Atlas.Core.Operations.SetToolBarVisibilityOperation.SetToolBarVisibilityOperation(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility, long? baseRevision = null) -> void
+Atlas.Core.Operations.SetToolBarVisibilityOperation.Side.get -> Atlas.Core.Placement.LogicalSide
+Atlas.Core.Operations.SetToolBarVisibilityOperation.Visibility.get -> Atlas.Core.Placement.ToolBarVisibility
+Atlas.Core.Operations.UpdateItemPresentationOperation
+Atlas.Core.Operations.UpdateItemPresentationOperation.IconKey.get -> string?
+Atlas.Core.Operations.UpdateItemPresentationOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.UpdateItemPresentationOperation.Title.get -> string?
+Atlas.Core.Operations.UpdateItemPresentationOperation.UpdateItemPresentationOperation(Atlas.Core.DockItemId itemId, string? title, string? iconKey, long? baseRevision = null) -> void
 Atlas.Core.Placement.AutoHideEntry
 Atlas.Core.Placement.AutoHideEntry.AutoHideEntry() -> void
 Atlas.Core.Placement.AutoHideEntry.AutoHideEntry(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.DockBack dockBack) -> void

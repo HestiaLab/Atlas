@@ -10,11 +10,19 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
 {
     private readonly ConditionalWeakTable<CloseItemOperation, GuardDecision> guardDecisions = new();
     private readonly object guardGate = new();
-    private readonly IDockItemCloseGuard? closeGuard;
+    private readonly IDockItemCloseGuardResolver? closeGuardResolver;
 
     internal DefaultWorkspaceOperationPlanner(IDockItemCloseGuard? closeGuard = null)
     {
-        this.closeGuard = closeGuard;
+        closeGuardResolver = closeGuard is null
+            ? null
+            : new FixedCloseGuardResolver(closeGuard);
+    }
+
+    internal DefaultWorkspaceOperationPlanner(IDockItemCloseGuardResolver closeGuardResolver)
+    {
+        this.closeGuardResolver = closeGuardResolver
+            ?? throw new ArgumentNullException(nameof(closeGuardResolver));
     }
 
     public async ValueTask<WorkspacePlan> PlanAsync(
@@ -150,9 +158,23 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                     itemId: item.Id));
         }
 
-        var group = snapshot.Nodes.Values
-            .OfType<GroupNode>()
-            .Single(node => node.ItemIds.Contains(item.Id));
+        if (!snapshot.Nodes.TryGetValue(operation.GroupId, out var groupNode))
+        {
+            return ReorderFailure(
+                WorkspaceErrorCode.TargetNotFound,
+                operation,
+                "ATLAS-REORDER-GROUP-MISSING",
+                "Atlas.Reorder.GroupNotFound");
+        }
+
+        if (groupNode is not GroupNode group || !group.ItemIds.Contains(item.Id))
+        {
+            return ReorderFailure(
+                WorkspaceErrorCode.TargetRejectedByPolicy,
+                operation,
+                "ATLAS-REORDER-GROUP-REJECTED",
+                "Atlas.Reorder.TargetRejected");
+        }
         if (operation.TargetIndex >= group.ItemIds.Count)
         {
             return ReorderTargetRejected(operation, group.Id);
@@ -236,6 +258,22 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                 operation.ItemId));
     }
 
+    private static WorkspacePlan ReorderFailure(
+        WorkspaceErrorCode code,
+        ReorderItemOperation operation,
+        string diagnosticId,
+        string messageKey)
+    {
+        return WorkspacePlan.Failure(
+            new WorkspaceError(
+                code,
+                operation.Kind,
+                diagnosticId,
+                messageKey,
+                operation.GroupId,
+                operation.ItemId));
+    }
+
     private async ValueTask<WorkspacePlan> PlanCloseAsync(
         WorkspaceSnapshot snapshot,
         CloseItemOperation operation,
@@ -257,6 +295,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                     itemId: item.Id));
         }
 
+        var closeGuard = closeGuardResolver?.Resolve(item);
         if (closeGuard is not null)
         {
             GuardDecision decision;
@@ -409,4 +448,19 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
     }
 
     private sealed record GuardDecision(Task<bool> Task);
+
+    private sealed class FixedCloseGuardResolver : IDockItemCloseGuardResolver
+    {
+        private readonly IDockItemCloseGuard guard;
+
+        internal FixedCloseGuardResolver(IDockItemCloseGuard guard)
+        {
+            this.guard = guard;
+        }
+
+        public IDockItemCloseGuard? Resolve(DockItem item)
+        {
+            return guard;
+        }
+    }
 }
