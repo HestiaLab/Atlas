@@ -1,9 +1,41 @@
 #nullable enable
+Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.Operation = 0 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.ReconcileDefinition = 5 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.Redo = 2 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.Reset = 3 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.Restore = 4 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeKind.Undo = 1 -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeSet
+Atlas.Core.Changes.LayoutChangeSet.AddedItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Changes.LayoutChangeSet.AddedNodes.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.LayoutNodeId>!
+Atlas.Core.Changes.LayoutChangeSet.AfterRevision.get -> long
+Atlas.Core.Changes.LayoutChangeSet.BeforeRevision.get -> long
+Atlas.Core.Changes.LayoutChangeSet.ChangeKind.get -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Changes.LayoutChangeSet.RemovedItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Changes.LayoutChangeSet.RemovedNodes.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.LayoutNodeId>!
+Atlas.Core.Changes.LayoutChangeSet.UpdatedAutoHideStrips.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.WorkspaceEdge>!
+Atlas.Core.Changes.LayoutChangeSet.UpdatedItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Changes.LayoutChangeSet.UpdatedNodes.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.LayoutNodeId>!
+Atlas.Core.Changes.LayoutChangeSet.UpdatedToolBarOrders.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.LogicalRegion>!
+Atlas.Core.Changes.LayoutChangeSet.UpdatedToolBars.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.LogicalSide>!
+Atlas.Core.Changes.WorkspaceChangedEventArgs
+Atlas.Core.Changes.WorkspaceChangedEventArgs.ChangeSet.get -> Atlas.Core.Changes.LayoutChangeSet!
+Atlas.Core.Changes.WorkspaceChangedEventArgs.WorkspaceId.get -> Atlas.Core.WorkspaceId
 Atlas.Core.DockItemId
 Atlas.Core.DockItemId.DockItemId() -> void
 Atlas.Core.DockItemId.DockItemId(string! value) -> void
 Atlas.Core.DockItemId.Equals(Atlas.Core.DockItemId other) -> bool
 Atlas.Core.DockItemId.Value.get -> string!
+Atlas.Core.IAtlasWorkspace
+Atlas.Core.IAtlasWorkspace.CanRedo.get -> bool
+Atlas.Core.IAtlasWorkspace.CanUndo.get -> bool
+Atlas.Core.IAtlasWorkspace.Changed -> System.EventHandler<Atlas.Core.Changes.WorkspaceChangedEventArgs!>?
+Atlas.Core.IAtlasWorkspace.Current.get -> Atlas.Core.WorkspaceSnapshot!
+Atlas.Core.IAtlasWorkspace.ExecuteAsync(Atlas.Core.Operations.LayoutOperation! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.IAtlasWorkspace.Id.get -> Atlas.Core.WorkspaceId
+Atlas.Core.IAtlasWorkspace.RedoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.IAtlasWorkspace.UndoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.Items.ContentReference
 Atlas.Core.Items.ContentReference.ContentReference() -> void
 Atlas.Core.Items.ContentReference.ContentReference(string! kind, string! resourceId) -> void
@@ -115,6 +147,26 @@ Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
 Atlas.Core.LayoutNodeId.LayoutNodeId(string! value) -> void
 Atlas.Core.LayoutNodeId.Value.get -> string!
+Atlas.Core.Operations.LayoutOperation
+Atlas.Core.Operations.LayoutOperation.BaseRevision.get -> long?
+Atlas.Core.Operations.LayoutOperation.Kind.get -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.CloseItem = 1 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.MoveItem = 3 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.OpenItem = 0 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ReorderItem = 4 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ReorderToolBarEntry = 15 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ReplaceContentReference = 11 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ResetWorkspace = 12 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ResizeSplit = 6 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.RestoreAutoHiddenItem = 9 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.RestoreWorkspace = 13 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SelectItem = 2 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SetAutoHide = 8 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SetGroupVisibility = 7 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SetToolBarVisibility = 14 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SplitItem = 5 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.UpdateItemPresentation = 10 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Placement.AutoHideEntry
 Atlas.Core.Placement.AutoHideEntry.AutoHideEntry() -> void
 Atlas.Core.Placement.AutoHideEntry.AutoHideEntry(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.DockBack dockBack) -> void
@@ -158,6 +210,38 @@ Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.BlockEnd = 2 -> Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.InlineEnd = 1 -> Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.InlineStart = 0 -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Results.WorkspaceError
+Atlas.Core.Results.WorkspaceError.Code.get -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceError.DiagnosticId.get -> string!
+Atlas.Core.Results.WorkspaceError.ItemId.get -> Atlas.Core.DockItemId?
+Atlas.Core.Results.WorkspaceError.MessageKey.get -> string!
+Atlas.Core.Results.WorkspaceError.NodeId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.Results.WorkspaceError.OperationKind.get -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.CapabilityRejected = 9 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.CloseCancelledByGuard = 10 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.ContentAlreadyRegistered = 2 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.ContentNotRegistered = 7 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.DragSessionExpired = 14 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.DuplicateTabId = 4 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.InteractionProtocolInvalid = 13 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.InvalidLayoutData = 3 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.ItemNotFound = 5 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.LayoutVersionIncompatible = 1 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.PersistenceUnavailable = 11 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.StaleOperation = 6 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.TargetRejectedByPolicy = 8 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.WorkspaceFaulted = 12 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceResult<T>
+Atlas.Core.Results.WorkspaceResult<T>.Error.get -> Atlas.Core.Results.WorkspaceError?
+Atlas.Core.Results.WorkspaceResult<T>.IsNoChange.get -> bool
+Atlas.Core.Results.WorkspaceResult<T>.Status.get -> Atlas.Core.Results.WorkspaceResultStatus
+Atlas.Core.Results.WorkspaceResult<T>.Succeeded.get -> bool
+Atlas.Core.Results.WorkspaceResult<T>.Value.get -> T?
+Atlas.Core.Results.WorkspaceResultStatus
+Atlas.Core.Results.WorkspaceResultStatus.Failure = 2 -> Atlas.Core.Results.WorkspaceResultStatus
+Atlas.Core.Results.WorkspaceResultStatus.NoChange = 1 -> Atlas.Core.Results.WorkspaceResultStatus
+Atlas.Core.Results.WorkspaceResultStatus.Success = 0 -> Atlas.Core.Results.WorkspaceResultStatus
 Atlas.Core.WorkspaceSnapshot
 Atlas.Core.WorkspaceSnapshot.AutoHideStrips.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.Placement.WorkspaceEdge, Atlas.Core.Placement.AutoHideStripState!>!
 Atlas.Core.WorkspaceSnapshot.Id.get -> Atlas.Core.WorkspaceId

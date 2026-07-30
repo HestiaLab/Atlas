@@ -15,8 +15,6 @@
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
-    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="package.json" Pack="false" />
