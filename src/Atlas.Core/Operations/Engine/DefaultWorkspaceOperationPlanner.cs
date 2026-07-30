@@ -31,6 +31,9 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             SelectItemOperation select => PlanSelect(snapshot, select),
             ReorderItemOperation reorder => PlanReorder(snapshot, reorder),
             MoveToolOperation move => MoveToolPlanner.Plan(snapshot, move),
+            SetGroupVisibilityOperation visibility => GroupVisibilityPlanner.Plan(
+                snapshot,
+                visibility),
             CloseItemOperation close => await PlanCloseAsync(
                 snapshot,
                 close,
