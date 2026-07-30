@@ -61,6 +61,7 @@
 | REQ-F-012、REQ-F-104、REQ-F-141、REQ-F-156 | DES-DOM-010、DES-OP-001~002、DES-OP-005、DES-OP-009 | P2 | `Atlas.Core/Operations/Engine` | `GroupVisibilityOperationTests`：collapse/expand、NoChange、missing/document target failure、Undo/Redo | In Progress | P2-WP-07 实现 Tool Group committed visibility；空间像素重分配仍由纯 resolver/后续 Splitter projection 承担 |
 | REQ-F-020~024、REQ-F-140、REQ-F-149、REQ-F-151、REQ-F-156 | DES-DOM-009、DES-OP-007、DES-RND-006 | P2 | `Atlas.Core/Operations/Engine` | `ToolBarOperationTests`：visibility、toolbar-only ordering、Group order independence、NoChange、missing/policy failure | In Progress | P2-WP-08 实现 ToolBar committed state operations；Razor projection 与交互在 P3/P5 承担 |
 | REQ-F-039、REQ-F-143、REQ-F-156 | DES-DOM-004、DES-OP-001~002 | P2 | `Atlas.Core/Operations/Engine` | `ItemPresentationOperationTests`：title/icon update、identity/content/capability preservation、default title、NoChange、missing failure、Undo | In Progress | P2-WP-09 只更新 committed presentation；Razor header/template 渲染在 P3 承担 |
+| REQ-F-073~078、REQ-F-133、REQ-F-156 | DES-DOM-003、DES-DOM-010、DES-OP-001~005、DES-INT-007 | P2 | `Atlas.Core/Operations/Engine` | `ResizeSplitOperationTests`：basis commit、NoChange、missing/non-split failure、Undo/Redo | In Progress | P2-WP-10 只提交已解析的 committed basis；pointer/keyboard preview、hysteresis 与 coalescing 在 P4 承担 |
 
 ## 更新规则
 
