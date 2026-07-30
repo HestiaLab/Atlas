@@ -36,6 +36,21 @@ Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> v
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
 Atlas.Core.Items.DocumentState.IsPinned.get -> bool
 Atlas.Core.Items.DocumentState.IsPreview.get -> bool
+Atlas.Core.Layout.GroupNode
+Atlas.Core.Layout.GroupNode.GroupNode(Atlas.Core.LayoutNodeId id, Atlas.Core.Items.DockItemKind kind, Atlas.Core.Layout.GroupRetentionPolicy retentionPolicy, Atlas.Core.Layout.GroupVisibility visibility, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>! itemIds, Atlas.Core.DockItemId? selectedItemId) -> void
+Atlas.Core.Layout.GroupNode.ItemIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Layout.GroupNode.Kind.get -> Atlas.Core.Items.DockItemKind
+Atlas.Core.Layout.GroupNode.RetentionPolicy.get -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Core.Layout.GroupNode.SelectedItemId.get -> Atlas.Core.DockItemId?
+Atlas.Core.Layout.GroupNode.Visibility.get -> Atlas.Core.Layout.GroupVisibility
+Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Core.Layout.GroupRetentionPolicy.Dynamic = 1 -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Core.Layout.GroupRetentionPolicy.Persistent = 0 -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Core.Layout.GroupVisibility
+Atlas.Core.Layout.GroupVisibility.Collapsed = 1 -> Atlas.Core.Layout.GroupVisibility
+Atlas.Core.Layout.GroupVisibility.Expanded = 0 -> Atlas.Core.Layout.GroupVisibility
+Atlas.Core.Layout.LayoutNode
+Atlas.Core.Layout.LayoutNode.Id.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Layout.ResolvedSplitLayout
 Atlas.Core.Layout.ResolvedSplitLayout.EffectiveConstraints.get -> Atlas.Core.Layout.SplitConstraints
 Atlas.Core.Layout.ResolvedSplitLayout.FirstExtent.get -> double
@@ -45,6 +60,9 @@ Atlas.Core.Layout.ResolvedSplitLayout.SecondExtent.get -> double
 Atlas.Core.Layout.SplitAnchor
 Atlas.Core.Layout.SplitAnchor.First = 0 -> Atlas.Core.Layout.SplitAnchor
 Atlas.Core.Layout.SplitAnchor.Second = 1 -> Atlas.Core.Layout.SplitAnchor
+Atlas.Core.Layout.SplitAxis
+Atlas.Core.Layout.SplitAxis.BlockChildren = 1 -> Atlas.Core.Layout.SplitAxis
+Atlas.Core.Layout.SplitAxis.InlineChildren = 0 -> Atlas.Core.Layout.SplitAxis
 Atlas.Core.Layout.SplitBasis
 Atlas.Core.Layout.SplitBasis.Anchor.get -> Atlas.Core.Layout.SplitAnchor?
 Atlas.Core.Layout.SplitBasis.Equals(Atlas.Core.Layout.SplitBasis other) -> bool
@@ -63,6 +81,13 @@ Atlas.Core.Layout.SplitConstraints.SecondMinimum.get -> double
 Atlas.Core.Layout.SplitConstraints.SplitConstraints() -> void
 Atlas.Core.Layout.SplitConstraints.SplitConstraints(double firstMinimum = 0, double? firstMaximum = null, double secondMinimum = 0, double? secondMaximum = null) -> void
 Atlas.Core.Layout.SplitLayoutResolver
+Atlas.Core.Layout.SplitNode
+Atlas.Core.Layout.SplitNode.Axis.get -> Atlas.Core.Layout.SplitAxis
+Atlas.Core.Layout.SplitNode.Basis.get -> Atlas.Core.Layout.SplitBasis
+Atlas.Core.Layout.SplitNode.Constraints.get -> Atlas.Core.Layout.SplitConstraints
+Atlas.Core.Layout.SplitNode.FirstId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Layout.SplitNode.SecondId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Layout.SplitNode.SplitNode(Atlas.Core.LayoutNodeId id, Atlas.Core.Layout.SplitAxis axis, Atlas.Core.Layout.SplitBasis basis, Atlas.Core.Layout.SplitConstraints constraints, Atlas.Core.LayoutNodeId firstId, Atlas.Core.LayoutNodeId secondId) -> void
 Atlas.Core.LayoutNodeId
 Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
