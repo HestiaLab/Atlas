@@ -13,5 +13,6 @@
     <AdditionalFiles Include="PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
     <InternalsVisibleTo Include="Atlas.Blazor" />
+    <InternalsVisibleTo Include="Atlas.Core.Tests" />
   </ItemGroup>
 </Project>

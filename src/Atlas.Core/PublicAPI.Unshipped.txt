@@ -157,6 +157,15 @@ Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.BlockEnd = 2 -> Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.InlineEnd = 1 -> Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.Placement.WorkspaceEdge.InlineStart = 0 -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.WorkspaceSnapshot
+Atlas.Core.WorkspaceSnapshot.AutoHideStrips.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.Placement.WorkspaceEdge, Atlas.Core.Placement.AutoHideStripState!>!
+Atlas.Core.WorkspaceSnapshot.Id.get -> Atlas.Core.WorkspaceId
+Atlas.Core.WorkspaceSnapshot.Items.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.DockItemId, Atlas.Core.Items.DockItem!>!
+Atlas.Core.WorkspaceSnapshot.Nodes.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.LayoutNodeId, Atlas.Core.Layout.LayoutNode!>!
+Atlas.Core.WorkspaceSnapshot.Revision.get -> long
+Atlas.Core.WorkspaceSnapshot.RootNodeId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.WorkspaceSnapshot.ToolBarOrders.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.Placement.LogicalRegion, Atlas.Core.Placement.ToolBarOrderState!>!
+Atlas.Core.WorkspaceSnapshot.ToolBars.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.Placement.LogicalSide, Atlas.Core.Placement.ToolBarState>!
 Atlas.Core.WorkspaceId
 Atlas.Core.WorkspaceId.Equals(Atlas.Core.WorkspaceId other) -> bool
 Atlas.Core.WorkspaceId.Value.get -> string!
