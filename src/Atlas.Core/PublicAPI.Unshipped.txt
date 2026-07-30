@@ -36,8 +36,21 @@ Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> v
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
 Atlas.Core.Items.DocumentState.IsPinned.get -> bool
 Atlas.Core.Items.DocumentState.IsPreview.get -> bool
+Atlas.Core.Layout.EditorActivationPolicy
+Atlas.Core.Layout.EditorActivationPolicy.Adjacent = 0 -> Atlas.Core.Layout.EditorActivationPolicy
+Atlas.Core.Layout.EditorActivationPolicy.MostRecentlyVisited = 1 -> Atlas.Core.Layout.EditorActivationPolicy
+Atlas.Core.Layout.EditorGroupState
+Atlas.Core.Layout.EditorGroupState.ActivationPolicy.get -> Atlas.Core.Layout.EditorActivationPolicy
+Atlas.Core.Layout.EditorGroupState.EditorGroupState(Atlas.Core.Layout.EditorOverflowMode overflowMode = Atlas.Core.Layout.EditorOverflowMode.Scroll, Atlas.Core.Layout.EditorActivationPolicy activationPolicy = Atlas.Core.Layout.EditorActivationPolicy.Adjacent, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>? recentlyVisitedIds = null) -> void
+Atlas.Core.Layout.EditorGroupState.OverflowMode.get -> Atlas.Core.Layout.EditorOverflowMode
+Atlas.Core.Layout.EditorGroupState.RecentlyVisitedIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Layout.EditorOverflowMode
+Atlas.Core.Layout.EditorOverflowMode.Menu = 1 -> Atlas.Core.Layout.EditorOverflowMode
+Atlas.Core.Layout.EditorOverflowMode.Scroll = 0 -> Atlas.Core.Layout.EditorOverflowMode
+Atlas.Core.Layout.EditorOverflowMode.Wrap = 2 -> Atlas.Core.Layout.EditorOverflowMode
 Atlas.Core.Layout.GroupNode
-Atlas.Core.Layout.GroupNode.GroupNode(Atlas.Core.LayoutNodeId id, Atlas.Core.Items.DockItemKind kind, Atlas.Core.Layout.GroupRetentionPolicy retentionPolicy, Atlas.Core.Layout.GroupVisibility visibility, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>! itemIds, Atlas.Core.DockItemId? selectedItemId) -> void
+Atlas.Core.Layout.GroupNode.EditorState.get -> Atlas.Core.Layout.EditorGroupState?
+Atlas.Core.Layout.GroupNode.GroupNode(Atlas.Core.LayoutNodeId id, Atlas.Core.Items.DockItemKind kind, Atlas.Core.Layout.GroupRetentionPolicy retentionPolicy, Atlas.Core.Layout.GroupVisibility visibility, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>! itemIds, Atlas.Core.DockItemId? selectedItemId, Atlas.Core.Layout.EditorGroupState? editorState = null) -> void
 Atlas.Core.Layout.GroupNode.ItemIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
 Atlas.Core.Layout.GroupNode.Kind.get -> Atlas.Core.Items.DockItemKind
 Atlas.Core.Layout.GroupNode.RetentionPolicy.get -> Atlas.Core.Layout.GroupRetentionPolicy
@@ -88,6 +101,14 @@ Atlas.Core.Layout.SplitNode.Constraints.get -> Atlas.Core.Layout.SplitConstraint
 Atlas.Core.Layout.SplitNode.FirstId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Layout.SplitNode.SecondId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Layout.SplitNode.SplitNode(Atlas.Core.LayoutNodeId id, Atlas.Core.Layout.SplitAxis axis, Atlas.Core.Layout.SplitBasis basis, Atlas.Core.Layout.SplitConstraints constraints, Atlas.Core.LayoutNodeId firstId, Atlas.Core.LayoutNodeId secondId) -> void
+Atlas.Core.Layout.ToolSizingDefinition
+Atlas.Core.Layout.ToolSizingDefinition.CollapsedExtent.get -> double
+Atlas.Core.Layout.ToolSizingDefinition.Equals(Atlas.Core.Layout.ToolSizingDefinition other) -> bool
+Atlas.Core.Layout.ToolSizingDefinition.InitialRatio.get -> double?
+Atlas.Core.Layout.ToolSizingDefinition.MaxExtent.get -> double?
+Atlas.Core.Layout.ToolSizingDefinition.MinExtent.get -> double?
+Atlas.Core.Layout.ToolSizingDefinition.ToolSizingDefinition() -> void
+Atlas.Core.Layout.ToolSizingDefinition.ToolSizingDefinition(double? initialRatio = null, double? minExtent = null, double? maxExtent = null, double collapsedExtent = 0) -> void
 Atlas.Core.LayoutNodeId
 Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
@@ -152,6 +173,8 @@ override Atlas.Core.Layout.SplitBasis.Equals(object? obj) -> bool
 override Atlas.Core.Layout.SplitBasis.GetHashCode() -> int
 override Atlas.Core.Layout.SplitConstraints.Equals(object? obj) -> bool
 override Atlas.Core.Layout.SplitConstraints.GetHashCode() -> int
+override Atlas.Core.Layout.ToolSizingDefinition.Equals(object? obj) -> bool
+override Atlas.Core.Layout.ToolSizingDefinition.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.Equals(object? obj) -> bool
 override Atlas.Core.LayoutNodeId.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.ToString() -> string!
@@ -180,6 +203,8 @@ static Atlas.Core.Layout.SplitBasis.operator ==(Atlas.Core.Layout.SplitBasis lef
 static Atlas.Core.Layout.SplitConstraints.operator !=(Atlas.Core.Layout.SplitConstraints left, Atlas.Core.Layout.SplitConstraints right) -> bool
 static Atlas.Core.Layout.SplitConstraints.operator ==(Atlas.Core.Layout.SplitConstraints left, Atlas.Core.Layout.SplitConstraints right) -> bool
 static Atlas.Core.Layout.SplitLayoutResolver.Resolve(double availableExtent, Atlas.Core.Layout.SplitBasis basis, Atlas.Core.Layout.SplitConstraints constraints) -> Atlas.Core.Layout.ResolvedSplitLayout
+static Atlas.Core.Layout.ToolSizingDefinition.operator !=(Atlas.Core.Layout.ToolSizingDefinition left, Atlas.Core.Layout.ToolSizingDefinition right) -> bool
+static Atlas.Core.Layout.ToolSizingDefinition.operator ==(Atlas.Core.Layout.ToolSizingDefinition left, Atlas.Core.Layout.ToolSizingDefinition right) -> bool
 static Atlas.Core.LayoutNodeId.operator !=(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.LayoutNodeId.operator ==(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.Placement.AutoHideEntry.operator !=(Atlas.Core.Placement.AutoHideEntry left, Atlas.Core.Placement.AutoHideEntry right) -> bool

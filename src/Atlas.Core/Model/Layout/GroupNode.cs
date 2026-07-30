@@ -16,13 +16,15 @@ public sealed class GroupNode : LayoutNode
     /// <param name="visibility">The committed group visibility.</param>
     /// <param name="itemIds">The ordered item identities.</param>
     /// <param name="selectedItemId">The selected item identity, or null for an empty group.</param>
+    /// <param name="editorState">Optional document-group behavior state.</param>
     public GroupNode(
         LayoutNodeId id,
         DockItemKind kind,
         GroupRetentionPolicy retentionPolicy,
         GroupVisibility visibility,
         IEnumerable<DockItemId> itemIds,
-        DockItemId? selectedItemId)
+        DockItemId? selectedItemId,
+        EditorGroupState? editorState = null)
         : base(id)
     {
         ValidateEnums(kind, retentionPolicy, visibility);
@@ -32,6 +34,13 @@ public sealed class GroupNode : LayoutNode
             throw new ArgumentException(
                 "Document groups cannot be collapsed.",
                 nameof(visibility));
+        }
+
+        if (kind == DockItemKind.Tool && editorState is not null)
+        {
+            throw new ArgumentException(
+                "Tool groups cannot contain editor state.",
+                nameof(editorState));
         }
 
         ArgumentNullException.ThrowIfNull(itemIds);
@@ -44,6 +53,9 @@ public sealed class GroupNode : LayoutNode
         Visibility = visibility;
         ItemIds = Array.AsReadOnly(materializedItemIds);
         SelectedItemId = selectedItemId;
+        EditorState = kind == DockItemKind.Document
+            ? editorState ?? new EditorGroupState()
+            : null;
     }
 
     /// <summary>
@@ -70,6 +82,11 @@ public sealed class GroupNode : LayoutNode
     /// Gets the selected item identity, or null for an empty group.
     /// </summary>
     public DockItemId? SelectedItemId { get; }
+
+    /// <summary>
+    /// Gets document-group behavior state, or null for a tool group.
+    /// </summary>
+    public EditorGroupState? EditorState { get; }
 
     private static void ValidateEnums(
         DockItemKind kind,
