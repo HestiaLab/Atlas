@@ -42,6 +42,7 @@
 | Requirement | DES | Phase | Owner | Test evidence | Status | Notes |
 |-------------|-----|-------|-------|---------------|--------|-------|
 | — | DES-PRJ-001~002 | P0 | repository | architecture baseline tests + local build/test/format/npm/pack；Windows/Linux CI workflow | Verified | 不代表任何功能需求已实现；远端 CI 首次运行仍须确认 |
+| REQ-F-028、REQ-F-109、REQ-F-124 | DES-DOM-007 | P1 | `Atlas.Core/Model/Identity` | `StronglyTypedIdTests`：构造验证、ordinal equality、类型隔离、default、无字符串隐式转换 | In Progress | P1-WP-01 仅实现强类型 identity value object；自动 ID 生成、Workspace 作用域行为和重复 ID operation 仍待后续 work package |
 
 ## 更新规则
 

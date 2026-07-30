@@ -1,1 +1,31 @@
 #nullable enable
+Atlas.Core.DockItemId
+Atlas.Core.DockItemId.DockItemId() -> void
+Atlas.Core.DockItemId.DockItemId(string! value) -> void
+Atlas.Core.DockItemId.Equals(Atlas.Core.DockItemId other) -> bool
+Atlas.Core.DockItemId.Value.get -> string!
+Atlas.Core.LayoutNodeId
+Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
+Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
+Atlas.Core.LayoutNodeId.LayoutNodeId(string! value) -> void
+Atlas.Core.LayoutNodeId.Value.get -> string!
+Atlas.Core.WorkspaceId
+Atlas.Core.WorkspaceId.Equals(Atlas.Core.WorkspaceId other) -> bool
+Atlas.Core.WorkspaceId.Value.get -> string!
+Atlas.Core.WorkspaceId.WorkspaceId() -> void
+Atlas.Core.WorkspaceId.WorkspaceId(string! value) -> void
+override Atlas.Core.DockItemId.Equals(object? obj) -> bool
+override Atlas.Core.DockItemId.GetHashCode() -> int
+override Atlas.Core.DockItemId.ToString() -> string!
+override Atlas.Core.LayoutNodeId.Equals(object? obj) -> bool
+override Atlas.Core.LayoutNodeId.GetHashCode() -> int
+override Atlas.Core.LayoutNodeId.ToString() -> string!
+override Atlas.Core.WorkspaceId.Equals(object? obj) -> bool
+override Atlas.Core.WorkspaceId.GetHashCode() -> int
+override Atlas.Core.WorkspaceId.ToString() -> string!
+static Atlas.Core.DockItemId.operator !=(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
+static Atlas.Core.DockItemId.operator ==(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
+static Atlas.Core.LayoutNodeId.operator !=(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
+static Atlas.Core.LayoutNodeId.operator ==(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
+static Atlas.Core.WorkspaceId.operator !=(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool
+static Atlas.Core.WorkspaceId.operator ==(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool
