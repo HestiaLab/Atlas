@@ -29,6 +29,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
         return operation switch
         {
             SelectItemOperation select => PlanSelect(snapshot, select),
+            ReorderItemOperation reorder => PlanReorder(snapshot, reorder),
             CloseItemOperation close => await PlanCloseAsync(
                 snapshot,
                 close,
@@ -110,6 +111,118 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             group.EditorState.OverflowMode,
             group.EditorState.ActivationPolicy,
             recentlyVisited);
+    }
+
+    private static WorkspacePlan PlanReorder(
+        WorkspaceSnapshot snapshot,
+        ReorderItemOperation operation)
+    {
+        if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
+        {
+            return WorkspacePlan.Failure(
+                new WorkspaceError(
+                    WorkspaceErrorCode.ItemNotFound,
+                    operation.Kind,
+                    "ATLAS-ITEM-MISSING",
+                    "Atlas.Item.NotFound",
+                    itemId: operation.ItemId));
+        }
+
+        if (!item.Capabilities.HasFlag(DockItemCapabilities.CanMove))
+        {
+            return WorkspacePlan.Failure(
+                new WorkspaceError(
+                    WorkspaceErrorCode.CapabilityRejected,
+                    operation.Kind,
+                    "ATLAS-REORDER-CAPABILITY",
+                    "Atlas.Reorder.CapabilityRejected",
+                    itemId: item.Id));
+        }
+
+        var group = snapshot.Nodes.Values
+            .OfType<GroupNode>()
+            .Single(node => node.ItemIds.Contains(item.Id));
+        if (operation.TargetIndex >= group.ItemIds.Count)
+        {
+            return ReorderTargetRejected(operation, group.Id);
+        }
+
+        var currentIndex = group.ItemIds.ToList().IndexOf(item.Id);
+        if (currentIndex == operation.TargetIndex)
+        {
+            return WorkspacePlan.NoChange();
+        }
+
+        var reordered = group.ItemIds.ToList();
+        reordered.RemoveAt(currentIndex);
+        reordered.Insert(operation.TargetIndex, item.Id);
+        if (!HasPinnedPrefix(snapshot, reordered))
+        {
+            return ReorderTargetRejected(operation, group.Id);
+        }
+
+        var replacement = new GroupNode(
+            group.Id,
+            group.Kind,
+            group.RetentionPolicy,
+            group.Visibility,
+            reordered,
+            group.SelectedItemId,
+            group.EditorState,
+            group.LogicalRegion);
+        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
+        nodes[group.Id] = replacement;
+        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
+        if (group.LogicalRegion is LogicalRegion region)
+        {
+            orders[region] = new ToolBarOrderState(region, reordered);
+        }
+
+        return WorkspacePlan.Commit(
+            new WorkspaceSnapshot(
+                snapshot.Id,
+                snapshot.Revision,
+                snapshot.RootNodeId,
+                nodes,
+                snapshot.Items,
+                snapshot.ToolBars,
+                orders,
+                snapshot.AutoHideStrips));
+    }
+
+    private static bool HasPinnedPrefix(
+        WorkspaceSnapshot snapshot,
+        IEnumerable<DockItemId> itemIds)
+    {
+        var unpinnedSeen = false;
+        foreach (var itemId in itemIds)
+        {
+            var pinned = snapshot.Items[itemId].DocumentState?.IsPinned == true;
+            if (!pinned)
+            {
+                unpinnedSeen = true;
+            }
+            else if (unpinnedSeen)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static WorkspacePlan ReorderTargetRejected(
+        ReorderItemOperation operation,
+        LayoutNodeId groupId)
+    {
+        return WorkspacePlan.Failure(
+            new WorkspaceError(
+                WorkspaceErrorCode.TargetRejectedByPolicy,
+                operation.Kind,
+                "ATLAS-REORDER-TARGET",
+                "Atlas.Reorder.TargetRejected",
+                groupId,
+                operation.ItemId));
     }
 
     private async ValueTask<WorkspacePlan> PlanCloseAsync(

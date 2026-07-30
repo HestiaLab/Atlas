@@ -55,6 +55,7 @@
 | REQ-F-041、REQ-F-110、REQ-F-133、REQ-F-156 | DES-OP-002~006 | P2 | `Atlas.Core/Operations/Engine` | `WorkspaceTransactionTests`：success/no-change/failure/stale/cancel、invariant rollback、monotonic undo/redo、redo branch、subscriber isolation/reentrancy、dispose | In Progress | P2-WP-02 实现内部 transaction/history/event 内核；尚未冻结的具体 operation、guard 与 command/query 公共签名未提前公开 |
 | REQ-F-035、REQ-F-039、REQ-F-103~104、REQ-F-121 | DES-DOM-011、DES-OP-001、DES-OP-009 | P2 | `Atlas.Core/Operations` | `SelectItemOperationTests`：Document selection/MRU、collapsed Tool expand、NoChange、`ITEM_NOT_FOUND` | In Progress | P2-WP-03 实现内部 Select planner 垂直切片；operation/command 的最终公开构造签名仍等待 API freeze |
 | REQ-F-029~034、REQ-F-036~037、REQ-F-040~041、REQ-F-102、REQ-F-112、REQ-F-133 | DES-OP-001~005、DES-OP-009 | P2 | `Atlas.Core/Operations` | `CloseItemOperationTests`：adjacent/MRU selection、Dynamic Group normalization、missing/capability/guard failure、single guard decision、guard 外并发与 stale | In Progress | P2-WP-04 实现内部 Close planner 与 async guard 协调；公开 guard registration、domain event 和 command facade 待 API freeze |
+| REQ-F-045、REQ-F-048、REQ-F-142、REQ-F-151、REQ-F-156 | DES-DOM-009、DES-DOM-011、DES-OP-001、DES-OP-004~007 | P2 | `Atlas.Core/Operations` | `ReorderItemOperationTests`：Document/Tool reorder、pinned prefix、ToolBar order 同步、capability/policy failure、NoChange、Undo/Redo | In Progress | P2-WP-05 仅实现当前 Group 内确定性排序；跨区域 Panel drop 默认策略仍由 DEV-GATE-002 阻断 |
 
 ## 更新规则
 
