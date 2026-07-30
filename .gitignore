@@ -16,17 +16,19 @@ x86/
 [Bb]uild/
 bld/
 [Oo]ut/
+artifacts/
 msbuild.log
 msbuild.err
 msbuild.wrn
 
 ## NuGet
 *.nupkg
+*.snupkg
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
 *.nuget.props
 *.nuget.targets
-nuget.config
+.packages/
 
 ## Visual Studio
 .vs/
@@ -43,6 +45,7 @@ nuget.config
 
 ## Hermes (AI agent plans)
 .hermes/
+.tmp/
 
 ## Windows
 Thumbs.db
@@ -61,8 +64,8 @@ yarn-debug.log*
 yarn-error.log*
 
 ## Atlas generated static assets
-src/Atlas/wwwroot/atlas/*.js
-src/Atlas/wwwroot/atlas/*.js.map
+src/Atlas.Blazor/wwwroot/atlas-v2/*.js
+src/Atlas.Blazor/wwwroot/atlas-v2/*.js.map
 
 ## Code coverage
 TestResults/
