@@ -4,6 +4,38 @@ Atlas.Core.DockItemId.DockItemId() -> void
 Atlas.Core.DockItemId.DockItemId(string! value) -> void
 Atlas.Core.DockItemId.Equals(Atlas.Core.DockItemId other) -> bool
 Atlas.Core.DockItemId.Value.get -> string!
+Atlas.Core.Items.ContentReference
+Atlas.Core.Items.ContentReference.ContentReference() -> void
+Atlas.Core.Items.ContentReference.ContentReference(string! kind, string! resourceId) -> void
+Atlas.Core.Items.ContentReference.Equals(Atlas.Core.Items.ContentReference other) -> bool
+Atlas.Core.Items.ContentReference.Kind.get -> string!
+Atlas.Core.Items.ContentReference.ResourceId.get -> string!
+Atlas.Core.Items.DockItem
+Atlas.Core.Items.DockItem.Capabilities.get -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItem.Content.get -> Atlas.Core.Items.ContentReference
+Atlas.Core.Items.DockItem.DockItem(Atlas.Core.DockItemId id, Atlas.Core.Items.DockItemKind kind, Atlas.Core.Items.ContentReference content, Atlas.Core.Items.DockItemCapabilities capabilities, string? title = null, string? iconKey = null, Atlas.Core.Items.DocumentState? documentState = null) -> void
+Atlas.Core.Items.DockItem.DocumentState.get -> Atlas.Core.Items.DocumentState?
+Atlas.Core.Items.DockItem.IconKey.get -> string?
+Atlas.Core.Items.DockItem.Id.get -> Atlas.Core.DockItemId
+Atlas.Core.Items.DockItem.Kind.get -> Atlas.Core.Items.DockItemKind
+Atlas.Core.Items.DockItem.Title.get -> string!
+Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.CanAutoHide = 4 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.CanClose = 1 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.CanMove = 2 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.CanPinDocument = 16 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.CanSplit = 8 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilities.None = 0 -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Items.DockItemCapabilityPresets
+Atlas.Core.Items.DockItemKind
+Atlas.Core.Items.DockItemKind.Document = 1 -> Atlas.Core.Items.DockItemKind
+Atlas.Core.Items.DockItemKind.Tool = 0 -> Atlas.Core.Items.DockItemKind
+Atlas.Core.Items.DocumentState
+Atlas.Core.Items.DocumentState.DocumentState() -> void
+Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> void
+Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
+Atlas.Core.Items.DocumentState.IsPinned.get -> bool
+Atlas.Core.Items.DocumentState.IsPreview.get -> bool
 Atlas.Core.LayoutNodeId
 Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
@@ -17,6 +49,10 @@ Atlas.Core.WorkspaceId.WorkspaceId(string! value) -> void
 override Atlas.Core.DockItemId.Equals(object? obj) -> bool
 override Atlas.Core.DockItemId.GetHashCode() -> int
 override Atlas.Core.DockItemId.ToString() -> string!
+override Atlas.Core.Items.ContentReference.Equals(object? obj) -> bool
+override Atlas.Core.Items.ContentReference.GetHashCode() -> int
+override Atlas.Core.Items.DocumentState.Equals(object? obj) -> bool
+override Atlas.Core.Items.DocumentState.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.Equals(object? obj) -> bool
 override Atlas.Core.LayoutNodeId.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.ToString() -> string!
@@ -25,6 +61,15 @@ override Atlas.Core.WorkspaceId.GetHashCode() -> int
 override Atlas.Core.WorkspaceId.ToString() -> string!
 static Atlas.Core.DockItemId.operator !=(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
 static Atlas.Core.DockItemId.operator ==(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
+static Atlas.Core.Items.ContentReference.operator !=(Atlas.Core.Items.ContentReference left, Atlas.Core.Items.ContentReference right) -> bool
+static Atlas.Core.Items.ContentReference.operator ==(Atlas.Core.Items.ContentReference left, Atlas.Core.Items.ContentReference right) -> bool
+static Atlas.Core.Items.DockItemCapabilityPresets.Document.get -> Atlas.Core.Items.DockItemCapabilities
+static Atlas.Core.Items.DockItemCapabilityPresets.PermanentTool.get -> Atlas.Core.Items.DockItemCapabilities
+static Atlas.Core.Items.DockItemCapabilityPresets.Placeholder.get -> Atlas.Core.Items.DockItemCapabilities
+static Atlas.Core.Items.DockItemCapabilityPresets.PreviewDocument.get -> Atlas.Core.Items.DockItemCapabilities
+static Atlas.Core.Items.DockItemCapabilityPresets.Tool.get -> Atlas.Core.Items.DockItemCapabilities
+static Atlas.Core.Items.DocumentState.operator !=(Atlas.Core.Items.DocumentState left, Atlas.Core.Items.DocumentState right) -> bool
+static Atlas.Core.Items.DocumentState.operator ==(Atlas.Core.Items.DocumentState left, Atlas.Core.Items.DocumentState right) -> bool
 static Atlas.Core.LayoutNodeId.operator !=(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.LayoutNodeId.operator ==(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.WorkspaceId.operator !=(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool
