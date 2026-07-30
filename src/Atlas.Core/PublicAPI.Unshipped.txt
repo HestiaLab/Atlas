@@ -93,6 +93,49 @@ Atlas.Core.LayoutNodeId.Equals(Atlas.Core.LayoutNodeId other) -> bool
 Atlas.Core.LayoutNodeId.LayoutNodeId() -> void
 Atlas.Core.LayoutNodeId.LayoutNodeId(string! value) -> void
 Atlas.Core.LayoutNodeId.Value.get -> string!
+Atlas.Core.Placement.AutoHideEntry
+Atlas.Core.Placement.AutoHideEntry.AutoHideEntry() -> void
+Atlas.Core.Placement.AutoHideEntry.AutoHideEntry(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.DockBack dockBack) -> void
+Atlas.Core.Placement.AutoHideEntry.DockBack.get -> Atlas.Core.Placement.DockBack
+Atlas.Core.Placement.AutoHideEntry.Equals(Atlas.Core.Placement.AutoHideEntry other) -> bool
+Atlas.Core.Placement.AutoHideEntry.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Placement.AutoHideStripState
+Atlas.Core.Placement.AutoHideStripState.AutoHideStripState(Atlas.Core.Placement.WorkspaceEdge edge, System.Collections.Generic.IEnumerable<Atlas.Core.Placement.AutoHideEntry>! entries) -> void
+Atlas.Core.Placement.AutoHideStripState.Edge.get -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Placement.AutoHideStripState.Entries.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.AutoHideEntry>!
+Atlas.Core.Placement.DockBack
+Atlas.Core.Placement.DockBack.DockBack() -> void
+Atlas.Core.Placement.DockBack.DockBack(Atlas.Core.LayoutNodeId preferredGroupId, int preferredIndex, Atlas.Core.Placement.WorkspaceEdge fallbackEdge) -> void
+Atlas.Core.Placement.DockBack.Equals(Atlas.Core.Placement.DockBack other) -> bool
+Atlas.Core.Placement.DockBack.FallbackEdge.get -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Placement.DockBack.PreferredGroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Placement.DockBack.PreferredIndex.get -> int
+Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.BlockEndInlineEnd = 5 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.BlockEndInlineStart = 4 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.InlineEndLower = 3 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.InlineEndUpper = 2 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.InlineStartLower = 1 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalRegion.InlineStartUpper = 0 -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.LogicalSide
+Atlas.Core.Placement.LogicalSide.InlineEnd = 1 -> Atlas.Core.Placement.LogicalSide
+Atlas.Core.Placement.LogicalSide.InlineStart = 0 -> Atlas.Core.Placement.LogicalSide
+Atlas.Core.Placement.ToolBarOrderState
+Atlas.Core.Placement.ToolBarOrderState.ItemIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Placement.ToolBarOrderState.Region.get -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.ToolBarOrderState.ToolBarOrderState(Atlas.Core.Placement.LogicalRegion region, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>! itemIds) -> void
+Atlas.Core.Placement.ToolBarState
+Atlas.Core.Placement.ToolBarState.Side.get -> Atlas.Core.Placement.LogicalSide
+Atlas.Core.Placement.ToolBarState.ToolBarState() -> void
+Atlas.Core.Placement.ToolBarState.ToolBarState(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility) -> void
+Atlas.Core.Placement.ToolBarState.Visibility.get -> Atlas.Core.Placement.ToolBarVisibility
+Atlas.Core.Placement.ToolBarVisibility
+Atlas.Core.Placement.ToolBarVisibility.Collapsed = 1 -> Atlas.Core.Placement.ToolBarVisibility
+Atlas.Core.Placement.ToolBarVisibility.Expanded = 0 -> Atlas.Core.Placement.ToolBarVisibility
+Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Placement.WorkspaceEdge.BlockEnd = 2 -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Placement.WorkspaceEdge.InlineEnd = 1 -> Atlas.Core.Placement.WorkspaceEdge
+Atlas.Core.Placement.WorkspaceEdge.InlineStart = 0 -> Atlas.Core.Placement.WorkspaceEdge
 Atlas.Core.WorkspaceId
 Atlas.Core.WorkspaceId.Equals(Atlas.Core.WorkspaceId other) -> bool
 Atlas.Core.WorkspaceId.Value.get -> string!
@@ -112,6 +155,10 @@ override Atlas.Core.Layout.SplitConstraints.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.Equals(object? obj) -> bool
 override Atlas.Core.LayoutNodeId.GetHashCode() -> int
 override Atlas.Core.LayoutNodeId.ToString() -> string!
+override Atlas.Core.Placement.AutoHideEntry.Equals(object? obj) -> bool
+override Atlas.Core.Placement.AutoHideEntry.GetHashCode() -> int
+override Atlas.Core.Placement.DockBack.Equals(object? obj) -> bool
+override Atlas.Core.Placement.DockBack.GetHashCode() -> int
 override Atlas.Core.WorkspaceId.Equals(object? obj) -> bool
 override Atlas.Core.WorkspaceId.GetHashCode() -> int
 override Atlas.Core.WorkspaceId.ToString() -> string!
@@ -135,5 +182,9 @@ static Atlas.Core.Layout.SplitConstraints.operator ==(Atlas.Core.Layout.SplitCon
 static Atlas.Core.Layout.SplitLayoutResolver.Resolve(double availableExtent, Atlas.Core.Layout.SplitBasis basis, Atlas.Core.Layout.SplitConstraints constraints) -> Atlas.Core.Layout.ResolvedSplitLayout
 static Atlas.Core.LayoutNodeId.operator !=(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
 static Atlas.Core.LayoutNodeId.operator ==(Atlas.Core.LayoutNodeId left, Atlas.Core.LayoutNodeId right) -> bool
+static Atlas.Core.Placement.AutoHideEntry.operator !=(Atlas.Core.Placement.AutoHideEntry left, Atlas.Core.Placement.AutoHideEntry right) -> bool
+static Atlas.Core.Placement.AutoHideEntry.operator ==(Atlas.Core.Placement.AutoHideEntry left, Atlas.Core.Placement.AutoHideEntry right) -> bool
+static Atlas.Core.Placement.DockBack.operator !=(Atlas.Core.Placement.DockBack left, Atlas.Core.Placement.DockBack right) -> bool
+static Atlas.Core.Placement.DockBack.operator ==(Atlas.Core.Placement.DockBack left, Atlas.Core.Placement.DockBack right) -> bool
 static Atlas.Core.WorkspaceId.operator !=(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool
 static Atlas.Core.WorkspaceId.operator ==(Atlas.Core.WorkspaceId left, Atlas.Core.WorkspaceId right) -> bool

@@ -46,6 +46,7 @@
 | REQ-F-006~009、REQ-F-036~037、REQ-F-046、REQ-F-095、REQ-F-143 | DES-DOM-004~005 | P1 | `Atlas.Core/Model/Items` | `ContentReferenceTests`、`DockItemTests`：内容 identity、能力矩阵、Document state、默认标题、不可变性 | In Progress | P1-WP-02 仅实现 Core item/content model；provider、参数传递、去重/关闭 operation、恢复占位和 rendering 仍待后续 Phase |
 | REQ-F-015~016、REQ-F-078、REQ-F-148 | DES-DOM-003、DES-DOM-010 | P1 | `Atlas.Core/Model/Layout` | `SplitBasisTests`、`SplitConstraintsTests`、`SplitLayoutResolverTests`：fixed/proportional、min/max clamp、overflow、container resize restore | In Progress | P1-WP-03 仅实现二子节点 sizing value objects 与纯 resolver；SplitNode、pointer hysteresis、render projection 和 F-144 runtime definition 仍待后续 work package/Phase |
 | REQ-F-001~004、REQ-F-019、REQ-F-025~026、REQ-F-031~032、REQ-F-049、REQ-F-145、REQ-F-154 | DES-DOM-003、DES-DOM-008 | P1 | `Atlas.Core/Model/Layout` | `LayoutNodeTests`：closed hierarchy、split topology、group order/selection、retention、visibility、defensive copy | In Progress | P1-WP-04 仅实现 immutable Layout Tree node model；跨节点引用、Item kind compatibility、normalization、rendering 和 operations 由后续 work package/Phase 承担 |
+| REQ-F-012、REQ-F-017~024、REQ-F-140、REQ-F-149~154 | DES-DOM-006、DES-DOM-009 | P1 | `Atlas.Core/Model/Placement` | `PlacementStateTests`：DockBack、AutoHide ordering、logical side/region、ToolBar visibility/order、immutability | In Progress | P1-WP-05 仅实现 committed placement/chrome state；placement compatibility、ToolBar projection、toggle/drag、RTL mapping 和 rendering 仍待后续 work package/Phase |
 
 ## 更新规则
 
