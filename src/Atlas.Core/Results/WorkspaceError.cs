@@ -16,7 +16,7 @@ public sealed class WorkspaceError
         DockItemId? itemId = null)
     {
         if (code is < WorkspaceErrorCode.LayoutVersionIncompatible
-            or > WorkspaceErrorCode.DragSessionExpired)
+            or > WorkspaceErrorCode.TargetNotFound)
         {
             throw new ArgumentOutOfRangeException(nameof(code), code, "Unknown workspace error code.");
         }

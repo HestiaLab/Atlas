@@ -230,6 +230,7 @@ Atlas.Core.Results.WorkspaceErrorCode.ItemNotFound = 5 -> Atlas.Core.Results.Wor
 Atlas.Core.Results.WorkspaceErrorCode.LayoutVersionIncompatible = 1 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.PersistenceUnavailable = 11 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.StaleOperation = 6 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.TargetNotFound = 15 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.TargetRejectedByPolicy = 8 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.WorkspaceFaulted = 12 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceResult<T>

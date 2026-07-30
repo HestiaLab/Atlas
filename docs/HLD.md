@@ -2559,9 +2559,10 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | `WORKSPACE_FAULTED` | 状态不可修复且 InitialDefinition reset 失败 | F-127 |
 | `INTERACTION_PROTOCOL_INVALID` | JS commit payload 版本、字段或 Host/Workspace identity 非法 | DES-INT-005 |
 | `DRAG_SESSION_EXPIRED` | SessionId 已结束、Host generation 已变化或 callback 到达 disposed Host | DES-INT-005 |
+| `TARGET_NOT_FOUND` | Operation 指定的目标 Group、View 或 Layout Node 不存在 | F-101, DES-OP-006 |
 
 > F-030 与 F-121 统一返回 `ITEM_NOT_FOUND`；F-037 的不可关闭能力由 operation capability validation
-> 返回 `CAPABILITY_REJECTED`，不抛出异常。
+> 返回 `CAPABILITY_REJECTED`，不抛出异常。`TARGET_NOT_FOUND` 不用于缺失的 Dock Item。
 
 ---
 

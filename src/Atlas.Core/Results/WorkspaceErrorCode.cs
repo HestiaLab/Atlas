@@ -46,4 +46,7 @@ public enum WorkspaceErrorCode
 
     /// <summary>The referenced drag session is no longer active.</summary>
     DragSessionExpired = 14,
+
+    /// <summary>The requested layout target does not exist.</summary>
+    TargetNotFound = 15,
 }
