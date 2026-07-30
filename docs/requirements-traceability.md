@@ -57,6 +57,7 @@
 | REQ-F-029~034、REQ-F-036~037、REQ-F-040~041、REQ-F-102、REQ-F-112、REQ-F-133 | DES-OP-001~005、DES-OP-009 | P2 | `Atlas.Core/Operations` | `CloseItemOperationTests`：adjacent/MRU selection、Dynamic Group normalization、missing/capability/guard failure、single guard decision、guard 外并发与 stale | In Progress | P2-WP-04 实现内部 Close planner 与 async guard 协调；公开 guard registration、domain event 和 command facade 待 API freeze |
 | REQ-F-045、REQ-F-048、REQ-F-142、REQ-F-151、REQ-F-156 | DES-DOM-009、DES-DOM-011、DES-OP-001、DES-OP-004~007 | P2 | `Atlas.Core/Operations` | `ReorderItemOperationTests`：Document/Tool reorder、pinned prefix、ToolBar order 同步、capability/policy failure、NoChange、Undo/Redo | In Progress | P2-WP-05 仅实现当前 Group 内确定性排序；跨区域 Panel drop 默认策略仍由 DEV-GATE-002 阻断 |
 | REQ-F-101 | DES-OP-006、DES-OP-009 | P2 | `Atlas.Core/Results` | `OperationContractTests`：`TARGET_NOT_FOUND = 15` 数值稳定性 | In Progress | 维护者于 2026-07-31 批准新增错误码；仅用于目标 Group/View/Node 缺失，不替代 `ITEM_NOT_FOUND` |
+| REQ-F-022、REQ-F-069~071、REQ-F-140、REQ-F-142、REQ-F-151、REQ-F-156 | DES-OP-001、DES-OP-004~007 | P2 | `Atlas.Core/Operations/Engine` | `MoveToolOperationTests`：显式跨 Group move、selection/order、Dynamic normalization、NoChange、missing/policy/capability failure、Undo | In Progress | P2-WP-06 实现显式目标 Tool move；不选择 ToolBar/RegionBody/Scaffold 默认投放策略，因此 DEV-GATE-002 保持 Open |
 
 ## 更新规则
 
