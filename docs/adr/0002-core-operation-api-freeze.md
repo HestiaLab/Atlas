@@ -1,8 +1,8 @@
 # ADR-0002：Core Operation API Freeze
 
-- **状态**：Proposed
+- **状态**：Accepted
 - **日期**：2026-07-31
-- **决策者**：Atlas Maintainer
+- **决策者**：Atlas Maintainer（2026-07-31 批准继续）
 - **关联**：DES-OP-001~009、HLD §10.2、P2 Exit Gate
 
 ## Context

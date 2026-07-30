@@ -223,6 +223,7 @@ Atlas.Core.Results.WorkspaceErrorCode.CloseCancelledByGuard = 10 -> Atlas.Core.R
 Atlas.Core.Results.WorkspaceErrorCode.ContentAlreadyRegistered = 2 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.ContentNotRegistered = 7 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.DragSessionExpired = 14 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.Results.WorkspaceErrorCode.DuplicateContentIdentity = 16 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.DuplicateTabId = 4 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.InteractionProtocolInvalid = 13 -> Atlas.Core.Results.WorkspaceErrorCode
 Atlas.Core.Results.WorkspaceErrorCode.InvalidLayoutData = 3 -> Atlas.Core.Results.WorkspaceErrorCode

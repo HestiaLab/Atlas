@@ -16,7 +16,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | ADR | 状态 | 决策 |
 |-----|------|------|
 | [ADR-0001](./0001-runtime-and-package-baseline.md) | Accepted | .NET 6.0、双包、Atlas.Demo、Node 24 LTS 与 npm |
-| [ADR-0002](./0002-core-operation-api-freeze.md) | Proposed | P2 operation、factory、guard、command/query、lifecycle 与错误码 API freeze |
+| [ADR-0002](./0002-core-operation-api-freeze.md) | Accepted | P2 operation、factory、guard、command/query、lifecycle 与错误码 API freeze |
 
 ## 编写约定
 

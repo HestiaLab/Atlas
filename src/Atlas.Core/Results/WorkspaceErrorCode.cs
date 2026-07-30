@@ -49,4 +49,7 @@ public enum WorkspaceErrorCode
 
     /// <summary>The requested layout target does not exist.</summary>
     TargetNotFound = 15,
+
+    /// <summary>The requested content identity duplicates an existing workspace item.</summary>
+    DuplicateContentIdentity = 16,
 }

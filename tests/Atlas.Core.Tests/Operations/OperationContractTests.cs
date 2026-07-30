@@ -16,6 +16,7 @@ public sealed class OperationContractTests
         Assert.Equal(1, (int)WorkspaceErrorCode.LayoutVersionIncompatible);
         Assert.Equal(14, (int)WorkspaceErrorCode.DragSessionExpired);
         Assert.Equal(15, (int)WorkspaceErrorCode.TargetNotFound);
+        Assert.Equal(16, (int)WorkspaceErrorCode.DuplicateContentIdentity);
     }
 
     [Fact]
