@@ -32,8 +32,8 @@
 |------|------|-----------|
 | DEV-GATE-001 Repository Baseline | Closed | ADR-0001 Accepted；restore/build/test/format/npm/pack 本地验证通过 |
 | DEV-GATE-002 Panel Drop Policy | Closed | [ADR-0007](./adr/0007-panel-drop-policy.md) Accepted；SRS/HLD 已统一 ToolBar-first + hidden Scaffold enabled set、优先级与失败语义 |
-| DEV-GATE-003 Content Lifetime | Open | OI-002 |
-| DEV-GATE-004 Content Trust | Open | OI-006 |
+| DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`：跨 Group remount/dispose，ResourceId 外置业务状态恢复 |
+| DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据仍为 P7 Exit Gate，未提前声称 Verified |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
 | DEV-GATE-006 Traceability Baseline | Evidence Ready | 本文件已建立；SRS OI-003/OI-005 仍待勘误 |
 
@@ -90,6 +90,7 @@
 | REQ-F-091~094、REQ-F-096~098、REQ-F-123、REQ-F-133 | DES-PER-001、DES-PER-003、DES-PER-005~006、DES-PER-008 | P6 | `Atlas.Core/Persistence` | `LayoutPresetServiceTests`：overwrite/apply/missing/delete/single-writer/store failure；`LayoutAutoPersistenceTests`：debounce/latest flush/initial restore/corrupt rollback | Implemented | P6-WP-04 实现 ordinal named Preset 与独立 reserved auto document；默认 debounce 500ms；storage failure typed degradation，未把 adapter 放入 Workspace 或 Blazor |
 | REQ-F-089~090、REQ-F-095、REQ-F-123~124 | DES-PER-003、DES-PER-007~008 | P6 | `Atlas.Core/Persistence`、`AtlasWorkspaceCommands` | `AtlasXmlLayoutSerializerTests`：deterministic reserved-ID remap rewrites Item/selection/MRU；missing content PreservePlaceholder/DropUnknownItems/FailRestore；`WorkspaceRestoreTests`：commit report/TargetRevision | Implemented | P6-WP-05 由显式 target reserved set 触发 Document identity conflict remap；默认 placeholder 使用 conservative capabilities；restore command 返回 remap/warning/drop/placeholder 与 committed TargetRevision |
 | — | DES-PER-001~008 | P6 | `Atlas.Core` | strict XSD/V1+V2 golden/adversarial parser；262 Core + 29 Blazor + 14 Node tests；restore/build/test/format；Core/Blazor Release pack；[P6 evidence](./evidence/p6-persistence.md) | Verified | P6 Phase Exit Gate 已满足；review/refactor、ADR-0010/0011、PublicAPI baseline、atomicity/history barrier/single-writer/degradation evidence 已完成；DEV-GATE-003/004/006 状态未改变，P7 未提前实现 |
+| REQ-F-070、REQ-NF-006 | DES-RND-005、DES-RND-007、DES-NFR-004 | P7 | `Atlas.Blazor/Content`、`Components/Workspace`、`ClientScripts` | `ContentLifetimeSpikeTests`、ADR-0012/0013、[content threat model](./security/content-threat-model.md) | In Progress | P7-WP-01 关闭 DEV-GATE-003/004；生命周期和 SandboxedFrame 实现、协议 golden、浏览器安全 E2E 尚未完成，不标记 Verified |
 
 ## 更新规则
 

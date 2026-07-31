@@ -51,11 +51,11 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | 编号 | SRS 依据 | 问题 | HLD 处理 |
 |------|----------|------|----------|
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
-| OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | 首版保证内容身份与外置状态；Workspace-wide keep-alive 需独立 Spike/ADR |
+| OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录写为 152 | HLD 追溯以正文正式需求块为基线，等待 SRS 勘误 |
 | OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、Atlas.Demo、Node 24 LTS + npm |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景出现在索引/引用中，但没有正式需求块和 AC | 作为设计鲁棒性输入，不计入 Designed，等待补充正式需求 |
-| OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | 需在 Trusted Component 与 sandboxed iframe 合同间做产品决策 |
+| OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
 
 ---
 
@@ -1417,9 +1417,9 @@ ownership、focus、ARIA、DOM order 与 disposal。
 明确不承诺"Item 在任意 Group 间拖动后组件实例绝不重建"——Blazor @key 在跨 parent reparent 时
 不能保证实例保持。V2 通过外置状态（Default 策略）提供可靠的替代方案。
 
-该限制与 F-070 的"内部状态完整保留"存在 OI-002。实现前必须通过 Tool content move spike
-验证 WorkspaceWideKeepAlive；若不能在不破坏 RenderTree ownership 的前提下实现，则应由 SRS
-明确"状态保持"是用户可观察业务状态而非任意组件实例 identity。
+ADR-0012 已通过 Tool content move spike 关闭 OI-002：跨 Group move 会 remount/dispose component，
+但 ResourceId/DockItemId 外置状态可恢复。F-070 的合同因此是用户可观察业务状态而非任意组件实例
+identity；WorkspaceWideKeepAlive 不进入首版。
 
 来源：F-027~029, F-031~032, F-069~070
 ```
@@ -1481,8 +1481,8 @@ ContentReference.ResourceId 连接 application business state。
 5. 若 WorkspaceWideKeepAlive spike 获得批准，Tool Item 可升级为跨 Group 保持实例的显式策略
 6. move commit 前渲染异常不影响 Core 原子性；commit 后新 outlet 异常由 per-outlet ErrorBoundary 隔离
 
-F-070 的严格组件内部状态合同在 OI-002 关闭前追溯状态为 Partial。测试必须分别验证 identity/
-business state 保持与 component instance 是否 remount，禁止用业务状态恢复冒充实例保持测试。
+ADR-0012 已关闭 OI-002。测试必须分别验证 identity/business state 保持与 component instance 是否
+remount，禁止用业务状态恢复冒充实例保持测试。
 
 来源：F-069~070, F-120, F-128
 ```
@@ -1976,10 +1976,9 @@ Atlas 区分两种不能混淆的内容承载合同：
 Workspace/Item identity、ProtocolVersion、payload size 和 command allowlist；未知消息忽略并记录。
 一个 frame 崩溃或拒绝响应只替换对应 outlet，不影响 Workspace。
 
-OI-006 关闭前，Atlas 不得在文档或 public interface 中声称 TrustedComponent 已“沙箱化”。
-若 SRS 坚持所有内容强制安全隔离，则 ContentTemplate 默认路径必须调整为 frame-backed provider；
-若产品需要任意 Blazor component composition，则 SRS 应把 NF-006 限定为错误/状态隔离而非恶意脚本
-安全边界。该决策需要独立 ADR、threat model 与 browser E2E。
+ADR-0013 已关闭 OI-006：Atlas 不得在文档或 public interface 中声称 TrustedComponent 已“沙箱化”；
+NF-006 的恶意脚本隔离仅适用于 SandboxedFrame。Frame 使用固定 deny-by-default sandbox，协议接收方
+验证 source、opaque origin、identity、version、size 与 allowlist；独立 origin/CSP 由 consumer 负责。
 
 来源：F-120, F-128, NF-006
 ```
@@ -2106,9 +2105,8 @@ Golden fixtures 同时验证 TypeScript `PanelDropIntent` 与 C# DTO 的 Protoco
 required/optional field 和 unknown-version rejection。测试不得依赖私有 collection 类型；Core
 行为通过 IAtlasWorkspace 接口与公开 Snapshot/ChangeSet 观察，resolver 通过纯输入输出验证。
 
-OI-001 关闭前，ToolBar、Scaffold 与 RegionBody policy 组合分别参数化测试；默认产品配置的 E2E
-断言在 SRS 决议后启用。OI-002 关闭前，内容测试分别报告 business state preservation 与
-component instance preservation，不能合并为一个模糊的"内容保持"断言。
+OI-001 的 policy 组合继续分别参数化测试。依据 ADR-0012，内容测试分别报告 business state
+preservation 与 component instance preservation，不能合并为一个模糊的"内容保持"断言。
 
 来源：F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007
 ```
@@ -2133,8 +2131,8 @@ component instance preservation，不能合并为一个模糊的"内容保持"�
 |------|---------------|----------|----------|------------------|
 | DEV-GATE-001 Repository Baseline | OI-004 | solution、TargetFramework、PackageId、namespace、CI、NuGet 依赖 | 仓库基线 ADR + 可运行的 SDK/CI 配置 | 纯文档、与 TFM 无关的模型 Spike |
 | DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | **Closed**：ADR-0007 Accepted；SRS 已统一 enabled set、优先级、失败语义与默认策略 | 参数化 resolver、全部候选策略的纯函数测试 |
-| DEV-GATE-003 Content Lifetime | OI-002 | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + ADR，明确“业务状态”或“组件实例”的合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
-| DEV-GATE-004 Content Trust | OI-006 | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + ADR | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
+| DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
+| DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | OI-003、OI-005 | 自动化覆盖率统计和“全部需求完成”声明 | SRS 统计勘误；无正式需求块的编号有明确 disposition | 以正文 150 个正式需求块建立临时矩阵 |
 
@@ -2416,12 +2414,12 @@ DOM contract tests 至少验证：
 | P4 Splitter & Keyboard | JS root controller 基础、resize、keyboard command、ARIA | P3 + interaction protocol frozen | Node/controller/component/E2E 分层通过；pointermove 0 interop |
 | P5 Drag & Dock | Tab drag、Panel drag、target resolver、preview、cancel、undo | P4 + DEV-GATE-002 Closed | resolver matrix、全部 terminal path、跨实例、stale、30fps profile 通过 |
 | P6 Persistence | V2 XML、restore、Preset、V1 migration、repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests 通过 |
-| P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame（若批准）、threat model | P3 + DEV-GATE-003/004 按范围关闭 | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
+| P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame、threat model | P3 + DEV-GATE-003/004 Closed | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
 | P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 150 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
 
 P5 与 P6 可以在 P2/P4 稳定后并行，但共享的 ID、Result、Revision、protocol enum 和 public API
-必须先冻结。P7 的 TrustedComponent 错误隔离可在 DEV-GATE-004 前完成；只有安全沙箱实现和安全承诺
-被该闸门阻断。
+必须先冻结。ADR-0013 已关闭 DEV-GATE-004；SandboxedFrame 的协议、public API 和安全声明必须严格
+遵守该 ADR 与 threat model。
 
 任何 Phase 的 Exit gate 还必须满足：
 
@@ -2661,7 +2659,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-023 | DES-DOM-006、DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Designed |
 | REQ-F-024 | DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Deferred，与 RTL 总体需求一致 |
 | REQ-F-069 | DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
-| REQ-F-070 | DES-RND-005、DES-RND-007 | Blazor/E2E | Partial，等待 OI-002 |
+| REQ-F-070 | DES-RND-005、DES-RND-007 | Blazor/E2E | Designed，OI-002 已由 ADR-0012 关闭 |
 | REQ-F-071 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed |
 | REQ-F-140 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-142 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed |
@@ -2678,7 +2676,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-003 | DES-INT-007~008、DES-NFR-003 | Blazor/E2E | Designed |
 | REQ-NF-004 | DES-INT-001~006、DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-005 | DES-INT-004、DES-INT-006、DES-PRJ-003 | Interop/Performance | Designed |
-| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Open，等待 OI-006 |
+| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Designed，OI-006 已由 ADR-0013 关闭 |
 | REQ-NF-007 | DES-NFR-003、DES-RND-006、DES-RND-009 | Blazor/E2E | Designed |
 
 ### D.2 完整需求映射
@@ -2720,7 +2718,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
 | REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Partial |
+| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
 | REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010、DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
@@ -2771,6 +2769,6 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-003 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-004 | DES-ARCH-001、DES-ARCH-004、DES-INT-001、DES-INT-002、DES-INT-004、DES-INT-005、DES-INT-006、DES-INT-007、DES-PRJ-002、DES-PRJ-003 | Designed |
 | REQ-NF-005 | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | Designed |
-| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Open |
+| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Designed |
 | REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |

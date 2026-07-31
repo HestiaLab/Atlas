@@ -3042,17 +3042,18 @@ Title
 Dock Panel（Dock 面板） 移动后内容保持
 
 Description
-系统应在 Dock Panel 移动操作完成后保持被移动 Dock Panel 内容及其内部状态完整保留。Dock Panel 移动至已有 Dock Panel 的区域时，系统应将该 Dock Panel 加入该区域，展开为 Active Panel（活跃面板），而非替换现有 Dock Panel。
+系统应在 Dock Panel 移动操作完成后保持被移动 Dock Panel 的内容身份和用户可观察业务状态。业务状态由应用按 ContentReference.ResourceId 外置，视图状态按 DockItemId 外置；跨 Group 移动允许内容组件重新挂载，不承诺组件实例身份。Dock Panel 移动至已有 Dock Panel 的区域时，系统应将该 Dock Panel 加入该区域，展开为 Active Panel（活跃面板），而非替换现有 Dock Panel。
 
 Acceptance Criteria
 
 AC1：Dock Panel 内容完整性
 
-Given Dock Panel 中已加载内容组件且存在内部状态
+Given Dock Panel 中已加载内容组件且存在按 ResourceId 或 DockItemId 外置的业务/视图状态
 When 该 Dock Panel 被移动至另一个 Dock Region（Dock 区域）
-Then Dock Panel 内容组件及其内部状态应完整保留
-And Dock Panel 内容及其内部状态完整保留
+Then DockItemId 和 ContentReference 应保持不变
+And 新内容实例应能恢复该业务/视图状态
 And Dock Panel 内容渲染不受影响
+And 系统不应承诺跨 Group 保持原组件实例身份
 
 AC2：ToolBar Entry（ToolBar 条目）同步
 
@@ -4621,16 +4622,17 @@ Title
 内容渲染安全
 
 Description
-系统应使用沙箱机制隔离各Dock Panel（Dock 面板）的内容渲染上下文，防止跨面板脚本访问和数据泄露。
+系统应明确区分 TrustedComponent 与 SandboxedFrame 内容模式。TrustedComponent 与应用共享 DOM/DI，只提供渲染异常隔离且不构成恶意脚本安全边界；不受信任内容应使用 SandboxedFrame，以浏览器沙箱和已验证消息协议防止跨面板 DOM 访问和数据泄露。
 
 Acceptance Criteria
 
 AC1：面板间内容隔离
 
-Given 布局中存在多个已渲染内容的面板
-When 任意面板中的内容脚本尝试访问其他面板的 DOM 或数据
+Given 布局中存在多个以 SandboxedFrame 渲染的不受信任内容面板
+When 任意 SandboxedFrame 中的内容脚本尝试访问 parent 或其他面板的 DOM 或数据
 Then 系统应阻止跨面板访问
 And 不抛出未捕获异常
+And 伪造、未知、超限或身份不匹配的消息应 fail closed
 
 AC2：内容组件崩溃不影响布局
 
@@ -4954,6 +4956,8 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-153     | ToolBar 拖拽投放交互稳定性                          | 新增     | 根据实机测试反馈新增 ToolBar 拖拽稳定性约束：拖拽预览不跳跃、Divider 不占常驻槽位、空逻辑槽位拖拽可达、拖拽渲染与注册过程无 Blazor crit 级错误                     |
 | REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；可见 RegionBody 不作为直接释放目标 |
 | REQ-F-085~088 | Persistence Schema | 修改 | 2026-07-31 依据 ADR-0010 固定 V2 namespace、`2.0` 版本、strict unknown policy、完整 committed topology；任意对象参数不持久化；无真实 V1 样本时仅支持已冻结窄兼容输入 |
+| REQ-F-070 | Content Lifetime | 修改 | 2026-07-31 依据 ADR-0012 将状态保持明确为 ResourceId/DockItemId 外置的用户可观察业务/视图状态；跨 Group 允许组件 remount，不承诺实例身份 |
+| REQ-NF-006 | Content Trust | 修改 | 2026-07-31 依据 ADR-0013 区分 TrustedComponent 异常隔离与 SandboxedFrame 恶意脚本安全边界 |
 | REQ-F-022     | ToolBar Dock Panel 切换                      | 修改     | 切换模型改为 Toggle（方案 A）：点击已打开且活跃 Panel 的条目 → 收起 Panel；AC 拆分（AC2 新增收起 / AC3 原非活跃激活 / AC4 原 API）；Flowchart 补收起分支 |
 | —             | 全文一致性                                      | 勘误     | 范围外明确排除主题/i18n/Floating Window；§1.2 范围表 + §2.2 导航去"主题、国际化"；新增附录 D 错误码汇总；附录 B 新增主题和 Floating Window 延期行     |
 | —             | 全局术语                                       | 全局     | 术语统一为 English（中文）双语格式；移除 Tab Group / Panel Tab 旧模型                                                         |
