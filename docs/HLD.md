@@ -53,7 +53,7 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
-| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、Atlas.Demo、Node 24 LTS + npm |
+| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、无应用项目、Node 24 LTS + npm |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
 | OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
 
@@ -2013,18 +2013,12 @@ DES-PRJ-001
       ClientScripts/           interaction-controller.ts, drag-session.ts, ...
       wwwroot/
 
-    Atlas.Demo/              ← Demo 应用，不发布为 NuGet 包
-
-  examples/
-    Atlas.Examples.Rider/    ← Rider 风格开发者示例，不发布为 NuGet 包
-
   tests/
     Atlas.Core.Tests/        ← 纯逻辑测试（无 Blazor 依赖）
     Atlas.Blazor.Tests/      ← bUnit 组件测试
-    Atlas.Interop.Tests/     ← JS protocol 测试
-    Atlas.E2E.Tests/         ← 真实浏览器测试
+    browser/                 ← 静态真实浏览器验证 fixtures
 
-依赖方向：Atlas.Core ← Atlas.Blazor ← Atlas.Demo / Atlas.Examples.Rider。禁止反向依赖。
+依赖方向：Atlas.Core ← Atlas.Blazor；测试项目只依赖被测包。禁止反向依赖。
 
 V1/V2 共存规则：
 

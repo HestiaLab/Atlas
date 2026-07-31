@@ -31,12 +31,6 @@ dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restor
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 ```
 
-For the demo app:
-
-```sh
-dotnet run --project src/Atlas.Demo
-```
-
 ## Branches
 
 Use short branch names:
@@ -76,7 +70,8 @@ maintenance requests.
 
 - Atlas domain, operation, history, and persistence code belongs in `src/Atlas.Core` and must not reference Blazor or JS interop.
 - Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
-- Atlas reference scenarios belong in `src/Atlas.Demo`.
+- Browser verification fixtures belong in `tests/browser`; consumer applications are not part of
+  the repository topology unless a maintainer approves a new ADR.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in

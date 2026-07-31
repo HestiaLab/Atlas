@@ -1,5 +1,8 @@
 # P7 Content Lifetime & Security Evidence
 
+> 历史证据说明：承载本页浏览器验证的 `Atlas.Demo` 已按 ADR-0016 删除。以下结果记录对应提交
+> 当时的已执行证据；当前 solution 不再提供该浏览器入口。
+
 - 日期：2026-07-31
 - 分支：`chore/dev-gate-001-baseline`
 - 状态：Verified

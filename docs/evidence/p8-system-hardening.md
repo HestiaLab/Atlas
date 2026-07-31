@@ -1,5 +1,8 @@
 # P8 System Hardening Evidence
 
+> 历史证据说明：20 Panel 测量所用 `Atlas.Demo` 页面已按 ADR-0016 删除。以下测量记录保持为
+> 对应提交时的历史证据；静态 Splitter fixture 仍保留在 `tests/browser`。
+
 - 日期：2026-07-31
 - 分支：`chore/dev-gate-001-baseline`
 - Entry：P3~P7 Verified；DEV-GATE-006 Closed（ADR-0014）

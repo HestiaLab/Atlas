@@ -1,6 +1,6 @@
 # ADR-0015：独立 Rider 风格示例应用
 
-- 状态：Accepted
+- 状态：Superseded by ADR-0016
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确要求添加 Rider 编辑器风格示例项目）
 - 关联：REQ-F-001~005、REQ-F-009~011、REQ-F-020~026、REQ-F-035、REQ-F-073、
@@ -46,4 +46,4 @@ solution 多一个非打包 WASM 项目，restore/build 时间略有增加。示
 
 ## Supersession
 
-无。若示例需要进入 NuGet 包、引入新公共组件或专用 interop protocol，必须由新的 ADR 取代本决策。
+[ADR-0016](./0016-remove-application-projects.md) 按维护者明确决定删除该示例项目。

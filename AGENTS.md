@@ -32,9 +32,9 @@ src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazo
   Interop/                C# JS interop boundary
   ClientScripts/          TypeScript source
   wwwroot/atlas-v2/       Generated static assets
-src/Atlas.Demo/           Blazor WebAssembly demo; not packed
 tests/Atlas.Core.Tests/   Core xUnit tests
 tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
+tests/browser/            Static real-browser verification fixtures
 docs/                     SRS, HLD, traceability and ADRs
 ```
 

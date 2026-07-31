@@ -84,4 +84,5 @@ CI 固定安装 .NET 6 SDK 与 Node.js 24，并在 Windows/Linux 执行同一基
 
 ## Supersession
 
-无。
+Decision 3（`Atlas.Demo`）由 [ADR-0016](./0016-remove-application-projects.md) 取代；其余运行时、
+双包、工具链、测试与 CI 决策继续有效。

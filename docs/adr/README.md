@@ -15,7 +15,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 
 | ADR | 状态 | 决策 |
 |-----|------|------|
-| [ADR-0001](./0001-runtime-and-package-baseline.md) | Accepted | .NET 6.0、双包、Atlas.Demo、Node 24 LTS 与 npm |
+| [ADR-0001](./0001-runtime-and-package-baseline.md) | Accepted | .NET 6.0、双包、Node 24 LTS 与 npm；Demo 条款由 ADR-0016 取代 |
 | [ADR-0002](./0002-core-operation-api-freeze.md) | Accepted | P2 operation、factory、guard、command/query、lifecycle 与错误码 API freeze |
 | [ADR-0003](./0003-domain-events-and-reconciliation.md) | Accepted | typed domain events、placement payload 与 definition reconciliation API |
 | [ADR-0004](./0004-blazor-projection-api-and-reconciliation.md) | Accepted | P3 Blazor public API、Host ownership、content contracts 与 runtime Item reconciliation |
@@ -29,7 +29,8 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0012](./0012-content-lifetime-and-state-preservation.md) | Accepted | 业务状态保持、Default 与 bounded KeepAliveWithinGroup 生命周期合同 |
 | [ADR-0013](./0013-content-trust-and-sandboxed-frame.md) | Accepted | TrustedComponent 非安全沙箱与 SandboxedFrame deny-by-default 安全边界 |
 | [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | 150 条正式需求基线、历史删除编号与非规范性边界场景处置 |
-| [ADR-0015](./0015-rider-style-example-application.md) | Accepted | 独立、非打包的 Rider 风格 Blazor WASM 示例项目 |
+| [ADR-0015](./0015-rider-style-example-application.md) | Superseded | 独立 Rider 风格示例；由 ADR-0016 删除 |
+| [ADR-0016](./0016-remove-application-projects.md) | Accepted | 删除 Atlas.Demo 与 Atlas.Examples.Rider，只保留双包、测试和静态 fixtures |
 
 ## 编写约定
 
