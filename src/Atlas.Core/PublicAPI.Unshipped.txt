@@ -135,6 +135,45 @@ Atlas.Core.Persistence.AtlasXmlLayoutSerializer.Serialize(Atlas.Core.WorkspaceSn
 Atlas.Core.Persistence.IAtlasLayoutSerializer
 Atlas.Core.Persistence.IAtlasLayoutSerializer.Deserialize(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
 Atlas.Core.Persistence.IAtlasLayoutSerializer.Serialize(Atlas.Core.WorkspaceSnapshot! snapshot) -> string!
+Atlas.Core.Persistence.ILayoutPresetStore
+Atlas.Core.Persistence.ILayoutPresetStore.DeleteAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Atlas.Core.Persistence.ILayoutPresetStore.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Atlas.Core.Persistence.LayoutPresetDescriptor!>!>
+Atlas.Core.Persistence.ILayoutPresetStore.SaveAsync(string! name, Atlas.Core.Persistence.LayoutPresetDocument! document, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Atlas.Core.Persistence.ILayoutPresetStore.TryLoadAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Persistence.LayoutPresetDocument?>
+Atlas.Core.Persistence.InMemoryLayoutPresetStore
+Atlas.Core.Persistence.InMemoryLayoutPresetStore.DeleteAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
+Atlas.Core.Persistence.InMemoryLayoutPresetStore.InMemoryLayoutPresetStore() -> void
+Atlas.Core.Persistence.InMemoryLayoutPresetStore.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Atlas.Core.Persistence.LayoutPresetDescriptor!>!>
+Atlas.Core.Persistence.InMemoryLayoutPresetStore.SaveAsync(string! name, Atlas.Core.Persistence.LayoutPresetDocument! document, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Atlas.Core.Persistence.InMemoryLayoutPresetStore.TryLoadAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Persistence.LayoutPresetDocument?>
+Atlas.Core.Persistence.InMemoryWorkspaceLayoutStore
+Atlas.Core.Persistence.InMemoryWorkspaceLayoutStore.InMemoryWorkspaceLayoutStore() -> void
+Atlas.Core.Persistence.InMemoryWorkspaceLayoutStore.SaveAsync(Atlas.Core.Persistence.WorkspaceLayoutDocument! document, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Atlas.Core.Persistence.InMemoryWorkspaceLayoutStore.TryLoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Persistence.WorkspaceLayoutDocument?>
+Atlas.Core.Persistence.IWorkspaceLayoutStore
+Atlas.Core.Persistence.IWorkspaceLayoutStore.SaveAsync(Atlas.Core.Persistence.WorkspaceLayoutDocument! document, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Atlas.Core.Persistence.IWorkspaceLayoutStore.TryLoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Persistence.WorkspaceLayoutDocument?>
+Atlas.Core.Persistence.LayoutAutoPersistence
+Atlas.Core.Persistence.LayoutAutoPersistence.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Atlas.Core.Persistence.LayoutAutoPersistence.FlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<bool>!>
+Atlas.Core.Persistence.LayoutAutoPersistence.LayoutAutoPersistence(Atlas.Core.IAtlasWorkspace! workspace, Atlas.Core.Persistence.IAtlasLayoutSerializer! serializer, Atlas.Core.Persistence.IWorkspaceLayoutStore! store, System.TimeSpan? debounceDelay = null) -> void
+Atlas.Core.Persistence.LayoutAutoPersistence.RestoreIfAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.Persistence.LayoutPresetDescriptor
+Atlas.Core.Persistence.LayoutPresetDescriptor.LayoutPresetDescriptor(string! name, string! schemaVersion, long savedRevision, System.DateTimeOffset? savedAt = null) -> void
+Atlas.Core.Persistence.LayoutPresetDescriptor.Name.get -> string!
+Atlas.Core.Persistence.LayoutPresetDescriptor.SavedAt.get -> System.DateTimeOffset?
+Atlas.Core.Persistence.LayoutPresetDescriptor.SavedRevision.get -> long
+Atlas.Core.Persistence.LayoutPresetDescriptor.SchemaVersion.get -> string!
+Atlas.Core.Persistence.LayoutPresetDocument
+Atlas.Core.Persistence.LayoutPresetDocument.Descriptor.get -> Atlas.Core.Persistence.LayoutPresetDescriptor!
+Atlas.Core.Persistence.LayoutPresetDocument.LayoutPresetDocument(Atlas.Core.Persistence.LayoutPresetDescriptor! descriptor, string! xml) -> void
+Atlas.Core.Persistence.LayoutPresetDocument.Xml.get -> string!
+Atlas.Core.Persistence.LayoutPresetService
+Atlas.Core.Persistence.LayoutPresetService.ApplyAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.Persistence.LayoutPresetService.DeleteAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<bool>!>
+Atlas.Core.Persistence.LayoutPresetService.LayoutPresetService(Atlas.Core.IAtlasWorkspace! workspace, Atlas.Core.Persistence.IAtlasLayoutSerializer! serializer, Atlas.Core.Persistence.ILayoutPresetStore! store) -> void
+Atlas.Core.Persistence.LayoutPresetService.ListAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<System.Collections.Generic.IReadOnlyList<Atlas.Core.Persistence.LayoutPresetDescriptor!>!>!>
+Atlas.Core.Persistence.LayoutPresetService.SaveAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutPresetDescriptor!>!>
 Atlas.Core.Persistence.LayoutPersistenceLimits
 Atlas.Core.Persistence.LayoutPersistenceLimits.LayoutPersistenceLimits(int maxDocumentBytes = 1048576, int maxDepth = 64, int maxNodeCount = 4096, int maxItemCount = 4096, int maxItemsPerGroup = 1024, int maxStringLength = 4096, int maxMigrationSteps = 1) -> void
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxDepth.get -> int
@@ -148,6 +187,11 @@ Atlas.Core.Persistence.LayoutRestoreDocument
 Atlas.Core.Persistence.LayoutRestoreDocument.Snapshot.get -> Atlas.Core.WorkspaceSnapshot!
 Atlas.Core.Persistence.LayoutRestoreDocument.SourceSchemaVersion.get -> string!
 Atlas.Core.Persistence.LayoutRestoreDocument.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Atlas.Core.Persistence.WorkspaceLayoutDocument
+Atlas.Core.Persistence.WorkspaceLayoutDocument.SavedRevision.get -> long
+Atlas.Core.Persistence.WorkspaceLayoutDocument.SchemaVersion.get -> string!
+Atlas.Core.Persistence.WorkspaceLayoutDocument.WorkspaceLayoutDocument(string! schemaVersion, long savedRevision, string! xml) -> void
+Atlas.Core.Persistence.WorkspaceLayoutDocument.Xml.get -> string!
 Atlas.Core.Items.DocumentState.DocumentState() -> void
 Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> void
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
