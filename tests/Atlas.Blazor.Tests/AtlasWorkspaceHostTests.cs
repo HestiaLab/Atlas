@@ -271,6 +271,39 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public void Empty_template_exception_isolated_to_its_group()
+    {
+        var errors = new List<AtlasHostError>();
+        var workspace = CreateWorkspace(ProjectionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.ContentTemplate, ContentText)
+                .Add(
+                    component => component.DocumentEmptyTemplate,
+                    _ => _ => throw new InvalidOperationException(
+                        "empty template exception must remain private"))
+                .Add(
+                    component => component.OnError,
+                    EventCallback.Factory.Create<AtlasHostError>(
+                        this,
+                        error => errors.Add(error))));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Single(cut.FindAll(".atlas-v2-group-error"));
+                Assert.Contains("Tool content", cut.Markup, StringComparison.Ordinal);
+                Assert.Single(errors);
+                Assert.Equal(AtlasHostErrorCode.Unexpected, errors[0].Code);
+                Assert.DoesNotContain(
+                    "empty template exception",
+                    cut.Markup,
+                    StringComparison.OrdinalIgnoreCase);
+            });
+    }
+
+    [Fact]
     public async Task Changed_rerenders_only_the_affected_group()
     {
         RenderCounterContent.Reset();

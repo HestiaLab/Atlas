@@ -361,27 +361,57 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
         var group = (GroupNode)node;
         var items = group.ItemIds.Select(itemId => snapshot.Items[itemId]).ToArray();
-        builder.OpenComponent<AtlasGroupView>(sequence++);
+        var emptyTemplate = group.Kind == DockItemKind.Tool
+            ? ToolEmptyTemplate
+            : DocumentEmptyTemplate;
+        var headerTemplate = group.Kind == DockItemKind.Tool
+            ? ToolHeaderTemplate
+            : DocumentHeaderTemplate;
+        builder.OpenComponent<AtlasContentErrorBoundary>(sequence++);
         builder.SetKey(group.Id);
-        builder.AddAttribute(sequence++, "Workspace", activeWorkspace);
-        builder.AddAttribute(sequence++, "Snapshot", snapshot);
-        builder.AddAttribute(sequence++, "Group", group);
-        builder.AddAttribute(sequence++, "Items", items);
         builder.AddAttribute(
             sequence++,
-            "Registry",
-            Registry ?? emptyRegistry);
-        builder.AddAttribute(sequence++, "FocusCoordinator", focusCoordinator);
-        builder.AddAttribute(sequence++, "ContentTemplate", ContentTemplate);
+            "SafeError",
+            new AtlasHostError(
+                AtlasHostErrorCode.Unexpected,
+                "ATLAS-GROUP-RENDER-FAILED",
+                "Atlas.Group.RenderFailed",
+                activeWorkspace!.Id,
+                nodeId: group.Id));
+        builder.AddAttribute(sequence++, "OnSafeError", OnError);
         builder.AddAttribute(
             sequence++,
-            "EmptyTemplate",
-            group.Kind == DockItemKind.Tool ? ToolEmptyTemplate : DocumentEmptyTemplate);
+            "RecoveryKey",
+            (group.Id, emptyTemplate, headerTemplate));
         builder.AddAttribute(
             sequence++,
-            "HeaderTemplate",
-            group.Kind == DockItemKind.Tool ? ToolHeaderTemplate : DocumentHeaderTemplate);
-        builder.AddAttribute(sequence++, "OnError", OnError);
+            "ErrorContent",
+            (RenderFragment<Exception>)(_ => errorBuilder =>
+            {
+                errorBuilder.OpenElement(0, "div");
+                errorBuilder.AddAttribute(1, "class", "atlas-v2-group-error");
+                errorBuilder.AddContent(2, "Workspace group could not be rendered.");
+                errorBuilder.CloseElement();
+            }));
+        builder.AddAttribute(
+            sequence++,
+            "ChildContent",
+            (RenderFragment)(groupBuilder =>
+            {
+                groupBuilder.OpenComponent<AtlasGroupView>(0);
+                groupBuilder.SetKey(group.Id);
+                groupBuilder.AddAttribute(1, "Workspace", activeWorkspace);
+                groupBuilder.AddAttribute(2, "Snapshot", snapshot);
+                groupBuilder.AddAttribute(3, "Group", group);
+                groupBuilder.AddAttribute(4, "Items", items);
+                groupBuilder.AddAttribute(5, "Registry", Registry ?? emptyRegistry);
+                groupBuilder.AddAttribute(6, "FocusCoordinator", focusCoordinator);
+                groupBuilder.AddAttribute(7, "ContentTemplate", ContentTemplate);
+                groupBuilder.AddAttribute(8, "EmptyTemplate", emptyTemplate);
+                groupBuilder.AddAttribute(9, "HeaderTemplate", headerTemplate);
+                groupBuilder.AddAttribute(10, "OnError", OnError);
+                groupBuilder.CloseComponent();
+            }));
         builder.CloseComponent();
     }
 

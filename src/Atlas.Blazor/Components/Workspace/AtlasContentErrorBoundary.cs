@@ -5,11 +5,30 @@ namespace Atlas.Blazor.Components;
 
 internal sealed class AtlasContentErrorBoundary : ErrorBoundary
 {
+    private object? previousRecoveryKey;
+    private bool recoveryKeyInitialized;
+
     [Parameter]
     public AtlasHostError? SafeError { get; set; }
 
     [Parameter]
     public EventCallback<AtlasHostError> OnSafeError { get; set; }
+
+    [Parameter]
+    public object? RecoveryKey { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (recoveryKeyInitialized
+            && !Equals(previousRecoveryKey, RecoveryKey)
+            && CurrentException is not null)
+        {
+            Recover();
+        }
+
+        previousRecoveryKey = RecoveryKey;
+        recoveryKeyInitialized = true;
+    }
 
     protected override async Task OnErrorAsync(Exception exception)
     {

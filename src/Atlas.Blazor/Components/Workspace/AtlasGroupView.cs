@@ -282,6 +282,7 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddElementReferenceCapture(sequence++, value => contentElement = value);
 
         builder.OpenComponent<AtlasContentErrorBoundary>(sequence++);
+        builder.SetKey(item.Id);
         builder.AddAttribute(
             sequence++,
             "SafeError",
@@ -292,6 +293,7 @@ internal sealed class AtlasGroupView : ComponentBase
                 Workspace.Id,
                 item.Id));
         builder.AddAttribute(sequence++, "OnSafeError", OnError);
+        builder.AddAttribute(sequence++, "RecoveryKey", (item.Id, ContentTemplate));
         builder.AddAttribute(
             sequence++,
             "ErrorContent",
