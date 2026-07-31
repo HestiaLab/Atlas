@@ -80,16 +80,21 @@ public sealed class LayoutAutoPersistenceTests
         {
             Current = new WorkspaceLayoutDocument("2.0", 0, "<corrupt"),
         };
+        var diagnostics = new List<WorkspacePersistenceDiagnostic>();
         await using var persistence = new LayoutAutoPersistence(
             workspace,
             new AtlasXmlLayoutSerializer(),
-            store);
+            store,
+            diagnosticSink: diagnostics.Add);
 
         var result = await persistence.RestoreIfAvailableAsync();
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
         Assert.Same(before, workspace.Current);
+        Assert.Equal(
+            WorkspacePersistenceDiagnosticKind.CorruptDocument,
+            Assert.Single(diagnostics).Kind);
     }
 
     private static IAtlasWorkspace CreateWorkspace()

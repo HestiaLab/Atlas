@@ -13,6 +13,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     private readonly IAtlasLayoutSerializer serializer;
     private readonly IWorkspaceLayoutStore store;
     private readonly TimeSpan debounceDelay;
+    private readonly Action<WorkspacePersistenceDiagnostic>? diagnosticSink;
     private CancellationTokenSource? delayCancellation;
     private Task pendingSave = Task.CompletedTask;
     private long generation;
@@ -23,12 +24,14 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         IAtlasWorkspace workspace,
         IAtlasLayoutSerializer serializer,
         IWorkspaceLayoutStore store,
-        TimeSpan? debounceDelay = null)
+        TimeSpan? debounceDelay = null,
+        Action<WorkspacePersistenceDiagnostic>? diagnosticSink = null)
     {
         this.workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
         this.serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.debounceDelay = debounceDelay ?? TimeSpan.FromMilliseconds(500);
+        this.diagnosticSink = diagnosticSink;
         if (this.debounceDelay < TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(
@@ -52,6 +55,9 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
+            Report(
+                WorkspacePersistenceDiagnosticKind.StorageUnavailable,
+                "ATLAS-AUTO-READ");
             return Failure<LayoutChangeSet>("ATLAS-AUTO-READ");
         }
 
@@ -64,6 +70,9 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         var parsed = serializer.Deserialize(stored.Xml, workspace.Id);
         if (!parsed.Succeeded)
         {
+            Report(
+                WorkspacePersistenceDiagnosticKind.CorruptDocument,
+                parsed.Error!.DiagnosticId);
             return WorkspaceResult<LayoutChangeSet>.Failure(parsed.Error!);
         }
 
@@ -172,6 +181,9 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         }
         catch (Exception exception) when (exception is InvalidOperationException or ArgumentException)
         {
+            Report(
+                WorkspacePersistenceDiagnosticKind.SerializationFailure,
+                "ATLAS-AUTO-SERIALIZE");
             return WorkspaceResult<bool>.Failure(
                 new WorkspaceError(
                     WorkspaceErrorCode.InvalidLayoutData,
@@ -195,6 +207,9 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
+            Report(
+                WorkspacePersistenceDiagnosticKind.StorageUnavailable,
+                "ATLAS-AUTO-WRITE");
             return Failure<bool>("ATLAS-AUTO-WRITE");
         }
         finally
@@ -211,6 +226,21 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
                 LayoutOperationKind.RestoreWorkspace,
                 diagnosticId,
                 "Atlas.Persistence.Unavailable"));
+    }
+
+    private void Report(
+        WorkspacePersistenceDiagnosticKind kind,
+        string diagnosticId)
+    {
+        try
+        {
+            diagnosticSink?.Invoke(
+                new WorkspacePersistenceDiagnostic(workspace.Id, kind, diagnosticId));
+        }
+        catch
+        {
+            // Diagnostics must never turn persistence degradation into a workspace failure.
+        }
     }
 
     private void ThrowIfDisposed()

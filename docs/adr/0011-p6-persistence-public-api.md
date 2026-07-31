@@ -24,6 +24,8 @@ C# 签名。P6 需要一个不依赖 Blazor、JS 或浏览器 storage 的 Core �
   per-key generation ordering、apply/delete 与 typed result。
 - storage adapter 不进入 `AtlasWorkspace`，不引入全局状态。自动持久化由可释放的
   `LayoutAutoPersistence` 订阅 `Changed` 并复用 preset/service 的 single-writer 路径。
+- 自动持久化通过可选 diagnostic sink 报告不含布局内容的 WorkspaceId/category/diagnostic ID；
+  sink 自身失败不得影响 workspace。
 - 公共 DTO 全部只读；enum 数值和方法签名进入 PublicAPI baseline。
 
 ## Alternatives

@@ -168,7 +168,7 @@ Atlas.Core.Persistence.IdentityRemapReason.LegacyMigration = 2 -> Atlas.Core.Per
 Atlas.Core.Persistence.LayoutAutoPersistence
 Atlas.Core.Persistence.LayoutAutoPersistence.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Atlas.Core.Persistence.LayoutAutoPersistence.FlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<bool>!>
-Atlas.Core.Persistence.LayoutAutoPersistence.LayoutAutoPersistence(Atlas.Core.IAtlasWorkspace! workspace, Atlas.Core.Persistence.IAtlasLayoutSerializer! serializer, Atlas.Core.Persistence.IWorkspaceLayoutStore! store, System.TimeSpan? debounceDelay = null) -> void
+Atlas.Core.Persistence.LayoutAutoPersistence.LayoutAutoPersistence(Atlas.Core.IAtlasWorkspace! workspace, Atlas.Core.Persistence.IAtlasLayoutSerializer! serializer, Atlas.Core.Persistence.IWorkspaceLayoutStore! store, System.TimeSpan? debounceDelay = null, System.Action<Atlas.Core.Persistence.WorkspacePersistenceDiagnostic!>? diagnosticSink = null) -> void
 Atlas.Core.Persistence.LayoutAutoPersistence.RestoreIfAvailableAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.Persistence.LayoutPresetDescriptor
 Atlas.Core.Persistence.LayoutPresetDescriptor.LayoutPresetDescriptor(string! name, string! schemaVersion, long savedRevision, System.DateTimeOffset? savedAt = null) -> void
@@ -225,6 +225,15 @@ Atlas.Core.Persistence.WorkspaceLayoutDocument.SavedRevision.get -> long
 Atlas.Core.Persistence.WorkspaceLayoutDocument.SchemaVersion.get -> string!
 Atlas.Core.Persistence.WorkspaceLayoutDocument.WorkspaceLayoutDocument(string! schemaVersion, long savedRevision, string! xml) -> void
 Atlas.Core.Persistence.WorkspaceLayoutDocument.Xml.get -> string!
+Atlas.Core.Persistence.WorkspacePersistenceDiagnostic
+Atlas.Core.Persistence.WorkspacePersistenceDiagnostic.DiagnosticId.get -> string!
+Atlas.Core.Persistence.WorkspacePersistenceDiagnostic.Kind.get -> Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind
+Atlas.Core.Persistence.WorkspacePersistenceDiagnostic.WorkspaceId.get -> Atlas.Core.WorkspaceId
+Atlas.Core.Persistence.WorkspacePersistenceDiagnostic.WorkspacePersistenceDiagnostic(Atlas.Core.WorkspaceId workspaceId, Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind kind, string! diagnosticId) -> void
+Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind
+Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind.CorruptDocument = 1 -> Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind
+Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind.SerializationFailure = 2 -> Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind
+Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind.StorageUnavailable = 0 -> Atlas.Core.Persistence.WorkspacePersistenceDiagnosticKind
 Atlas.Core.Items.DocumentState.DocumentState() -> void
 Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> void
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
