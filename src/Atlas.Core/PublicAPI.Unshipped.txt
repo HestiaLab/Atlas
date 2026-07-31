@@ -5,6 +5,7 @@ Atlas.Core.AtlasWorkspaceCommands.ActivateItemAsync(Atlas.Core.DockItemId itemId
 Atlas.Core.AtlasWorkspaceCommands.AtlasWorkspaceCommands(Atlas.Core.IAtlasWorkspace! workspace) -> void
 Atlas.Core.AtlasWorkspaceCommands.CloseItemAsync(Atlas.Core.DockItemId itemId, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceCommands.OpenItemAsync(Atlas.Core.Items.DockItem! item, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.RestoreAsync(Atlas.Core.Persistence.LayoutRestoreDocument! document, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreResult!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolBarVisibilityAsync(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolVisibilityAsync(Atlas.Core.LayoutNodeId groupId, bool visible, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceOptions
@@ -207,6 +208,14 @@ Atlas.Core.Persistence.LayoutRestoreOptions.LayoutRestoreOptions(Atlas.Core.Pers
 Atlas.Core.Persistence.LayoutRestoreOptions.Limits.get -> Atlas.Core.Persistence.LayoutPersistenceLimits!
 Atlas.Core.Persistence.LayoutRestoreOptions.MissingContentPolicy.get -> Atlas.Core.Persistence.MissingContentPolicy
 Atlas.Core.Persistence.LayoutRestoreOptions.ReservedItemIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Persistence.LayoutRestoreResult
+Atlas.Core.Persistence.LayoutRestoreResult.ChangeSet.get -> Atlas.Core.Changes.LayoutChangeSet!
+Atlas.Core.Persistence.LayoutRestoreResult.DroppedItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Persistence.LayoutRestoreResult.IdentityRemaps.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Persistence.IdentityRemap!>!
+Atlas.Core.Persistence.LayoutRestoreResult.PlaceholderItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Persistence.LayoutRestoreResult.SourceSchemaVersion.get -> string!
+Atlas.Core.Persistence.LayoutRestoreResult.TargetRevision.get -> long
+Atlas.Core.Persistence.LayoutRestoreResult.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Atlas.Core.Persistence.MissingContentPolicy
 Atlas.Core.Persistence.MissingContentPolicy.DropUnknownItems = 1 -> Atlas.Core.Persistence.MissingContentPolicy
 Atlas.Core.Persistence.MissingContentPolicy.FailRestore = 2 -> Atlas.Core.Persistence.MissingContentPolicy

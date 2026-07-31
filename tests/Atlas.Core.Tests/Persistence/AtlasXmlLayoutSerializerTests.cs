@@ -185,6 +185,48 @@ public sealed class AtlasXmlLayoutSerializerTests
         Assert.DoesNotContain(new DockItemId("document-42"), drop.Value.Snapshot.Items.Keys);
     }
 
+    [Theory]
+    [InlineData("depth")]
+    [InlineData("nodes")]
+    [InlineData("items")]
+    [InlineData("string")]
+    public void Rejects_each_structural_resource_limit(string limit)
+    {
+        var limits = limit switch
+        {
+            "depth" => new LayoutPersistenceLimits(maxDepth: 2),
+            "nodes" => new LayoutPersistenceLimits(maxNodeCount: 2),
+            "items" => new LayoutPersistenceLimits(maxItemCount: 1),
+            "string" => new LayoutPersistenceLimits(maxStringLength: 3),
+            _ => throw new InvalidOperationException(),
+        };
+
+        var result = serializer.Deserialize(
+            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            new WorkspaceId("main"),
+            limits);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+    }
+
+    [Fact]
+    public void Rejects_non_finite_numbers_and_duplicate_ids()
+    {
+        var golden = File.ReadAllText(GoldenPath("workspace-v2.xml"));
+        var nonFinite = serializer.Deserialize(
+            golden.Replace("basisValue=\"280\"", "basisValue=\"NaN\"", StringComparison.Ordinal),
+            new WorkspaceId("main"));
+        var duplicate = serializer.Deserialize(
+            golden.Replace("id=\"explorer\"", "id=\"document-42\"", StringComparison.Ordinal),
+            new WorkspaceId("main"));
+
+        Assert.False(nonFinite.Succeeded);
+        Assert.False(duplicate.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, nonFinite.Error!.Code);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, duplicate.Error!.Code);
+    }
+
     private static string GoldenPath(string fileName)
     {
         return Path.Combine(AppContext.BaseDirectory, "Persistence", "Golden", fileName);

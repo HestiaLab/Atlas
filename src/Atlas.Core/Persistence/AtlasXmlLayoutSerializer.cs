@@ -304,6 +304,11 @@ public sealed class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
         var rootNodeId = snapshot.RootNodeId;
         foreach (var group in nodes.Values.OfType<GroupNode>().ToArray())
         {
+            if (!nodes.ContainsKey(group.Id))
+            {
+                continue;
+            }
+
             var remaining = group.ItemIds.Where(id => !droppedSet.Contains(id)).ToArray();
             if (remaining.Length == 0 && group.RetentionPolicy == GroupRetentionPolicy.Dynamic)
             {

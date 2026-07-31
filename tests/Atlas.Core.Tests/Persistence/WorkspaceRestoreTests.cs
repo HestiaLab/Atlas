@@ -100,6 +100,27 @@ public sealed class WorkspaceRestoreTests
         await workspace.DisposeAsync();
     }
 
+    [Fact]
+    public async Task Restore_command_returns_remaps_and_target_revision()
+    {
+        var workspace = CreateWorkspace();
+        var serializer = new AtlasXmlLayoutSerializer();
+        var document = serializer.DeserializeWithOptions(
+            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            new WorkspaceId("main"),
+            new LayoutRestoreOptions(
+                reservedItemIds: new[] { new DockItemId("document-42") })).Value!;
+
+        var result = await new AtlasWorkspaceCommands(workspace)
+            .RestoreAsync(document);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(workspace.Current.Revision, result.Value!.TargetRevision);
+        Assert.Single(result.Value.IdentityRemaps);
+        Assert.Equal("2.0", result.Value.SourceSchemaVersion);
+        await workspace.DisposeAsync();
+    }
+
     private static IAtlasWorkspace CreateWorkspace()
     {
         var group = new GroupNode(

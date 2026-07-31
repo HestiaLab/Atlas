@@ -3,6 +3,7 @@ using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
 using Atlas.Core.Placement;
+using Atlas.Core.Persistence;
 using Atlas.Core.Results;
 
 namespace Atlas.Core;
@@ -84,6 +85,27 @@ public sealed class AtlasWorkspaceCommands
         return workspace.ExecuteAsync(
             new SetToolBarVisibilityOperation(side, visibility, baseRevision),
             cancellationToken);
+    }
+
+    /// <summary>Atomically restores a validated persisted layout and returns its report.</summary>
+    public async ValueTask<WorkspaceResult<LayoutRestoreResult>> RestoreAsync(
+        LayoutRestoreDocument document,
+        long? baseRevision = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        var result = await workspace.ExecuteAsync(
+            new RestoreWorkspaceOperation(document, baseRevision),
+            cancellationToken).ConfigureAwait(false);
+        if (!result.Succeeded)
+        {
+            return WorkspaceResult<LayoutRestoreResult>.Failure(result.Error!);
+        }
+
+        var restored = new LayoutRestoreResult(result.Value!, document);
+        return result.IsNoChange
+            ? WorkspaceResult<LayoutRestoreResult>.NoChange(restored)
+            : WorkspaceResult<LayoutRestoreResult>.Success(restored);
     }
 
     /// <summary>Activates the first item matching a snapshot predicate.</summary>
