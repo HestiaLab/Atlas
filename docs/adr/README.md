@@ -23,6 +23,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0006](./0006-keyboard-resize-history-coalescing.md) | Accepted | 键盘 Resize 每步提交与 Core history 时间窗合并 |
 | [ADR-0007](./0007-panel-drop-policy.md) | Accepted | Panel 默认采用 ToolBar-first + hidden Scaffold 投放策略 |
 | [ADR-0008](./0008-p5-drag-protocol-and-document-docking-api.md) | Accepted | P5 drag protocol v1 additive message 与 Document docking operation API |
+| [ADR-0009](./0009-document-tab-insertion-semantics.md) | Accepted | 同 Group Document Tab Before/After insertion 映射到既有 reorder operation |
 
 ## 编写约定
 

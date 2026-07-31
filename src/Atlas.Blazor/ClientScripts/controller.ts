@@ -55,6 +55,9 @@ interface ActiveDrag {
   readonly baseRevision: number;
   readonly itemId: string;
   readonly sourceKind: AtlasDragSourceKind;
+  readonly sourceGroupId?: string;
+  documentGeometry: ReadonlyMap<HTMLElement, DOMRect>;
+  documentTabGeometry: ReadonlyMap<HTMLElement, DOMRect>;
   dragging: boolean;
   target?: DropTarget;
 }
@@ -100,6 +103,9 @@ export class AtlasInteractionController {
     this.root.addEventListener("keydown", this.onKeyDown);
     this.root.addEventListener("keyup", this.onKeyUp);
     this.ownerWindow?.addEventListener("resize", this.onEnvironmentInvalidated);
+    this.ownerWindow?.addEventListener("blur", this.onEnvironmentInvalidated);
+    this.ownerWindow?.addEventListener("pointerup", this.onPointerUp);
+    this.ownerWindow?.addEventListener("pointercancel", this.onPointerCancel);
     this.ownerDocument?.addEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
@@ -148,6 +154,9 @@ export class AtlasInteractionController {
     this.root.removeEventListener("keydown", this.onKeyDown);
     this.root.removeEventListener("keyup", this.onKeyUp);
     this.ownerWindow?.removeEventListener("resize", this.onEnvironmentInvalidated);
+    this.ownerWindow?.removeEventListener("blur", this.onEnvironmentInvalidated);
+    this.ownerWindow?.removeEventListener("pointerup", this.onPointerUp);
+    this.ownerWindow?.removeEventListener("pointercancel", this.onPointerCancel);
     this.ownerDocument?.removeEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
@@ -164,6 +173,7 @@ export class AtlasInteractionController {
       const itemId = dragSource.dataset.atlasItemId;
       const sourceKind = dragSource.dataset.atlasDragKind as AtlasDragSourceKind;
       if (itemId && isDragSourceKind(sourceKind)) {
+        const sourceGroupId = this.groupIdFrom(dragSource);
         this.cancelResize();
         this.dragSequence += 1;
         this.activeDrag = {
@@ -176,6 +186,11 @@ export class AtlasInteractionController {
           baseRevision: this.readRootRevision(),
           itemId,
           sourceKind,
+          ...(sourceGroupId === undefined
+            ? {}
+            : { sourceGroupId }),
+          documentGeometry: new Map(),
+          documentTabGeometry: new Map(),
           dragging: false
         };
         dragSource.setPointerCapture?.(event.pointerId);
@@ -221,6 +236,8 @@ export class AtlasInteractionController {
     if (drag && event.pointerId === drag.pointerId) {
       if (!drag.dragging
         && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 4) {
+        drag.documentGeometry = this.captureDocumentGeometry();
+        drag.documentTabGeometry = this.captureDocumentTabGeometry();
         drag.dragging = true;
         this.root.dataset.atlasDragging = "true";
       }
@@ -228,7 +245,7 @@ export class AtlasInteractionController {
       if (drag.dragging) {
         this.previewDropTarget(
           drag,
-          this.resolveDropTarget(event.clientX, event.clientY, event.target, drag.sourceKind));
+          this.resolveDropTarget(event.clientX, event.clientY, event.target, drag));
       }
       return;
     }
@@ -250,7 +267,13 @@ export class AtlasInteractionController {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
-      const target = drag.dragging ? drag.target : undefined;
+      const target = drag.dragging
+        ? this.resolveDropTarget(
+            event.clientX,
+            event.clientY,
+            event.target,
+            drag)
+        : undefined;
       this.finishDrag();
       if (target && drag.generation === this.identity.generation) {
         const directional = target.kind.startsWith("document-")
@@ -582,7 +605,7 @@ export class AtlasInteractionController {
     x: number,
     y: number,
     eventTarget: EventTarget | null,
-    sourceKind: AtlasDragSourceKind): DropTarget | undefined {
+    drag: ActiveDrag): DropTarget | undefined {
     const hit = this.ownerDocument?.elementFromPoint(x, y)
       ?? (eventTarget instanceof Element ? eventTarget : null);
     if (!(hit instanceof Element)
@@ -590,16 +613,37 @@ export class AtlasInteractionController {
       return undefined;
     }
 
-    if (sourceKind === "document-tab") {
+    if (drag.sourceKind === "document-tab") {
       const group = hit.closest<HTMLElement>("[data-atlas-group-kind=document][data-atlas-group-id]");
       const groupId = group?.dataset.atlasGroupId;
       if (!group || !groupId) {
         return undefined;
       }
 
+      const tab = hit.closest<HTMLElement>("[data-atlas-drag-kind=document-tab]");
+      const tabIndex = readNonNegativeInteger(tab?.dataset.atlasInsertionIndex);
+      if (tab
+        && tabIndex !== undefined
+        && groupId === drag.sourceGroupId) {
+        const rect = drag.documentTabGeometry.get(tab) ?? tab.getBoundingClientRect();
+        return {
+          element: tab,
+          kind: "document-center",
+          groupId,
+          insertionIndex: tabIndex + (x >= rect.left + (rect.width / 2) ? 1 : 0)
+        };
+      }
+
+      if (tab) {
+        return { element: tab, kind: "document-center", groupId };
+      }
+
       return {
         element: group,
-        kind: documentTargetKind(group.getBoundingClientRect(), x, y),
+        kind: documentTargetKind(
+          drag.documentGeometry.get(group) ?? group.getBoundingClientRect(),
+          x,
+          y),
         groupId
       };
     }
@@ -660,9 +704,27 @@ export class AtlasInteractionController {
       : null;
   }
 
+  private captureDocumentGeometry(): ReadonlyMap<HTMLElement, DOMRect> {
+    return new Map(
+      Array.from(
+        this.root.querySelectorAll<HTMLElement>(
+          "[data-atlas-group-kind=document][data-atlas-group-id]"))
+        .map(group => [group, group.getBoundingClientRect()] as const));
+  }
+
+  private captureDocumentTabGeometry(): ReadonlyMap<HTMLElement, DOMRect> {
+    return new Map(
+      Array.from(
+        this.root.querySelectorAll<HTMLElement>(
+          "[data-atlas-drag-kind=document-tab][data-atlas-insertion-index]"))
+        .map(tab => [tab, tab.getBoundingClientRect()] as const));
+  }
+
   private canMove(source: HTMLElement): boolean {
     const capabilities = Number(source.dataset.atlasCommandCapabilities);
-    return !Number.isFinite(capabilities) || (capabilities & 2) === 2;
+    return Number.isSafeInteger(capabilities)
+      && capabilities >= 0
+      && (capabilities & 2) === 2;
   }
 
   private readRootRevision(): number {

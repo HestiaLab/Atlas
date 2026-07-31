@@ -43,6 +43,13 @@
       "data-atlas-command-capabilities"
     ]
   },
+  "documentTab": {
+    "selector": "[data-atlas-drag-kind=document-tab]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-insertion-index"
+    ]
+  },
   "panelHeader": {
     "selector": "[data-atlas-panel-header]",
     "requiredAttributes": [

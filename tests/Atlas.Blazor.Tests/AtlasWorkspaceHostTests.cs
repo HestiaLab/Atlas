@@ -899,6 +899,54 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Same_group_tab_insertion_maps_slot_to_reorder_operation()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(TwoTabsDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "documents",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "first",
+            sourceKind: "document-tab",
+            targetKind: "document-center",
+            insertionIndex: 2);
+
+        var operation = Assert.IsType<ReorderItemOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        Assert.Equal(
+            new[] { new DockItemId("second"), new DockItemId("first") },
+            Assert.IsType<GroupNode>(
+                tracked.Current.Nodes[new LayoutNodeId("documents")]).ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Dom_metadata_manifest_matches_rendered_projection()
     {
         var path = Path.Combine(

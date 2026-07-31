@@ -42,5 +42,19 @@
     "targetGroupId": "documents-target",
     "newGroupId": "atlas-host-fixture-1-group",
     "newSplitId": "atlas-host-fixture-1-split"
+  },
+  "tabReorderCommit": {
+    "type": "dock-item",
+    "protocolVersion": 1,
+    "sessionId": "host-fixture:2",
+    "hostId": "host-fixture",
+    "workspaceId": "workspace-fixture",
+    "generation": 3,
+    "itemId": "document-fixture",
+    "sourceKind": "document-tab",
+    "baseRevision": 7,
+    "targetKind": "document-center",
+    "targetGroupId": "documents-source",
+    "insertionIndex": 2
   }
 }

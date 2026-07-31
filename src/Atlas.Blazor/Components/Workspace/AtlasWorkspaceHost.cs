@@ -1168,15 +1168,38 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
             if (zone == DocumentDockZone.Center)
             {
-                operation = new DockDocumentOperation(
-                    itemId,
-                    targetGroupId,
-                    zone.Value,
-                    baseRevision: message.BaseRevision);
+                if (message.InsertionIndex is int insertionIndex)
+                {
+                    var sourceIndex = target.ItemIds.ToList().IndexOf(itemId);
+                    if (sourceIndex < 0
+                        || insertionIndex < 0
+                        || insertionIndex > target.ItemIds.Count)
+                    {
+                        return;
+                    }
+
+                    var targetIndex = insertionIndex > sourceIndex
+                        ? insertionIndex - 1
+                        : insertionIndex;
+                    operation = new ReorderItemOperation(
+                        itemId,
+                        targetGroupId,
+                        targetIndex,
+                        message.BaseRevision);
+                }
+                else
+                {
+                    operation = new DockDocumentOperation(
+                        itemId,
+                        targetGroupId,
+                        zone.Value,
+                        baseRevision: message.BaseRevision);
+                }
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(message.NewGroupId)
+                if (message.InsertionIndex is not null
+                    || string.IsNullOrWhiteSpace(message.NewGroupId)
                     || string.IsNullOrWhiteSpace(message.NewSplitId))
                 {
                     return;

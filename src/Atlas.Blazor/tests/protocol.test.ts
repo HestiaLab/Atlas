@@ -30,6 +30,7 @@ test("shared interaction protocol fixture matches TypeScript v1 union", () => {
   const keyboard =
     protocolFixture.keyboardCommandIntent as AtlasInteractionMessage;
   const dock = protocolFixture.dockItemCommit as AtlasInteractionMessage;
+  const tabReorder = protocolFixture.tabReorderCommit as AtlasInteractionMessage;
   assert.equal(resize.type, "resize-split");
   assert.equal(
     resize.type === "resize-split" ? resize.baseRevision : -1,
@@ -45,6 +46,9 @@ test("shared interaction protocol fixture matches TypeScript v1 union", () => {
   assert.equal(keyboard.type, "keyboard-command");
   assert.equal(dock.type, "dock-item");
   assert.equal(dock.type === "dock-item" ? dock.hostId : "", "host-fixture");
+  assert.equal(
+    tabReorder.type === "dock-item" ? tabReorder.insertionIndex : -1,
+    2);
 });
 
 test("controller identity requires stable host workspace and generation", () => {
@@ -86,6 +90,17 @@ class FakeStyle {
   }
 }
 
+class FakeDocument extends EventTarget {
+  public defaultView = null;
+  public hidden = false;
+  public activeElement: FakeElement | null = null;
+  public pointElement: FakeElement | null = null;
+
+  public elementFromPoint(_x: number, _y: number): FakeElement | null {
+    return this.pointElement;
+  }
+}
+
 class FakeElement extends EventTarget {
   public readonly dataset: Record<string, string> = {};
   public readonly style = new FakeStyle();
@@ -93,7 +108,9 @@ class FakeElement extends EventTarget {
   public capturedPointer?: number;
   public releasedPointer?: number;
   public editable = false;
+  public ownerDocument?: FakeDocument;
   public rect = { left: 0, top: 0, width: 100, height: 100 };
+  public rectReads = 0;
 
   public closest<T extends Element>(selector: string): T | null {
     if (selector === "[data-atlas-split-id]") {
@@ -106,6 +123,16 @@ class FakeElement extends EventTarget {
 
     if (selector === "[data-atlas-drag-kind]") {
       return this.dataset.atlasDragKind ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-group-id]") {
+      return this.dataset.atlasGroupId ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-drag-kind=document-tab]") {
+      return this.dataset.atlasDragKind === "document-tab"
+        ? this as unknown as T
+        : null;
     }
 
     if (selector === "[data-atlas-group-kind=document][data-atlas-group-id]") {
@@ -145,7 +172,20 @@ class FakeElement extends EventTarget {
     return this as unknown as T;
   }
 
+  public querySelectorAll<T extends Element>(selector: string): T[] {
+    const documentGroup = selector === "[data-atlas-group-kind=document][data-atlas-group-id]"
+      && this.dataset.atlasGroupKind === "document"
+      && this.dataset.atlasGroupId;
+    const documentTab = selector === "[data-atlas-drag-kind=document-tab][data-atlas-insertion-index]"
+      && this.dataset.atlasDragKind === "document-tab"
+      && this.dataset.atlasInsertionIndex;
+    return documentGroup || documentTab
+      ? [this as unknown as T]
+      : [];
+  }
+
   public getBoundingClientRect(): DOMRect {
+    this.rectReads += 1;
     return this.rect as DOMRect;
   }
 
@@ -459,6 +499,8 @@ function dragFixture(kind: "document-tab" | "panel-header"): {
   root.dataset.atlasDragKind = kind;
   root.dataset.atlasItemId = kind === "document-tab" ? "document" : "tool";
   root.dataset.atlasGroupId = kind === "document-tab" ? "documents" : "tools";
+  root.dataset.atlasCommandCapabilities = "2";
+  root.dataset.atlasInsertionIndex = "0";
   if (kind === "document-tab") {
     root.dataset.atlasGroupKind = "document";
   } else {
@@ -483,11 +525,17 @@ test("document drag crosses threshold previews and commits one host-scoped inten
   fixture.root.dispatchEvent(interactionEvent("pointerdown", {
     pointerId: 31, clientX: 50, clientY: 50, button: 0, isPrimary: true
   }));
+  assert.equal(fixture.root.rectReads, 0);
   fixture.root.dispatchEvent(interactionEvent("pointermove", {
     pointerId: 31, clientX: 56, clientY: 50
   }));
+  const geometryReadsAtStart = fixture.root.rectReads;
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 31, clientX: 58, clientY: 50
+  }));
   assert.equal(fixture.messages.length, 0);
   assert.equal(fixture.root.dataset.atlasDropPreview, "document-center");
+  assert.equal(fixture.root.rectReads, geometryReadsAtStart);
   fixture.root.dispatchEvent(interactionEvent("pointerup", {
     pointerId: 31, clientX: 56, clientY: 50
   }));
@@ -505,7 +553,8 @@ test("document drag crosses threshold previews and commits one host-scoped inten
     sourceKind: "document-tab",
     baseRevision: 12,
     targetKind: "document-center",
-    targetGroupId: "documents"
+    targetGroupId: "documents",
+    insertionIndex: 1
   });
   assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
   fixture.controller.dispose();
@@ -526,6 +575,24 @@ test("drag terminal paths cancel without callback and generation update expires 
     assert.equal(fixture.messages.length, 0);
     fixture.controller.dispose();
   }
+
+  const escaped = dragFixture("document-tab");
+  escaped.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 43, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  escaped.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 43, clientX: 5, clientY: 0
+  }));
+  escaped.root.dispatchEvent(interactionEvent("keydown", {
+    code: "Escape", ctrlKey: false, shiftKey: false, altKey: false, metaKey: false
+  }));
+  escaped.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 43, clientX: 50, clientY: 50
+  }));
+  await flushCallbacks();
+  assert.equal(escaped.messages.length, 0);
+  assert.equal(escaped.root.dataset.atlasDropPreview, undefined);
+  escaped.controller.dispose();
 
   const stale = dragFixture("document-tab");
   stale.root.dispatchEvent(interactionEvent("pointerdown", {
@@ -585,4 +652,45 @@ test("panel drag uses approved header target while threshold click remains untou
     insertionIndex: 0
   });
   drag.controller.dispose();
+});
+
+test("pointerup re-resolves target and rejects a stale preview from another host", async () => {
+  const fixture = dragFixture("document-tab");
+  const document = new FakeDocument();
+  fixture.root.ownerDocument = document;
+  document.pointElement = fixture.root;
+  fixture.controller.dispose();
+
+  const messages: AtlasInteractionMessage[] = [];
+  const controller = new AtlasInteractionController(
+    fixture.root as unknown as HTMLElement,
+    {
+      hostId: "drag-host",
+      workspaceId: "drag-workspace",
+      generation: 5,
+      protocolVersion: ATLAS_PROTOCOL_VERSION
+    },
+    { invokeMethodAsync: async (_method, message) => { messages.push(message); } });
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 60, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 60, clientX: 5, clientY: 0
+  }));
+  assert.equal(fixture.root.dataset.atlasDropPreview, "document-center");
+
+  const foreignRoot = new FakeElement();
+  foreignRoot.dataset.atlasWorkspaceId = "other-workspace";
+  foreignRoot.dataset.atlasGroupKind = "document";
+  foreignRoot.dataset.atlasGroupId = "other-documents";
+  document.pointElement = foreignRoot;
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 60, clientX: 50, clientY: 50
+  }));
+  await flushCallbacks();
+
+  assert.equal(messages.length, 0);
+  assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
+  assert.equal(fixture.root.dataset.atlasDragging, undefined);
+  controller.dispose();
 });

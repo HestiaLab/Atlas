@@ -202,8 +202,9 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(sequence++, "class", "atlas-v2-tab-strip");
         builder.AddAttribute(sequence++, "role", "tablist");
         builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
-        foreach (var item in Items)
+        for (var itemIndex = 0; itemIndex < Items.Count; itemIndex++)
         {
+            var item = Items[itemIndex];
             var selected = item.Id == Group.SelectedItemId;
             builder.OpenElement(sequence++, "button");
             builder.SetKey(item.Id);
@@ -212,6 +213,11 @@ internal sealed class AtlasGroupView : ComponentBase
             builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
             builder.AddAttribute(sequence++, "data-atlas-item-kind", "document");
             builder.AddAttribute(sequence++, "data-atlas-drag-kind", "document-tab");
+            builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-insertion-index",
+                itemIndex.ToString(CultureInfo.InvariantCulture));
             builder.AddAttribute(
                 sequence++,
                 "data-atlas-command-capabilities",
