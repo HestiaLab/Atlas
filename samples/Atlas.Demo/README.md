@@ -25,5 +25,5 @@ Copy this entire directory. Update the `atlas-local` source in `NuGet.Config` to
 feed containing `Atlas.Core` and `Atlas.Blazor`, and update their versions in
 `Directory.Packages.props` when needed. No layout source changes are required.
 
-The sample intentionally contains no ProjectReference to Atlas source projects, linked Atlas
-source files, internal APIs, or test helpers.
+The sample intentionally contains no project-to-project references, linked Atlas source files,
+internal APIs, or test helpers.

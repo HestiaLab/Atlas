@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Demo", "Atlas.Demo.csproj", "{D8910610-84EA-4BB6-A87B-C8EB47D8BA9C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Demo.Tests", "tests\Atlas.Demo.Tests\Atlas.Demo.Tests.csproj", "{8C3336D9-38A8-4937-9A6E-58BE3C8FD0D0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D8910610-84EA-4BB6-A87B-C8EB47D8BA9C} = {D8910610-84EA-4BB6-A87B-C8EB47D8BA9C}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

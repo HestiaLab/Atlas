@@ -49,7 +49,7 @@ ADR-0016 删除了历史阶段验证宿主与 Rider 风格示例，并禁止在�
 ## Consequences
 
 - 本地验证必须先 Release pack 双包，再恢复独立 Demo solution。
-- Demo 的测试项目可以引用 Demo 项目，但不得引用 Atlas 源项目。
+- Demo 的测试项目从独立 solution 生成的 Demo 程序集验证行为；整个 sample 不使用源码项目引用。
 - `Atlas.sln` 的四项目拓扑保持不变。
 - Demo 的 UI 与测试需要跟随已发布公共合同演进，但不得通过修改 Atlas public surface 解决样例问题。
 
