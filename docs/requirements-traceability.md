@@ -14,6 +14,9 @@
 在首个功能 work package 合并前，所有 150 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
 
+P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-audit.md)。该表每个正式 ID
+恰好一行，并明确保留 Partial、Not Started 与 Deferred 缺口。
+
 ## 状态
 
 | 状态 | 含义 |

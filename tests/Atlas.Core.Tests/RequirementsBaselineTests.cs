@@ -40,6 +40,30 @@ public sealed class RequirementsBaselineTests
             indexedIds.OrderBy(id => id, StringComparer.Ordinal));
     }
 
+    [Fact]
+    public void P8_audit_has_one_evidence_status_for_every_formal_requirement()
+    {
+        var root = RepositoryRoot();
+        var srs = File.ReadAllText(Path.Combine(root, "docs", "SRS.md"));
+        var audit = File.ReadAllText(
+            Path.Combine(root, "docs", "evidence", "p8-requirement-audit.md"));
+        var formalIds = FormalRequirement.Matches(srs)
+            .Select(match => match.Value.Split(' ')[0])
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+        var auditedRows = Regex.Matches(
+                audit,
+                @"^\| (REQ-(?:F|NF)-\d{3}) \| (?:Not Started|In Progress|Implemented|Verified|Blocked|Deferred) \|",
+                RegexOptions.Multiline | RegexOptions.CultureInvariant)
+            .Select(match => match.Groups[1].Value)
+            .ToArray();
+
+        Assert.Equal(150, auditedRows.Length);
+        Assert.Equal(auditedRows.Length, auditedRows.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(formalIds, auditedRows.OrderBy(id => id, StringComparer.Ordinal));
+        Assert.DoesNotContain("| Designed |", audit, StringComparison.Ordinal);
+    }
+
     private static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
