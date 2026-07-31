@@ -229,6 +229,7 @@ Atlas.Core.Operations.LayoutOperation.BaseRevision.get -> long?
 Atlas.Core.Operations.LayoutOperation.Kind.get -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.CloseItem = 1 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.EqualizeSplit = 17 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.MoveItem = 3 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.OpenItem = 0 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.ReconcileDefinition = 16 -> Atlas.Core.Operations.LayoutOperationKind
@@ -245,6 +246,9 @@ Atlas.Core.Operations.LayoutOperationKind.SetGroupVisibility = 7 -> Atlas.Core.O
 Atlas.Core.Operations.LayoutOperationKind.SetToolBarVisibility = 14 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.SplitItem = 5 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.UpdateItemPresentation = 10 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.EqualizeSplitOperation
+Atlas.Core.Operations.EqualizeSplitOperation.EqualizeSplitOperation(Atlas.Core.LayoutNodeId splitId, long? baseRevision = null) -> void
+Atlas.Core.Operations.EqualizeSplitOperation.SplitId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Operations.MoveToolOperation
 Atlas.Core.Operations.MoveToolOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.MoveToolOperation.MoveToolOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId targetGroupId, int? targetIndex = null, long? baseRevision = null) -> void

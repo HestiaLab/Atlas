@@ -64,6 +64,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             UpdateItemPresentationOperation presentation =>
                 ItemPresentationPlanner.Plan(snapshot, presentation),
             ResizeSplitOperation resize => ResizeSplitPlanner.Plan(snapshot, resize),
+            EqualizeSplitOperation equalize => EqualizeSplitPlanner.Plan(snapshot, equalize),
             ReconcileDefinitionOperation reconcile => ReconcileDefinitionPlanner.Plan(
                 snapshot,
                 reconcile),

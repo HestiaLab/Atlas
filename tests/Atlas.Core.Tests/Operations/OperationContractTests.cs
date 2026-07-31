@@ -15,6 +15,7 @@ public sealed class OperationContractTests
         Assert.Equal(0, (int)LayoutOperationKind.OpenItem);
         Assert.Equal(15, (int)LayoutOperationKind.ReorderToolBarEntry);
         Assert.Equal(16, (int)LayoutOperationKind.ReconcileDefinition);
+        Assert.Equal(17, (int)LayoutOperationKind.EqualizeSplit);
         Assert.Equal(0, (int)DockItemPlacementKind.Group);
         Assert.Equal(1, (int)DockItemPlacementKind.AutoHide);
         Assert.Equal(1, (int)WorkspaceErrorCode.LayoutVersionIncompatible);

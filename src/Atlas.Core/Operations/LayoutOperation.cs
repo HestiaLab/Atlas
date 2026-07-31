@@ -7,7 +7,7 @@ public abstract class LayoutOperation
 {
     private protected LayoutOperation(LayoutOperationKind kind, long? baseRevision)
     {
-        if (kind is < LayoutOperationKind.OpenItem or > LayoutOperationKind.ReconcileDefinition)
+        if (kind is < LayoutOperationKind.OpenItem or > LayoutOperationKind.EqualizeSplit)
         {
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown operation kind.");
         }

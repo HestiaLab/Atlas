@@ -55,4 +55,7 @@ public enum LayoutOperationKind
 
     /// <summary>Reconciles the committed state with a declarative definition.</summary>
     ReconcileDefinition = 16,
+
+    /// <summary>Equalizes the two children of an existing split.</summary>
+    EqualizeSplit = 17,
 }
