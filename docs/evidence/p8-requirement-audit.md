@@ -12,7 +12,7 @@
 | Architecture boundary | Pass | Atlas.Core architecture test 禁止 Blazor、JS interop 与 Atlas.Blazor 引用；双包边界保持。 |
 | Domain model | Partial | identity、snapshot、layout、placement、sizing、persistence 模型存在；Auto-hide runtime、Reset 等行为仍缺。 |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 纵向切片存在；Overflow Menu/Wrap、Context Menu、部分修复策略未实现。 |
-| Delivery evidence | Partial | Chrome 实机和分层门禁已有；P8 尚需 a11y、Splitter FPS、20-panel init、兼容性声明复核。 |
+| Delivery evidence | Partial | Chromium 实机、a11y、Splitter FPS、20-panel init 与完整分层门禁已完成；Firefox/Edge/Safari 兼容性矩阵仍是明确缺口。 |
 
 ## Per-requirement status
 
