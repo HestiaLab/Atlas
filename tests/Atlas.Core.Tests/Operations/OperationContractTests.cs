@@ -16,6 +16,11 @@ public sealed class OperationContractTests
         Assert.Equal(15, (int)LayoutOperationKind.ReorderToolBarEntry);
         Assert.Equal(16, (int)LayoutOperationKind.ReconcileDefinition);
         Assert.Equal(17, (int)LayoutOperationKind.EqualizeSplit);
+        Assert.Equal(0, (int)DocumentDockZone.Center);
+        Assert.Equal(1, (int)DocumentDockZone.InlineStart);
+        Assert.Equal(2, (int)DocumentDockZone.InlineEnd);
+        Assert.Equal(3, (int)DocumentDockZone.BlockStart);
+        Assert.Equal(4, (int)DocumentDockZone.BlockEnd);
         Assert.Equal(0, (int)DockItemPlacementKind.Group);
         Assert.Equal(1, (int)DockItemPlacementKind.AutoHide);
         Assert.Equal(1, (int)WorkspaceErrorCode.LayoutVersionIncompatible);
@@ -97,6 +102,7 @@ public sealed class OperationContractTests
         Assert.Empty(GetWritablePublicProperties(typeof(DockItemPlacementSnapshot)));
         Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceError)));
         Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceResult<LayoutChangeSet>)));
+        Assert.Empty(GetWritablePublicProperties(typeof(DockDocumentOperation)));
         Assert.Empty(typeof(LayoutOperation).GetConstructors(BindingFlags.Instance | BindingFlags.Public));
     }
 

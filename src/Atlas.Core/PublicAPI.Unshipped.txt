@@ -220,6 +220,19 @@ Atlas.Core.Operations.CloseItemOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.DockItemCloseContext
 Atlas.Core.Operations.DockItemCloseContext.Item.get -> Atlas.Core.Items.DockItem!
 Atlas.Core.Operations.DockItemCloseContext.Snapshot.get -> Atlas.Core.WorkspaceSnapshot!
+Atlas.Core.Operations.DockDocumentOperation
+Atlas.Core.Operations.DockDocumentOperation.DockDocumentOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Operations.DocumentDockZone zone, Atlas.Core.LayoutNodeId? newGroupId = null, Atlas.Core.LayoutNodeId? newSplitId = null, long? baseRevision = null) -> void
+Atlas.Core.Operations.DockDocumentOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.DockDocumentOperation.NewGroupId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.Operations.DockDocumentOperation.NewSplitId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.Operations.DockDocumentOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.DockDocumentOperation.Zone.get -> Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone.BlockEnd = 4 -> Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone.BlockStart = 3 -> Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone.Center = 0 -> Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone.InlineEnd = 2 -> Atlas.Core.Operations.DocumentDockZone
+Atlas.Core.Operations.DocumentDockZone.InlineStart = 1 -> Atlas.Core.Operations.DocumentDockZone
 Atlas.Core.Operations.IDockItemCloseGuard
 Atlas.Core.Operations.IDockItemCloseGuard.CanCloseAsync(Atlas.Core.Operations.DockItemCloseContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<bool>
 Atlas.Core.Operations.IDockItemCloseGuardResolver

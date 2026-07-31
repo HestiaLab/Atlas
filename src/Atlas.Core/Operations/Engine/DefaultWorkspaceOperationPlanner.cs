@@ -53,6 +53,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                 contentIdentityPolicy),
             SelectItemOperation select => SelectItemPlanner.Plan(snapshot, select),
             ReorderItemOperation reorder => ReorderItemPlanner.Plan(snapshot, reorder),
+            DockDocumentOperation dockDocument => DockDocumentPlanner.Plan(snapshot, dockDocument),
             MoveToolOperation move => MoveToolPlanner.Plan(snapshot, move),
             SetGroupVisibilityOperation visibility => GroupVisibilityPlanner.Plan(
                 snapshot,
