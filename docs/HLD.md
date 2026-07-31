@@ -50,7 +50,7 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 
 | 编号 | SRS 依据 | 问题 | HLD 处理 |
 |------|----------|------|----------|
-| OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | 统一建模为 `PanelDropTarget`；默认启用集合在 SRS 澄清后确定 |
+| OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | 首版保证内容身份与外置状态；Workspace-wide keep-alive 需独立 Spike/ADR |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录写为 152 | HLD 追溯以正文正式需求块为基线，等待 SRS 勘误 |
 | OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、Atlas.Demo、Node 24 LTS + npm |
@@ -1053,10 +1053,10 @@ Document docking intent
 使用 DockingZone 枚举（Center/Before/After/InlineStart/InlineEnd/BlockStart/BlockEnd），
 不使用含糊的 Left/Right。Panel drop intent 使用 PanelDropTarget，不复用 DockingZone。
 
-OI-001 在 SRS 澄清前按以下方式隔离：Target Resolver 能识别 ToolBar、Scaffold 与 RegionBody，
-PanelTargetPolicy 决定可提交集合。禁止在 resolver 中硬编码某一冲突需求，这使产品规则修订不需要
-重写 geometry/session。当前 HLD 推荐候选为 ToolBar + 隐藏 Region Scaffold；可见 RegionBody
-保持可识别但默认拒绝，最终以 SRS 勘误为准。
+ADR-0007 已关闭 OI-001：Target Resolver 能识别 ToolBar、Scaffold 与 RegionBody，默认
+PanelTargetPolicy 仅启用 PanelHeaderInsertion、ToolBarInsertion、ToolBarRegion 与隐藏 Region
+Scaffold；可见 RegionBody 保持可识别但默认拒绝。命中优先级为 PanelHeaderInsertion >
+ToolBarInsertion > ToolBarRegion > DropScaffold。固定区域和其他 Host 永远不产生有效目标。
 
 来源：F-050~068, F-069, F-150~153, F-155, F-071
 ```
@@ -2128,7 +2128,7 @@ component instance preservation，不能合并为一个模糊的"内容保持"�
 | 闸门 | 必须关闭的事项 | 阻断范围 | 关闭证据 | 关闭前允许的工作 |
 |------|---------------|----------|----------|------------------|
 | DEV-GATE-001 Repository Baseline | OI-004 | solution、TargetFramework、PackageId、namespace、CI、NuGet 依赖 | 仓库基线 ADR + 可运行的 SDK/CI 配置 | 纯文档、与 TFM 无关的模型 Spike |
-| DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | SRS 勘误或 ADR 明确 ToolBar/RegionBody/Scaffold 的 enabled set 与优先级 | 参数化 resolver、全部候选策略的纯函数测试 |
+| DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | **Closed**：ADR-0007 Accepted；SRS 已统一 enabled set、优先级、失败语义与默认策略 | 参数化 resolver、全部候选策略的纯函数测试 |
 | DEV-GATE-003 Content Lifetime | OI-002 | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + ADR，明确“业务状态”或“组件实例”的合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
 | DEV-GATE-004 Content Trust | OI-006 | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + ADR | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | DES-PER-002 的待审批项 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、至少一组 V1/V2 golden files | DTO/validator 接口与 adversarial parser tests |
@@ -2656,20 +2656,20 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-022 | DES-NFR-003、DES-OP-007、DES-RND-006 | Core/Blazor/E2E | Designed |
 | REQ-F-023 | DES-DOM-006、DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Designed |
 | REQ-F-024 | DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Deferred，与 RTL 总体需求一致 |
-| REQ-F-069 | DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Open，等待 OI-001 |
+| REQ-F-069 | DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-070 | DES-RND-005、DES-RND-007 | Blazor/E2E | Partial，等待 OI-002 |
 | REQ-F-071 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed |
-| REQ-F-140 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Open，等待 OI-001 |
+| REQ-F-140 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-142 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed |
 | REQ-F-147 | DES-INT-002、DES-INT-005、DES-PRJ-003 | Interop/Blazor | Designed |
 | REQ-F-148 | DES-INT-006、DES-DOM-003 | Interop/E2E | Designed |
 | REQ-F-149 | DES-DOM-009、DES-RND-006 | Core/Blazor | Designed |
-| REQ-F-150 | DES-INT-003、DES-INT-006 | Interop/E2E | Open，等待 OI-001 |
+| REQ-F-150 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-151 | DES-OP-007、DES-INT-006 | Core/Interop/E2E | Designed |
 | REQ-F-152 | — | — | Deferred，Floating Window 不在当前 Phase |
 | REQ-F-153 | DES-INT-005~006、DES-PRJ-003 | Interop/E2E | Designed |
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006 | Core/Interop/E2E | Designed |
-| REQ-F-155 | DES-INT-003、DES-INT-006 | Interop/E2E | Open，等待 OI-001 |
+| REQ-F-155 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-156 | DES-OP-004~005、DES-OP-007 | Core/E2E | Designed |
 | REQ-NF-003 | DES-INT-007~008、DES-NFR-003 | Blazor/E2E | Designed |
 | REQ-NF-004 | DES-INT-001~006、DES-PRJ-003 | Interop/Performance | Designed |
@@ -2715,7 +2715,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-050~060、REQ-F-063~067 | DES-INT-001、DES-INT-003 | Designed |
 | REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
-| REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Open |
+| REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
 | REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Partial |
 | REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
@@ -2748,19 +2748,19 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-124 | DES-DOM-007、DES-ERR-001、DES-PER-007 | Designed |
 | REQ-F-128 | DES-ERR-001、DES-NFR-004、DES-RND-004、DES-RND-007 | Designed |
 | REQ-F-133 | DES-ARCH-002、DES-ARCH-003、DES-ARCH-004、DES-DOM-008、DES-INT-005、DES-OP-002、DES-OP-004 | Designed |
-| REQ-F-140 | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | Open |
+| REQ-F-140 | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-141 | DES-DOM-010、DES-OP-009 | Designed |
 | REQ-F-142 | DES-INT-005、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-144 | DES-DOM-010、DES-OP-008 | Designed |
 | REQ-F-147 | DES-INT-005、DES-NFR-001、DES-PRJ-003 | Designed |
 | REQ-F-148 | DES-DOM-010、DES-INT-006、DES-INT-007 | Designed |
 | REQ-F-149 | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-RND-006 | Designed |
-| REQ-F-150 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Open |
+| REQ-F-150 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-151 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-OP-007、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-152 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Deferred |
 | REQ-F-153 | DES-DOM-009、DES-INT-003、DES-INT-005、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | Designed |
-| REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Open |
+| REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Designed |
 | REQ-F-156 | DES-OP-004、DES-OP-005、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-NF-001 | DES-NFR-001 | Designed |
 | REQ-NF-002 | DES-PRJ-001 | Designed |

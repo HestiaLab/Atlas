@@ -31,7 +31,7 @@
 | Gate | 状态 | 证据/阻断 |
 |------|------|-----------|
 | DEV-GATE-001 Repository Baseline | Closed | ADR-0001 Accepted；restore/build/test/format/npm/pack 本地验证通过 |
-| DEV-GATE-002 Panel Drop Policy | Open | OI-001 |
+| DEV-GATE-002 Panel Drop Policy | Closed | [ADR-0007](./adr/0007-panel-drop-policy.md) Accepted；SRS/HLD 已统一 ToolBar-first + hidden Scaffold enabled set、优先级与失败语义 |
 | DEV-GATE-003 Content Lifetime | Open | OI-002 |
 | DEV-GATE-004 Content Trust | Open | OI-006 |
 | DEV-GATE-005 Persistence Schema | Open | schema ADR/XSD 未批准 |

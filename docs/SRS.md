@@ -1617,7 +1617,8 @@ Title
 拖拽 ToolBar Entry（ToolBar 条目）移动 Dock Panel（Dock 面板）
 
 Description
-系统应支持终端用户拖拽 LT/RT 中的 ToolBar Entry 至其他 Dock Region（Dock 区域），移动完成后对应
+系统应支持终端用户拖拽 LT/RT 中的 ToolBar Entry 至其他 Dock Region（Dock 区域）对应的 ToolBar
+逻辑槽；当目标 Dock Region 因无展开 Panel 而隐藏时，也可拖至其 Drop Scaffold。移动完成后对应
 Dock Panel 迁移至目标区域，ToolBar Entry 同步迁移至目标侧 ToolBar 并按分组规则重新排列。
 
 Acceptance Criteria
@@ -1625,7 +1626,7 @@ Acceptance Criteria
 AC1：拖拽 ToolBar Entry 至其他 Dock Region
 
 Given LT 中存在一个 ToolBar Entry
-When 终端用户拖拽该 ToolBar Entry 至 Right Dock Upper 区域并释放
+When 终端用户拖拽该 ToolBar Entry 至 RT 中 Right Dock Upper 对应的逻辑槽并释放
 Then 对应 Dock Panel 应移至 Right Dock Upper
 And ToolBar Entry 从 LT 迁移至 RT
 And ToolBar Entry 在 RT 中按 Upper Dock → Lower Dock → Bottom Dock 分组顺序排列
@@ -2813,8 +2814,9 @@ And 系统不启动拖拽流程
 ## 3.5 Dock Panel（Dock 面板） 移动
 
 > **适用范围：** 本章需求针对 **Dock Panel（Dock 面板）**（工具窗口）在 Dock Region（Dock 区域）之间的移动，以及在同一 Dock Region 内的拖拽排序（REQ-F-142）。
-> 与 Editor Tab 的拖拽停靠（§3.4.1）不同，Dock Panel 的拖拽停靠**不区分方向**——拖拽至目标 Dock Region
-> 任意位置释放即完成移动（类似 VSCode / Rider 中 Tool Window 的拖拽行为），无需方向判定区域。
+> 与 Editor Tab 的拖拽停靠（§3.4.1）不同，Dock Panel 的拖拽停靠**不区分方向**。可见 Region 通过
+> ToolBar 对应逻辑槽完成投放；因无展开 Panel 而隐藏的 Region 通过 Drop Scaffold 完成投放。
+> 可见 Dock Region Body 本身不是直接释放目标，无需方向判定区域。
 > 关于 Region、Dock Panel、Editor View（编辑器视图） 与 Editor Tab 的区别，参见 [§1.7 空间概念](#17-空间概念)。
 
 ```
@@ -2824,7 +2826,8 @@ Title
 Dock Panel（Dock 面板） 跨区域移动
 
 Description
-系统应支持终端用户将任意 Dock Panel 在六个 Dock Region 之间互相拖拽移动。六个 Dock Region 为。拖拽过程中应向终端用户提供目标区域的视觉反馈（高亮指示和 Drop Scaffold（投放骨架））。
+系统应支持终端用户将任意 Dock Panel 在六个 Dock Region 之间互相拖拽移动。拖拽过程中应通过
+ToolBar 逻辑槽或隐藏 Region 的 Drop Scaffold 向终端用户提供目标区域的视觉反馈。
 Left Dock Upper、Left Dock Lower、Right Dock Upper、Right Dock Lower、Bottom Left Dock、Bottom Right Dock，
 任意两个之间均可跨区域拖拽。当目标区域已有 Active Panel 时，
 新面板展开为 Active Panel，原有 Active Panel 收起为 ToolBar Entry（ToolBar 条目）。
@@ -2833,8 +2836,8 @@ Acceptance Criteria
 
 AC1：Dock Panel 移动至空区域
 
-Given 布局中 Left Dock Upper 区域为空
-When 终端用户拖拽 Left Dock Lower 中 Dock Panel 的标题栏至 Left Dock Upper 区域并释放
+Given 布局中 Left Dock Upper 区域为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Left Dock Lower 中 Dock Panel 的标题栏至 Left Dock Upper 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Left Dock Upper 区域
 And Dock Panel 内容和状态保持不变
 And 源区域 Left Dock Lower 显示空状态（无可见 Dock Panel 时显示 Empty State）
@@ -2842,23 +2845,23 @@ And 源区域 Left Dock Lower 显示空状态（无可见 Dock Panel 时显示 E
 AC2：Dock Panel 移动至已有 Dock Panel 的区域
 
 Given Right Dock Upper 区域已有 Panel B 且处于展开状态
-When 终端用户拖拽 Panel A 的标题栏至 Right Dock Upper 区域并释放
+When 终端用户拖拽 Panel A 的标题栏至 RT 中 Right Dock Upper 对应逻辑槽并释放
 Then Panel A 应在该区域展开并成为 Active Panel
 And Panel B 收起到 ToolBar Entry
 And 对应 ToolBar Entry 同步更新
 
 AC3：Dock Panel 从 Left Dock 移动至 Bottom Dock
 
-Given 布局中 Bottom Left Dock Region为空
-When 终端用户拖拽 Left Dock Upper 中 Dock Panel 的标题栏至 Bottom Left Dock Region并释放
+Given 布局中 Bottom Left Dock Region 为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Left Dock Upper 中 Dock Panel 的标题栏至 Bottom Left Dock 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Bottom Left Dock Region
 And Dock Panel 内容和状态保持不变
 And 对应 ToolBar 条目保持在 LT（同属左侧）
 
 AC4：Dock Panel 从 Bottom Dock 移动至 Right Dock
 
-Given 布局中 Right Dock Lower 区域为空
-When 终端用户拖拽 Bottom Right 中 Dock Panel 的标题栏至 Right Dock Lower 区域并释放
+Given 布局中 Right Dock Lower 区域为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Bottom Right 中 Dock Panel 的标题栏至 Right Dock Lower 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Right Dock Lower 区域
 And Dock Panel 内容和状态保持不变
 And 对应 ToolBar 条目保持在 RT（同属右侧）
@@ -2866,10 +2869,11 @@ And 对应 ToolBar 条目保持在 RT（同属右侧）
 AC5：拖拽目标区域高亮指示
 
 Given 终端用户正在拖拽 Dock Panel 的标题栏
-When 拖拽预览进入某个 Dock Region 范围
-Then 该 Dock Region 应以高亮样式显示
-And 高亮指示该区域为有效放置目标
-And 拖拽离开该区域后高亮消失
+When 拖拽预览进入某个 Dock Region 对应的 ToolBar 逻辑槽或隐藏 Region 的 Drop Scaffold
+Then 当前 ToolBar 逻辑槽或 Drop Scaffold 应以高亮样式显示
+And 高亮指示释放后的目标 Dock Region
+And 可见 Dock Region Body 不应显示为直接释放目标
+And 拖拽离开有效目标后高亮消失
 ```
 
 ```
@@ -4946,6 +4950,7 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-147     | Layout Instance 销毁                         | 新增     | 销毁接口 + DOM/事件清理 + 重复销毁 + 销毁后操作拒绝                                                                           |
 | REQ-F-148     | 容器尺寸变化时布局自适应                               | 新增     | 容器 resize 按比例自适应，含最小尺寸约束冲突处理                                                                               |
 | REQ-F-153     | ToolBar 拖拽投放交互稳定性                          | 新增     | 根据实机测试反馈新增 ToolBar 拖拽稳定性约束：拖拽预览不跳跃、Divider 不占常驻槽位、空逻辑槽位拖拽可达、拖拽渲染与注册过程无 Blazor crit 级错误                     |
+| REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；可见 RegionBody 不作为直接释放目标 |
 | REQ-F-022     | ToolBar Dock Panel 切换                      | 修改     | 切换模型改为 Toggle（方案 A）：点击已打开且活跃 Panel 的条目 → 收起 Panel；AC 拆分（AC2 新增收起 / AC3 原非活跃激活 / AC4 原 API）；Flowchart 补收起分支 |
 | —             | 全文一致性                                      | 勘误     | 范围外明确排除主题/i18n/Floating Window；§1.2 范围表 + §2.2 导航去"主题、国际化"；新增附录 D 错误码汇总；附录 B 新增主题和 Floating Window 延期行     |
 | —             | 全局术语                                       | 全局     | 术语统一为 English（中文）双语格式；移除 Tab Group / Panel Tab 旧模型                                                         |
