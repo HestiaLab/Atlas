@@ -106,7 +106,10 @@ internal sealed class WorkspacePatch
             .Where(
                 key => !EqualityComparer<TValue>.Default.Equals(
                     before[key],
-                    after[key]));
+                    after[key])
+                    && !WorkspaceSemanticComparer.ValueEquals(
+                        before[key],
+                        after[key]));
     }
 
     private static IEnumerable<TKey> ChangedKeys<TKey, TValue>(
@@ -127,6 +130,6 @@ internal sealed class WorkspacePatch
         return left.Count == right.Count
             && left.All(
                 pair => right.TryGetValue(pair.Key, out var value)
-                    && EqualityComparer<TValue>.Default.Equals(pair.Value, value));
+                    && WorkspaceSemanticComparer.ValueEquals(pair.Value, value));
     }
 }

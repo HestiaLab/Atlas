@@ -13,30 +13,9 @@ internal sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
         var resolvedOptions = options ?? new AtlasWorkspaceOptions();
         try
         {
-            var snapshot = new WorkspaceSnapshot(
-                definition.WorkspaceId,
-                revision: 0,
-                definition.RootNodeId,
-                definition.Nodes.Select(
-                    node => new KeyValuePair<LayoutNodeId, Layout.LayoutNode>(
-                        node.Id,
-                        node)),
-                definition.Items.Select(
-                    item => new KeyValuePair<DockItemId, Items.DockItem>(
-                        item.Id,
-                        item)),
-                definition.ToolBars.Select(
-                    toolbar => new KeyValuePair<Placement.LogicalSide, Placement.ToolBarState>(
-                        toolbar.Side,
-                        toolbar)),
-                definition.ToolBarOrders.Select(
-                    order => new KeyValuePair<Placement.LogicalRegion, Placement.ToolBarOrderState>(
-                        order.Region,
-                        order)),
-                definition.AutoHideStrips.Select(
-                    strip => new KeyValuePair<Placement.WorkspaceEdge, Placement.AutoHideStripState>(
-                        strip.Edge,
-                        strip)));
+            var snapshot = WorkspaceDefinitionMaterializer.Create(
+                definition,
+                revision: 0);
             IAtlasWorkspace workspace = new AtlasWorkspace(
                 snapshot,
                 new DefaultWorkspaceOperationPlanner(resolvedOptions),

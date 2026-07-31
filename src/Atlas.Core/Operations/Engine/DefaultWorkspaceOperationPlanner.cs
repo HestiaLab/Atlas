@@ -64,6 +64,9 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             UpdateItemPresentationOperation presentation =>
                 ItemPresentationPlanner.Plan(snapshot, presentation),
             ResizeSplitOperation resize => ResizeSplitPlanner.Plan(snapshot, resize),
+            ReconcileDefinitionOperation reconcile => ReconcileDefinitionPlanner.Plan(
+                snapshot,
+                reconcile),
             CloseItemOperation close => await PlanCloseAsync(
                 snapshot,
                 close,

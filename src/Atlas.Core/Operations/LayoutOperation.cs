@@ -7,7 +7,7 @@ public abstract class LayoutOperation
 {
     private protected LayoutOperation(LayoutOperationKind kind, long? baseRevision)
     {
-        if (kind is < LayoutOperationKind.OpenItem or > LayoutOperationKind.ReorderToolBarEntry)
+        if (kind is < LayoutOperationKind.OpenItem or > LayoutOperationKind.ReconcileDefinition)
         {
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown operation kind.");
         }

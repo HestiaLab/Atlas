@@ -1,4 +1,5 @@
 using Atlas.Core.Changes;
+using Atlas.Core.Events;
 using Atlas.Core.Operations;
 using Atlas.Core.Results;
 
@@ -20,6 +21,9 @@ public interface IAtlasWorkspace : IAsyncDisposable
 
     /// <summary>Gets whether an undone operation can be redone.</summary>
     bool CanRedo { get; }
+
+    /// <summary>Gets the strongly typed events derived from committed changes.</summary>
+    IAtlasWorkspaceDomainEvents DomainEvents { get; }
 
     /// <summary>Occurs after a new snapshot has been committed.</summary>
     event EventHandler<WorkspaceChangedEventArgs>? Changed;

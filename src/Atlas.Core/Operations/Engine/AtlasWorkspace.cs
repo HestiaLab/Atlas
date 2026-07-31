@@ -1,4 +1,5 @@
 using Atlas.Core.Changes;
+using Atlas.Core.Events;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
@@ -11,6 +12,7 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
     private readonly object lifecycleGate = new();
     private readonly IWorkspaceOperationPlanner planner;
     private readonly WorkspaceEventDispatcher eventDispatcher = new();
+    private readonly AtlasWorkspaceDomainEvents domainEvents = new();
     private readonly int maxHistoryEntries;
     private WorkspaceStoreState state;
     private TaskCompletionSource<object?>? operationsDrained;
@@ -52,6 +54,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
     public bool CanRedo => Volatile.Read(ref state).Redo.Count != 0;
 
+    public IAtlasWorkspaceDomainEvents DomainEvents => domainEvents;
+
     public event EventHandler<WorkspaceChangedEventArgs>? Changed;
 
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ExecuteAsync(
@@ -82,12 +86,13 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
             if (plan.IsNoChange)
             {
-                return NoChange(captured.Revision, LayoutChangeKind.Operation);
+                return NoChange(captured.Revision, plan.ChangeKind);
             }
 
             var candidate = plan.Candidate
                 ?? throw new InvalidOperationException("A commit plan must provide a candidate snapshot.");
             LayoutChangeSet changeSet;
+            WorkspaceSnapshot committedSnapshot;
             lock (transactionGate)
             {
                 ThrowIfDisposed();
@@ -98,24 +103,27 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                 }
 
                 var patch = WorkspacePatch.Create(captured, candidate);
-                var committed = patch.ApplyForward(captured);
-                EnsureValid(committed);
-                changeSet = patch.Describe(captured, committed, LayoutChangeKind.Operation);
+                committedSnapshot = patch.ApplyForward(captured);
+                EnsureValid(committedSnapshot);
+                changeSet = patch.Describe(captured, committedSnapshot, plan.ChangeKind);
                 var undo = plan.IsHistoryBarrier
                     ? Array.Empty<WorkspacePatch>()
                     : AppendBounded(currentState.Undo, patch);
                 Volatile.Write(
                     ref state,
                     new WorkspaceStoreState(
-                        committed,
+                        committedSnapshot,
                         undo,
                         redo: Array.Empty<WorkspacePatch>()));
             }
 
             eventDispatcher.Enqueue(
                 Changed,
+                domainEvents,
                 this,
-                new WorkspaceChangedEventArgs(Id, changeSet));
+                captured,
+                committedSnapshot,
+                changeSet);
             return WorkspaceResult<LayoutChangeSet>.Success(changeSet);
         }
         finally
@@ -172,6 +180,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         {
             cancellationToken.ThrowIfCancellationRequested();
             LayoutChangeSet? changeSet = null;
+            WorkspaceSnapshot? before = null;
+            WorkspaceSnapshot? after = null;
             long noChangeRevision = 0;
             lock (transactionGate)
             {
@@ -185,12 +195,14 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                 else
                 {
                     var patch = source[^1];
+                    before = currentState.Snapshot;
                     var committed = undo
                         ? patch.ApplyReverse(currentState.Snapshot)
                         : patch.ApplyForward(currentState.Snapshot);
                     EnsureValid(committed);
                     var kind = undo ? LayoutChangeKind.Undo : LayoutChangeKind.Redo;
                     changeSet = patch.Describe(currentState.Snapshot, committed, kind);
+                    after = committed;
                     var remaining = source.Take(source.Count - 1).ToArray();
                     var destination = undo
                         ? currentState.Redo.Concat(new[] { patch }).ToArray()
@@ -213,8 +225,11 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
             eventDispatcher.Enqueue(
                 Changed,
+                domainEvents,
                 this,
-                new WorkspaceChangedEventArgs(Id, changeSet));
+                before!,
+                after!,
+                changeSet);
             return ValueTask.FromResult(
                 WorkspaceResult<LayoutChangeSet>.Success(changeSet));
         }

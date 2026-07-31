@@ -1,4 +1,5 @@
 using Atlas.Core.Changes;
+using Atlas.Core.Events;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
@@ -134,6 +135,9 @@ public sealed class WorkspaceFacadeTests
 
         public bool CanRedo => false;
 
+        public IAtlasWorkspaceDomainEvents DomainEvents { get; } =
+            new EmptyDomainEvents();
+
         public event EventHandler<WorkspaceChangedEventArgs>? Changed
         {
             add { }
@@ -169,6 +173,45 @@ public sealed class WorkspaceFacadeTests
         public ValueTask DisposeAsync()
         {
             return ValueTask.CompletedTask;
+        }
+    }
+
+    private sealed class EmptyDomainEvents : IAtlasWorkspaceDomainEvents
+    {
+        public event EventHandler<ItemOpenedEventArgs>? ItemOpened
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<ItemClosedEventArgs>? ItemClosed
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<ItemActivatedEventArgs>? ItemActivated
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<ToolCreatedEventArgs>? ToolCreated
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<ToolRemovedEventArgs>? ToolRemoved
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<WorkspaceRestoredEventArgs>? WorkspaceRestored
+        {
+            add { }
+            remove { }
         }
     }
 }

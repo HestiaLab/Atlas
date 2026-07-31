@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Atlas.Core.Changes;
+using Atlas.Core.Events;
 
 namespace Atlas.Core.Operations.Engine;
 
@@ -13,14 +14,12 @@ internal sealed class WorkspaceEventDispatcher
 
     internal void Enqueue(
         EventHandler<WorkspaceChangedEventArgs>? handlers,
+        AtlasWorkspaceDomainEvents domainEvents,
         object sender,
-        WorkspaceChangedEventArgs args)
+        WorkspaceSnapshot before,
+        WorkspaceSnapshot after,
+        LayoutChangeSet changeSet)
     {
-        if (handlers is null)
-        {
-            return;
-        }
-
         lock (gate)
         {
             if (!accepting)
@@ -28,7 +27,14 @@ internal sealed class WorkspaceEventDispatcher
                 throw new ObjectDisposedException(nameof(WorkspaceEventDispatcher));
             }
 
-            notifications.Enqueue(new Notification(handlers, sender, args));
+            notifications.Enqueue(
+                new Notification(
+                    handlers,
+                    domainEvents,
+                    sender,
+                    before,
+                    after,
+                    changeSet));
             if (!draining)
             {
                 draining = true;
@@ -65,25 +71,40 @@ internal sealed class WorkspaceEventDispatcher
                 notification = notifications.Dequeue();
             }
 
-            foreach (EventHandler<WorkspaceChangedEventArgs> handler
-                in notification.Handlers.GetInvocationList())
+            if (notification.Handlers is not null)
             {
-                try
+                var args = new WorkspaceChangedEventArgs(
+                    notification.After.Id,
+                    notification.ChangeSet);
+                foreach (EventHandler<WorkspaceChangedEventArgs> handler
+                    in notification.Handlers.GetInvocationList())
                 {
-                    handler(notification.Sender, notification.Args);
-                }
-                catch (Exception exception)
-                {
-                    Trace.TraceError(
-                        "Atlas Changed subscriber failed: {0}",
-                        exception);
+                    try
+                    {
+                        handler(notification.Sender, args);
+                    }
+                    catch (Exception exception)
+                    {
+                        Trace.TraceError(
+                            "Atlas Changed subscriber failed: {0}",
+                            exception);
+                    }
                 }
             }
+
+            notification.DomainEvents.Publish(
+                notification.Sender,
+                notification.Before,
+                notification.After,
+                notification.ChangeSet);
         }
     }
 
     private sealed record Notification(
-        EventHandler<WorkspaceChangedEventArgs> Handlers,
+        EventHandler<WorkspaceChangedEventArgs>? Handlers,
+        AtlasWorkspaceDomainEvents DomainEvents,
         object Sender,
-        WorkspaceChangedEventArgs Args);
+        WorkspaceSnapshot Before,
+        WorkspaceSnapshot After,
+        LayoutChangeSet ChangeSet);
 }

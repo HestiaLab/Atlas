@@ -52,4 +52,7 @@ public enum LayoutOperationKind
 
     /// <summary>Reorders a toolbar entry within a logical region.</summary>
     ReorderToolBarEntry = 15,
+
+    /// <summary>Reconciles the committed state with a declarative definition.</summary>
+    ReconcileDefinition = 16,
 }

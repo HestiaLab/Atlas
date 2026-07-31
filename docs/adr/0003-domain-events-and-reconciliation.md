@@ -1,6 +1,6 @@
 # ADR-0003：Domain Events 与 Definition Reconciliation API
 
-- **状态**：Proposed
+- **状态**：Accepted
 - **日期**：2026-07-31
 - **决策者**：Atlas Maintainer
 - **关联**：DES-OP-008~009、F-100、F-110~115、F-146、P2 Exit Gate、P3 Entry Gate
@@ -19,7 +19,7 @@ P2 的 transaction、history、通用 `Changed`、operation、factory、commands
 也需要 before/after selection。Core transaction 同时拥有 before/after Snapshot，因此必须由 Core
 在 commit 时派生。
 
-## Proposed Decision
+## Decision
 
 ### 1. Event owner
 

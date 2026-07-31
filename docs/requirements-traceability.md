@@ -67,7 +67,7 @@
 | REQ-F-027~028、REQ-F-046、REQ-F-101、REQ-F-124 | DES-DOM-005、DES-OP-001~002、DES-OP-009 | P2 | `Atlas.Core/Operations/Engine` | `OpenItemOperationTests`：normal open、ActivateExisting、AllowMultiple、ReplaceExisting、RejectDuplicate、ID conflict、target failure | In Progress | P2-WP-11 实现显式 Item open 与四种内容去重；自动 ID 生成和 command facade 尚待后续切片 |
 | REQ-F-030、REQ-F-101~108、REQ-F-121、REQ-F-141 | DES-OP-006、DES-OP-009 | P2 | `Atlas.Core/AtlasWorkspaceCommands`、`AtlasWorkspaceQueries` | `WorkspaceFacadeTests`：typed operation delegation、snapshot Revision capture、no-match NoChange、immutable materialized query | In Progress | P2-WP-12 实现 command/query facade；Reset/Preset command 等待对应 operation/persistence Phase |
 | REQ-F-001~005、REQ-F-046、REQ-F-099、REQ-F-109、REQ-F-133 | DES-DOM-002、DES-OP-002、DES-OP-005~008 | P2 | `Atlas.Core/Definitions`、`IAtlasWorkspaceFactory` | `WorkspaceFactoryTests`：valid/invalid definition、isolated instance、history bound、custom identity policy | In Progress | P2-WP-13 建立 validated definition/factory/options；Blazor declarative collection/reconciliation 在 P3 承担 |
-| REQ-F-100、REQ-F-110~115、REQ-F-146 | DES-OP-008~009 | P2/P3 boundary | Core domain events + reconciliation | [ADR-0003](./adr/0003-domain-events-and-reconciliation.md) | Blocked | 等待维护者批准 event hub、placement payload、ordering 与 `ReconcileDefinition = 16`；P2 不得在此之前声明 Verified，P3 不得进入 |
+| REQ-F-100、REQ-F-110~115、REQ-F-146 | DES-OP-008~009 | P2/P3 boundary | Core domain events + reconciliation | [ADR-0003](./adr/0003-domain-events-and-reconciliation.md) | In Progress | 维护者于 2026-07-31 批准 event hub、placement payload、ordering 与 `ReconcileDefinition = 16`；实现和 Phase Exit Gate 证据待补齐 |
 
 ## 更新规则
 

@@ -1,5 +1,6 @@
 using System.Reflection;
 using Atlas.Core.Changes;
+using Atlas.Core.Events;
 using Atlas.Core.Operations;
 using Atlas.Core.Results;
 using Xunit;
@@ -13,6 +14,9 @@ public sealed class OperationContractTests
     {
         Assert.Equal(0, (int)LayoutOperationKind.OpenItem);
         Assert.Equal(15, (int)LayoutOperationKind.ReorderToolBarEntry);
+        Assert.Equal(16, (int)LayoutOperationKind.ReconcileDefinition);
+        Assert.Equal(0, (int)DockItemPlacementKind.Group);
+        Assert.Equal(1, (int)DockItemPlacementKind.AutoHide);
         Assert.Equal(1, (int)WorkspaceErrorCode.LayoutVersionIncompatible);
         Assert.Equal(14, (int)WorkspaceErrorCode.DragSessionExpired);
         Assert.Equal(15, (int)WorkspaceErrorCode.TargetNotFound);
@@ -86,6 +90,10 @@ public sealed class OperationContractTests
     {
         Assert.Empty(GetWritablePublicProperties(typeof(LayoutChangeSet)));
         Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceChangedEventArgs)));
+        Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceItemEventArgs)));
+        Assert.Empty(GetWritablePublicProperties(typeof(ItemActivatedEventArgs)));
+        Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceRestoredEventArgs)));
+        Assert.Empty(GetWritablePublicProperties(typeof(DockItemPlacementSnapshot)));
         Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceError)));
         Assert.Empty(GetWritablePublicProperties(typeof(WorkspaceResult<LayoutChangeSet>)));
         Assert.Empty(typeof(LayoutOperation).GetConstructors(BindingFlags.Instance | BindingFlags.Public));

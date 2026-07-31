@@ -50,11 +50,46 @@ Atlas.Core.DockItemId.DockItemId() -> void
 Atlas.Core.DockItemId.DockItemId(string! value) -> void
 Atlas.Core.DockItemId.Equals(Atlas.Core.DockItemId other) -> bool
 Atlas.Core.DockItemId.Value.get -> string!
+Atlas.Core.Events.DockItemPlacementKind
+Atlas.Core.Events.DockItemPlacementKind.AutoHide = 1 -> Atlas.Core.Events.DockItemPlacementKind
+Atlas.Core.Events.DockItemPlacementKind.Group = 0 -> Atlas.Core.Events.DockItemPlacementKind
+Atlas.Core.Events.DockItemPlacementSnapshot
+Atlas.Core.Events.DockItemPlacementSnapshot.AutoHideEdge.get -> Atlas.Core.Placement.WorkspaceEdge?
+Atlas.Core.Events.DockItemPlacementSnapshot.GroupId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.Events.DockItemPlacementSnapshot.Index.get -> int
+Atlas.Core.Events.DockItemPlacementSnapshot.Kind.get -> Atlas.Core.Events.DockItemPlacementKind
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.ItemActivated -> System.EventHandler<Atlas.Core.Events.ItemActivatedEventArgs!>?
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.ItemClosed -> System.EventHandler<Atlas.Core.Events.ItemClosedEventArgs!>?
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.ItemOpened -> System.EventHandler<Atlas.Core.Events.ItemOpenedEventArgs!>?
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.ToolCreated -> System.EventHandler<Atlas.Core.Events.ToolCreatedEventArgs!>?
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.ToolRemoved -> System.EventHandler<Atlas.Core.Events.ToolRemovedEventArgs!>?
+Atlas.Core.Events.IAtlasWorkspaceDomainEvents.WorkspaceRestored -> System.EventHandler<Atlas.Core.Events.WorkspaceRestoredEventArgs!>?
+Atlas.Core.Events.ItemActivatedEventArgs
+Atlas.Core.Events.ItemActivatedEventArgs.PreviousItemId.get -> Atlas.Core.DockItemId?
+Atlas.Core.Events.ItemClosedEventArgs
+Atlas.Core.Events.ItemOpenedEventArgs
+Atlas.Core.Events.ToolCreatedEventArgs
+Atlas.Core.Events.ToolRemovedEventArgs
+Atlas.Core.Events.WorkspaceItemEventArgs
+Atlas.Core.Events.WorkspaceItemEventArgs.AfterRevision.get -> long
+Atlas.Core.Events.WorkspaceItemEventArgs.BeforeRevision.get -> long
+Atlas.Core.Events.WorkspaceItemEventArgs.ChangeKind.get -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Events.WorkspaceItemEventArgs.CurrentPlacement.get -> Atlas.Core.Events.DockItemPlacementSnapshot?
+Atlas.Core.Events.WorkspaceItemEventArgs.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Events.WorkspaceItemEventArgs.PreviousPlacement.get -> Atlas.Core.Events.DockItemPlacementSnapshot?
+Atlas.Core.Events.WorkspaceItemEventArgs.WorkspaceId.get -> Atlas.Core.WorkspaceId
+Atlas.Core.Events.WorkspaceRestoredEventArgs
+Atlas.Core.Events.WorkspaceRestoredEventArgs.AfterRevision.get -> long
+Atlas.Core.Events.WorkspaceRestoredEventArgs.BeforeRevision.get -> long
+Atlas.Core.Events.WorkspaceRestoredEventArgs.ChangeKind.get -> Atlas.Core.Changes.LayoutChangeKind
+Atlas.Core.Events.WorkspaceRestoredEventArgs.WorkspaceId.get -> Atlas.Core.WorkspaceId
 Atlas.Core.IAtlasWorkspace
 Atlas.Core.IAtlasWorkspace.CanRedo.get -> bool
 Atlas.Core.IAtlasWorkspace.CanUndo.get -> bool
 Atlas.Core.IAtlasWorkspace.Changed -> System.EventHandler<Atlas.Core.Changes.WorkspaceChangedEventArgs!>?
 Atlas.Core.IAtlasWorkspace.Current.get -> Atlas.Core.WorkspaceSnapshot!
+Atlas.Core.IAtlasWorkspace.DomainEvents.get -> Atlas.Core.Events.IAtlasWorkspaceDomainEvents!
 Atlas.Core.IAtlasWorkspace.ExecuteAsync(Atlas.Core.Operations.LayoutOperation! operation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.IAtlasWorkspace.Id.get -> Atlas.Core.WorkspaceId
 Atlas.Core.IAtlasWorkspace.RedoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
@@ -196,6 +231,7 @@ Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.CloseItem = 1 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.MoveItem = 3 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.OpenItem = 0 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.ReconcileDefinition = 16 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.ReorderItem = 4 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.ReorderToolBarEntry = 15 -> Atlas.Core.Operations.LayoutOperationKind
 Atlas.Core.Operations.LayoutOperationKind.ReplaceContentReference = 11 -> Atlas.Core.Operations.LayoutOperationKind
@@ -220,6 +256,9 @@ Atlas.Core.Operations.OpenItemOperation.Item.get -> Atlas.Core.Items.DockItem!
 Atlas.Core.Operations.OpenItemOperation.OpenItemOperation(Atlas.Core.Items.DockItem! item, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null) -> void
 Atlas.Core.Operations.OpenItemOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Operations.OpenItemOperation.TargetIndex.get -> int?
+Atlas.Core.Operations.ReconcileDefinitionOperation
+Atlas.Core.Operations.ReconcileDefinitionOperation.Definition.get -> Atlas.Core.Definitions.AtlasWorkspaceDefinition!
+Atlas.Core.Operations.ReconcileDefinitionOperation.ReconcileDefinitionOperation(Atlas.Core.Definitions.AtlasWorkspaceDefinition! definition, long? baseRevision = null) -> void
 Atlas.Core.Operations.ReorderItemOperation
 Atlas.Core.Operations.ReorderItemOperation.GroupId.get -> Atlas.Core.LayoutNodeId
 Atlas.Core.Operations.ReorderItemOperation.ItemId.get -> Atlas.Core.DockItemId
