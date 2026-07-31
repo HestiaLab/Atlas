@@ -101,6 +101,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
 
     /// <summary>
+    /// Gets or sets the transient content lifetime policy. The default unmounts inactive
+    /// content; runtime replacement does not enter workspace history.
+    /// </summary>
+    [Parameter]
+    public WorkspaceContentLifetimeOptions ContentLifetimeOptions { get; set; } = new();
+
+    /// <summary>
     /// Gets or sets the tool-group empty-state template. Template parameter; the default is
     /// <see langword="null"/> and runtime changes only invalidate projection.
     /// </summary>
@@ -605,6 +612,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 groupBuilder.AddAttribute(8, "EmptyTemplate", emptyTemplate);
                 groupBuilder.AddAttribute(9, "HeaderTemplate", headerTemplate);
                 groupBuilder.AddAttribute(10, "OnError", OnError);
+                groupBuilder.AddAttribute(11, "ContentLifetimeOptions", ContentLifetimeOptions);
                 groupBuilder.CloseComponent();
             }));
         builder.CloseComponent();

@@ -163,3 +163,6 @@
     animation-duration: 0s;
   }
 }
+.atlas-v2-content-stack {
+  display: contents;
+}

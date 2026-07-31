@@ -1,5 +1,8 @@
 #nullable enable
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition
+Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasContentLifetimeMode.Default = 0 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasContentLifetimeMode.KeepAliveWithinGroup = 1 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.get -> Atlas.Core.Layout.EditorActivationPolicy
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.set -> void
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.AtlasDocumentGroupDefinition() -> void
@@ -131,6 +134,8 @@ Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.get -> Microsoft.AspNetC
 Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasContentContext!>?
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.get -> Atlas.Blazor.Components.WorkspaceContentLifetimeOptions!
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasEmptyStateContext!>?
 Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.set -> void
@@ -168,6 +173,10 @@ Atlas.Blazor.Components.WorkspaceOwnership
 Atlas.Blazor.Components.WorkspaceOwnership.Automatic = 0 -> Atlas.Blazor.Components.WorkspaceOwnership
 Atlas.Blazor.Components.WorkspaceOwnership.External = 1 -> Atlas.Blazor.Components.WorkspaceOwnership
 Atlas.Blazor.Components.WorkspaceOwnership.Host = 2 -> Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.MaxCachedItems.get -> int
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.Mode.get -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.WorkspaceContentLifetimeOptions(Atlas.Blazor.Components.AtlasContentLifetimeMode mode = Atlas.Blazor.Components.AtlasContentLifetimeMode.Default, int maxCachedItems = 20) -> void
 Atlas.Blazor.Content.AtlasContentCommands
 Atlas.Blazor.Content.AtlasContentCommands.ActivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Blazor.Content.AtlasContentCommands.CloseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>

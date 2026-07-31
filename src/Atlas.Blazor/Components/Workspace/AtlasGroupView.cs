@@ -6,17 +6,17 @@ using Atlas.Core.Layout;
 using Atlas.Core.Operations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
-using Microsoft.AspNetCore.Components.Web;
 using System.Globalization;
 
 namespace Atlas.Blazor.Components;
 
 internal sealed class AtlasGroupView : ComponentBase
 {
-    private ElementReference contentElement;
+    private AtlasContentOutlet? selectedContentOutlet;
     private int lastRenderedStamp;
     private int currentStamp;
     private string? reportedMissingContent;
+    private readonly List<DockItemId> keptAliveItemIds = new();
 
     [Parameter]
     public IAtlasWorkspace Workspace { get; set; } = null!;
@@ -48,8 +48,12 @@ internal sealed class AtlasGroupView : ComponentBase
     [Parameter]
     public EventCallback<AtlasHostError> OnError { get; set; }
 
+    [Parameter]
+    public WorkspaceContentLifetimeOptions ContentLifetimeOptions { get; set; } = new();
+
     protected override void OnParametersSet()
     {
+        UpdateLifetimeCache();
         var hash = new HashCode();
         hash.Add(RuntimeHelpers.GetHashCode(Group));
         foreach (var item in Items)
@@ -61,6 +65,13 @@ internal sealed class AtlasGroupView : ComponentBase
         hash.Add(EmptyTemplate);
         hash.Add(HeaderTemplate);
         hash.Add(FocusCoordinator.Version);
+        hash.Add(ContentLifetimeOptions.Mode);
+        hash.Add(ContentLifetimeOptions.MaxCachedItems);
+        foreach (var itemId in keptAliveItemIds)
+        {
+            hash.Add(itemId);
+        }
+
         currentStamp = hash.ToHashCode();
     }
 
@@ -94,14 +105,32 @@ internal sealed class AtlasGroupView : ComponentBase
         {
             if (Group.Kind == DockItemKind.Document)
             {
-                RenderTabStrip(builder, ref sequence);
+                builder.AddContent(
+                    sequence++,
+                    (RenderFragment)(headerBuilder =>
+                    {
+                        var headerSequence = 0;
+                        RenderTabStrip(headerBuilder, ref headerSequence);
+                    }));
             }
             else
             {
-                RenderToolHeader(builder, ref sequence);
+                builder.AddContent(
+                    sequence++,
+                    (RenderFragment)(headerBuilder =>
+                    {
+                        var headerSequence = 0;
+                        RenderToolHeader(headerBuilder, ref headerSequence);
+                    }));
             }
 
-            RenderSelectedContent(builder, ref sequence);
+            builder.AddContent(
+                sequence++,
+                (RenderFragment)(contentBuilder =>
+                {
+                    var contentSequence = 0;
+                    RenderContentOutlets(contentBuilder, ref contentSequence);
+                }));
         }
 
         builder.CloseElement();
@@ -120,7 +149,10 @@ internal sealed class AtlasGroupView : ComponentBase
 
         try
         {
-            await contentElement.FocusAsync();
+            if (selectedContentOutlet is not null)
+            {
+                await selectedContentOutlet.FocusAsync();
+            }
         }
         catch (Exception)
         {
@@ -286,50 +318,74 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.CloseElement();
     }
 
-    private void RenderSelectedContent(RenderTreeBuilder builder, ref int sequence)
+    private void RenderContentOutlets(RenderTreeBuilder builder, ref int sequence)
     {
-        var item = SelectedItem();
-        var context = new AtlasContentContext(Workspace, item);
+        var selectedId = Group.SelectedItemId
+            ?? throw new InvalidOperationException("A non-empty group must select an item.");
         builder.OpenElement(sequence++, "div");
-        builder.SetKey(item.Id);
-        builder.AddAttribute(sequence++, "class", "atlas-v2-content-outlet");
-        builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
-        builder.AddAttribute(
-            sequence++,
-            "data-atlas-item-kind",
-            item.Kind.ToString().ToLowerInvariant());
-        builder.AddAttribute(sequence++, "tabindex", "-1");
-        builder.AddElementReferenceCapture(sequence++, value => contentElement = value);
-
-        builder.OpenComponent<AtlasContentErrorBoundary>(sequence++);
-        builder.SetKey(item.Id);
-        builder.AddAttribute(
-            sequence++,
-            "SafeError",
-            new AtlasHostError(
-                AtlasHostErrorCode.ContentRenderFailed,
-                "ATLAS-CONTENT-RENDER-FAILED",
-                "Atlas.Content.RenderFailed",
-                Workspace.Id,
-                item.Id));
-        builder.AddAttribute(sequence++, "OnSafeError", OnError);
-        builder.AddAttribute(sequence++, "RecoveryKey", (item.Id, ContentTemplate));
-        builder.AddAttribute(
-            sequence++,
-            "ErrorContent",
-            (RenderFragment<Exception>)(_ => errorBuilder =>
+        builder.AddAttribute(sequence++, "class", "atlas-v2-content-stack");
+        foreach (var item in Items)
+        {
+            if (item.Id != selectedId && !keptAliveItemIds.Contains(item.Id))
             {
-                errorBuilder.OpenElement(0, "div");
-                errorBuilder.AddAttribute(1, "class", "atlas-v2-content-error");
-                errorBuilder.AddContent(2, "Content could not be rendered.");
-                errorBuilder.CloseElement();
-            }));
+                continue;
+            }
+
+            RenderContentOutlet(builder, item, item.Id == selectedId);
+        }
+
+        builder.CloseElement();
+    }
+
+    private void RenderContentOutlet(
+        RenderTreeBuilder builder,
+        DockItem item,
+        bool isSelected)
+    {
+        var sequence = 0;
+        var context = new AtlasContentContext(Workspace, item);
+        builder.OpenComponent<AtlasContentOutlet>(sequence++);
+        builder.SetKey(item.Id);
+        builder.AddAttribute(sequence++, "WorkspaceId", Workspace.Id);
+        builder.AddAttribute(sequence++, "Item", item);
+        builder.AddAttribute(sequence++, "IsSelected", isSelected);
+        builder.AddAttribute(sequence++, "RecoveryKey", ContentTemplate);
+        builder.AddAttribute(sequence++, "OnError", OnError);
         builder.AddAttribute(
             sequence++,
             "ChildContent",
             (RenderFragment)(contentBuilder => RenderContent(contentBuilder, context)));
+        builder.AddComponentReferenceCapture(
+            sequence++,
+            value =>
+            {
+                if (isSelected)
+                {
+                    selectedContentOutlet = (AtlasContentOutlet)value;
+                }
+            });
         builder.CloseComponent();
-        builder.CloseElement();
+    }
+
+    private void UpdateLifetimeCache()
+    {
+        if (ContentLifetimeOptions.Mode == AtlasContentLifetimeMode.Default
+            || Group.SelectedItemId is null)
+        {
+            keptAliveItemIds.Clear();
+            return;
+        }
+
+        var itemIds = Items.Select(item => item.Id).ToHashSet();
+        keptAliveItemIds.RemoveAll(itemId => !itemIds.Contains(itemId));
+
+        var selectedId = Group.SelectedItemId.Value;
+        keptAliveItemIds.Remove(selectedId);
+        keptAliveItemIds.Add(selectedId);
+        while (keptAliveItemIds.Count > ContentLifetimeOptions.MaxCachedItems)
+        {
+            keptAliveItemIds.RemoveAt(0);
+        }
     }
 
     private void RenderContent(RenderTreeBuilder builder, AtlasContentContext context)
