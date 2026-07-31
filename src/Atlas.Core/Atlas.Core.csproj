@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
     <InternalsVisibleTo Include="Atlas.Blazor" />
+    <InternalsVisibleTo Include="Atlas.Blazor.Tests" />
     <InternalsVisibleTo Include="Atlas.Core.Tests" />
   </ItemGroup>
 </Project>
