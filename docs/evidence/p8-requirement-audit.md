@@ -163,11 +163,11 @@
 | REQ-NF-001 | In Progress | DES-NFR-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-002 | In Progress | DES-PRJ-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-003 | In Progress | DES-INT-007~008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-NF-004 | In Progress | DES-ARCH-001、DES-ARCH-004、DES-INT-001~007、DES-PRJ-002~003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-NF-005 | In Progress | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-NF-004 | Verified | DES-ARCH-001、DES-ARCH-004、DES-INT-001~007、DES-PRJ-002~003 | [P8 evidence](./p8-system-hardening.md)：drag 75.543 FPS、Splitter 121.427 FPS，两个 AC 均通过真实浏览器。 |
+| REQ-NF-005 | Verified | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | [P8 evidence](./p8-system-hardening.md)：20 Panel Blazor 首次投影 192.700ms/169.900ms，≤500ms。 |
 | REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
-| REQ-NF-007 | In Progress | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-NF-008 | Implemented | DES-NFR-002、DES-PRJ-002 | Node 验证初值、动态 change 与 dispose；CSS media fallback 已实现，待 P8 browser evidence 后升级。 |
+| REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/真实 accessibility tree 验证现有 chrome；未实现控件与全焦点矩阵缺口仍保留。 |
+| REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md)：Node + 真实浏览器动态 change、dispose 和 CSS fallback。 |
 
 ## Audit interpretation
 

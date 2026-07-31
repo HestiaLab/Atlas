@@ -193,6 +193,20 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public void Twenty_panel_declaration_projects_every_toolbar_entry()
+    {
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.WorkspaceId, new WorkspaceId("twenty-panels"))
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ChildContent, TwentyToolDeclaration())
+                .Add(component => component.ContentTemplate, ContentText));
+
+        cut.WaitForAssertion(
+            () => Assert.Equal(20, cut.FindAll("[data-atlas-toolbar-entry]").Count));
+    }
+
+    [Fact]
     public async Task Interactive_chrome_exposes_named_aria_relationships_and_roving_focus()
     {
         await using var workspace = CreateWorkspace(ProjectionDefinition());
@@ -1313,6 +1327,36 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     items.AddAttribute(3, "ResourceId", "resource");
                     items.AddAttribute(4, "Title", title);
                     items.CloseComponent();
+                }));
+            builder.CloseComponent();
+        };
+    }
+
+    private static RenderFragment TwentyToolDeclaration()
+    {
+        return builder =>
+        {
+            builder.OpenComponent<AtlasToolGroupDefinition>(0);
+            builder.AddAttribute(1, "Id", new LayoutNodeId("performance-tools"));
+            builder.AddAttribute(2, "LogicalRegion", LogicalRegion.InlineStartUpper);
+            builder.AddAttribute(
+                3,
+                "ChildContent",
+                (RenderFragment)(items =>
+                {
+                    for (var index = 0; index < 20; index++)
+                    {
+                        var sequence = index * 10;
+                        items.OpenComponent<AtlasToolItemDefinition>(sequence);
+                        items.AddAttribute(
+                            sequence + 1,
+                            "Id",
+                            new DockItemId($"tool-{index}"));
+                        items.AddAttribute(sequence + 2, "ContentKind", "tool");
+                        items.AddAttribute(sequence + 3, "ResourceId", $"resource-{index}");
+                        items.AddAttribute(sequence + 4, "Title", $"Tool {index}");
+                        items.CloseComponent();
+                    }
                 }));
             builder.CloseComponent();
         };
