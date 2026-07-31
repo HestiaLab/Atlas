@@ -758,6 +758,144 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             root.GetProperty("keyboardCommandIntent")
                 .GetProperty("sourceGroupId")
                 .GetString());
+        Assert.Equal(
+            "dock-item",
+            root.GetProperty("dockItemCommit").GetProperty("type").GetString());
+        Assert.Equal(
+            "document-inline-end",
+            root.GetProperty("dockItemCommit").GetProperty("targetKind").GetString());
+    }
+
+    [Fact]
+    public async Task Dock_intent_validates_host_generation_revision_and_single_terminal_session()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(TwoTabsDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "documents",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "first",
+            sourceKind: "document-tab",
+            targetKind: "document-inline-end",
+            newGroupId: "drag-group",
+            newSplitId: "drag-split");
+
+        Assert.IsType<DockDocumentOperation>(tracked.LastOperation);
+        Assert.Equal(1, tracked.ExecuteCount);
+        Assert.Contains(new LayoutNodeId("drag-group"), tracked.Current.Nodes);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "documents",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "first",
+            sourceKind: "document-tab",
+            targetKind: "document-inline-end",
+            newGroupId: "other-group",
+            newSplitId: "other-split");
+        Assert.Equal(1, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 1,
+            targetGroupId: "documents",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:2",
+            hostId: "another-host",
+            workspaceId: tracked.Id.Value,
+            itemId: "second",
+            sourceKind: "document-tab",
+            targetKind: "document-center");
+        Assert.Equal(1, tracked.ExecuteCount);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Panel_dock_intent_maps_approved_target_to_move_tool_operation()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "tool",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-region",
+            logicalRegion: "InlineStartUpper");
+
+        var operation = Assert.IsType<MoveToolOperation>(tracked.LastOperation);
+        Assert.Equal(new DockItemId("tool"), operation.ItemId);
+        Assert.Equal(new LayoutNodeId("tools"), operation.TargetGroupId);
+        Assert.Equal(1, tracked.ExecuteCount);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
     }
 
     [Fact]
@@ -844,7 +982,18 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         long generation,
         long? baseRevision = 0,
         string? sourceGroupId = null,
-        string? targetGroupId = null)
+        string? targetGroupId = null,
+        int protocolVersion = 0,
+        string? sessionId = null,
+        string? hostId = null,
+        string? workspaceId = null,
+        string? itemId = null,
+        string? sourceKind = null,
+        string? targetKind = null,
+        string? logicalRegion = null,
+        int? insertionIndex = null,
+        string? newGroupId = null,
+        string? newSplitId = null)
     {
         var receiver = receiverReference.GetType()
             .GetProperty("Value")!
@@ -861,6 +1010,17 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         messageType.GetProperty("BaseRevision")!.SetValue(message, baseRevision);
         messageType.GetProperty("SourceGroupId")!.SetValue(message, sourceGroupId);
         messageType.GetProperty("TargetGroupId")!.SetValue(message, targetGroupId);
+        messageType.GetProperty("ProtocolVersion")!.SetValue(message, protocolVersion);
+        messageType.GetProperty("SessionId")!.SetValue(message, sessionId);
+        messageType.GetProperty("HostId")!.SetValue(message, hostId);
+        messageType.GetProperty("WorkspaceId")!.SetValue(message, workspaceId);
+        messageType.GetProperty("ItemId")!.SetValue(message, itemId);
+        messageType.GetProperty("SourceKind")!.SetValue(message, sourceKind);
+        messageType.GetProperty("TargetKind")!.SetValue(message, targetKind);
+        messageType.GetProperty("LogicalRegion")!.SetValue(message, logicalRegion);
+        messageType.GetProperty("InsertionIndex")!.SetValue(message, insertionIndex);
+        messageType.GetProperty("NewGroupId")!.SetValue(message, newGroupId);
+        messageType.GetProperty("NewSplitId")!.SetValue(message, newSplitId);
         await (Task)method.Invoke(receiver, new[] { message })!;
     }
 

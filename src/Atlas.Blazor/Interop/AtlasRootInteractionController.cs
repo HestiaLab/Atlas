@@ -219,6 +219,28 @@ internal sealed class AtlasInteractionMessage
 
     public string? TargetGroupId { get; set; }
 
+    public int ProtocolVersion { get; set; }
+
+    public string? SessionId { get; set; }
+
+    public string? HostId { get; set; }
+
+    public string? WorkspaceId { get; set; }
+
+    public string? ItemId { get; set; }
+
+    public string? SourceKind { get; set; }
+
+    public string? TargetKind { get; set; }
+
+    public string? LogicalRegion { get; set; }
+
+    public int? InsertionIndex { get; set; }
+
+    public string? NewGroupId { get; set; }
+
+    public string? NewSplitId { get; set; }
+
     public long Generation { get; set; }
 
     public long? BaseRevision { get; set; }

@@ -211,6 +211,7 @@ internal sealed class AtlasGroupView : ComponentBase
             builder.AddAttribute(sequence++, "role", "tab");
             builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
             builder.AddAttribute(sequence++, "data-atlas-item-kind", "document");
+            builder.AddAttribute(sequence++, "data-atlas-drag-kind", "document-tab");
             builder.AddAttribute(
                 sequence++,
                 "data-atlas-command-capabilities",
@@ -233,6 +234,19 @@ internal sealed class AtlasGroupView : ComponentBase
         var selected = SelectedItem();
         builder.OpenElement(sequence++, "header");
         builder.AddAttribute(sequence++, "class", "atlas-v2-panel-header");
+        builder.AddAttribute(sequence++, "data-atlas-panel-header", "true");
+        builder.AddAttribute(sequence++, "data-atlas-drag-kind", "panel-header");
+        builder.AddAttribute(sequence++, "data-atlas-item-id", selected.Id.Value);
+        builder.AddAttribute(sequence++, "data-atlas-item-kind", "tool");
+        builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
+        builder.AddAttribute(
+            sequence++,
+            "data-atlas-command-capabilities",
+            ((int)selected.Capabilities).ToString(CultureInfo.InvariantCulture));
+        builder.AddAttribute(
+            sequence++,
+            "data-atlas-insertion-index",
+            Group.ItemIds.ToList().IndexOf(selected.Id).ToString(CultureInfo.InvariantCulture));
         RenderHeader(builder, ref sequence, selected, isSelected: true);
         builder.CloseElement();
     }

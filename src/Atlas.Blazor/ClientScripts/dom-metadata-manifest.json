@@ -4,7 +4,8 @@
     "requiredAttributes": [
       "data-atlas-host-id",
       "data-atlas-workspace-id",
-      "data-atlas-protocol-version"
+      "data-atlas-protocol-version",
+      "data-atlas-revision"
     ]
   },
   "split": {
@@ -33,5 +34,35 @@
   },
   "toolGroup": {
     "selector": "[data-atlas-group-kind=tool][data-atlas-group-id]"
+  },
+  "dragSource": {
+    "selector": "[data-atlas-drag-kind]",
+    "requiredAttributes": [
+      "data-atlas-drag-kind",
+      "data-atlas-item-id",
+      "data-atlas-command-capabilities"
+    ]
+  },
+  "panelHeader": {
+    "selector": "[data-atlas-panel-header]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-insertion-index"
+    ]
+  },
+  "toolbarEntry": {
+    "selector": "[data-atlas-toolbar-entry]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-toolbar-region",
+      "data-atlas-insertion-index"
+    ]
+  },
+  "dropScaffold": {
+    "selector": "[data-atlas-drop-scaffold]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-toolbar-region"
+    ]
   }
 }

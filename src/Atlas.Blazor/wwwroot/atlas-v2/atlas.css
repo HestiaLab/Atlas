@@ -135,6 +135,25 @@
   opacity: 0.25;
 }
 
+.atlas-v2-drop-scaffold {
+  display: none;
+  min-block-size: 2rem;
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-drop-scaffold {
+  display: block;
+}
+
+[data-atlas-drop-preview] {
+  outline: 2px solid Highlight;
+  outline-offset: -2px;
+}
+
+[data-atlas-dragging="true"] {
+  cursor: grabbing;
+  user-select: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .atlas-v2-workspace *,
   .atlas-v2-workspace *::before,

@@ -25,6 +25,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private readonly AtlasFocusCoordinator focusCoordinator = new();
     private readonly AtlasContentRegistry emptyRegistry =
         new(Array.Empty<AtlasContentRegistration>());
+    private readonly HashSet<string> consumedDragSessions = new(StringComparer.Ordinal);
     private IReadOnlyDictionary<LayoutNodeId, AtlasSplitterPresentation>
         declarativeSplitterPresentations =
             new Dictionary<LayoutNodeId, AtlasSplitterPresentation>();
@@ -252,6 +253,10 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         builder.AddAttribute(sequence++, "data-atlas-host-id", hostId);
         builder.AddAttribute(sequence++, "data-atlas-protocol-version", "1");
         builder.AddAttribute(sequence++, "data-atlas-workspace-id", activeWorkspace.Id.Value);
+        builder.AddAttribute(
+            sequence++,
+            "data-atlas-revision",
+            snapshot.Revision.ToString(CultureInfo.InvariantCulture));
         builder.AddAttribute(sequence++, "data-atlas-direction", "inherit");
         builder.AddAttribute(sequence++, "data-atlas-reduced-motion", "system");
         builder.AddElementReferenceCapture(sequence++, element => rootElement = element);
@@ -662,8 +667,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 sequence++,
                 "data-atlas-toolbar-region",
                 region.Group.LogicalRegion!.Value.ToString());
-            foreach (var item in region.Items)
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-group-id",
+                region.Group.Id.Value);
+            for (var itemIndex = 0; itemIndex < region.Items.Length; itemIndex++)
             {
+                var item = region.Items[itemIndex];
                 var isActive = region.Group.Visibility == GroupVisibility.Expanded
                     && region.Group.SelectedItemId == item.Id;
                 builder.OpenElement(sequence++, "button");
@@ -674,6 +684,17 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 builder.AddAttribute(sequence++, "aria-selected", isActive);
                 builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
                 builder.AddAttribute(sequence++, "data-atlas-item-kind", "tool");
+                builder.AddAttribute(sequence++, "data-atlas-drag-kind", "toolbar-entry");
+                builder.AddAttribute(sequence++, "data-atlas-toolbar-entry", "true");
+                builder.AddAttribute(sequence++, "data-atlas-group-id", region.Group.Id.Value);
+                builder.AddAttribute(
+                    sequence++,
+                    "data-atlas-toolbar-region",
+                    region.Group.LogicalRegion.Value.ToString());
+                builder.AddAttribute(
+                    sequence++,
+                    "data-atlas-insertion-index",
+                    itemIndex.ToString(CultureInfo.InvariantCulture));
                 builder.AddAttribute(
                     sequence++,
                     "data-atlas-command-capabilities",
@@ -685,6 +706,19 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                         this,
                         () => ToggleToolAsync(region.Group, item.Id, isActive)));
                 builder.AddContent(sequence++, item.Title);
+                builder.CloseElement();
+            }
+
+            if (region.Group.Visibility == GroupVisibility.Collapsed)
+            {
+                builder.OpenElement(sequence++, "div");
+                builder.AddAttribute(sequence++, "class", "atlas-v2-drop-scaffold");
+                builder.AddAttribute(sequence++, "data-atlas-drop-scaffold", "true");
+                builder.AddAttribute(sequence++, "data-atlas-group-id", region.Group.Id.Value);
+                builder.AddAttribute(
+                    sequence++,
+                    "data-atlas-toolbar-region",
+                    region.Group.LogicalRegion.Value.ToString());
                 builder.CloseElement();
             }
 
@@ -826,6 +860,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         activeWorkspaceDeclarative = declarative;
         ownsActiveWorkspace = ownsWorkspace;
         interactionGeneration++;
+        consumedDragSessions.Clear();
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }
@@ -1071,7 +1106,122 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 message.Command,
                 message.SourceGroupId,
                 message.TargetGroupId);
+            return;
         }
+
+        if (string.Equals(message.Type, "dock-item", StringComparison.Ordinal))
+        {
+            await ExecuteDockItemAsync(message);
+        }
+    }
+
+    private async Task ExecuteDockItemAsync(AtlasInteractionMessage message)
+    {
+        if (activeWorkspace is null
+            || message.ProtocolVersion != 1
+            || !string.Equals(message.HostId, hostId, StringComparison.Ordinal)
+            || !string.Equals(
+                message.WorkspaceId,
+                activeWorkspace.Id.Value,
+                StringComparison.Ordinal)
+            || string.IsNullOrWhiteSpace(message.SessionId)
+            || !message.SessionId.StartsWith($"{hostId}:", StringComparison.Ordinal)
+            || consumedDragSessions.Contains(message.SessionId)
+            || string.IsNullOrWhiteSpace(message.ItemId)
+            || string.IsNullOrWhiteSpace(message.SourceKind)
+            || string.IsNullOrWhiteSpace(message.TargetKind)
+            || string.IsNullOrWhiteSpace(message.TargetGroupId)
+            || message.BaseRevision is null
+            || message.BaseRevision < 0)
+        {
+            return;
+        }
+
+        var snapshot = activeWorkspace.Current;
+        var itemId = new DockItemId(message.ItemId);
+        var targetGroupId = new LayoutNodeId(message.TargetGroupId);
+        if (!snapshot.Items.TryGetValue(itemId, out var item)
+            || !snapshot.Nodes.TryGetValue(targetGroupId, out var targetNode)
+            || targetNode is not GroupNode target)
+        {
+            return;
+        }
+
+        LayoutOperation? operation = null;
+        if (message.SourceKind == "document-tab"
+            && item.Kind == DockItemKind.Document
+            && target.Kind == DockItemKind.Document)
+        {
+            var zone = message.TargetKind switch
+            {
+                "document-center" => DocumentDockZone.Center,
+                "document-inline-start" => DocumentDockZone.InlineStart,
+                "document-inline-end" => DocumentDockZone.InlineEnd,
+                "document-block-start" => DocumentDockZone.BlockStart,
+                "document-block-end" => DocumentDockZone.BlockEnd,
+                _ => (DocumentDockZone?)null,
+            };
+            if (zone is null)
+            {
+                return;
+            }
+
+            if (zone == DocumentDockZone.Center)
+            {
+                operation = new DockDocumentOperation(
+                    itemId,
+                    targetGroupId,
+                    zone.Value,
+                    baseRevision: message.BaseRevision);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(message.NewGroupId)
+                    || string.IsNullOrWhiteSpace(message.NewSplitId))
+                {
+                    return;
+                }
+
+                operation = new DockDocumentOperation(
+                    itemId,
+                    targetGroupId,
+                    zone.Value,
+                    new LayoutNodeId(message.NewGroupId),
+                    new LayoutNodeId(message.NewSplitId),
+                    message.BaseRevision);
+            }
+        }
+        else if (message.SourceKind is "panel-header" or "toolbar-entry"
+            && item.Kind == DockItemKind.Tool
+            && target.Kind == DockItemKind.Tool
+            && message.TargetKind is "panel-header-insertion"
+                or "toolbar-insertion"
+                or "toolbar-region"
+                or "drop-scaffold")
+        {
+            if (message.InsertionIndex < 0
+                || (message.LogicalRegion is not null
+                    && !string.Equals(
+                        message.LogicalRegion,
+                        target.LogicalRegion?.ToString(),
+                        StringComparison.Ordinal)))
+            {
+                return;
+            }
+
+            operation = new MoveToolOperation(
+                itemId,
+                targetGroupId,
+                message.InsertionIndex,
+                message.BaseRevision);
+        }
+
+        if (operation is null || !consumedDragSessions.Add(message.SessionId))
+        {
+            return;
+        }
+
+        await activeWorkspace.ExecuteAsync(operation);
     }
 
     private async Task ExecuteKeyboardCommandAsync(
