@@ -631,7 +631,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             command: null,
             generation: 1);
 
-        Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(
+            ResizeSplitInputKind.Pointer,
+            Assert.IsType<ResizeSplitOperation>(tracked.LastOperation).InputKind);
         Assert.Equal(1, tracked.ExecuteCount);
         Assert.Equal(
             SplitBasis.Proportional(0.4),
@@ -658,15 +660,29 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             receiverReference,
             type: "resize-split",
             splitId: "root",
+            firstRatio: 0.6,
+            mode: "keyboard",
+            command: null,
+            generation: 1,
+            baseRevision: null);
+        Assert.Equal(
+            ResizeSplitInputKind.Keyboard,
+            Assert.IsType<ResizeSplitOperation>(tracked.LastOperation).InputKind);
+        Assert.Equal(3, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
             firstRatio: 0.3,
             mode: "resize",
             command: null,
             generation: 0);
-        Assert.Equal(2, tracked.ExecuteCount);
+        Assert.Equal(3, tracked.ExecuteCount);
 
         await cut.Instance.DisposeAsync();
         Assert.Single(module.Invocations["disposeAtlasController"]);
-        Assert.Equal(2, tracked.ExecuteCount);
+        Assert.Equal(3, tracked.ExecuteCount);
         await tracked.DisposeAsync();
     }
 
@@ -826,7 +842,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         string? mode,
         string? command,
         long generation,
-        long baseRevision = 0,
+        long? baseRevision = 0,
         string? sourceGroupId = null,
         string? targetGroupId = null)
     {

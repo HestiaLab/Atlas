@@ -45,7 +45,6 @@ export class AtlasInteractionController {
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
   private keyboardRatio: number | undefined;
-  private keyboardBaseRevision: number | undefined;
   private callbackQueue: Promise<unknown> = Promise.resolve();
   private disposed = false;
 
@@ -249,9 +248,9 @@ export class AtlasInteractionController {
         : rect.height;
       const limits = this.readLimits(split, extent);
       this.keyboardSplit = split;
-      this.keyboardBaseRevision ??= this.readRevision(split);
       this.keyboardRatio = clamp(requested, limits.minimum, limits.maximum);
       this.preview(split, this.keyboardRatio);
+      this.commitResize(split, this.keyboardRatio, "keyboard", null);
       this.scheduleKeyboardCommit();
       return;
     }
@@ -398,15 +397,7 @@ export class AtlasInteractionController {
   }
 
   private flushKeyboardCommit(): void {
-    const split = this.keyboardSplit;
-    const ratio = this.keyboardRatio;
-    const baseRevision = this.keyboardBaseRevision;
     this.clearKeyboardCommit();
-    if (split && ratio !== undefined && baseRevision !== undefined
-      && ratio !== this.readRatio(split)) {
-      this.clearPreview(split);
-      this.commitResize(split, ratio, "resize", baseRevision);
-    }
   }
 
   private clearKeyboardCommit(): void {
@@ -420,7 +411,6 @@ export class AtlasInteractionController {
     }
     this.keyboardSplit = undefined;
     this.keyboardRatio = undefined;
-    this.keyboardBaseRevision = undefined;
   }
 
   private cancelResize(): void {
@@ -436,8 +426,8 @@ export class AtlasInteractionController {
   private commitResize(
     split: HTMLElement,
     firstRatio: number,
-    mode: "resize" | "equalize",
-    baseRevision: number): void {
+    mode: "resize" | "keyboard" | "equalize",
+    baseRevision: number | null): void {
     const splitId = split.dataset.atlasNodeId;
     if (!splitId) {
       return;

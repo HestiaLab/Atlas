@@ -25,12 +25,22 @@ test("shared interaction protocol fixture matches TypeScript v1 union", () => {
     isValidControllerIdentity(protocolFixture.identity),
     true);
   const resize = protocolFixture.resizeSplitCommit as AtlasInteractionMessage;
+  const keyboardResize =
+    protocolFixture.keyboardResizeCommit as AtlasInteractionMessage;
   const keyboard =
     protocolFixture.keyboardCommandIntent as AtlasInteractionMessage;
   assert.equal(resize.type, "resize-split");
   assert.equal(
     resize.type === "resize-split" ? resize.baseRevision : -1,
     7);
+  assert.equal(
+    keyboardResize.type === "resize-split" ? keyboardResize.mode : "",
+    "keyboard");
+  assert.equal(
+    keyboardResize.type === "resize-split"
+      ? keyboardResize.baseRevision
+      : -1,
+    null);
   assert.equal(keyboard.type, "keyboard-command");
 });
 
@@ -229,7 +239,7 @@ test("cancel and dispose produce no terminal callback", async () => {
   assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
 });
 
-test("splitter key burst commits once and double click requests equalize", async () => {
+test("each splitter key step commits and double click requests equalize", async () => {
   const fixture = controllerFixture();
   fixture.splitter.dispatchEvent(interactionEvent("keydown", {
     code: "ArrowRight",
@@ -248,18 +258,26 @@ test("splitter key burst commits once and double click requests equalize", async
   }));
   await flushCallbacks();
 
-  assert.equal(fixture.messages.length, 1);
+  assert.equal(fixture.messages.length, 2);
   assert.equal(fixture.messages[0]?.type, "resize-split");
   assert.equal(
     fixture.messages[0]?.type === "resize-split"
       ? fixture.messages[0].firstRatio
       : 0,
-    0.7);
+    0.6);
+  assert.deepEqual(fixture.messages[1], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.7,
+    mode: "keyboard",
+    generation: 4,
+    baseRevision: null
+  });
 
   fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
   await flushCallbacks();
-  assert.equal(fixture.messages.length, 2);
-  assert.deepEqual(fixture.messages[1], {
+  assert.equal(fixture.messages.length, 3);
+  assert.deepEqual(fixture.messages[2], {
     type: "resize-split",
     splitId: "root",
     firstRatio: 0.5,

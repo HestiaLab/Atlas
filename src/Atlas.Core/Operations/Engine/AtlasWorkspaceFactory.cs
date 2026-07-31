@@ -19,7 +19,7 @@ internal sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
             IAtlasWorkspace workspace = new AtlasWorkspace(
                 snapshot,
                 new DefaultWorkspaceOperationPlanner(resolvedOptions),
-                resolvedOptions.History.MaxEntries);
+                resolvedOptions.History);
             return WorkspaceResult<IAtlasWorkspace>.Success(workspace);
         }
         catch (ArgumentException)

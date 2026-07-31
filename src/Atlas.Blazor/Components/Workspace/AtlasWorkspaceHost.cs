@@ -1047,10 +1047,17 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                     return;
                 }
 
-                operation = new ResizeSplitOperation(
-                    new LayoutNodeId(message.SplitId),
-                    SplitBasis.Proportional(message.FirstRatio),
-                    message.BaseRevision);
+                operation = string.Equals(
+                    message.Mode,
+                    "keyboard",
+                    StringComparison.Ordinal)
+                    ? ResizeSplitOperation.CreateKeyboard(
+                        new LayoutNodeId(message.SplitId),
+                        SplitBasis.Proportional(message.FirstRatio))
+                    : new ResizeSplitOperation(
+                        new LayoutNodeId(message.SplitId),
+                        SplitBasis.Proportional(message.FirstRatio),
+                        message.BaseRevision);
             }
 
             await activeWorkspace.ExecuteAsync(operation);

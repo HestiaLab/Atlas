@@ -70,6 +70,86 @@ public sealed class ResizeSplitOperationTests
         }
     }
 
+    [Fact]
+    public async Task Keyboard_resize_steps_within_window_coalesce_into_one_history_entry()
+    {
+        var (initialWorkspace, split) = CreateWorkspace();
+        var snapshot = initialWorkspace.Current;
+        await initialWorkspace.DisposeAsync();
+        var now = new DateTimeOffset(2026, 7, 31, 0, 0, 0, TimeSpan.Zero);
+        await using var workspace = new AtlasWorkspace(
+            snapshot,
+            new DefaultWorkspaceOperationPlanner(),
+            new WorkspaceHistoryOptions(
+                resizeCoalescingWindow: TimeSpan.FromMilliseconds(500)),
+            () => now);
+
+        await workspace.ExecuteAsync(
+            ResizeSplitOperation.CreateKeyboard(
+                split.Id,
+                SplitBasis.Proportional(0.6)));
+        now += TimeSpan.FromMilliseconds(100);
+        await workspace.ExecuteAsync(
+            ResizeSplitOperation.CreateKeyboard(
+                split.Id,
+                SplitBasis.Proportional(0.7)));
+
+        var undo = await workspace.UndoAsync();
+
+        Assert.Equal(WorkspaceResultStatus.Success, undo.Status);
+        Assert.Equal(
+            split.Basis,
+            Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
+        Assert.False(workspace.CanUndo);
+
+        await workspace.RedoAsync();
+        Assert.Equal(
+            SplitBasis.Proportional(0.7),
+            Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
+    }
+
+    [Fact]
+    public async Task Pointer_or_expired_keyboard_resizes_keep_distinct_history_entries()
+    {
+        var (initialWorkspace, split) = CreateWorkspace();
+        var snapshot = initialWorkspace.Current;
+        await initialWorkspace.DisposeAsync();
+        var now = new DateTimeOffset(2026, 7, 31, 0, 0, 0, TimeSpan.Zero);
+        await using var workspace = new AtlasWorkspace(
+            snapshot,
+            new DefaultWorkspaceOperationPlanner(),
+            new WorkspaceHistoryOptions(
+                resizeCoalescingWindow: TimeSpan.FromMilliseconds(50)),
+            () => now);
+
+        await workspace.ExecuteAsync(
+            ResizeSplitOperation.CreateKeyboard(
+                split.Id,
+                SplitBasis.Proportional(0.6)));
+        now += TimeSpan.FromMilliseconds(100);
+        await workspace.ExecuteAsync(
+            ResizeSplitOperation.CreateKeyboard(
+                split.Id,
+                SplitBasis.Proportional(0.7)));
+        await workspace.ExecuteAsync(
+            new ResizeSplitOperation(
+                split.Id,
+                SplitBasis.Proportional(0.8)));
+
+        await workspace.UndoAsync();
+        Assert.Equal(
+            SplitBasis.Proportional(0.7),
+            Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
+        await workspace.UndoAsync();
+        Assert.Equal(
+            SplitBasis.Proportional(0.6),
+            Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
+        await workspace.UndoAsync();
+        Assert.Equal(
+            split.Basis,
+            Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
+    }
+
     private static (AtlasWorkspace Workspace, SplitNode Split) CreateWorkspace()
     {
         var firstItem = CreateDocument("first");

@@ -14,7 +14,11 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
     private readonly WorkspaceEventDispatcher eventDispatcher = new();
     private readonly AtlasWorkspaceDomainEvents domainEvents = new();
     private readonly int maxHistoryEntries;
+    private readonly TimeSpan resizeCoalescingWindow;
+    private readonly Func<DateTimeOffset> utcNow;
     private WorkspaceStoreState state;
+    private ResizeHistoryKey? lastResizeHistoryKey;
+    private DateTimeOffset lastResizeCommittedAt;
     private TaskCompletionSource<object?>? operationsDrained;
     private int activeOperations;
     private volatile bool disposed;
@@ -23,16 +27,22 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         WorkspaceSnapshot initialSnapshot,
         IWorkspaceOperationPlanner planner,
         int maxHistoryEntries = DefaultMaxHistoryEntries)
+        : this(
+            initialSnapshot,
+            planner,
+            new WorkspaceHistoryOptions(maxEntries: maxHistoryEntries))
+    {
+    }
+
+    internal AtlasWorkspace(
+        WorkspaceSnapshot initialSnapshot,
+        IWorkspaceOperationPlanner planner,
+        WorkspaceHistoryOptions history,
+        Func<DateTimeOffset>? utcNow = null)
     {
         ArgumentNullException.ThrowIfNull(initialSnapshot);
         this.planner = planner ?? throw new ArgumentNullException(nameof(planner));
-        if (maxHistoryEntries <= 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(maxHistoryEntries),
-                maxHistoryEntries,
-                "History capacity must be positive.");
-        }
+        ArgumentNullException.ThrowIfNull(history);
 
         var violations = WorkspaceInvariantValidator.Validate(initialSnapshot);
         if (violations.Count != 0)
@@ -43,7 +53,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         }
 
         state = new WorkspaceStoreState(initialSnapshot);
-        this.maxHistoryEntries = maxHistoryEntries;
+        maxHistoryEntries = history.MaxEntries;
+        resizeCoalescingWindow = history.ResizeCoalescingWindow;
+        this.utcNow = utcNow ?? (() => DateTimeOffset.UtcNow);
     }
 
     public WorkspaceId Id => Current.Id;
@@ -106,15 +118,30 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                 committedSnapshot = patch.ApplyForward(captured);
                 EnsureValid(committedSnapshot);
                 changeSet = patch.Describe(captured, committedSnapshot, plan.ChangeKind);
+                var committedAt = utcNow();
+                var resizeKey = ResizeHistoryKey.For(operation);
                 var undo = plan.IsHistoryBarrier
                     ? Array.Empty<WorkspacePatch>()
-                    : AppendBounded(currentState.Undo, patch);
+                    : AppendHistory(
+                        currentState.Undo,
+                        patch,
+                        resizeKey,
+                        committedAt);
                 Volatile.Write(
                     ref state,
                     new WorkspaceStoreState(
                         committedSnapshot,
                         undo,
                         redo: Array.Empty<WorkspacePatch>()));
+                if (plan.IsHistoryBarrier)
+                {
+                    lastResizeHistoryKey = null;
+                }
+                else
+                {
+                    lastResizeHistoryKey = resizeKey;
+                    lastResizeCommittedAt = committedAt;
+                }
             }
 
             eventDispatcher.Enqueue(
@@ -212,6 +239,7 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                         undo
                             ? new WorkspaceStoreState(committed, remaining, destination)
                             : new WorkspaceStoreState(committed, destination, remaining));
+                    lastResizeHistoryKey = null;
                 }
             }
 
@@ -247,6 +275,28 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             .Append(patch)
             .TakeLast(maxHistoryEntries)
             .ToArray();
+    }
+
+    private WorkspacePatch[] AppendHistory(
+        IReadOnlyList<WorkspacePatch> history,
+        WorkspacePatch patch,
+        ResizeHistoryKey? resizeKey,
+        DateTimeOffset committedAt)
+    {
+        if (resizeKey is not null
+            && resizeKey == lastResizeHistoryKey
+            && resizeCoalescingWindow > TimeSpan.Zero
+            && committedAt >= lastResizeCommittedAt
+            && committedAt - lastResizeCommittedAt <= resizeCoalescingWindow
+            && history.Count != 0)
+        {
+            return history
+                .Take(history.Count - 1)
+                .Append(WorkspacePatch.Create(history[^1].Before, patch.After))
+                .ToArray();
+        }
+
+        return AppendBounded(history, patch);
     }
 
     private static WorkspaceResult<LayoutChangeSet> NoChange(
@@ -307,6 +357,21 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         if (disposed)
         {
             throw new ObjectDisposedException(nameof(AtlasWorkspace));
+        }
+    }
+
+    private sealed record ResizeHistoryKey(
+        LayoutNodeId SplitId,
+        ResizeSplitInputKind InputKind)
+    {
+        internal static ResizeHistoryKey? For(LayoutOperation operation)
+        {
+            return operation is ResizeSplitOperation
+            {
+                InputKind: ResizeSplitInputKind.Keyboard,
+            } resize
+                ? new ResizeHistoryKey(resize.SplitId, resize.InputKind)
+                : null;
         }
     }
 }

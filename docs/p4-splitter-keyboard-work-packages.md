@@ -34,7 +34,7 @@ failure semantics。各切片必须保持 Atlas.Core/Atlas.Blazor 双包边界�
 
 ## WP-P4-03 — Splitter 与 workspace keyboard
 
-- Scope：splitter Arrow/Home/End、coalesced terminal commit、默认 command map、editable
+- Scope：splitter Arrow/Home/End 每步提交与 Core history coalescing、默认 command map、editable
   target guard、tab/close/focus semantic intent。
 - Requirement：REQ-F-035、REQ-F-041、REQ-F-116～REQ-F-118、REQ-NF-003、REQ-NF-007。
 - DES：DES-INT-007、DES-INT-008、DES-NFR-003。
@@ -43,7 +43,7 @@ failure semantics。各切片必须保持 Atlas.Core/Atlas.Blazor 双包边界�
 - Public API impact：新增 keyboard command/chord/binding/map 类型；同步 PublicAPI。
 - Failure semantics：未绑定或被 editable guard 拦截时不 callback；无效目标不改变 workspace；
   一个连续按键 burst 只形成一次 history entry。
-- Tests：TS command matching/coalescing；bUnit semantic execution 与 focus request。
+- Tests：Core coalescing；TS command matching/逐步 commit；bUnit semantic execution 与 focus request。
 - Verification：npm 与 Atlas.Blazor targeted gates。
 - Traceability update：更新 keyboard/accessibility requirement evidence。
 

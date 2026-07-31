@@ -11,9 +11,9 @@ export interface ResizeSplitCommit {
   readonly type: "resize-split";
   readonly splitId: string;
   readonly firstRatio: number;
-  readonly mode: "resize" | "equalize";
+  readonly mode: "resize" | "keyboard" | "equalize";
   readonly generation: number;
-  readonly baseRevision: number;
+  readonly baseRevision: number | null;
 }
 
 export type AtlasKeyboardCommand =

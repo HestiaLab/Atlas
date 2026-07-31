@@ -275,8 +275,13 @@ Atlas.Core.Operations.ReorderToolBarEntryOperation.ReorderToolBarEntryOperation(
 Atlas.Core.Operations.ReorderToolBarEntryOperation.TargetIndex.get -> int
 Atlas.Core.Operations.ResizeSplitOperation
 Atlas.Core.Operations.ResizeSplitOperation.Basis.get -> Atlas.Core.Layout.SplitBasis
+static Atlas.Core.Operations.ResizeSplitOperation.CreateKeyboard(Atlas.Core.LayoutNodeId splitId, Atlas.Core.Layout.SplitBasis basis) -> Atlas.Core.Operations.ResizeSplitOperation!
+Atlas.Core.Operations.ResizeSplitOperation.InputKind.get -> Atlas.Core.Operations.ResizeSplitInputKind
 Atlas.Core.Operations.ResizeSplitOperation.ResizeSplitOperation(Atlas.Core.LayoutNodeId splitId, Atlas.Core.Layout.SplitBasis basis, long? baseRevision = null) -> void
 Atlas.Core.Operations.ResizeSplitOperation.SplitId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.ResizeSplitInputKind
+Atlas.Core.Operations.ResizeSplitInputKind.Keyboard = 1 -> Atlas.Core.Operations.ResizeSplitInputKind
+Atlas.Core.Operations.ResizeSplitInputKind.Pointer = 0 -> Atlas.Core.Operations.ResizeSplitInputKind
 Atlas.Core.Operations.SelectItemOperation
 Atlas.Core.Operations.SelectItemOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.SelectItemOperation.SelectItemOperation(Atlas.Core.DockItemId itemId, long? baseRevision = null) -> void

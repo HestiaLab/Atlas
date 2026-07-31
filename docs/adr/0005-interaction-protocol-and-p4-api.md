@@ -100,3 +100,6 @@ lifetime/security 能力。`DEV-GATE-002` 保持 Open，直至 P5 需要其证�
 
 修改协议版本、消息 union、默认键盘语义或上述公共 API 时，必须由新的 Accepted ADR
 取代本 ADR。
+
+键盘 resize 的提交频率、input kind 与 Core history 合并条款已由
+[ADR-0006](./0006-keyboard-resize-history-coalescing.md) 取代。

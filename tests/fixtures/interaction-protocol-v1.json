@@ -14,6 +14,14 @@
     "generation": 3,
     "baseRevision": 7
   },
+  "keyboardResizeCommit": {
+    "type": "resize-split",
+    "splitId": "split-fixture",
+    "firstRatio": 0.4,
+    "mode": "keyboard",
+    "generation": 3,
+    "baseRevision": null
+  },
   "keyboardCommandIntent": {
     "type": "keyboard-command",
     "command": "next-tab",

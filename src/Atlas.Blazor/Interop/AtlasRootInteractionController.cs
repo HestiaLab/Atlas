@@ -221,5 +221,5 @@ internal sealed class AtlasInteractionMessage
 
     public long Generation { get; set; }
 
-    public long BaseRevision { get; set; }
+    public long? BaseRevision { get; set; }
 }
