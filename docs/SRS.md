@@ -3386,7 +3386,9 @@ AC2：恢复Editor Tab（编辑器标签页）信息
 Given 开发者调用导入布局接口恢复布局
 When 布局恢复完成
 Then 系统应恢复所有标签页信息
-And 标签页信息包含Content Identifier（内容标识）、标题、参数、可关闭标记、Pinned（固定标记）
+And 标签页信息包含Content Identifier（内容标识）、标题、可关闭标记、Pinned（固定标记）
+And 可持久化业务身份参数通过 ContentReference 的 kind/resourceId 表达
+And 任意运行时对象参数不进入布局文档，由应用在内容解析或显式迁移 hook 中恢复
 
 AC3：恢复面板比例
 
@@ -4951,6 +4953,7 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-148     | 容器尺寸变化时布局自适应                               | 新增     | 容器 resize 按比例自适应，含最小尺寸约束冲突处理                                                                               |
 | REQ-F-153     | ToolBar 拖拽投放交互稳定性                          | 新增     | 根据实机测试反馈新增 ToolBar 拖拽稳定性约束：拖拽预览不跳跃、Divider 不占常驻槽位、空逻辑槽位拖拽可达、拖拽渲染与注册过程无 Blazor crit 级错误                     |
 | REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；可见 RegionBody 不作为直接释放目标 |
+| REQ-F-085~088 | Persistence Schema | 修改 | 2026-07-31 依据 ADR-0010 固定 V2 namespace、`2.0` 版本、strict unknown policy、完整 committed topology；任意对象参数不持久化；无真实 V1 样本时仅支持已冻结窄兼容输入 |
 | REQ-F-022     | ToolBar Dock Panel 切换                      | 修改     | 切换模型改为 Toggle（方案 A）：点击已打开且活跃 Panel 的条目 → 收起 Panel；AC 拆分（AC2 新增收起 / AC3 原非活跃激活 / AC4 原 API）；Flowchart 补收起分支 |
 | —             | 全文一致性                                      | 勘误     | 范围外明确排除主题/i18n/Floating Window；§1.2 范围表 + §2.2 导航去"主题、国际化"；新增附录 D 错误码汇总；附录 B 新增主题和 Floating Window 延期行     |
 | —             | 全局术语                                       | 全局     | 术语统一为 English（中文）双语格式；移除 Tab Group / Panel Tab 旧模型                                                         |

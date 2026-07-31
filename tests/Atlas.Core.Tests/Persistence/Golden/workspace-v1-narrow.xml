@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AtlasLayout schemaVersion="1.0" workspaceId="main">
+  <Panels>
+    <Panel id="explorer" contentKey="explorer" region="left-upper" title="Explorer" active="true" autoHidden="false" size="280" />
+  </Panels>
+  <EditorViews>
+    <EditorView id="document-42" contentKey="document-editor" resourceId="42" title="Document 42" active="true" pinned="true" />
+  </EditorViews>
+</AtlasLayout>

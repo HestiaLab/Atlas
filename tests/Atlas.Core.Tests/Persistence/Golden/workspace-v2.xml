@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AtlasWorkspace xmlns="urn:atlas:workspace:2" schemaVersion="2.0" workspaceId="main">
+  <Items>
+    <Item id="document-42" kind="Document" title="Document 42" iconKey="file" capabilities="27">
+      <Content kind="document-editor" resourceId="42" />
+      <DocumentState isPinned="true" isPreview="false" />
+    </Item>
+    <Item id="explorer" kind="Tool" title="Explorer" iconKey="tree" capabilities="7">
+      <Content kind="explorer" resourceId="main-solution" />
+    </Item>
+  </Items>
+  <Layout>
+    <Split id="root" axis="InlineChildren" basisKind="FixedPixels" basisValue="280" basisAnchor="First" firstMinimum="160" firstMaximum="480" secondMinimum="240">
+      <First>
+        <Group id="left-tools" kind="Tool" retentionPolicy="Persistent" visibility="Expanded" selectedItemId="explorer" logicalRegion="InlineStartUpper">
+          <ItemRef id="explorer" />
+        </Group>
+      </First>
+      <Second>
+        <Group id="documents" kind="Document" retentionPolicy="Persistent" visibility="Expanded" selectedItemId="document-42">
+          <EditorState overflowMode="Scroll" activationPolicy="MostRecentlyVisited">
+            <RecentlyVisited id="document-42" />
+          </EditorState>
+          <ItemRef id="document-42" />
+        </Group>
+      </Second>
+    </Split>
+  </Layout>
+  <ToolBars>
+    <ToolBar side="InlineStart" visibility="Expanded" />
+    <ToolBar side="InlineEnd" visibility="Collapsed" />
+    <RegionOrder region="InlineStartUpper">
+      <ItemRef id="explorer" />
+    </RegionOrder>
+  </ToolBars>
+  <AutoHide />
+</AtlasWorkspace>

@@ -1579,7 +1579,8 @@ DES-PER-002
 XML Schema
 V2 持久化格式为 XML。空 Workspace 使用空 <Layout />，不引入隐式默认 Group 或 EmptyNode。
 
-  <AtlasWorkspace schemaVersion="2" workspaceId="main">
+  <AtlasWorkspace xmlns="urn:atlas:workspace:2"
+                  schemaVersion="2.0" workspaceId="main">
     <Items>
       <Item id="explorer" kind="Tool" title="Explorer">
         <Content kind="explorer" resourceId="main-solution" />
@@ -1607,7 +1608,7 @@ V2 持久化格式为 XML。空 Workspace 使用空 <Layout />，不引入隐式
     </Layout>
     <ToolBars>
       <ToolBar side="InlineStart" visibility="Expanded">
-        <RegionOrder region="left-upper">
+        <RegionOrder region="InlineStartUpper">
           <ItemRef id="explorer" />
         </RegionOrder>
       </ToolBar>
@@ -1625,7 +1626,9 @@ XML 支持 schema validation、版本化命名空间和人类可读的层级结�
 相比 JSON 的优势：schema 版本可以随根元素属性声明、元素顺序在语义上与 Item ordering 一致、
 支持注释（便于手工调试和 golden file 审查）。
 
-最终 XML schema 需独立 ADR 与 golden file 审批。SplitAxis 枚举值与 SRS、TypeScript wire value
+XML schema 已由 ADR-0010 与 golden file 批准。严格 XSD 不允许 unknown element/attribute，
+canonical writer 使用固定 element order；reader 接受通过同一 XSD 的 2.x minor，拒绝其他 major。
+SplitAxis 枚举值与 SRS、TypeScript wire value
 使用相同定义。Items 独立于 Layout 列出，避免同一 Item 被多处引用时的重复定义。
 ToolBars 只保存 committed visibility 与独立 presentation ordering；Entry 的 title、icon、active
 和 DisplayState 仍从 Item/placement 派生，不在 XML 中复制。
@@ -1683,8 +1686,9 @@ V1 迁移
   AutoHidden display state → AutoHideStrip placement
   Parameters               → 不做 generic migration，由 consumer 显式迁移 hook
 
-Compatibility policy：Atlas 1.x 维持必要修复；Atlas 2.0 使用独立 schemaVersion 2；V2 支持
-读取 V1 layout 一个明确兼容窗口；V2 只写 V2；不支持 V1 读取 V2；migration failure 返回
+Compatibility policy：Atlas 1.x 维持必要修复；Atlas 2.0 使用独立 schemaVersion 2.0；V2 支持
+读取 ADR-0010 冻结的无 namespace `AtlasLayout` 1.0 窄兼容输入；因无真实 V1 artifact，不宣称
+通用 V1 compatibility。V2 只写 V2；不支持 V1 读取 V2；migration failure 返回
 structured report，原状态不变。
 
 旧 Parameters 如果包含业务状态，框架无法猜测其类型和语义——只能由 consumer 通过显式 migration
@@ -2131,7 +2135,7 @@ component instance preservation，不能合并为一个模糊的"内容保持"�
 | DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | **Closed**：ADR-0007 Accepted；SRS 已统一 enabled set、优先级、失败语义与默认策略 | 参数化 resolver、全部候选策略的纯函数测试 |
 | DEV-GATE-003 Content Lifetime | OI-002 | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + ADR，明确“业务状态”或“组件实例”的合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
 | DEV-GATE-004 Content Trust | OI-006 | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + ADR | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
-| DEV-GATE-005 Persistence Schema | DES-PER-002 的待审批项 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、至少一组 V1/V2 golden files | DTO/validator 接口与 adversarial parser tests |
+| DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | OI-003、OI-005 | 自动化覆盖率统计和“全部需求完成”声明 | SRS 统计勘误；无正式需求块的编号有明确 disposition | 以正文 150 个正式需求块建立临时矩阵 |
 
 闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、

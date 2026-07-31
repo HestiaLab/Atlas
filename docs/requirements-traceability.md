@@ -34,7 +34,7 @@
 | DEV-GATE-002 Panel Drop Policy | Closed | [ADR-0007](./adr/0007-panel-drop-policy.md) Accepted；SRS/HLD 已统一 ToolBar-first + hidden Scaffold enabled set、优先级与失败语义 |
 | DEV-GATE-003 Content Lifetime | Open | OI-002 |
 | DEV-GATE-004 Content Trust | Open | OI-006 |
-| DEV-GATE-005 Persistence Schema | Open | schema ADR/XSD 未批准 |
+| DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
 | DEV-GATE-006 Traceability Baseline | Evidence Ready | 本文件已建立；SRS OI-003/OI-005 仍待勘误 |
 
 ## 实施状态变更
@@ -84,6 +84,7 @@
 | REQ-F-045、REQ-F-048、REQ-F-051、REQ-F-156 | DES-DOM-011、DES-INT-003、DES-OP-007 | P5 | `ClientScripts/controller.ts`、`AtlasWorkspaceHost.cs` | Node Before/After resolver 与 geometry snapshot；`AtlasWorkspaceHostTests` insertion slot 到 final index；Core reorder/Undo/Redo | Implemented | P5-WP-03/04 根据 ADR-0009 实现同 Group Document Tab reorder；跨 Group Tab center 保持 ADR-0008 append 语义 |
 | REQ-F-054~062、REQ-F-069、REQ-F-133、REQ-F-147、REQ-F-153、REQ-F-156 | DES-OP-007、DES-INT-005~006、DES-PRJ-003 | P5 | `Atlas.Blazor/Interop`、`Components/Workspace/AtlasWorkspaceHost.cs` | `AtlasWorkspaceHostTests`：document/panel/reorder mapping、protocol/host/workspace/generation/session/revision/source/target validation、single-use session、cross-Host rejection | Implemented | P5-WP-04 将已冻结 commit intent 映射为 Core `DockDocumentOperation`/`MoveToolOperation`/`ReorderItemOperation`；stale typed failure 与 Undo/Redo 由 Core transaction 验证 |
 | — | DES-DOM-003、DES-DOM-008、DES-OP-001、DES-OP-004~007、DES-INT-001~006、DES-PRJ-002~003、DES-RND-005、DES-RND-007~008 | P5 | `Atlas.Core`、`Atlas.Blazor` | Node.js 24：14 tests；230 Core tests；29 Blazor/bUnit tests；真实浏览器 Document/Panel/cross-Host/terminal；120 pointermove = 75.543 FPS；restore/build/test/format；Core/Blazor Release pack | Verified | P5 Phase Exit Gate 已满足；review/refactor、ADR-0007/0008/0009、PublicAPI/protocol/DOM golden fixtures 与 [P5 evidence](./evidence/p5-drag-and-dock.md) 已完成；DEV-GATE-003～006 状态未擅自改变，P6/P7 未提前实现 |
+| REQ-F-021、REQ-F-085~088、REQ-F-140、REQ-F-149 | DES-PER-001~005 | P6 | `Atlas.Core/Persistence/Schema` | ADR-0010；strict V2 XSD；V1/V2 golden fixtures；schema compilation/validation tests | In Progress | P6-WP-01 冻结 namespace `urn:atlas:workspace:2`、schemaVersion `2.0`、canonical order、limits、unknown rejection 与无真实样本 V1 窄兼容；DEV-GATE-005 Closed |
 
 ## 更新规则
 
