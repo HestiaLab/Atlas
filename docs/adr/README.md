@@ -29,6 +29,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0012](./0012-content-lifetime-and-state-preservation.md) | Accepted | 业务状态保持、Default 与 bounded KeepAliveWithinGroup 生命周期合同 |
 | [ADR-0013](./0013-content-trust-and-sandboxed-frame.md) | Accepted | TrustedComponent 非安全沙箱与 SandboxedFrame deny-by-default 安全边界 |
 | [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | 150 条正式需求基线、历史删除编号与非规范性边界场景处置 |
+| [ADR-0015](./0015-rider-style-example-application.md) | Accepted | 独立、非打包的 Rider 风格 Blazor WASM 示例项目 |
 
 ## 编写约定
 

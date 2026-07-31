@@ -2015,13 +2015,16 @@ DES-PRJ-001
 
     Atlas.Demo/              ← Demo 应用，不发布为 NuGet 包
 
+  examples/
+    Atlas.Examples.Rider/    ← Rider 风格开发者示例，不发布为 NuGet 包
+
   tests/
     Atlas.Core.Tests/        ← 纯逻辑测试（无 Blazor 依赖）
     Atlas.Blazor.Tests/      ← bUnit 组件测试
     Atlas.Interop.Tests/     ← JS protocol 测试
     Atlas.E2E.Tests/         ← 真实浏览器测试
 
-依赖方向：Atlas.Core ← Atlas.Blazor ← Atlas.Demo。禁止反向依赖。
+依赖方向：Atlas.Core ← Atlas.Blazor ← Atlas.Demo / Atlas.Examples.Rider。禁止反向依赖。
 
 V1/V2 共存规则：
 

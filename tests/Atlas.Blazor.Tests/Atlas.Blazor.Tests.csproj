@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atlas.Blazor\Atlas.Blazor.csproj" />
+    <ProjectReference Include="..\..\examples\Atlas.Examples.Rider\Atlas.Examples.Rider.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\fixtures\interaction-protocol-v1.json"

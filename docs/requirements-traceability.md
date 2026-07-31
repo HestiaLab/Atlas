@@ -7,8 +7,9 @@
 
 - 基线日期：2026-07-31
 - 正式需求块：150（REQ-F 142 + REQ-NF 8）
-- 当前功能实施状态：全部 `Not Started`
-- 已完成工程工作：DEV-GATE-001 repository baseline（本地验证通过）
+- 当前功能实施状态：见 P8 逐项审计；Verified 49、Implemented 16、In Progress 78、
+  Not Started 5、Deferred 2
+- 已完成工程工作：P0~P8 Verified；DEV-GATE-001~006 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
 在首个功能 work package 合并前，所有 150 个正式需求默认继承 `Not Started`。开始实施后，只在
@@ -101,6 +102,7 @@ P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-024、REQ-NF-008 | DES-INT-008、DES-NFR-002、DES-PRJ-002 | P8 | `Atlas.Blazor/ClientScripts/controller.ts`、`atlas.css` | Node + 真实浏览器：media query 初值、运行时 change、dispose 后 listener 无效；CSS media fallback + Host data projection | Verified | NF-008 AC 已通过；REQ-F-024 RTL 仍按 SRS/HLD 保持 Deferred，仅保留既有 logical keyboard mapping |
 | REQ-NF-004~005 | DES-INT-004、DES-INT-006~007、DES-PRJ-003 | P8 | `Atlas.Demo/Pages/P8Performance.razor`、`tests/browser/p8-hardening-fixture.html` | 真实浏览器：drag 75.543 FPS；Splitter 121.427 FPS；20 Panel first projection 192.700ms/169.900ms/113.000ms；[P8 evidence](./evidence/p8-system-hardening.md) | Verified | P8-WP-05 同时覆盖 NF-004 的 drag 与 resize AC，以及 NF-005 ≤500ms AC；测量入口不进入包/API |
 | — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、`Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests；Chromium a11y/reduced-motion/performance；restore/build/test/format；Core/Blazor Release pack；[P8 evidence](./evidence/p8-system-hardening.md) 与 [150 条审计](./evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate 已满足；150 条需求均有 DES、诚实状态与证据/缺口；REQ-NF-002/003/007 保持未完全验证，不宣称完整跨浏览器或 WCAG 覆盖 |
+| REQ-F-001~005、REQ-F-009~011、REQ-F-020~026、REQ-F-035、REQ-F-073、REQ-NF-003、REQ-NF-007 | DES-ARCH-004、DES-DOM-003、DES-DOM-008~010、DES-RND-001、DES-RND-003、DES-RND-006、DES-RND-008~009、DES-PRJ-003 | P8 follow-up | `examples/Atlas.Examples.Rider` | `RiderExampleTests`：3 Splitter、4 Group、3 Editor Tab、top toolbar、status bar；solution build 与真实浏览器 | Implemented | ADR-0015；独立非打包 WASM 示例只组合既有 public components，不新增 API/protocol；不升级对应需求的其他 AC |
 
 ## 更新规则
 

@@ -1,0 +1,97 @@
+@using Atlas.Blazor.Components
+@using Atlas.Blazor.Content
+@using Atlas.Core
+@using Atlas.Core.Layout
+@using Atlas.Core.Placement
+
+<div class="rider-example-shell">
+    <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("rider-example"))">
+        <TopToolbarContent>
+            <div class="rider-topbar">
+                <div class="rider-product-mark" aria-label="Atlas Rider example">A</div>
+                <nav class="rider-menu" aria-label="Application menu">
+                    <button type="button">File</button>
+                    <button type="button">Edit</button>
+                    <button type="button">View</button>
+                    <button type="button">Navigate</button>
+                    <button type="button">Code</button>
+                    <button type="button">Run</button>
+                </nav>
+                <div class="rider-runner">
+                    <span class="rider-branch">main</span>
+                    <button class="rider-run-target" type="button">Atlas.Examples.Rider</button>
+                    <button class="rider-run-button" type="button" aria-label="Run project">▶</button>
+                    <button type="button" aria-label="Debug project">◆</button>
+                    <button type="button" aria-label="Search everywhere">⌕</button>
+                </div>
+            </div>
+        </TopToolbarContent>
+        <StatusBarContent>
+            <div class="rider-statusbar">
+                <span>✓ No problems</span>
+                <span class="rider-status-spacer"></span>
+                <span>LF</span>
+                <span>UTF-8</span>
+                <span>4 spaces</span>
+                <span>main</span>
+            </div>
+        </StatusBarContent>
+        <ContentTemplate Context="content">
+            <RiderContent Content="@content" />
+        </ContentTemplate>
+        <ChildContent>
+            <AtlasSplitDefinition Id="@(new LayoutNodeId("root-stack"))"
+                                  Axis="SplitAxis.BlockChildren"
+                                  Basis="@(SplitBasis.Proportional(0.76d))"
+                                  Constraints="@(new SplitConstraints(360d, null, 130d, 360d))">
+                <AtlasSplitDefinition Id="@(new LayoutNodeId("main-row"))"
+                                      Axis="SplitAxis.InlineChildren"
+                                      Basis="@(SplitBasis.Proportional(0.20d))"
+                                      Constraints="@(new SplitConstraints(170d, 360d, 420d, null))">
+                    <AtlasToolGroupDefinition Id="@(new LayoutNodeId("project-group"))"
+                                              LogicalRegion="LogicalRegion.InlineStartUpper">
+                        <AtlasToolItemDefinition Id="@(new DockItemId("project"))"
+                                                 ContentKind="rider-tool"
+                                                 ResourceId="project"
+                                                 Title="Project" />
+                    </AtlasToolGroupDefinition>
+                    <AtlasSplitDefinition Id="@(new LayoutNodeId("editor-services-row"))"
+                                          Axis="SplitAxis.InlineChildren"
+                                          Basis="@(SplitBasis.Proportional(0.76d))"
+                                          Constraints="@(new SplitConstraints(360d, null, 190d, 420d))">
+                        <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("editor-group"))"
+                                                      SelectedItemId="@(new DockItemId("program"))">
+                            <AtlasDocumentItemDefinition Id="@(new DockItemId("program"))"
+                                                         ContentKind="rider-editor"
+                                                         ResourceId="editor-program"
+                                                         Title="Program.cs"
+                                                         IsPinned="true" />
+                            <AtlasDocumentItemDefinition Id="@(new DockItemId("workspace"))"
+                                                         ContentKind="rider-editor"
+                                                         ResourceId="editor-workspace"
+                                                         Title="RiderWorkspace.razor" />
+                            <AtlasDocumentItemDefinition Id="@(new DockItemId("readme"))"
+                                                         ContentKind="rider-editor"
+                                                         ResourceId="editor-readme"
+                                                         Title="README.md" />
+                        </AtlasDocumentGroupDefinition>
+                        <AtlasToolGroupDefinition Id="@(new LayoutNodeId("services-group"))"
+                                                  LogicalRegion="LogicalRegion.InlineEndUpper">
+                            <AtlasToolItemDefinition Id="@(new DockItemId("services"))"
+                                                     ContentKind="rider-tool"
+                                                     ResourceId="services"
+                                                     Title="Services" />
+                        </AtlasToolGroupDefinition>
+                    </AtlasSplitDefinition>
+                </AtlasSplitDefinition>
+                <AtlasToolGroupDefinition Id="@(new LayoutNodeId("terminal-group"))"
+                                          LogicalRegion="LogicalRegion.BlockEndInlineStart">
+                    <AtlasToolItemDefinition Id="@(new DockItemId("terminal"))"
+                                             ContentKind="rider-tool"
+                                             ResourceId="terminal"
+                                             Title="Terminal" />
+                </AtlasToolGroupDefinition>
+            </AtlasSplitDefinition>
+        </ChildContent>
+    </AtlasWorkspaceHost>
+</div>
