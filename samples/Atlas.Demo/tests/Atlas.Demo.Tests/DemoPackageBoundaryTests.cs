@@ -18,11 +18,20 @@ public sealed class DemoPackageBoundaryTests
 
         Assert.Contains("Atlas.Core", references);
         Assert.Contains("Atlas.Blazor", references);
-        var projectReferenceElement = "Project" + "Reference";
-        Assert.Empty(project.Descendants(projectReferenceElement));
+        var forbiddenReferenceElement = "Project" + "Reference";
+        Assert.Empty(project.Descendants(forbiddenReferenceElement));
+        var consumerProjects = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
+            .Select(XDocument.Load)
+            .ToArray();
+
         Assert.DoesNotContain(
-            Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)
-                .SelectMany(path => XDocument.Load(path).Descendants(projectReferenceElement)),
+            consumerProjects.SelectMany(document => document.Descendants(forbiddenReferenceElement)),
+            _ => true);
+        Assert.DoesNotContain(
+            consumerProjects.SelectMany(document => document.Descendants("Compile")),
+            item => item.Attribute("Include") is not null);
+        Assert.DoesNotContain(
+            consumerProjects.SelectMany(document => document.Descendants("Link")),
             _ => true);
     }
 
