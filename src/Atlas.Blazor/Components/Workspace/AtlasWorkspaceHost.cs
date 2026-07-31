@@ -1,4 +1,5 @@
 using Atlas.Blazor.Content;
+using Atlas.Blazor.Interop;
 using Atlas.Core;
 using Atlas.Core.Changes;
 using Atlas.Core.Definitions;
@@ -11,6 +12,7 @@ using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.JSInterop;
 using System.Globalization;
 
 namespace Atlas.Blazor.Components;
@@ -23,7 +25,15 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private readonly AtlasFocusCoordinator focusCoordinator = new();
     private readonly AtlasContentRegistry emptyRegistry =
         new(Array.Empty<AtlasContentRegistration>());
+    private IReadOnlyDictionary<LayoutNodeId, AtlasSplitterPresentation>
+        declarativeSplitterPresentations =
+            new Dictionary<LayoutNodeId, AtlasSplitterPresentation>();
     private IAtlasWorkspace? activeWorkspace;
+    private ElementReference rootElement;
+    private AtlasRootInteractionController? interactionController;
+    private long interactionGeneration;
+    private string? failedInteractionConfiguration;
+    private string? presentationFingerprint;
     private bool activeWorkspaceDeclarative;
     private bool ownsActiveWorkspace;
     private AtlasWorkspaceDefinition? previousDeclaration;
@@ -131,11 +141,42 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     [Parameter]
     public EventCallback<AtlasHostError> OnError { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether browser interaction is enabled. Transient interaction option;
+    /// runtime changes attach or dispose this Host's controller. The default is true.
+    /// </summary>
+    [Parameter]
+    public bool EnableInteractions { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets splitter interaction options. Transient interaction option; runtime
+    /// replacement updates the existing controller and does not enter workspace history.
+    /// </summary>
+    [Parameter]
+    public AtlasSplitterOptions? SplitterOptions { get; set; }
+
+    /// <summary>
+    /// Gets or sets the workspace keyboard command map. Transient interaction option; runtime
+    /// replacement updates the existing controller and does not enter workspace history.
+    /// </summary>
+    [Parameter]
+    public AtlasKeyboardCommandMap? KeyboardCommands { get; set; }
+
+    /// <summary>
+    /// Gets or sets programmatic-mode splitter presentation resolution. Presentation parameter;
+    /// runtime changes only invalidate derived projection.
+    /// </summary>
+    [Parameter]
+    public Func<LayoutNodeId, AtlasSplitterPresentation?>? SplitterPresentation { get; set; }
+
     [Inject]
     private IAtlasWorkspaceFactory? Factory { get; set; }
 
     [Inject]
     private AtlasContentRegistry? Registry { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
 
     /// <inheritdoc />
     protected override async Task OnParametersSetAsync()
@@ -213,6 +254,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         builder.AddAttribute(sequence++, "data-atlas-workspace-id", activeWorkspace.Id.Value);
         builder.AddAttribute(sequence++, "data-atlas-direction", "inherit");
         builder.AddAttribute(sequence++, "data-atlas-reduced-motion", "system");
+        builder.AddElementReferenceCapture(sequence++, element => rootElement = element);
 
         RenderFixedSlot(builder, ref sequence, "top-toolbar", TopToolbarContent);
         RenderHostError(builder, ref sequence);
@@ -241,6 +283,51 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        _ = firstRender;
+        if (disposed)
+        {
+            return;
+        }
+
+        await ProcessDeclarationAsync();
+        var interactionConfiguration = InteractionConfigurationFingerprint();
+        if (!string.Equals(
+            failedInteractionConfiguration,
+            interactionConfiguration,
+            StringComparison.Ordinal))
+        {
+            try
+            {
+                interactionController ??=
+                    new AtlasRootInteractionController(
+                        JSRuntime,
+                        hostId,
+                        OnInteractionAsync);
+                await interactionController.SynchronizeAsync(
+                    rootElement,
+                    activeWorkspace?.Id,
+                    interactionGeneration,
+                    EnableInteractions,
+                    SplitterOptions ?? new AtlasSplitterOptions(),
+                    KeyboardCommands ?? AtlasKeyboardCommandMap.Default);
+                failedInteractionConfiguration = null;
+            }
+            catch (JSException)
+            {
+                failedInteractionConfiguration = interactionConfiguration;
+                await ReportErrorAsync(
+                    new AtlasHostError(
+                        AtlasHostErrorCode.Unexpected,
+                        "ATLAS-INTERACTION-ATTACH-FAILED",
+                        "Atlas.Interaction.AttachFailed",
+                        activeWorkspace?.Id));
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private async Task ProcessDeclarationAsync()
+    {
         if (!declarativeMode || disposed || WorkspaceId is null)
         {
             return;
@@ -260,9 +347,21 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             return;
         }
 
+        var currentPresentationFingerprint = PresentationFingerprint(collector);
+        var presentationChanged = !string.Equals(
+            presentationFingerprint,
+            currentPresentationFingerprint,
+            StringComparison.Ordinal);
+        presentationFingerprint = currentPresentationFingerprint;
+        declarativeSplitterPresentations = collector.GetSplitPresentations();
         var currentFingerprint = Fingerprint(declaration);
         if (string.Equals(processedFingerprint, currentFingerprint, StringComparison.Ordinal))
         {
+            if (presentationChanged)
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+
             return;
         }
 
@@ -323,6 +422,11 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
         disposed = true;
         focusCoordinator.Clear();
+        if (interactionController is not null)
+        {
+            await interactionController.DisposeAsync();
+            interactionController = null;
+        }
         var workspace = activeWorkspace;
         var disposeWorkspace = ownsActiveWorkspace;
         UnbindWorkspace();
@@ -341,18 +445,104 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         var node = snapshot.Nodes[nodeId];
         if (node is SplitNode split)
         {
+            var presentation = ResolveSplitterPresentation(split.Id);
             builder.OpenElement(sequence++, "div");
             builder.SetKey(split.Id);
             builder.AddAttribute(sequence++, "class", SplitClass(split.Axis));
             builder.AddAttribute(sequence++, "data-atlas-node-id", split.Id.Value);
             builder.AddAttribute(sequence++, "data-atlas-node-kind", "split");
             builder.AddAttribute(sequence++, "data-atlas-split-axis", split.Axis.ToString());
-            builder.AddAttribute(sequence++, "data-atlas-split-locked", "false");
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-split-locked",
+                presentation.IsLocked ? "true" : "false");
+            builder.AddAttribute(sequence++, "data-atlas-split-ratio", SplitRatio(split.Basis));
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-split-basis-kind",
+                split.Basis.Kind.ToString());
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-split-basis-value",
+                Invariant(split.Basis.Value));
+            if (split.Basis.Anchor is not null)
+            {
+                builder.AddAttribute(
+                    sequence++,
+                    "data-atlas-split-anchor",
+                    split.Basis.Anchor.Value.ToString());
+            }
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-revision",
+                snapshot.Revision.ToString(CultureInfo.InvariantCulture));
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-first-minimum",
+                Invariant(split.Constraints.FirstMinimum));
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-second-minimum",
+                Invariant(split.Constraints.SecondMinimum));
+            AddOptionalAttribute(
+                builder,
+                ref sequence,
+                "data-atlas-first-maximum",
+                split.Constraints.FirstMaximum);
+            AddOptionalAttribute(
+                builder,
+                ref sequence,
+                "data-atlas-second-maximum",
+                split.Constraints.SecondMaximum);
             builder.AddAttribute(sequence++, "style", SplitStyle(split.Basis));
             RenderNode(builder, ref sequence, snapshot, split.FirstId);
             builder.OpenElement(sequence++, "div");
-            builder.AddAttribute(sequence++, "class", "atlas-v2-splitter");
+            builder.AddAttribute(
+                sequence++,
+                "class",
+                CssClasses("atlas-v2-splitter", presentation.CssClass));
             builder.AddAttribute(sequence++, "data-atlas-split-id", split.Id.Value);
+            builder.AddAttribute(sequence++, "role", "separator");
+            builder.AddAttribute(sequence++, "tabindex", presentation.IsLocked ? "-1" : "0");
+            builder.AddAttribute(
+                sequence++,
+                "aria-orientation",
+                split.Axis == SplitAxis.InlineChildren ? "vertical" : "horizontal");
+            builder.AddAttribute(
+                sequence++,
+                "aria-disabled",
+                presentation.IsLocked ? "true" : "false");
+            builder.AddAttribute(sequence++, "aria-valuemin", "0");
+            builder.AddAttribute(sequence++, "aria-valuemax", "100");
+            builder.AddAttribute(
+                sequence++,
+                "aria-valuenow",
+                (double.Parse(
+                    SplitRatio(split.Basis),
+                    CultureInfo.InvariantCulture) * 100d)
+                    .ToString("R", CultureInfo.InvariantCulture));
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-can-collapse-first",
+                presentation.CanCollapseFirst ? "true" : "false");
+            builder.AddAttribute(
+                sequence++,
+                "data-atlas-can-collapse-second",
+                presentation.CanCollapseSecond ? "true" : "false");
+            RenderCollapseButton(
+                builder,
+                ref sequence,
+                snapshot,
+                split.FirstId,
+                "first",
+                presentation.CanCollapseFirst);
+            RenderCollapseButton(
+                builder,
+                ref sequence,
+                snapshot,
+                split.SecondId,
+                "second",
+                presentation.CanCollapseSecond);
             builder.CloseElement();
             RenderNode(builder, ref sequence, snapshot, split.SecondId);
             builder.CloseElement();
@@ -571,6 +761,54 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         await activeWorkspace.ExecuteAsync(operation);
     }
 
+    private void RenderCollapseButton(
+        RenderTreeBuilder builder,
+        ref int sequence,
+        WorkspaceSnapshot snapshot,
+        LayoutNodeId childId,
+        string childName,
+        bool enabled)
+    {
+        if (!enabled
+            || !snapshot.Nodes.TryGetValue(childId, out var node)
+            || node is not GroupNode group)
+        {
+            return;
+        }
+
+        var collapsed = group.Visibility == GroupVisibility.Collapsed;
+        builder.OpenElement(sequence++, "button");
+        builder.SetKey((group.Id, "split-collapse"));
+        builder.AddAttribute(sequence++, "type", "button");
+        builder.AddAttribute(sequence++, "class", "atlas-v2-splitter-collapse");
+        builder.AddAttribute(sequence++, "data-atlas-collapse-child", childName);
+        builder.AddAttribute(
+            sequence++,
+            "aria-label",
+            collapsed ? "Expand region" : "Collapse region");
+        builder.AddAttribute(
+            sequence++,
+            "onclick",
+            EventCallback.Factory.Create(
+                this,
+                () => ToggleSplitChildAsync(group.Id, collapsed)));
+        builder.AddContent(sequence++, collapsed ? "›" : "‹");
+        builder.CloseElement();
+    }
+
+    private async Task ToggleSplitChildAsync(LayoutNodeId groupId, bool collapsed)
+    {
+        if (activeWorkspace is null)
+        {
+            return;
+        }
+
+        await activeWorkspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(
+                groupId,
+                collapsed ? GroupVisibility.Expanded : GroupVisibility.Collapsed));
+    }
+
     private async Task BindWorkspaceAsync(
         IAtlasWorkspace workspace,
         bool declarative,
@@ -587,6 +825,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         activeWorkspace = workspace;
         activeWorkspaceDeclarative = declarative;
         ownsActiveWorkspace = ownsWorkspace;
+        interactionGeneration++;
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }
@@ -776,6 +1015,144 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         declaredItemIds = declaration.Items.Select(item => item.Id).ToHashSet();
     }
 
+    private async Task OnInteractionAsync(AtlasInteractionMessage message)
+    {
+        if (disposed
+            || activeWorkspace is null
+            || message.Generation != interactionGeneration)
+        {
+            return;
+        }
+
+        if (string.Equals(message.Type, "resize-split", StringComparison.Ordinal))
+        {
+            if (string.IsNullOrWhiteSpace(message.SplitId))
+            {
+                return;
+            }
+
+            LayoutOperation operation;
+            if (string.Equals(message.Mode, "equalize", StringComparison.Ordinal))
+            {
+                operation = new EqualizeSplitOperation(
+                    new LayoutNodeId(message.SplitId),
+                    message.BaseRevision);
+            }
+            else
+            {
+                if (!double.IsFinite(message.FirstRatio)
+                    || message.FirstRatio <= 0d
+                    || message.FirstRatio >= 1d)
+                {
+                    return;
+                }
+
+                operation = new ResizeSplitOperation(
+                    new LayoutNodeId(message.SplitId),
+                    SplitBasis.Proportional(message.FirstRatio),
+                    message.BaseRevision);
+            }
+
+            await activeWorkspace.ExecuteAsync(operation);
+            return;
+        }
+
+        if (string.Equals(message.Type, "keyboard-command", StringComparison.Ordinal)
+            && message.Command is not null)
+        {
+            await ExecuteKeyboardCommandAsync(
+                message.Command,
+                message.SourceGroupId,
+                message.TargetGroupId);
+        }
+    }
+
+    private async Task ExecuteKeyboardCommandAsync(
+        string command,
+        string? sourceGroupId,
+        string? targetGroupId)
+    {
+        if (activeWorkspace is null)
+        {
+            return;
+        }
+
+        if (command.StartsWith("focus-", StringComparison.Ordinal))
+        {
+            await FocusToolGroupAsync(targetGroupId);
+            return;
+        }
+
+        var snapshot = activeWorkspace.Current;
+        var documentGroups = snapshot.Nodes.Values
+            .OfType<GroupNode>()
+            .Where(group => group.Kind == DockItemKind.Document)
+            .ToArray();
+        var activeGroup = string.IsNullOrWhiteSpace(sourceGroupId)
+            ? null
+            : documentGroups.FirstOrDefault(
+                group => group.Id == new LayoutNodeId(sourceGroupId!));
+        activeGroup ??= documentGroups.FirstOrDefault(
+            group => group.SelectedItemId is not null);
+        if (activeGroup?.SelectedItemId is not DockItemId activeItemId)
+        {
+            return;
+        }
+
+        LayoutOperation? operation = command switch
+        {
+            "next-tab" => CycleTab(activeGroup, activeItemId, 1),
+            "previous-tab" => CycleTab(activeGroup, activeItemId, -1),
+            "close-active-document" => new CloseItemOperation(activeItemId),
+            _ => null,
+        };
+        if (operation is not null)
+        {
+            await activeWorkspace.ExecuteAsync(operation);
+        }
+    }
+
+    private async Task FocusToolGroupAsync(string? targetGroupId)
+    {
+        if (activeWorkspace is null || string.IsNullOrWhiteSpace(targetGroupId))
+        {
+            return;
+        }
+
+        var targetId = new LayoutNodeId(targetGroupId);
+        if (!activeWorkspace.Current.Nodes.TryGetValue(targetId, out var node)
+            || node is not GroupNode target
+            || target.Kind != DockItemKind.Tool
+            || target.SelectedItemId is not DockItemId itemId)
+        {
+            return;
+        }
+
+        var result = await activeWorkspace.ExecuteAsync(
+            new SelectItemOperation(itemId));
+        if (result.Succeeded)
+        {
+            focusCoordinator.Request(itemId, activeWorkspace.Current.Revision);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static SelectItemOperation? CycleTab(
+        GroupNode group,
+        DockItemId activeItemId,
+        int direction)
+    {
+        if (group.ItemIds.Count < 2)
+        {
+            return null;
+        }
+
+        var currentIndex = group.ItemIds.ToList().IndexOf(activeItemId);
+        var nextIndex = (currentIndex + direction + group.ItemIds.Count)
+            % group.ItemIds.Count;
+        return new SelectItemOperation(group.ItemIds[nextIndex]);
+    }
+
     private async Task ReportErrorAsync(AtlasHostError error)
     {
         hostError = error;
@@ -851,6 +1228,33 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         previousDeclaration = null;
         declaredItemIds.Clear();
         processedFingerprint = null;
+        presentationFingerprint = null;
+        declarativeSplitterPresentations =
+            new Dictionary<LayoutNodeId, AtlasSplitterPresentation>();
+    }
+
+    private static string PresentationFingerprint(AtlasDefinitionCollector source)
+    {
+        return string.Join(
+            "|",
+            source.GetSplitPresentations()
+                .OrderBy(pair => pair.Key.Value, StringComparer.Ordinal)
+                .Select(
+                    pair =>
+                        $"{pair.Key}:{pair.Value.IsLocked}:{pair.Value.CssClass}:"
+                        + $"{pair.Value.CanCollapseFirst}:{pair.Value.CanCollapseSecond}"));
+    }
+
+    private AtlasSplitterPresentation ResolveSplitterPresentation(LayoutNodeId splitId)
+    {
+        if (declarativeMode
+            && declarativeSplitterPresentations.TryGetValue(splitId, out var presentation))
+        {
+            return presentation;
+        }
+
+        return SplitterPresentation?.Invoke(splitId)
+            ?? new AtlasSplitterPresentation();
     }
 
     private static string NodeFingerprint(LayoutNode node)
@@ -897,5 +1301,54 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         return $"--atlas-first-track:{first};--atlas-second-track:{second}";
+    }
+
+    private static string SplitRatio(SplitBasis basis)
+    {
+        return basis.Kind == SplitBasisKind.Proportional
+            ? Invariant(basis.Value)
+            : "0.5";
+    }
+
+    private static string Invariant(double value)
+    {
+        return value.ToString("R", CultureInfo.InvariantCulture);
+    }
+
+    private static void AddOptionalAttribute(
+        RenderTreeBuilder builder,
+        ref int sequence,
+        string name,
+        double? value)
+    {
+        if (value is not null)
+        {
+            builder.AddAttribute(sequence++, name, Invariant(value.Value));
+        }
+    }
+
+    private static string CssClasses(string required, string? optional)
+    {
+        return optional is null ? required : $"{required} {optional}";
+    }
+
+    private string InteractionConfigurationFingerprint()
+    {
+        var splitterOptions = SplitterOptions ?? new AtlasSplitterOptions();
+        var bindings = (KeyboardCommands ?? AtlasKeyboardCommandMap.Default).Bindings;
+        return string.Join(
+            "|",
+            interactionGeneration,
+            EnableInteractions,
+            splitterOptions.KeyboardStepPixels,
+            splitterOptions.KeyboardCommitDelayMilliseconds,
+            string.Join(
+                ",",
+                bindings.Select(
+                    binding =>
+                        $"{binding.Chord.Code}:{binding.Chord.Control}:"
+                        + $"{binding.Chord.Shift}:{binding.Chord.Alt}:"
+                        + $"{binding.Chord.Meta}:"
+                        + $"{binding.Command}:{binding.IsGlobal}")));
     }
 }

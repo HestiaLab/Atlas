@@ -14,4 +14,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atlas.Blazor\Atlas.Blazor.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\fixtures\interaction-protocol-v1.json"
+          Link="fixtures\interaction-protocol-v1.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Atlas.Blazor\ClientScripts\dom-metadata-manifest.json"
+          Link="fixtures\dom-metadata-manifest.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

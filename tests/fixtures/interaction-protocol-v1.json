@@ -1,0 +1,23 @@
+{
+  "protocolVersion": 1,
+  "identity": {
+    "hostId": "host-fixture",
+    "workspaceId": "workspace-fixture",
+    "generation": 3,
+    "protocolVersion": 1
+  },
+  "resizeSplitCommit": {
+    "type": "resize-split",
+    "splitId": "split-fixture",
+    "firstRatio": 0.375,
+    "mode": "resize",
+    "generation": 3,
+    "baseRevision": 7
+  },
+  "keyboardCommandIntent": {
+    "type": "keyboard-command",
+    "command": "next-tab",
+    "generation": 3,
+    "sourceGroupId": "documents"
+  }
+}

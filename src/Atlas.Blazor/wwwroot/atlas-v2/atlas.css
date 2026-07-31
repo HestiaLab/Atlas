@@ -39,9 +39,53 @@
 }
 
 .atlas-v2-splitter {
+  position: relative;
   z-index: var(--atlas-layer-chrome);
   background: currentColor;
   opacity: 0.18;
+  touch-action: none;
+  user-select: none;
+}
+
+.atlas-v2-splitter::before {
+  content: "";
+  position: absolute;
+  inset: -0.25rem;
+}
+
+.atlas-v2-split-inline > .atlas-v2-splitter {
+  cursor: col-resize;
+}
+
+.atlas-v2-split-block > .atlas-v2-splitter {
+  cursor: row-resize;
+}
+
+.atlas-v2-splitter[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.08;
+}
+
+.atlas-v2-splitter:focus-visible {
+  opacity: 0.5;
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+
+.atlas-v2-splitter:hover,
+.atlas-v2-split[data-atlas-resizing="true"] > .atlas-v2-splitter {
+  opacity: 0.4;
+}
+
+.atlas-v2-splitter-collapse {
+  position: relative;
+  display: block;
+  margin: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
 .atlas-v2-group {

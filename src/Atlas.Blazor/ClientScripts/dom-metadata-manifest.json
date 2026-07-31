@@ -1,0 +1,37 @@
+{
+  "workspaceRoot": {
+    "selector": ".atlas-v2-workspace",
+    "requiredAttributes": [
+      "data-atlas-host-id",
+      "data-atlas-workspace-id",
+      "data-atlas-protocol-version"
+    ]
+  },
+  "split": {
+    "selector": "[data-atlas-node-kind=split]",
+    "requiredAttributes": [
+      "data-atlas-node-id",
+      "data-atlas-split-axis",
+      "data-atlas-split-locked",
+      "data-atlas-revision"
+    ]
+  },
+  "splitter": {
+    "selector": "[data-atlas-split-id]",
+    "requiredAttributes": [
+      "data-atlas-split-id",
+      "role",
+      "aria-orientation",
+      "aria-disabled"
+    ]
+  },
+  "collapseControl": {
+    "selector": "[data-atlas-collapse-child]"
+  },
+  "group": {
+    "selector": "[data-atlas-group-id]"
+  },
+  "toolGroup": {
+    "selector": "[data-atlas-group-kind=tool][data-atlas-group-id]"
+  }
+}

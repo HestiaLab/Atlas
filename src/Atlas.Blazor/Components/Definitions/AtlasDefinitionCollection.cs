@@ -15,6 +15,7 @@ internal sealed record AtlasSplitDescriptor(
     SplitAxis Axis,
     SplitBasis Basis,
     SplitConstraints Constraints,
+    AtlasSplitterPresentation Presentation,
     LayoutNodeId? ParentId,
     int Sequence);
 
@@ -47,6 +48,7 @@ internal sealed class AtlasDefinitionCollector
         SplitAxis axis,
         SplitBasis basis,
         SplitConstraints constraints,
+        AtlasSplitterPresentation presentation,
         LayoutNodeId? parentId)
     {
         AddNode(
@@ -56,8 +58,17 @@ internal sealed class AtlasDefinitionCollector
                 axis,
                 basis,
                 constraints,
+                presentation,
                 parentId,
                 sequence++));
+    }
+
+    internal IReadOnlyDictionary<LayoutNodeId, AtlasSplitterPresentation>
+        GetSplitPresentations()
+    {
+        return nodes.Values
+            .OfType<AtlasSplitDescriptor>()
+            .ToDictionary(split => split.Id, split => split.Presentation);
     }
 
     internal void AddGroup(
@@ -286,6 +297,30 @@ public sealed class AtlasSplitDefinition : ComponentBase
     [Parameter]
     public SplitConstraints Constraints { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether user splitter interaction is disabled. Presentation parameter.
+    /// </summary>
+    [Parameter]
+    public bool IsLocked { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional safe CSS class tokens for the splitter. Presentation parameter.
+    /// </summary>
+    [Parameter]
+    public string? SplitterClass { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the first child may expose collapse affordance. Presentation parameter.
+    /// </summary>
+    [Parameter]
+    public bool CanCollapseFirst { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the second child may expose collapse affordance. Presentation parameter.
+    /// </summary>
+    [Parameter]
+    public bool CanCollapseSecond { get; set; }
+
     /// <summary>Gets or sets the required definition children; changes reconcile atomically.</summary>
     [Parameter]
     [EditorRequired]
@@ -302,7 +337,17 @@ public sealed class AtlasSplitDefinition : ComponentBase
     {
         try
         {
-            Collector.AddSplit(Id, Axis, Basis, Constraints, Parent?.NodeId);
+            Collector.AddSplit(
+                Id,
+                Axis,
+                Basis,
+                Constraints,
+                new AtlasSplitterPresentation(
+                    IsLocked,
+                    SplitterClass,
+                    CanCollapseFirst,
+                    CanCollapseSecond),
+                Parent?.NodeId);
         }
         catch (ArgumentException)
         {

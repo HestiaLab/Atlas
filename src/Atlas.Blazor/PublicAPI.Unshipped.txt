@@ -44,18 +44,59 @@ Atlas.Blazor.Components.AtlasHostErrorCode.DefinitionInvalid = 2 -> Atlas.Blazor
 Atlas.Blazor.Components.AtlasHostErrorCode.FocusFailed = 5 -> Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.InitializationModeConflict = 1 -> Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.Unexpected = 6 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasKeyboardBinding
+Atlas.Blazor.Components.AtlasKeyboardBinding.AtlasKeyboardBinding(Atlas.Blazor.Components.AtlasKeyboardChord! chord, Atlas.Blazor.Components.AtlasKeyboardCommand command, bool isGlobal = false) -> void
+Atlas.Blazor.Components.AtlasKeyboardBinding.Chord.get -> Atlas.Blazor.Components.AtlasKeyboardChord!
+Atlas.Blazor.Components.AtlasKeyboardBinding.Command.get -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardBinding.IsGlobal.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord
+Atlas.Blazor.Components.AtlasKeyboardChord.Alt.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.AtlasKeyboardChord(string! code, bool control = false, bool shift = false, bool alt = false, bool meta = false) -> void
+Atlas.Blazor.Components.AtlasKeyboardChord.Code.get -> string!
+Atlas.Blazor.Components.AtlasKeyboardChord.Control.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.Meta.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.Shift.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.CloseActiveDocument = 2 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusBlockEnd = 6 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusBlockStart = 5 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusInlineEnd = 4 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusInlineStart = 3 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.NextTab = 0 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.PreviousTab = 1 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommandMap
+Atlas.Blazor.Components.AtlasKeyboardCommandMap.AtlasKeyboardCommandMap(System.Collections.Generic.IEnumerable<Atlas.Blazor.Components.AtlasKeyboardBinding!>! bindings) -> void
+Atlas.Blazor.Components.AtlasKeyboardCommandMap.Bindings.get -> System.Collections.Generic.IReadOnlyList<Atlas.Blazor.Components.AtlasKeyboardBinding!>!
 Atlas.Blazor.Components.AtlasSplitDefinition
 Atlas.Blazor.Components.AtlasSplitDefinition.AtlasSplitDefinition() -> void
 Atlas.Blazor.Components.AtlasSplitDefinition.Axis.get -> Atlas.Core.Layout.SplitAxis
 Atlas.Blazor.Components.AtlasSplitDefinition.Axis.set -> void
 Atlas.Blazor.Components.AtlasSplitDefinition.Basis.get -> Atlas.Core.Layout.SplitBasis
 Atlas.Blazor.Components.AtlasSplitDefinition.Basis.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseFirst.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseFirst.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseSecond.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseSecond.set -> void
 Atlas.Blazor.Components.AtlasSplitDefinition.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
 Atlas.Blazor.Components.AtlasSplitDefinition.ChildContent.set -> void
 Atlas.Blazor.Components.AtlasSplitDefinition.Constraints.get -> Atlas.Core.Layout.SplitConstraints
 Atlas.Blazor.Components.AtlasSplitDefinition.Constraints.set -> void
 Atlas.Blazor.Components.AtlasSplitDefinition.Id.get -> Atlas.Core.LayoutNodeId
 Atlas.Blazor.Components.AtlasSplitDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.IsLocked.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.IsLocked.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.SplitterClass.get -> string?
+Atlas.Blazor.Components.AtlasSplitDefinition.SplitterClass.set -> void
+Atlas.Blazor.Components.AtlasSplitterOptions
+Atlas.Blazor.Components.AtlasSplitterOptions.AtlasSplitterOptions(double keyboardStepPixels = 10, int keyboardCommitDelayMilliseconds = 500) -> void
+Atlas.Blazor.Components.AtlasSplitterOptions.KeyboardCommitDelayMilliseconds.get -> int
+Atlas.Blazor.Components.AtlasSplitterOptions.KeyboardStepPixels.get -> double
+Atlas.Blazor.Components.AtlasSplitterPresentation
+Atlas.Blazor.Components.AtlasSplitterPresentation.AtlasSplitterPresentation(bool isLocked = false, string? cssClass = null, bool canCollapseFirst = false, bool canCollapseSecond = false) -> void
+Atlas.Blazor.Components.AtlasSplitterPresentation.CanCollapseFirst.get -> bool
+Atlas.Blazor.Components.AtlasSplitterPresentation.CanCollapseSecond.get -> bool
+Atlas.Blazor.Components.AtlasSplitterPresentation.CssClass.get -> string?
+Atlas.Blazor.Components.AtlasSplitterPresentation.IsLocked.get -> bool
 Atlas.Blazor.Components.AtlasToolGroupDefinition
 Atlas.Blazor.Components.AtlasToolGroupDefinition.AtlasToolGroupDefinition() -> void
 Atlas.Blazor.Components.AtlasToolGroupDefinition.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
@@ -95,10 +136,18 @@ Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.get -> Microsof
 Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentHeaderTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasItemHeaderContext!>?
 Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentHeaderTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.EnableInteractions.get -> bool
+Atlas.Blazor.Components.AtlasWorkspaceHost.EnableInteractions.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ErrorTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Components.AtlasHostError!>?
 Atlas.Blazor.Components.AtlasWorkspaceHost.ErrorTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.get -> Atlas.Blazor.Components.AtlasKeyboardCommandMap?
+Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.get -> Microsoft.AspNetCore.Components.EventCallback<Atlas.Blazor.Components.AtlasHostError!>
 Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.get -> Atlas.Blazor.Components.AtlasSplitterOptions?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterPresentation.get -> System.Func<Atlas.Core.LayoutNodeId, Atlas.Blazor.Components.AtlasSplitterPresentation?>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterPresentation.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.StatusBarContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
 Atlas.Blazor.Components.AtlasWorkspaceHost.StatusBarContent.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ToolEmptyTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasEmptyStateContext!>?
@@ -141,5 +190,6 @@ Atlas.Blazor.Content.AtlasItemHeaderContext
 Atlas.Blazor.Content.AtlasItemHeaderContext.IsSelected.get -> bool
 Atlas.Blazor.Content.AtlasItemHeaderContext.Item.get -> Atlas.Core.Items.DockItem!
 Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions
+static Atlas.Blazor.Components.AtlasKeyboardCommandMap.Default.get -> Atlas.Blazor.Components.AtlasKeyboardCommandMap!
 static Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions.AddAtlasContent<TComponent>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! kind) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions.AddAtlasWorkspace(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

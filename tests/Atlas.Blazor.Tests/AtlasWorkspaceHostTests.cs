@@ -16,6 +16,7 @@ using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 using Xunit;
 
 namespace Atlas.Blazor.Tests;
@@ -459,8 +460,393 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         await tracked.DisposeAsync();
     }
 
+    [Fact]
+    public async Task Splitter_projection_exposes_locked_accessible_presentation_contract()
+    {
+        await using var workspace = CreateWorkspace(ProjectionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(
+                    component => component.SplitterPresentation,
+                    splitId => splitId == new LayoutNodeId("root")
+                        ? new AtlasSplitterPresentation(
+                            isLocked: true,
+                            cssClass: "custom-splitter",
+                            canCollapseFirst: true)
+                        : null)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        var root = cut.Find("[data-atlas-node-id='root']");
+        var splitter = root.QuerySelector("[data-atlas-split-id='root']");
+
+        Assert.NotNull(splitter);
+        Assert.Equal("true", root.GetAttribute("data-atlas-split-locked"));
+        Assert.Equal("0.25", root.GetAttribute("data-atlas-split-ratio"));
+        Assert.Equal("separator", splitter!.GetAttribute("role"));
+        Assert.Equal("vertical", splitter.GetAttribute("aria-orientation"));
+        Assert.Equal("true", splitter.GetAttribute("aria-disabled"));
+        Assert.Equal("-1", splitter.GetAttribute("tabindex"));
+        Assert.Contains("custom-splitter", splitter.ClassList);
+        Assert.Equal(
+            "true",
+            splitter.GetAttribute("data-atlas-can-collapse-first"));
+        var collapse = cut.Find("[data-atlas-collapse-child='first']");
+        collapse.Click();
+        cut.WaitForAssertion(
+            () => Assert.Equal(
+                GroupVisibility.Collapsed,
+                Assert.IsType<GroupNode>(
+                    workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility));
+    }
+
+    [Fact]
+    public void Splitter_and_keyboard_options_reject_invalid_public_input()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new AtlasSplitterOptions(keyboardStepPixels: 0));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new AtlasSplitterOptions(keyboardCommitDelayMilliseconds: -1));
+        Assert.Throws<ArgumentException>(
+            () => new AtlasSplitterPresentation(cssClass: "valid <script>"));
+        Assert.Throws<ArgumentException>(
+            () => new AtlasKeyboardChord(string.Empty));
+        Assert.Throws<ArgumentNullException>(
+            () => new AtlasKeyboardCommandMap(null!));
+        Assert.Throws<ArgumentException>(
+            () => new AtlasKeyboardCommandMap(
+                new[]
+                {
+                    new AtlasKeyboardBinding(
+                        new AtlasKeyboardChord("KeyK", meta: true),
+                        AtlasKeyboardCommand.NextTab),
+                    new AtlasKeyboardBinding(
+                        new AtlasKeyboardChord("KeyK", meta: true),
+                        AtlasKeyboardCommand.PreviousTab),
+                }));
+        Assert.Equal(8, AtlasKeyboardCommandMap.Default.Bindings.Count);
+    }
+
+    [Fact]
+    public void Declarative_splitter_presentation_updates_without_workspace_operation()
+    {
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(
+                    component => component.WorkspaceId,
+                    new WorkspaceId("declarative-splitter"))
+                .Add(component => component.EnableInteractions, false)
+                .Add(
+                    component => component.ChildContent,
+                    SplitDeclaration(isLocked: false, "initial-splitter"))
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Contains(
+                "initial-splitter",
+                cut.Find("[data-atlas-split-id='root']").ClassList));
+        var workspace = trackingFactory.LastWorkspace!;
+
+        cut.SetParametersAndRender(
+            parameters => parameters
+                .Add(
+                    component => component.WorkspaceId,
+                    new WorkspaceId("declarative-splitter"))
+                .Add(component => component.EnableInteractions, false)
+                .Add(
+                    component => component.ChildContent,
+                    SplitDeclaration(isLocked: true, "updated-splitter"))
+                .Add(component => component.ContentTemplate, ContentText));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var splitter = cut.Find("[data-atlas-split-id='root']");
+                Assert.Contains("updated-splitter", splitter.ClassList);
+                Assert.Equal("true", splitter.GetAttribute("aria-disabled"));
+            });
+        Assert.Equal(0, workspace.ExecuteCount);
+    }
+
+    [Fact]
+    public async Task Interaction_controller_attaches_once_and_disposes_once_per_host()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var firstWorkspace =
+            CreateWorkspace(DocumentDefinition("interaction-first", "First"));
+        await using var secondWorkspace =
+            CreateWorkspace(DocumentDefinition("interaction-second", "Second"));
+        var first = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, firstWorkspace)
+                .Add(component => component.ContentTemplate, ContentText));
+        var second = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, secondWorkspace)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        first.WaitForAssertion(
+            () => Assert.Equal(
+                2,
+                module.Invocations["attachAtlasController"].Count));
+        Assert.NotEqual(
+            first.Find(".atlas-v2-workspace").GetAttribute("data-atlas-host-id"),
+            second.Find(".atlas-v2-workspace").GetAttribute("data-atlas-host-id"));
+
+        await first.Instance.DisposeAsync();
+        await second.Instance.DisposeAsync();
+
+        Assert.Equal(
+            2,
+            module.Invocations["disposeAtlasController"].Count);
+    }
+
+    [Fact]
+    public async Task Interaction_callback_commits_once_and_rejects_stale_or_disposed_messages()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1);
+
+        Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(1, tracked.ExecuteCount);
+        Assert.Equal(
+            SplitBasis.Proportional(0.4),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.5,
+            mode: "equalize",
+            command: null,
+            generation: 1,
+            baseRevision: 1);
+        Assert.IsType<EqualizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(2, tracked.ExecuteCount);
+        Assert.Equal(
+            SplitBasis.Proportional(0.5),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.3,
+            mode: "resize",
+            command: null,
+            generation: 0);
+        Assert.Equal(2, tracked.ExecuteCount);
+
+        await cut.Instance.DisposeAsync();
+        Assert.Single(module.Invocations["disposeAtlasController"]);
+        Assert.Equal(2, tracked.ExecuteCount);
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Keyboard_intent_selects_next_tab_through_semantic_operation()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(TwoTabsDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "keyboard-command",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: "next-tab",
+            generation: 1);
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.IsType<SelectItemOperation>(tracked.LastOperation);
+                Assert.Equal(
+                    new DockItemId("second"),
+                    Assert.IsType<GroupNode>(
+                        tracked.Current.Nodes[new LayoutNodeId("documents")])
+                        .SelectedItemId);
+            });
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public void Shared_interaction_protocol_fixture_matches_blazor_contract()
+    {
+        var path = Path.Combine(
+            AppContext.BaseDirectory,
+            "fixtures",
+            "interaction-protocol-v1.json");
+        using var fixture = JsonDocument.Parse(File.ReadAllText(path));
+        var root = fixture.RootElement;
+
+        Assert.Equal(1, root.GetProperty("protocolVersion").GetInt32());
+        Assert.Equal(
+            "resize-split",
+            root.GetProperty("resizeSplitCommit").GetProperty("type").GetString());
+        Assert.Equal(
+            7,
+            root.GetProperty("resizeSplitCommit")
+                .GetProperty("baseRevision")
+                .GetInt64());
+        Assert.Equal(
+            "next-tab",
+            root.GetProperty("keyboardCommandIntent")
+                .GetProperty("command")
+                .GetString());
+        Assert.Equal(
+            "documents",
+            root.GetProperty("keyboardCommandIntent")
+                .GetProperty("sourceGroupId")
+                .GetString());
+    }
+
+    [Fact]
+    public async Task Dom_metadata_manifest_matches_rendered_projection()
+    {
+        var path = Path.Combine(
+            AppContext.BaseDirectory,
+            "fixtures",
+            "dom-metadata-manifest.json");
+        using var manifest = JsonDocument.Parse(File.ReadAllText(path));
+        await using var workspace = CreateWorkspace(ProjectionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        foreach (var contractName in new[] { "workspaceRoot", "split", "splitter" })
+        {
+            var contract = manifest.RootElement.GetProperty(contractName);
+            var element = cut.Find(contract.GetProperty("selector").GetString()!);
+            foreach (var attribute in contract
+                .GetProperty("requiredAttributes")
+                .EnumerateArray())
+            {
+                Assert.True(
+                    element.HasAttribute(attribute.GetString()!),
+                    $"{contractName} is missing {attribute.GetString()}.");
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Tool_focus_intent_uses_target_group_and_requests_content_focus()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "keyboard-command",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: "focus-inline-start",
+            generation: 1,
+            sourceGroupId: "documents",
+            targetGroupId: "tools");
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.IsType<SelectItemOperation>(tracked.LastOperation);
+                JSInterop.VerifyFocusAsyncInvoke();
+            });
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
     private static RenderFragment<AtlasContentContext> ContentText =>
         context => builder => builder.AddContent(0, $"{context.Item.Title} content");
+
+    private static async Task InvokeInteractionAsync(
+        object receiverReference,
+        string type,
+        string? splitId,
+        double firstRatio,
+        string? mode,
+        string? command,
+        long generation,
+        long baseRevision = 0,
+        string? sourceGroupId = null,
+        string? targetGroupId = null)
+    {
+        var receiver = receiverReference.GetType()
+            .GetProperty("Value")!
+            .GetValue(receiverReference)!;
+        var method = receiver.GetType().GetMethod("OnInteraction")!;
+        var messageType = method.GetParameters()[0].ParameterType;
+        var message = Activator.CreateInstance(messageType, nonPublic: true)!;
+        messageType.GetProperty("Type")!.SetValue(message, type);
+        messageType.GetProperty("SplitId")!.SetValue(message, splitId);
+        messageType.GetProperty("FirstRatio")!.SetValue(message, firstRatio);
+        messageType.GetProperty("Mode")!.SetValue(message, mode);
+        messageType.GetProperty("Command")!.SetValue(message, command);
+        messageType.GetProperty("Generation")!.SetValue(message, generation);
+        messageType.GetProperty("BaseRevision")!.SetValue(message, baseRevision);
+        messageType.GetProperty("SourceGroupId")!.SetValue(message, sourceGroupId);
+        messageType.GetProperty("TargetGroupId")!.SetValue(message, targetGroupId);
+        await (Task)method.Invoke(receiver, new[] { message })!;
+    }
 
     private IAtlasWorkspace CreateWorkspace(AtlasWorkspaceDefinition definition)
     {
@@ -640,6 +1026,52 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     items.AddAttribute(3, "ResourceId", "resource");
                     items.AddAttribute(4, "Title", title);
                     items.CloseComponent();
+                }));
+            builder.CloseComponent();
+        };
+    }
+
+    private static RenderFragment SplitDeclaration(bool isLocked, string cssClass)
+    {
+        return builder =>
+        {
+            builder.OpenComponent<AtlasSplitDefinition>(0);
+            builder.AddAttribute(1, "Id", new LayoutNodeId("root"));
+            builder.AddAttribute(2, "IsLocked", isLocked);
+            builder.AddAttribute(3, "SplitterClass", cssClass);
+            builder.AddAttribute(
+                4,
+                "ChildContent",
+                (RenderFragment)(children =>
+                {
+                    children.OpenComponent<AtlasDocumentGroupDefinition>(0);
+                    children.AddAttribute(1, "Id", new LayoutNodeId("left"));
+                    children.AddAttribute(
+                        2,
+                        "ChildContent",
+                        (RenderFragment)(items =>
+                        {
+                            items.OpenComponent<AtlasDocumentItemDefinition>(0);
+                            items.AddAttribute(1, "Id", new DockItemId("left-item"));
+                            items.AddAttribute(2, "ContentKind", "document");
+                            items.AddAttribute(3, "ResourceId", "left-resource");
+                            items.CloseComponent();
+                        }));
+                    children.CloseComponent();
+                    children.OpenComponent<AtlasDocumentGroupDefinition>(3);
+                    children.AddAttribute(4, "Id", new LayoutNodeId("right"));
+                    children.AddAttribute(
+                        5,
+                        "ChildContent",
+                        (RenderFragment)(items =>
+                        {
+                            items.OpenComponent<AtlasDocumentItemDefinition>(0);
+                            items.AddAttribute(1, "Id", new DockItemId("right-item"));
+                            items.AddAttribute(2, "ContentKind", "document");
+                            items.AddAttribute(3, "ResourceId", "right-resource");
+                            items.CloseComponent();
+                        }));
+                    children.CloseComponent();
                 }));
             builder.CloseComponent();
         };
