@@ -33,7 +33,44 @@ export interface KeyboardCommandIntent {
   readonly targetGroupId?: string;
 }
 
-export type AtlasInteractionMessage = ResizeSplitCommit | KeyboardCommandIntent;
+export type AtlasDragSourceKind =
+  | "document-tab"
+  | "panel-header"
+  | "toolbar-entry";
+
+export type AtlasDropTargetKind =
+  | "document-center"
+  | "document-inline-start"
+  | "document-inline-end"
+  | "document-block-start"
+  | "document-block-end"
+  | "panel-header-insertion"
+  | "toolbar-insertion"
+  | "toolbar-region"
+  | "drop-scaffold";
+
+export interface DockItemCommit {
+  readonly type: "dock-item";
+  readonly protocolVersion: typeof ATLAS_PROTOCOL_VERSION;
+  readonly sessionId: string;
+  readonly hostId: string;
+  readonly workspaceId: string;
+  readonly generation: number;
+  readonly itemId: string;
+  readonly sourceKind: AtlasDragSourceKind;
+  readonly baseRevision: number;
+  readonly targetKind: AtlasDropTargetKind;
+  readonly targetGroupId: string;
+  readonly logicalRegion?: string;
+  readonly insertionIndex?: number;
+  readonly newGroupId?: string;
+  readonly newSplitId?: string;
+}
+
+export type AtlasInteractionMessage =
+  | ResizeSplitCommit
+  | KeyboardCommandIntent
+  | DockItemCommit;
 
 export interface AtlasDotNetReceiver {
   invokeMethodAsync(method: "OnInteraction", message: AtlasInteractionMessage): Promise<unknown>;

@@ -29,6 +29,7 @@ test("shared interaction protocol fixture matches TypeScript v1 union", () => {
     protocolFixture.keyboardResizeCommit as AtlasInteractionMessage;
   const keyboard =
     protocolFixture.keyboardCommandIntent as AtlasInteractionMessage;
+  const dock = protocolFixture.dockItemCommit as AtlasInteractionMessage;
   assert.equal(resize.type, "resize-split");
   assert.equal(
     resize.type === "resize-split" ? resize.baseRevision : -1,
@@ -42,6 +43,8 @@ test("shared interaction protocol fixture matches TypeScript v1 union", () => {
       : -1,
     null);
   assert.equal(keyboard.type, "keyboard-command");
+  assert.equal(dock.type, "dock-item");
+  assert.equal(dock.type === "dock-item" ? dock.hostId : "", "host-fixture");
 });
 
 test("controller identity requires stable host workspace and generation", () => {
@@ -90,6 +93,7 @@ class FakeElement extends EventTarget {
   public capturedPointer?: number;
   public releasedPointer?: number;
   public editable = false;
+  public rect = { left: 0, top: 0, width: 100, height: 100 };
 
   public closest<T extends Element>(selector: string): T | null {
     if (selector === "[data-atlas-split-id]") {
@@ -98,6 +102,36 @@ class FakeElement extends EventTarget {
 
     if (selector === "[data-atlas-collapse-child]") {
       return this.dataset.atlasCollapseChild ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-drag-kind]") {
+      return this.dataset.atlasDragKind ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-group-kind=document][data-atlas-group-id]") {
+      return this.dataset.atlasGroupKind === "document" && this.dataset.atlasGroupId
+        ? this as unknown as T
+        : null;
+    }
+
+    if (selector === "[data-atlas-panel-header]") {
+      return this.dataset.atlasPanelHeader ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-toolbar-entry]") {
+      return this.dataset.atlasToolbarEntry ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-toolbar-region]") {
+      return this.dataset.atlasToolbarRegion ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-drop-scaffold]") {
+      return this.dataset.atlasDropScaffold ? this as unknown as T : null;
+    }
+
+    if (selector === ".atlas-v2-workspace") {
+      return this.dataset.atlasWorkspaceId ? this as unknown as T : null;
     }
 
     if (selector.startsWith("input,")) {
@@ -112,7 +146,7 @@ class FakeElement extends EventTarget {
   }
 
   public getBoundingClientRect(): DOMRect {
-    return { width: 100, height: 100 } as DOMRect;
+    return this.rect as DOMRect;
   }
 
   public setPointerCapture(pointerId: number): void {
@@ -411,4 +445,144 @@ test("invalid controller options are rejected", () => {
       { keyboardStepPixels: 0 }),
     /ATLAS-INTERACTION-PROTOCOL-INVALID/);
   fixture.controller.dispose();
+});
+
+function dragFixture(kind: "document-tab" | "panel-header"): {
+  controller: AtlasInteractionController;
+  root: FakeElement;
+  messages: AtlasInteractionMessage[];
+} {
+  const root = new FakeElement();
+  root.dataset.atlasHostId = "drag-host";
+  root.dataset.atlasWorkspaceId = "drag-workspace";
+  root.dataset.atlasRevision = "12";
+  root.dataset.atlasDragKind = kind;
+  root.dataset.atlasItemId = kind === "document-tab" ? "document" : "tool";
+  root.dataset.atlasGroupId = kind === "document-tab" ? "documents" : "tools";
+  if (kind === "document-tab") {
+    root.dataset.atlasGroupKind = "document";
+  } else {
+    root.dataset.atlasPanelHeader = "true";
+  }
+
+  const messages: AtlasInteractionMessage[] = [];
+  const controller = new AtlasInteractionController(
+    root as unknown as HTMLElement,
+    {
+      hostId: "drag-host",
+      workspaceId: "drag-workspace",
+      generation: 5,
+      protocolVersion: ATLAS_PROTOCOL_VERSION
+    },
+    { invokeMethodAsync: async (_method, message) => { messages.push(message); } });
+  return { controller, root, messages };
+}
+
+test("document drag crosses threshold previews and commits one host-scoped intent", async () => {
+  const fixture = dragFixture("document-tab");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 31, clientX: 50, clientY: 50, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 31, clientX: 56, clientY: 50
+  }));
+  assert.equal(fixture.messages.length, 0);
+  assert.equal(fixture.root.dataset.atlasDropPreview, "document-center");
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 31, clientX: 56, clientY: 50
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 1);
+  assert.deepEqual(fixture.messages[0], {
+    type: "dock-item",
+    protocolVersion: 1,
+    sessionId: "drag-host:1",
+    hostId: "drag-host",
+    workspaceId: "drag-workspace",
+    generation: 5,
+    itemId: "document",
+    sourceKind: "document-tab",
+    baseRevision: 12,
+    targetKind: "document-center",
+    targetGroupId: "documents"
+  });
+  assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
+  fixture.controller.dispose();
+});
+
+test("drag terminal paths cancel without callback and generation update expires session", async () => {
+  for (const terminal of ["pointercancel", "lostpointercapture"] as const) {
+    const fixture = dragFixture("panel-header");
+    fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+      pointerId: 41, clientX: 0, clientY: 0, button: 0, isPrimary: true
+    }));
+    fixture.root.dispatchEvent(interactionEvent("pointermove", {
+      pointerId: 41, clientX: 5, clientY: 0
+    }));
+    fixture.root.dispatchEvent(interactionEvent(terminal, { pointerId: 41 }));
+    fixture.root.dispatchEvent(interactionEvent("pointerup", { pointerId: 41 }));
+    await flushCallbacks();
+    assert.equal(fixture.messages.length, 0);
+    fixture.controller.dispose();
+  }
+
+  const stale = dragFixture("document-tab");
+  stale.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 42, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  stale.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 42, clientX: 5, clientY: 0
+  }));
+  stale.controller.update({
+    hostId: "drag-host",
+    workspaceId: "drag-workspace",
+    generation: 6,
+    protocolVersion: ATLAS_PROTOCOL_VERSION
+  });
+  stale.root.dispatchEvent(interactionEvent("pointerup", { pointerId: 42 }));
+  await flushCallbacks();
+  assert.equal(stale.messages.length, 0);
+  stale.controller.dispose();
+});
+
+test("panel drag uses approved header target while threshold click remains untouched", async () => {
+  const click = dragFixture("panel-header");
+  click.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 50, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  click.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 50, clientX: 3, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(click.messages.length, 0);
+  click.controller.dispose();
+
+  const drag = dragFixture("panel-header");
+  drag.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 51, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  drag.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 51, clientX: 4, clientY: 0
+  }));
+  drag.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 51, clientX: 4, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(drag.messages.length, 1);
+  assert.deepEqual(drag.messages[0], {
+    type: "dock-item",
+    protocolVersion: 1,
+    sessionId: "drag-host:1",
+    hostId: "drag-host",
+    workspaceId: "drag-workspace",
+    generation: 5,
+    itemId: "tool",
+    sourceKind: "panel-header",
+    baseRevision: 12,
+    targetKind: "panel-header-insertion",
+    targetGroupId: "tools",
+    insertionIndex: 0
+  });
+  drag.controller.dispose();
 });

@@ -3,6 +3,8 @@ import {
   type AtlasControllerIdentity,
   type AtlasControllerOptions,
   type AtlasDotNetReceiver,
+  type AtlasDragSourceKind,
+  type AtlasDropTargetKind,
   type AtlasKeyboardCommand,
   type AtlasKeyboardBinding,
   type AtlasInteractionMessage,
@@ -35,6 +37,28 @@ interface ActiveResize {
   currentRatio: number;
 }
 
+interface DropTarget {
+  readonly element: HTMLElement;
+  readonly kind: AtlasDropTargetKind;
+  readonly groupId: string;
+  readonly logicalRegion?: string;
+  readonly insertionIndex?: number;
+}
+
+interface ActiveDrag {
+  readonly source: HTMLElement;
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startY: number;
+  readonly sessionId: string;
+  readonly generation: number;
+  readonly baseRevision: number;
+  readonly itemId: string;
+  readonly sourceKind: AtlasDragSourceKind;
+  dragging: boolean;
+  target?: DropTarget;
+}
+
 export class AtlasInteractionController {
   private keyboardStepPixels: number;
   private keyboardCommitDelayMilliseconds: number;
@@ -42,6 +66,8 @@ export class AtlasInteractionController {
   private readonly ownerDocument: Document | undefined;
   private readonly ownerWindow: Window | null | undefined;
   private activeResize: ActiveResize | undefined;
+  private activeDrag: ActiveDrag | undefined;
+  private dragSequence = 0;
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
   private keyboardRatio: number | undefined;
@@ -90,6 +116,11 @@ export class AtlasInteractionController {
     }
 
     validateOptions(options);
+    if (identity.generation !== this.identity.generation) {
+      this.cancelDrag();
+      this.cancelResize();
+      this.clearKeyboardCommit();
+    }
     this.identity = identity;
     this.keyboardStepPixels =
       options.keyboardStepPixels ?? this.keyboardStepPixels;
@@ -106,6 +137,7 @@ export class AtlasInteractionController {
 
     this.disposed = true;
     this.cancelResize();
+    this.cancelDrag();
     this.clearKeyboardCommit();
     this.root.removeEventListener("pointerdown", this.onPointerDown);
     this.root.removeEventListener("pointermove", this.onPointerMove);
@@ -125,6 +157,31 @@ export class AtlasInteractionController {
     if (event.button !== 0 || !event.isPrimary
       || this.isCollapseControl(event.target)) {
       return;
+    }
+
+    const dragSource = this.dragSourceFrom(event.target);
+    if (!this.disposed && dragSource && this.canMove(dragSource)) {
+      const itemId = dragSource.dataset.atlasItemId;
+      const sourceKind = dragSource.dataset.atlasDragKind as AtlasDragSourceKind;
+      if (itemId && isDragSourceKind(sourceKind)) {
+        this.cancelResize();
+        this.dragSequence += 1;
+        this.activeDrag = {
+          source: dragSource,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          sessionId: `${this.identity.hostId}:${this.dragSequence}`,
+          generation: this.identity.generation,
+          baseRevision: this.readRootRevision(),
+          itemId,
+          sourceKind,
+          dragging: false
+        };
+        dragSource.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+        return;
+      }
     }
 
     const splitter = this.splitterFrom(event.target);
@@ -160,6 +217,22 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
+    const drag = this.activeDrag;
+    if (drag && event.pointerId === drag.pointerId) {
+      if (!drag.dragging
+        && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 4) {
+        drag.dragging = true;
+        this.root.dataset.atlasDragging = "true";
+      }
+
+      if (drag.dragging) {
+        this.previewDropTarget(
+          drag,
+          this.resolveDropTarget(event.clientX, event.clientY, event.target, drag.sourceKind));
+      }
+      return;
+    }
+
     const active = this.activeResize;
     if (!active || event.pointerId !== active.pointerId) {
       return;
@@ -175,6 +248,42 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
+    const drag = this.activeDrag;
+    if (drag && event.pointerId === drag.pointerId) {
+      const target = drag.dragging ? drag.target : undefined;
+      this.finishDrag();
+      if (target && drag.generation === this.identity.generation) {
+        const directional = target.kind.startsWith("document-")
+          && target.kind !== "document-center";
+        this.send({
+          type: "dock-item",
+          protocolVersion: ATLAS_PROTOCOL_VERSION,
+          sessionId: drag.sessionId,
+          hostId: this.identity.hostId,
+          workspaceId: this.identity.workspaceId,
+          generation: drag.generation,
+          itemId: drag.itemId,
+          sourceKind: drag.sourceKind,
+          baseRevision: drag.baseRevision,
+          targetKind: target.kind,
+          targetGroupId: target.groupId,
+          ...(target.logicalRegion === undefined
+            ? {}
+            : { logicalRegion: target.logicalRegion }),
+          ...(target.insertionIndex === undefined
+            ? {}
+            : { insertionIndex: target.insertionIndex }),
+          ...(directional
+            ? {
+                newGroupId: `atlas-${this.identity.hostId}-${this.dragSequence}-group`,
+                newSplitId: `atlas-${this.identity.hostId}-${this.dragSequence}-split`
+              }
+            : {})
+        });
+      }
+      return;
+    }
+
     const active = this.activeResize;
     if (!active || event.pointerId !== active.pointerId) {
       return;
@@ -194,6 +303,9 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerCancel = (event: PointerEvent): void => {
+    if (this.activeDrag?.pointerId === event.pointerId) {
+      this.cancelDrag();
+    }
     if (this.activeResize?.pointerId === event.pointerId) {
       this.cancelResize();
     }
@@ -221,6 +333,12 @@ export class AtlasInteractionController {
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (event.code === "Escape" && this.activeDrag) {
+      event.preventDefault();
+      this.cancelDrag();
+      return;
+    }
+
     if (event.code === "Escape" && this.activeResize) {
       event.preventDefault();
       this.cancelResize();
@@ -288,6 +406,7 @@ export class AtlasInteractionController {
 
   private readonly onEnvironmentInvalidated = (): void => {
     this.cancelResize();
+    this.cancelDrag();
     this.clearKeyboardCommit();
   };
 
@@ -423,6 +542,134 @@ export class AtlasInteractionController {
     }
   }
 
+  private cancelDrag(): void {
+    if (this.activeDrag) {
+      this.finishDrag();
+    }
+  }
+
+  private finishDrag(): void {
+    const drag = this.activeDrag;
+    this.activeDrag = undefined;
+    if (!drag) {
+      return;
+    }
+
+    this.clearDropPreview(drag.target);
+    this.root.removeAttribute("data-atlas-dragging");
+    drag.source.releasePointerCapture?.(drag.pointerId);
+  }
+
+  private previewDropTarget(drag: ActiveDrag, target: DropTarget | undefined): void {
+    if (drag.target?.element === target?.element && drag.target?.kind === target?.kind) {
+      return;
+    }
+
+    this.clearDropPreview(drag.target);
+    if (target) {
+      drag.target = target;
+      target.element.dataset.atlasDropPreview = target.kind;
+    } else {
+      delete drag.target;
+    }
+  }
+
+  private clearDropPreview(target: DropTarget | undefined): void {
+    target?.element.removeAttribute("data-atlas-drop-preview");
+  }
+
+  private resolveDropTarget(
+    x: number,
+    y: number,
+    eventTarget: EventTarget | null,
+    sourceKind: AtlasDragSourceKind): DropTarget | undefined {
+    const hit = this.ownerDocument?.elementFromPoint(x, y)
+      ?? (eventTarget instanceof Element ? eventTarget : null);
+    if (!(hit instanceof Element)
+      || hit.closest<HTMLElement>(domMetadata.workspaceRoot.selector) !== this.root) {
+      return undefined;
+    }
+
+    if (sourceKind === "document-tab") {
+      const group = hit.closest<HTMLElement>("[data-atlas-group-kind=document][data-atlas-group-id]");
+      const groupId = group?.dataset.atlasGroupId;
+      if (!group || !groupId) {
+        return undefined;
+      }
+
+      return {
+        element: group,
+        kind: documentTargetKind(group.getBoundingClientRect(), x, y),
+        groupId
+      };
+    }
+
+    const panelHeader = hit.closest<HTMLElement>("[data-atlas-panel-header]");
+    if (panelHeader?.dataset.atlasGroupId) {
+      return {
+        element: panelHeader,
+        kind: "panel-header-insertion",
+        groupId: panelHeader.dataset.atlasGroupId,
+        insertionIndex: readNonNegativeInteger(panelHeader.dataset.atlasInsertionIndex) ?? 0
+      };
+    }
+
+    const toolbarEntry = hit.closest<HTMLElement>("[data-atlas-toolbar-entry]");
+    if (toolbarEntry?.dataset.atlasGroupId) {
+      return {
+        element: toolbarEntry,
+        kind: "toolbar-insertion",
+        groupId: toolbarEntry.dataset.atlasGroupId,
+        ...(toolbarEntry.dataset.atlasToolbarRegion === undefined
+          ? {}
+          : { logicalRegion: toolbarEntry.dataset.atlasToolbarRegion }),
+        insertionIndex: readNonNegativeInteger(toolbarEntry.dataset.atlasInsertionIndex) ?? 0
+      };
+    }
+
+    const toolbarRegion = hit.closest<HTMLElement>("[data-atlas-toolbar-region]");
+    if (toolbarRegion?.dataset.atlasGroupId) {
+      return {
+        element: toolbarRegion,
+        kind: "toolbar-region",
+        groupId: toolbarRegion.dataset.atlasGroupId,
+        ...(toolbarRegion.dataset.atlasToolbarRegion === undefined
+          ? {}
+          : { logicalRegion: toolbarRegion.dataset.atlasToolbarRegion })
+      };
+    }
+
+    const scaffold = hit.closest<HTMLElement>("[data-atlas-drop-scaffold]");
+    if (scaffold?.dataset.atlasGroupId) {
+      return {
+        element: scaffold,
+        kind: "drop-scaffold",
+        groupId: scaffold.dataset.atlasGroupId,
+        ...(scaffold.dataset.atlasToolbarRegion === undefined
+          ? {}
+          : { logicalRegion: scaffold.dataset.atlasToolbarRegion })
+      };
+    }
+
+    return undefined;
+  }
+
+  private dragSourceFrom(target: EventTarget | null): HTMLElement | null {
+    return target instanceof Element
+      ? target.closest<HTMLElement>("[data-atlas-drag-kind]")
+      : null;
+  }
+
+  private canMove(source: HTMLElement): boolean {
+    const capabilities = Number(source.dataset.atlasCommandCapabilities);
+    return !Number.isFinite(capabilities) || (capabilities & 2) === 2;
+  }
+
+  private readRootRevision(): number {
+    const revision = Number(this.root.dataset.atlasRevision);
+    return Number.isSafeInteger(revision) && revision >= 0 ? revision : 0;
+  }
+
   private commitResize(
     split: HTMLElement,
     firstRatio: number,
@@ -552,12 +799,12 @@ export function attachAtlasController(
   receiver: AtlasDotNetReceiver,
   options?: AtlasControllerOptions): AtlasInteractionController {
   if (identity.protocolVersion !== ATLAS_PROTOCOL_VERSION
-    || controllers.has(identity.workspaceId)) {
+    || controllers.has(identity.hostId)) {
     throw new Error("ATLAS-INTERACTION-ATTACH-REJECTED");
   }
 
   const controller = new AtlasInteractionController(root, identity, receiver, options);
-  controllers.set(identity.workspaceId, controller);
+  controllers.set(identity.hostId, controller);
   return controller;
 }
 
@@ -571,9 +818,9 @@ export function updateAtlasController(
 export function disposeAtlasController(
   controller: AtlasInteractionController): void {
   controller.dispose();
-  for (const [workspaceId, registered] of controllers) {
+  for (const [hostId, registered] of controllers) {
     if (registered === controller) {
-      controllers.delete(workspaceId);
+      controllers.delete(hostId);
       break;
     }
   }
@@ -629,4 +876,30 @@ function validateOptions(options: AtlasControllerOptions): void {
       known => known.command === candidate.command))) {
     throw new Error("ATLAS-INTERACTION-PROTOCOL-INVALID");
   }
+}
+
+function isDragSourceKind(value: string): value is AtlasDragSourceKind {
+  return value === "document-tab"
+    || value === "panel-header"
+    || value === "toolbar-entry";
+}
+
+function readNonNegativeInteger(value: string | undefined): number | undefined {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function documentTargetKind(rect: DOMRect, x: number, y: number): AtlasDropTargetKind {
+  const localX = x - rect.left;
+  const localY = y - rect.top;
+  const inlineBand = rect.width * 0.25;
+  const blockBand = rect.height * 0.25;
+  const distances = [
+    { kind: "document-inline-start" as const, distance: localX, enabled: localX < inlineBand },
+    { kind: "document-inline-end" as const, distance: rect.width - localX, enabled: localX > rect.width - inlineBand },
+    { kind: "document-block-start" as const, distance: localY, enabled: localY < blockBand },
+    { kind: "document-block-end" as const, distance: rect.height - localY, enabled: localY > rect.height - blockBand }
+  ].filter(candidate => candidate.enabled)
+    .sort((left, right) => left.distance - right.distance);
+  return distances[0]?.kind ?? "document-center";
 }

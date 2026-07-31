@@ -8,10 +8,13 @@ export type {
   AtlasControllerIdentity,
   AtlasControllerOptions,
   AtlasDotNetReceiver,
+  AtlasDragSourceKind,
+  AtlasDropTargetKind,
   AtlasInteractionMessage,
   AtlasKeyboardBinding,
   AtlasKeyboardCommand,
   KeyboardCommandIntent,
+  DockItemCommit,
   ResizeSplitCommit
 } from "./protocol";
 

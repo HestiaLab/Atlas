@@ -27,5 +27,20 @@
     "command": "next-tab",
     "generation": 3,
     "sourceGroupId": "documents"
+  },
+  "dockItemCommit": {
+    "type": "dock-item",
+    "protocolVersion": 1,
+    "sessionId": "host-fixture:1",
+    "hostId": "host-fixture",
+    "workspaceId": "workspace-fixture",
+    "generation": 3,
+    "itemId": "document-fixture",
+    "sourceKind": "document-tab",
+    "baseRevision": 7,
+    "targetKind": "document-inline-end",
+    "targetGroupId": "documents-target",
+    "newGroupId": "atlas-host-fixture-1-group",
+    "newSplitId": "atlas-host-fixture-1-split"
   }
 }
