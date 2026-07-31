@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>P7 sandbox child</title></head>
+<body>
+  <p data-testid="p7-sandbox-child">Sandbox content</p>
+  <script>
+    let parentDomBlocked = false;
+    try {
+      void parent.document.querySelector("[data-testid=p7-demo-host]").textContent;
+    } catch (error) {
+      parentDomBlocked = error?.name === "SecurityError";
+    }
+    document.body.dataset.parentDomBlocked = String(parentDomBlocked);
+    parent.postMessage({
+      type: "atlas-sandbox-ready",
+      protocolVersion: 1,
+      workspaceId: "p7-demo",
+      itemId: "sandbox",
+      generation: 1
+    }, "*");
+  </script>
+</body>
+</html>

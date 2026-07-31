@@ -1,0 +1,23 @@
+@using Atlas.Blazor.Content
+@implements IDisposable
+
+<div data-testid="p7-trusted-content"
+     data-atlas-item-id="@Content.ItemId.Value"
+     data-instance-id="@instanceId">
+    <label>
+        @Content.Item.Title state
+        <input data-testid="p7-state-@Content.ItemId.Value" @bind="state" />
+    </label>
+</div>
+
+@code {
+    private readonly string instanceId = Guid.NewGuid().ToString("N");
+    private string state = string.Empty;
+
+    [Parameter]
+    public AtlasContentContext Content { get; set; } = null!;
+
+    public void Dispose()
+    {
+    }
+}
