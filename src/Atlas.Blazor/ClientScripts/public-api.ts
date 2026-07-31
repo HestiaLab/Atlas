@@ -24,3 +24,16 @@ export {
   disposeAtlasController,
   updateAtlasController
 } from "./controller";
+
+export {
+  ATLAS_SANDBOX_PROTOCOL_VERSION,
+  AtlasSandboxController,
+  validateSandboxMessage
+} from "./sandbox";
+
+export type {
+  AtlasSandboxMessageContext,
+  AtlasSandboxReadyMessage,
+  AtlasSandboxRejectionReason,
+  AtlasSandboxValidationResult
+} from "./sandbox";

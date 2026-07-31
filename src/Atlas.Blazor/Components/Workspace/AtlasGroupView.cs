@@ -51,6 +51,12 @@ internal sealed class AtlasGroupView : ComponentBase
     [Parameter]
     public WorkspaceContentLifetimeOptions ContentLifetimeOptions { get; set; } = new();
 
+    [Parameter]
+    public Func<AtlasContentContext, AtlasSandboxedFrameOptions?>? SandboxedFrameResolver { get; set; }
+
+    [Parameter]
+    public long Generation { get; set; }
+
     protected override void OnParametersSet()
     {
         UpdateLifetimeCache();
@@ -67,6 +73,8 @@ internal sealed class AtlasGroupView : ComponentBase
         hash.Add(FocusCoordinator.Version);
         hash.Add(ContentLifetimeOptions.Mode);
         hash.Add(ContentLifetimeOptions.MaxCachedItems);
+        hash.Add(SandboxedFrameResolver);
+        hash.Add(Generation);
         foreach (var itemId in keptAliveItemIds)
         {
             hash.Add(itemId);
@@ -178,6 +186,22 @@ internal sealed class AtlasGroupView : ComponentBase
         }
 
         var item = SelectedItem();
+        if (SandboxedFrameResolver is not null)
+        {
+            try
+            {
+                if (SandboxedFrameResolver(new AtlasContentContext(Workspace, item)) is not null)
+                {
+                    reportedMissingContent = null;
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+
         if (Registry.TryResolve(item.Content.Kind, out _))
         {
             reportedMissingContent = null;
@@ -349,7 +373,10 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(sequence++, "WorkspaceId", Workspace.Id);
         builder.AddAttribute(sequence++, "Item", item);
         builder.AddAttribute(sequence++, "IsSelected", isSelected);
-        builder.AddAttribute(sequence++, "RecoveryKey", ContentTemplate);
+        builder.AddAttribute(
+            sequence++,
+            "RecoveryKey",
+            (ContentTemplate, SandboxedFrameResolver));
         builder.AddAttribute(sequence++, "OnError", OnError);
         builder.AddAttribute(
             sequence++,
@@ -390,6 +417,13 @@ internal sealed class AtlasGroupView : ComponentBase
 
     private void RenderContent(RenderTreeBuilder builder, AtlasContentContext context)
     {
+        var sandbox = SandboxedFrameResolver?.Invoke(context);
+        if (sandbox is not null)
+        {
+            RenderSandboxedFrame(builder, context, sandbox);
+            return;
+        }
+
         if (ContentTemplate is not null)
         {
             builder.AddContent(0, ContentTemplate(context));
@@ -415,6 +449,33 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(1, "class", "atlas-v2-content-missing");
         builder.AddAttribute(2, "data-atlas-content-kind", context.Reference.Kind);
         builder.AddContent(3, "Content is not registered.");
+        builder.CloseElement();
+    }
+
+    private void RenderSandboxedFrame(
+        RenderTreeBuilder builder,
+        AtlasContentContext context,
+        AtlasSandboxedFrameOptions options)
+    {
+        builder.OpenElement(0, "iframe");
+        builder.AddAttribute(1, "class", "atlas-v2-sandbox-frame");
+        builder.AddAttribute(2, "data-atlas-sandbox-frame", "true");
+        builder.AddAttribute(3, "data-atlas-protocol-version", "1");
+        builder.AddAttribute(4, "data-atlas-workspace-id", Workspace.Id.Value);
+        builder.AddAttribute(5, "data-atlas-item-id", context.ItemId.Value);
+        builder.AddAttribute(
+            6,
+            "data-atlas-generation",
+            Generation.ToString(CultureInfo.InvariantCulture));
+        builder.AddAttribute(
+            7,
+            "data-atlas-max-message-bytes",
+            options.MaxMessageBytes.ToString(CultureInfo.InvariantCulture));
+        builder.AddAttribute(8, "sandbox", "allow-scripts");
+        builder.AddAttribute(9, "referrerpolicy", "no-referrer");
+        builder.AddAttribute(10, "loading", "lazy");
+        builder.AddAttribute(11, "title", options.Title);
+        builder.AddAttribute(12, "src", options.Source);
         builder.CloseElement();
     }
 

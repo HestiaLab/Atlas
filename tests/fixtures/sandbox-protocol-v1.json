@@ -1,0 +1,11 @@
+{
+  "protocolVersion": 1,
+  "maxMessageBytes": 4096,
+  "readyMessage": {
+    "type": "atlas-sandbox-ready",
+    "protocolVersion": 1,
+    "workspaceId": "workspace-fixture",
+    "itemId": "sandbox-item-fixture",
+    "generation": 3
+  }
+}

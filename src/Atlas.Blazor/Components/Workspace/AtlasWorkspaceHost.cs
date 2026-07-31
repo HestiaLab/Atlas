@@ -101,6 +101,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
 
     /// <summary>
+    /// Gets or sets the explicit untrusted-content resolver. A non-null result renders a fixed
+    /// sandboxed iframe instead of the trusted component path.
+    /// </summary>
+    [Parameter]
+    public Func<AtlasContentContext, AtlasSandboxedFrameOptions?>? SandboxedFrameResolver { get; set; }
+
+    /// <summary>
     /// Gets or sets the transient content lifetime policy. The default unmounts inactive
     /// content; runtime replacement does not enter workspace history.
     /// </summary>
@@ -613,6 +620,8 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 groupBuilder.AddAttribute(9, "HeaderTemplate", headerTemplate);
                 groupBuilder.AddAttribute(10, "OnError", OnError);
                 groupBuilder.AddAttribute(11, "ContentLifetimeOptions", ContentLifetimeOptions);
+                groupBuilder.AddAttribute(12, "SandboxedFrameResolver", SandboxedFrameResolver);
+                groupBuilder.AddAttribute(13, "Generation", interactionGeneration);
                 groupBuilder.CloseComponent();
             }));
         builder.CloseComponent();

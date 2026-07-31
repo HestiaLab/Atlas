@@ -71,5 +71,17 @@
       "data-atlas-group-id",
       "data-atlas-toolbar-region"
     ]
+  },
+  "sandboxFrame": {
+    "selector": "iframe[data-atlas-sandbox-frame]",
+    "requiredAttributes": [
+      "data-atlas-protocol-version",
+      "data-atlas-workspace-id",
+      "data-atlas-item-id",
+      "data-atlas-generation",
+      "data-atlas-max-message-bytes",
+      "sandbox",
+      "referrerpolicy"
+    ]
   }
 }

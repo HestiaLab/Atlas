@@ -166,3 +166,9 @@
 .atlas-v2-content-stack {
   display: contents;
 }
+
+.atlas-v2-sandbox-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

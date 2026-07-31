@@ -11,6 +11,7 @@ import {
   isValidControllerIdentity
 } from "./protocol";
 import domMetadata from "./dom-metadata-manifest.json";
+import { AtlasSandboxController } from "./sandbox";
 
 const controllers = new Map<string, AtlasInteractionController>();
 const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
@@ -68,6 +69,7 @@ export class AtlasInteractionController {
   private keyboardBindings: readonly AtlasKeyboardBinding[];
   private readonly ownerDocument: Document | undefined;
   private readonly ownerWindow: Window | null | undefined;
+  private readonly sandboxController: AtlasSandboxController;
   private activeResize: ActiveResize | undefined;
   private activeDrag: ActiveDrag | undefined;
   private dragSequence = 0;
@@ -94,6 +96,7 @@ export class AtlasInteractionController {
     this.keyboardBindings = options.keyboardBindings ?? defaultKeyboardBindings;
     this.ownerDocument = root.ownerDocument ?? undefined;
     this.ownerWindow = this.ownerDocument?.defaultView;
+    this.sandboxController = new AtlasSandboxController(root, identity);
     this.root.addEventListener("pointerdown", this.onPointerDown);
     this.root.addEventListener("pointermove", this.onPointerMove);
     this.root.addEventListener("pointerup", this.onPointerUp);
@@ -128,6 +131,7 @@ export class AtlasInteractionController {
       this.clearKeyboardCommit();
     }
     this.identity = identity;
+    this.sandboxController.update(identity);
     this.keyboardStepPixels =
       options.keyboardStepPixels ?? this.keyboardStepPixels;
     this.keyboardCommitDelayMilliseconds =
@@ -145,6 +149,7 @@ export class AtlasInteractionController {
     this.cancelResize();
     this.cancelDrag();
     this.clearKeyboardCommit();
+    this.sandboxController.dispose();
     this.root.removeEventListener("pointerdown", this.onPointerDown);
     this.root.removeEventListener("pointermove", this.onPointerMove);
     this.root.removeEventListener("pointerup", this.onPointerUp);

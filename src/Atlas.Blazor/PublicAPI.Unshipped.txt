@@ -59,6 +59,11 @@ Atlas.Blazor.Components.AtlasKeyboardChord.Code.get -> string!
 Atlas.Blazor.Components.AtlasKeyboardChord.Control.get -> bool
 Atlas.Blazor.Components.AtlasKeyboardChord.Meta.get -> bool
 Atlas.Blazor.Components.AtlasKeyboardChord.Shift.get -> bool
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.AtlasSandboxedFrameOptions(string! source, string! title, int maxMessageBytes = 65536) -> void
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.MaxMessageBytes.get -> int
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.Source.get -> string!
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.Title.get -> string!
 Atlas.Blazor.Components.AtlasKeyboardCommand
 Atlas.Blazor.Components.AtlasKeyboardCommand.CloseActiveDocument = 2 -> Atlas.Blazor.Components.AtlasKeyboardCommand
 Atlas.Blazor.Components.AtlasKeyboardCommand.FocusBlockEnd = 6 -> Atlas.Blazor.Components.AtlasKeyboardCommand
@@ -149,6 +154,8 @@ Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.get -> Atlas.Blazor.
 Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.get -> Microsoft.AspNetCore.Components.EventCallback<Atlas.Blazor.Components.AtlasHostError!>
 Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SandboxedFrameResolver.get -> System.Func<Atlas.Blazor.Content.AtlasContentContext!, Atlas.Blazor.Components.AtlasSandboxedFrameOptions?>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SandboxedFrameResolver.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.get -> Atlas.Blazor.Components.AtlasSplitterOptions?
 Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterPresentation.get -> System.Func<Atlas.Core.LayoutNodeId, Atlas.Blazor.Components.AtlasSplitterPresentation?>?

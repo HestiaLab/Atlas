@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Atlas sandbox child</title></head>
+<body>
+  <script>
+    let parentDomBlocked = false;
+    try {
+      void parent.document.getElementById("parent-secret").textContent;
+    } catch (error) {
+      parentDomBlocked = error?.name === "SecurityError";
+    }
+    document.body.dataset.parentDomBlocked = String(parentDomBlocked);
+
+    const ready = {
+      type: "atlas-sandbox-ready",
+      protocolVersion: 1,
+      workspaceId: "p7-workspace",
+      itemId: "sandbox-item",
+      generation: 3
+    };
+    parent.postMessage(ready, "*");
+    window.addEventListener("message", event => {
+      if (event.data === "send-unknown") {
+        parent.postMessage({ ...ready, type: "unknown-command" }, "*");
+      } else if (event.data === "send-oversized") {
+        parent.postMessage({ ...ready, padding: "x".repeat(5000) }, "*");
+      }
+    });
+  </script>
+</body>
+</html>

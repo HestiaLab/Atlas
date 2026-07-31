@@ -12,6 +12,11 @@ import type {
   AtlasDotNetReceiver
 } from "../ClientScripts/protocol";
 import protocolFixture from "../../../tests/fixtures/interaction-protocol-v1.json";
+import sandboxFixture from "../../../tests/fixtures/sandbox-protocol-v1.json";
+import {
+  ATLAS_SANDBOX_PROTOCOL_VERSION,
+  validateSandboxMessage
+} from "../ClientScripts/sandbox";
 
 test("protocol version is explicit and rejects unknown versions", () => {
   assert.equal(ATLAS_PROTOCOL_VERSION, 1);
@@ -70,6 +75,63 @@ test("controller identity requires stable host workspace and generation", () => 
     generation: -1,
     protocolVersion: ATLAS_PROTOCOL_VERSION
   }), false);
+});
+
+test("shared sandbox protocol fixture accepts only the bound opaque frame", () => {
+  const frameWindow = {} as Window;
+  const context = {
+    workspaceId: "workspace-fixture",
+    itemId: "sandbox-item-fixture",
+    generation: 3,
+    maxMessageBytes: sandboxFixture.maxMessageBytes
+  };
+  const accepted = validateSandboxMessage(
+    {
+      data: sandboxFixture.readyMessage,
+      origin: "null",
+      source: frameWindow
+    },
+    frameWindow,
+    context);
+
+  assert.equal(ATLAS_SANDBOX_PROTOCOL_VERSION, sandboxFixture.protocolVersion);
+  assert.equal(accepted.accepted, true);
+  assert.equal(accepted.accepted ? accepted.message.type : "", "atlas-sandbox-ready");
+});
+
+test("sandbox protocol fails closed for source origin identity version command and size", () => {
+  const frameWindow = {} as Window;
+  const base = sandboxFixture.readyMessage;
+  const context = {
+    workspaceId: base.workspaceId,
+    itemId: base.itemId,
+    generation: base.generation,
+    maxMessageBytes: 256
+  };
+  const reject = (data: unknown, origin = "null", source: MessageEventSource | null = frameWindow) =>
+    validateSandboxMessage({ data, origin, source }, frameWindow, context);
+
+  assert.deepEqual(reject(base, "https://example.test"), {
+    accepted: false, reason: "origin"
+  });
+  assert.deepEqual(reject(base, "null", {} as Window), {
+    accepted: false, reason: "source"
+  });
+  assert.deepEqual(reject({ ...base, protocolVersion: 2 }), {
+    accepted: false, reason: "version"
+  });
+  assert.deepEqual(reject({ ...base, workspaceId: "other" }), {
+    accepted: false, reason: "identity"
+  });
+  assert.deepEqual(reject({ ...base, generation: 2 }), {
+    accepted: false, reason: "stale"
+  });
+  assert.deepEqual(reject({ ...base, type: "unknown-command" }), {
+    accepted: false, reason: "command"
+  });
+  assert.deepEqual(reject({ ...base, padding: "x".repeat(512) }), {
+    accepted: false, reason: "size"
+  });
 });
 
 class FakeStyle {
