@@ -36,6 +36,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
 
         return operation switch
         {
+            OpenItemOperation open => OpenItemPlanner.Plan(snapshot, open),
             SelectItemOperation select => PlanSelect(snapshot, select),
             ReorderItemOperation reorder => PlanReorder(snapshot, reorder),
             MoveToolOperation move => MoveToolPlanner.Plan(snapshot, move),
