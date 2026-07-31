@@ -1597,7 +1597,7 @@ ToolBar RTL（Right-to-Left，从右到左）镜像
 
 Description
 系统应在终端用户使用 RTL（Right-to-Left，从右到左）语言模式浏览器时镜像 ToolBar 位置，与
-REQ-F-135 的 Dock 层级布局镜像规则保持一致。
+非规范 RTL 边界场景（历史编号 F-135）的 Dock 层级布局镜像规则保持一致。
 
 Acceptance Criteria
 
@@ -4723,7 +4723,6 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-010 | 🟡  | Application Developer            | 自定义Empty State（空状态）模板                              |
 | REQ-F-011 | 🔴  | End User                         | 拖入Editor Tab（编辑器标签页）至空Editor View（编辑器视图）           |
 | REQ-F-012 | 🟡  | End User / Application Developer | Dock Panel（Dock 面板）折叠                              |
-| REQ-F-013 | 🟡  | End User / Application Developer | Dock Panel（Dock 面板）展开                              |
 | REQ-F-014 | 🟡  | System                           | 折叠后Dock Panel（Dock 面板）空间重分配                        |
 | REQ-F-015 | 🔴  | Application Developer            | Dock Panel（Dock 面板）最小尺寸约束                          |
 | REQ-F-016 | 🟡  | Application Developer            | Dock Panel（Dock 面板）最大尺寸约束                          |
@@ -4741,6 +4740,7 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-141 | 🔴  | End User / Application Developer | Dock Panel（Dock 面板） 显隐控制                           |
 | REQ-F-025 | 🔴  | Application Developer            | Bottom Dock 结构声明                                   |
 | REQ-F-026 | 🔴  | System                           | Bottom Dock 与 Work Area 父子关系约束                     |
+| REQ-F-154 | 🟡  | Application Developer            | Dock 容器自适应折叠                                     |
 
 ### §3.4 Editor Tab（编辑器标签页）管理（含 §3.4.1 Tab 拖拽停靠）
 
@@ -4803,6 +4803,8 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-153 | 🔴  | End User / System | ToolBar 拖拽投放交互稳定性                             |
 | REQ-F-070 | 🔴  | System            | Dock Panel（Dock 面板） 移动后内容保持                   |
 | REQ-F-071 | 🔴  | System            | Fixed Region（固定区域） 不接受 Dock Panel（Dock 面板） 拖入 |
+| REQ-F-155 | 🟡  | End User          | 隐藏 Dock Region 拖拽投放骨架                         |
+| REQ-F-156 | 🟡  | End User          | Dock Panel 移动撤销                                  |
 
 ### §3.6 Splitter（分割条）
 
@@ -4883,17 +4885,9 @@ Then 系统应在下一次交互时应用新的动画设置
 
 | 编号        | 优先级 | Actor    | 标题                                          |
 | --------- |:---:| -------- | ------------------------------------------- |
-| REQ-F-129 | 🟡  | System   | 拖拽中窗口大小调整                                   |
 | REQ-F-148 | 🟡  | System   | 容器尺寸变化时布局自适应                                |
-| REQ-F-131 | 🟡  | System   | 零Dock Panel（Dock 面板）空布局                     |
-| REQ-F-132 | 🟡  | System   | Editor Tab（编辑器标签页）标题过长截断                    |
 | REQ-F-133 | 🟡  | System   | 快速连续操作串行化                                   |
-| REQ-F-134 | 🟡  | System   | Splitter（分割条）拖拽边界限制                         |
-| REQ-F-135 | 🟢  | System   | RTL（Right-to-Left，从右到左）布局镜像                 |
-| REQ-F-136 | 🟢  | System   | 高 DPI（Dots Per Inch，每英寸点数）显示适配              |
-| REQ-F-137 | 🟡  | System   | 页面后台时暂停拖拽                                   |
 | REQ-F-138 | 🟡  | End User | Editor Tab（编辑器标签页）右键上下文菜单                   |
-| REQ-F-139 | 🟡  | System   | Auto-hide（自动隐藏）Dock Panel（Dock 面板）与窗口尺寸变化协调 |
 
 ### §4 非功能需求
 
@@ -4908,7 +4902,27 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-NF-007 | 🟡  | End User              | WAI-ARIA 可访问性 |
 | REQ-NF-008 | 🟢  | End User              | 动画偏好适配        |
 
-> 合计 **152** 条需求（F: 144 条 + NF: 8 条）。
+> 合计 **150** 条正式需求（F: 142 条 + NF: 8 条）。正式需求以正文中包含 Actor 与 Acceptance
+> Criteria 的需求块为准，附录 A 与正文一一对应。
+
+### 非规范性历史编号处置
+
+以下编号没有独立的正式需求块和 Acceptance Criteria，不计入需求数量、状态或覆盖率。它们仅作为
+相关正式需求的设计与测试输入：
+
+| 历史编号 | 场景 | 正式需求映射 |
+| -------- | ---- | ------------ |
+| F-013 | Dock Panel 展开 | REQ-F-012、REQ-F-022、REQ-F-104 |
+| F-129 | 拖拽中窗口大小调整 | REQ-F-148 与 interaction cancel 合同 |
+| F-131 | 零 Dock Panel 空布局 | REQ-F-003、REQ-F-005 |
+| F-132 | Editor Tab 标题过长截断 | REQ-F-027 AC2 |
+| F-134 | Splitter 拖拽边界限制 | REQ-F-078 |
+| F-135 | RTL 布局镜像 | REQ-F-024 |
+| F-136 | 高 DPI 显示适配 | 浏览器与 rendering hardening 输入；无独立正式需求 |
+| F-137 | 页面后台时暂停拖拽 | REQ-F-065、REQ-F-068、REQ-F-147 |
+| F-139 | Auto-hide 与窗口尺寸变化协调 | REQ-F-017、REQ-F-018、REQ-F-148 |
+
+F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求编号，同样不属于当前基线。
 
 ## 附录 B：延期需求
 
@@ -4916,8 +4930,8 @@ Then 系统应在下一次交互时应用新的动画设置
 
 | 编号        | 优先级 | 标题                             | 推迟原因                          |
 | --------- |:---:| ------------------------------ | ----------------------------- |
-| REQ-F-136 | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
-| REQ-F-135 | 🟢  | RTL（Right-to-Left，从右到左）布局镜像    | 需 i18n 基础支持，当前版本仅 LTR         |
+| 历史 F-136（非规范） | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
+| REQ-F-024（含历史 F-135 场景） | 🟢  | RTL（Right-to-Left，从右到左）布局镜像 | 需 i18n 基础支持，当前版本仅 LTR |
 | —         | 🟢  | 主题定制与国际化（i18n）                 | 需全局主题引擎和本地化框架支持               |
 | —         | 🟢  | Floating Window（浮动窗口）          | 需独立的窗口管理层，非核心路径，§3.1 已标注为后续扩展 |
 
@@ -4964,4 +4978,4 @@ Then 系统应在下一次交互时应用新的动画设置
 | —             | 全局命名                                       | 全局     | Region 命名统一：Left/Right/Bottom Region → Left/Right/Bottom Dock                                              |
 | REQ-F-002     | Dock 层级布局空间结构                              | 勘误     | AC3 补齐缺失的 Then 步骤，修正 Given 残句                                                                              |
 | REQ-NF-002    | 浏览器兼容性                                     | 勘误     | AC1 移除硬编码需求编号范围（REQ-F-001 至 REQ-F-139），改为"§3 全部 REQ-F 需求"，避免随需求增删失效                                        |
-| —             | 全文一致性                                      | 勘误     | 统计与索引同步实际需求数（143 条）；编号规则注明 5 处历史空缺；附录 B 延期需求编号错位修正（F-138/139 → F-136/135）；同分段重复术语标注精简                      |
+| —             | 全文一致性                                      | 勘误     | 2026-07-31 依据 ADR-0014 固定正式需求数为 150（F:142 + NF:8）；附录 A 与正式需求块一一对应；5 个历史删除编号与 9 个非规范性边界编号不计入覆盖率 |

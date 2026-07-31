@@ -5,11 +5,11 @@
 
 ## Baseline
 
-- 基线日期：2026-07-30
-- 正式需求块：150
+- 基线日期：2026-07-31
+- 正式需求块：150（REQ-F 142 + REQ-NF 8）
 - 当前功能实施状态：全部 `Not Started`
 - 已完成工程工作：DEV-GATE-001 repository baseline（本地验证通过）
-- 不计入正式覆盖率：仅出现在 SRS 索引/变更记录、没有正式需求块和 AC 的编号
+- 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
 在首个功能 work package 合并前，所有 150 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
@@ -35,7 +35,7 @@
 | DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`：跨 Group remount/dispose，ResourceId 外置业务状态恢复 |
 | DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据已在 P7 Phase Exit 补齐 |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
-| DEV-GATE-006 Traceability Baseline | Evidence Ready | 本文件已建立；SRS OI-003/OI-005 仍待勘误 |
+| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 150 = F142 + NF8 且附录与正文集合相同 |
 
 ## 实施状态变更
 

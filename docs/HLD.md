@@ -52,9 +52,9 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 |------|----------|------|----------|
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
-| OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录写为 152 | HLD 追溯以正文正式需求块为基线，等待 SRS 勘误 |
+| OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
 | OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、Atlas.Demo、Node 24 LTS + npm |
-| OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景出现在索引/引用中，但没有正式需求块和 AC | 作为设计鲁棒性输入，不计入 Designed，等待补充正式需求 |
+| OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
 | OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
 
 ---
@@ -228,7 +228,7 @@ WorkspaceSnapshot 是 committed state 的唯一公开快照，对 consumer 只�
 
 1. RootNodeId + Nodes、Items、ToolBars、ToolBarOrders 和 AutoHideStrips 是 committed authoritative state（F-002）
 2. ToolBar Entry 列表、Item 排序索引等是派生投影，不持久化、不是第二真相源（F-021）
-3. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003, F-131）
+3. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003；历史边界场景 F-131）
 4. 每个打开 Item 必须恰有一个 placement：Group 或 Auto-hide Strip（F-069, F-017）
 5. 新建 Workspace 的初始 Revision 为 0；第一次成功 mutation 发布 Revision 1
 6. Snapshot 对 consumer immutable；内部可使用 immutable collection 或 copy-on-write（F-133）
@@ -449,7 +449,7 @@ DES-DOM-008
 11. 删除空 Dynamic Group 后必须递归提升单子 Split 的 sibling
 12. 任何失败 operation 不改变 published Snapshot、Revision 或 History（F-133）
 13. ContentReference kind/resourceId 非空；所有 Strong ID 不得为 default（F-006）
-14. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003, F-131）
+14. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003；历史边界场景 F-131）
 15. InlineStart / InlineEnd 各最多一个 ToolBarState；ToolBarState 不创建第三个物理侧
 16. 每个 ToolBarOrderState 只引用同一 LogicalRegion 的 Tool Item，ItemId 唯一且与 placement
     集合构成完整排列；AutoHidden Item 的 LogicalRegion 由有效 DockBack 解析
@@ -2134,7 +2134,7 @@ preservation 与 component instance preservation，不能合并为一个模糊�
 | DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
 | DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
-| DEV-GATE-006 Traceability Baseline | OI-003、OI-005 | 自动化覆盖率统计和“全部需求完成”声明 | SRS 统计勘误；无正式需求块的编号有明确 disposition | 以正文 150 个正式需求块建立临时矩阵 |
+| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；150 = F142 + NF8 | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 150 个正式需求块维护矩阵 |
 
 闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、
 geometry snapshot 和参数化 target resolver，但不得选择默认 Panel drop policy，也不得把相关 E2E
