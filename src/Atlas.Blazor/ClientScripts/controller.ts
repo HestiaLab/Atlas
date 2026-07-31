@@ -69,6 +69,7 @@ export class AtlasInteractionController {
   private keyboardBindings: readonly AtlasKeyboardBinding[];
   private readonly ownerDocument: Document | undefined;
   private readonly ownerWindow: Window | null | undefined;
+  private readonly reducedMotionQuery: MediaQueryList | undefined;
   private readonly sandboxController: AtlasSandboxController;
   private activeResize: ActiveResize | undefined;
   private activeDrag: ActiveDrag | undefined;
@@ -96,6 +97,8 @@ export class AtlasInteractionController {
     this.keyboardBindings = options.keyboardBindings ?? defaultKeyboardBindings;
     this.ownerDocument = root.ownerDocument ?? undefined;
     this.ownerWindow = this.ownerDocument?.defaultView;
+    this.reducedMotionQuery = this.ownerWindow?.matchMedia(
+      "(prefers-reduced-motion: reduce)");
     this.sandboxController = new AtlasSandboxController(root, identity);
     this.root.addEventListener("pointerdown", this.onPointerDown);
     this.root.addEventListener("pointermove", this.onPointerMove);
@@ -112,6 +115,8 @@ export class AtlasInteractionController {
     this.ownerDocument?.addEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
+    this.reducedMotionQuery?.addEventListener("change", this.onReducedMotionChanged);
+    this.projectReducedMotion();
   }
 
   public update(
@@ -165,6 +170,17 @@ export class AtlasInteractionController {
     this.ownerDocument?.removeEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
+    this.reducedMotionQuery?.removeEventListener("change", this.onReducedMotionChanged);
+  }
+
+  private readonly onReducedMotionChanged = (): void => {
+    this.projectReducedMotion();
+  };
+
+  private projectReducedMotion(): void {
+    this.root.dataset.atlasReducedMotion = this.reducedMotionQuery?.matches
+      ? "true"
+      : "false";
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {

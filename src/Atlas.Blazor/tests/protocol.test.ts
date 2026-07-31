@@ -153,13 +153,30 @@ class FakeStyle {
 }
 
 class FakeDocument extends EventTarget {
-  public defaultView = null;
+  public defaultView: Window | null = null;
   public hidden = false;
   public activeElement: FakeElement | null = null;
   public pointElement: FakeElement | null = null;
 
   public elementFromPoint(_x: number, _y: number): FakeElement | null {
     return this.pointElement;
+  }
+}
+
+class FakeMediaQueryList extends EventTarget {
+  public matches = false;
+  public readonly media = "(prefers-reduced-motion: reduce)";
+}
+
+class FakeWindow extends EventTarget {
+  public readonly reducedMotion = new FakeMediaQueryList();
+
+  public matchMedia(_query: string): MediaQueryList {
+    return this.reducedMotion as unknown as MediaQueryList;
+  }
+
+  public getComputedStyle(_element: Element): CSSStyleDeclaration {
+    return { direction: "ltr" } as CSSStyleDeclaration;
   }
 }
 
@@ -373,6 +390,35 @@ test("cancel and dispose produce no terminal callback", async () => {
 
   assert.equal(fixture.messages.length, 0);
   assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
+});
+
+test("reduced motion follows the host media query and releases its listener", () => {
+  const root = new FakeElement();
+  const document = new FakeDocument();
+  const ownerWindow = new FakeWindow();
+  document.defaultView = ownerWindow as unknown as Window;
+  root.ownerDocument = document;
+  root.dataset.atlasHostId = "motion-host";
+  root.dataset.atlasWorkspaceId = "motion-workspace";
+  const controller = new AtlasInteractionController(
+    root as unknown as HTMLElement,
+    {
+      hostId: "motion-host",
+      workspaceId: "motion-workspace",
+      generation: 1,
+      protocolVersion: ATLAS_PROTOCOL_VERSION
+    },
+    { invokeMethodAsync: async () => undefined });
+
+  assert.equal(root.dataset.atlasReducedMotion, "false");
+  ownerWindow.reducedMotion.matches = true;
+  ownerWindow.reducedMotion.dispatchEvent(new Event("change"));
+  assert.equal(root.dataset.atlasReducedMotion, "true");
+
+  controller.dispose();
+  ownerWindow.reducedMotion.matches = false;
+  ownerWindow.reducedMotion.dispatchEvent(new Event("change"));
+  assert.equal(root.dataset.atlasReducedMotion, "true");
 });
 
 test("each splitter key step commits and double click requests equalize", async () => {

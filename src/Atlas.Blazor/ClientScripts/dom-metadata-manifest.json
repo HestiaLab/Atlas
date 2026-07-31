@@ -6,6 +6,7 @@
       "data-atlas-workspace-id",
       "data-atlas-protocol-version",
       "data-atlas-revision",
+      "data-atlas-reduced-motion",
       "role",
       "aria-label"
     ]

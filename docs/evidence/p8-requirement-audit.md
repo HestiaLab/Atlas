@@ -167,7 +167,7 @@
 | REQ-NF-005 | In Progress | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
 | REQ-NF-007 | In Progress | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-NF-008 | In Progress | DES-NFR-002、DES-PRJ-002 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-NF-008 | Implemented | DES-NFR-002、DES-PRJ-002 | Node 验证初值、动态 change 与 dispose；CSS media fallback 已实现，待 P8 browser evidence 后升级。 |
 
 ## Audit interpretation
 

@@ -169,6 +169,14 @@
     animation-duration: 0s;
   }
 }
+
+.atlas-v2-workspace[data-atlas-reduced-motion="true"] *,
+.atlas-v2-workspace[data-atlas-reduced-motion="true"] *::before,
+.atlas-v2-workspace[data-atlas-reduced-motion="true"] *::after {
+  scroll-behavior: auto;
+  transition-duration: 0s;
+  animation-duration: 0s;
+}
 .atlas-v2-content-stack {
   display: contents;
 }
