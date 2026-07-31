@@ -18,5 +18,6 @@
     <None Include="Persistence\Schema\atlas-workspace-v2.xsd"
           Pack="true"
           PackagePath="contentFiles\any\any\Persistence\Schema" />
+    <EmbeddedResource Include="Persistence\Schema\atlas-workspace-v2.xsd" />
   </ItemGroup>
 </Project>

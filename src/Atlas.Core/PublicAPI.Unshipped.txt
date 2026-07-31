@@ -128,6 +128,26 @@ Atlas.Core.Items.DockItemKind
 Atlas.Core.Items.DockItemKind.Document = 1 -> Atlas.Core.Items.DockItemKind
 Atlas.Core.Items.DockItemKind.Tool = 0 -> Atlas.Core.Items.DockItemKind
 Atlas.Core.Items.DocumentState
+Atlas.Core.Persistence.AtlasXmlLayoutSerializer
+Atlas.Core.Persistence.AtlasXmlLayoutSerializer.AtlasXmlLayoutSerializer() -> void
+Atlas.Core.Persistence.AtlasXmlLayoutSerializer.Deserialize(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
+Atlas.Core.Persistence.AtlasXmlLayoutSerializer.Serialize(Atlas.Core.WorkspaceSnapshot! snapshot) -> string!
+Atlas.Core.Persistence.IAtlasLayoutSerializer
+Atlas.Core.Persistence.IAtlasLayoutSerializer.Deserialize(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
+Atlas.Core.Persistence.IAtlasLayoutSerializer.Serialize(Atlas.Core.WorkspaceSnapshot! snapshot) -> string!
+Atlas.Core.Persistence.LayoutPersistenceLimits
+Atlas.Core.Persistence.LayoutPersistenceLimits.LayoutPersistenceLimits(int maxDocumentBytes = 1048576, int maxDepth = 64, int maxNodeCount = 4096, int maxItemCount = 4096, int maxItemsPerGroup = 1024, int maxStringLength = 4096, int maxMigrationSteps = 1) -> void
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxDepth.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxDocumentBytes.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxItemCount.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxItemsPerGroup.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxMigrationSteps.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxNodeCount.get -> int
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxStringLength.get -> int
+Atlas.Core.Persistence.LayoutRestoreDocument
+Atlas.Core.Persistence.LayoutRestoreDocument.Snapshot.get -> Atlas.Core.WorkspaceSnapshot!
+Atlas.Core.Persistence.LayoutRestoreDocument.SourceSchemaVersion.get -> string!
+Atlas.Core.Persistence.LayoutRestoreDocument.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Atlas.Core.Items.DocumentState.DocumentState() -> void
 Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> void
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool

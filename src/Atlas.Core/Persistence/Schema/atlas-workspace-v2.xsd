@@ -145,7 +145,7 @@
     </xs:sequence>
     <xs:attribute name="overflowMode" use="required">
       <xs:simpleType><xs:restriction base="xs:string">
-        <xs:enumeration value="Scroll" /><xs:enumeration value="Compress" /><xs:enumeration value="Wrap" />
+        <xs:enumeration value="Scroll" /><xs:enumeration value="Menu" /><xs:enumeration value="Wrap" />
       </xs:restriction></xs:simpleType>
     </xs:attribute>
     <xs:attribute name="activationPolicy" use="required">
