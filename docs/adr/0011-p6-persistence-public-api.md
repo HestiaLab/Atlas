@@ -16,7 +16,8 @@ C# 签名。P6 需要一个不依赖 Blazor、JS 或浏览器 storage 的 Core �
   `Deserialize(string, WorkspaceId, LayoutPersistenceLimits?)`。同步 API 只做 CPU/memory XML codec，
   不执行 I/O。
 - `LayoutRestoreDocument` 是验证后的 immutable candidate，包含 Snapshot、source version、warnings；
-  只能由 serializer 产生。
+  只能由 serializer 产生。`DeserializeWithOptions` 额外接受纯 content-registration predicate、
+  MissingContentPolicy 和 target-reserved Item IDs，并返回 placeholder/drop/remap 报告。
 - `RestoreWorkspaceOperation` 携带验证后的 document，并通过既有 operation transaction 原子发布；
   restore 是 history barrier。
 - `ILayoutPresetStore` 只负责异步 document I/O；`LayoutPresetService` 负责 snapshot capture、codec、

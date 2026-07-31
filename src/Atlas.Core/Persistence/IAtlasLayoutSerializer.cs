@@ -13,4 +13,10 @@ public interface IAtlasLayoutSerializer
         string xml,
         WorkspaceId targetWorkspaceId,
         LayoutPersistenceLimits? limits = null);
+
+    /// <summary>Parses with explicit content and identity restore policies.</summary>
+    WorkspaceResult<LayoutRestoreDocument> DeserializeWithOptions(
+        string xml,
+        WorkspaceId targetWorkspaceId,
+        LayoutRestoreOptions options);
 }

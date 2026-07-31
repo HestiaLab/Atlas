@@ -1,4 +1,5 @@
 using Atlas.Core.Layout;
+using Atlas.Core.Items;
 using Atlas.Core.Persistence;
 using Atlas.Core.Results;
 using Xunit;
@@ -114,6 +115,74 @@ public sealed class AtlasXmlLayoutSerializerTests
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+    }
+
+    [Fact]
+    public void Reserved_document_identity_is_remapped_across_all_references()
+    {
+        var options = new LayoutRestoreOptions(
+            reservedItemIds: new[] { new DockItemId("document-42") });
+
+        var result = serializer.DeserializeWithOptions(
+            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            new WorkspaceId("main"),
+            options);
+
+        Assert.True(result.Succeeded);
+        var remap = Assert.Single(result.Value!.IdentityRemaps);
+        Assert.Equal(new DockItemId("document-42"), remap.OldItemId);
+        Assert.Equal(new DockItemId("document-42-restored-1"), remap.NewItemId);
+        Assert.DoesNotContain(new DockItemId("document-42"), result.Value.Snapshot.Items.Keys);
+        var group = Assert.IsType<GroupNode>(
+            result.Value.Snapshot.Nodes[new LayoutNodeId("documents")]);
+        Assert.Equal(remap.NewItemId, group.SelectedItemId);
+        Assert.Contains(remap.NewItemId, group.EditorState!.RecentlyVisitedIds);
+    }
+
+    [Fact]
+    public void Missing_content_defaults_to_safe_placeholder()
+    {
+        var options = new LayoutRestoreOptions(
+            isContentRegistered: reference => reference.Kind == "explorer");
+
+        var result = serializer.DeserializeWithOptions(
+            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            new WorkspaceId("main"),
+            options);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(
+            new[] { new DockItemId("document-42") },
+            result.Value!.PlaceholderItems);
+        Assert.Equal(
+            DockItemCapabilities.None,
+            result.Value.Snapshot.Items[new DockItemId("document-42")].Capabilities);
+    }
+
+    [Fact]
+    public void Missing_content_can_fail_or_drop_deterministically()
+    {
+        var xml = File.ReadAllText(GoldenPath("workspace-v2.xml"));
+        var fail = serializer.DeserializeWithOptions(
+            xml,
+            new WorkspaceId("main"),
+            new LayoutRestoreOptions(
+                isContentRegistered: _ => false,
+                missingContentPolicy: MissingContentPolicy.FailRestore));
+        var drop = serializer.DeserializeWithOptions(
+            xml,
+            new WorkspaceId("main"),
+            new LayoutRestoreOptions(
+                isContentRegistered: reference => reference.Kind == "explorer",
+                missingContentPolicy: MissingContentPolicy.DropUnknownItems));
+
+        Assert.False(fail.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.ContentNotRegistered, fail.Error!.Code);
+        Assert.True(drop.Succeeded);
+        Assert.Equal(
+            new[] { new DockItemId("document-42") },
+            drop.Value!.DroppedItems);
+        Assert.DoesNotContain(new DockItemId("document-42"), drop.Value.Snapshot.Items.Keys);
     }
 
     private static string GoldenPath(string fileName)

@@ -131,9 +131,11 @@ Atlas.Core.Items.DocumentState
 Atlas.Core.Persistence.AtlasXmlLayoutSerializer
 Atlas.Core.Persistence.AtlasXmlLayoutSerializer.AtlasXmlLayoutSerializer() -> void
 Atlas.Core.Persistence.AtlasXmlLayoutSerializer.Deserialize(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
+Atlas.Core.Persistence.AtlasXmlLayoutSerializer.DeserializeWithOptions(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutRestoreOptions! options) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
 Atlas.Core.Persistence.AtlasXmlLayoutSerializer.Serialize(Atlas.Core.WorkspaceSnapshot! snapshot) -> string!
 Atlas.Core.Persistence.IAtlasLayoutSerializer
 Atlas.Core.Persistence.IAtlasLayoutSerializer.Deserialize(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
+Atlas.Core.Persistence.IAtlasLayoutSerializer.DeserializeWithOptions(string! xml, Atlas.Core.WorkspaceId targetWorkspaceId, Atlas.Core.Persistence.LayoutRestoreOptions! options) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreDocument!>!
 Atlas.Core.Persistence.IAtlasLayoutSerializer.Serialize(Atlas.Core.WorkspaceSnapshot! snapshot) -> string!
 Atlas.Core.Persistence.ILayoutPresetStore
 Atlas.Core.Persistence.ILayoutPresetStore.DeleteAsync(string! name, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<bool>
@@ -153,6 +155,15 @@ Atlas.Core.Persistence.InMemoryWorkspaceLayoutStore.TryLoadAsync(System.Threadin
 Atlas.Core.Persistence.IWorkspaceLayoutStore
 Atlas.Core.Persistence.IWorkspaceLayoutStore.SaveAsync(Atlas.Core.Persistence.WorkspaceLayoutDocument! document, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Atlas.Core.Persistence.IWorkspaceLayoutStore.TryLoadAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Persistence.WorkspaceLayoutDocument?>
+Atlas.Core.Persistence.IdentityRemap
+Atlas.Core.Persistence.IdentityRemap.IdentityRemap(Atlas.Core.DockItemId oldItemId, Atlas.Core.DockItemId newItemId, Atlas.Core.Persistence.IdentityRemapReason reason) -> void
+Atlas.Core.Persistence.IdentityRemap.NewItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Persistence.IdentityRemap.OldItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Persistence.IdentityRemap.Reason.get -> Atlas.Core.Persistence.IdentityRemapReason
+Atlas.Core.Persistence.IdentityRemapReason
+Atlas.Core.Persistence.IdentityRemapReason.CloneImport = 1 -> Atlas.Core.Persistence.IdentityRemapReason
+Atlas.Core.Persistence.IdentityRemapReason.Conflict = 0 -> Atlas.Core.Persistence.IdentityRemapReason
+Atlas.Core.Persistence.IdentityRemapReason.LegacyMigration = 2 -> Atlas.Core.Persistence.IdentityRemapReason
 Atlas.Core.Persistence.LayoutAutoPersistence
 Atlas.Core.Persistence.LayoutAutoPersistence.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Atlas.Core.Persistence.LayoutAutoPersistence.FlushAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<bool>!>
@@ -184,9 +195,22 @@ Atlas.Core.Persistence.LayoutPersistenceLimits.MaxMigrationSteps.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxNodeCount.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxStringLength.get -> int
 Atlas.Core.Persistence.LayoutRestoreDocument
+Atlas.Core.Persistence.LayoutRestoreDocument.DroppedItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Persistence.LayoutRestoreDocument.IdentityRemaps.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Persistence.IdentityRemap!>!
+Atlas.Core.Persistence.LayoutRestoreDocument.PlaceholderItems.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
 Atlas.Core.Persistence.LayoutRestoreDocument.Snapshot.get -> Atlas.Core.WorkspaceSnapshot!
 Atlas.Core.Persistence.LayoutRestoreDocument.SourceSchemaVersion.get -> string!
 Atlas.Core.Persistence.LayoutRestoreDocument.Warnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Atlas.Core.Persistence.LayoutRestoreOptions
+Atlas.Core.Persistence.LayoutRestoreOptions.IsContentRegistered.get -> System.Func<Atlas.Core.Items.ContentReference, bool>?
+Atlas.Core.Persistence.LayoutRestoreOptions.LayoutRestoreOptions(Atlas.Core.Persistence.LayoutPersistenceLimits? limits = null, System.Func<Atlas.Core.Items.ContentReference, bool>? isContentRegistered = null, Atlas.Core.Persistence.MissingContentPolicy missingContentPolicy = Atlas.Core.Persistence.MissingContentPolicy.PreservePlaceholder, System.Collections.Generic.IEnumerable<Atlas.Core.DockItemId>? reservedItemIds = null) -> void
+Atlas.Core.Persistence.LayoutRestoreOptions.Limits.get -> Atlas.Core.Persistence.LayoutPersistenceLimits!
+Atlas.Core.Persistence.LayoutRestoreOptions.MissingContentPolicy.get -> Atlas.Core.Persistence.MissingContentPolicy
+Atlas.Core.Persistence.LayoutRestoreOptions.ReservedItemIds.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Persistence.MissingContentPolicy
+Atlas.Core.Persistence.MissingContentPolicy.DropUnknownItems = 1 -> Atlas.Core.Persistence.MissingContentPolicy
+Atlas.Core.Persistence.MissingContentPolicy.FailRestore = 2 -> Atlas.Core.Persistence.MissingContentPolicy
+Atlas.Core.Persistence.MissingContentPolicy.PreservePlaceholder = 0 -> Atlas.Core.Persistence.MissingContentPolicy
 Atlas.Core.Persistence.WorkspaceLayoutDocument
 Atlas.Core.Persistence.WorkspaceLayoutDocument.SavedRevision.get -> long
 Atlas.Core.Persistence.WorkspaceLayoutDocument.SchemaVersion.get -> string!
