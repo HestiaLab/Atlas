@@ -7,6 +7,11 @@ Atlas.Core.AtlasWorkspaceCommands.CloseItemAsync(Atlas.Core.DockItemId itemId, l
 Atlas.Core.AtlasWorkspaceCommands.OpenItemAsync(Atlas.Core.Items.DockItem! item, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolBarVisibilityAsync(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolVisibilityAsync(Atlas.Core.LayoutNodeId groupId, bool visible, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceOptions
+Atlas.Core.AtlasWorkspaceOptions.AtlasWorkspaceOptions(Atlas.Core.WorkspaceHistoryOptions? history = null, Atlas.Core.Items.IContentIdentityPolicy? contentIdentityPolicy = null, Atlas.Core.Operations.IDockItemCloseGuardResolver? closeGuardResolver = null) -> void
+Atlas.Core.AtlasWorkspaceOptions.CloseGuardResolver.get -> Atlas.Core.Operations.IDockItemCloseGuardResolver?
+Atlas.Core.AtlasWorkspaceOptions.ContentIdentityPolicy.get -> Atlas.Core.Items.IContentIdentityPolicy?
+Atlas.Core.AtlasWorkspaceOptions.History.get -> Atlas.Core.WorkspaceHistoryOptions!
 Atlas.Core.AtlasWorkspaceQueries
 Atlas.Core.Changes.LayoutChangeKind
 Atlas.Core.Changes.LayoutChangeKind.Operation = 0 -> Atlas.Core.Changes.LayoutChangeKind
@@ -31,6 +36,15 @@ Atlas.Core.Changes.LayoutChangeSet.UpdatedToolBars.get -> System.Collections.Gen
 Atlas.Core.Changes.WorkspaceChangedEventArgs
 Atlas.Core.Changes.WorkspaceChangedEventArgs.ChangeSet.get -> Atlas.Core.Changes.LayoutChangeSet!
 Atlas.Core.Changes.WorkspaceChangedEventArgs.WorkspaceId.get -> Atlas.Core.WorkspaceId
+Atlas.Core.Definitions.AtlasWorkspaceDefinition
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.AtlasWorkspaceDefinition(Atlas.Core.WorkspaceId workspaceId, Atlas.Core.LayoutNodeId? rootNodeId, System.Collections.Generic.IEnumerable<Atlas.Core.Layout.LayoutNode!>! nodes, System.Collections.Generic.IEnumerable<Atlas.Core.Items.DockItem!>! items, System.Collections.Generic.IEnumerable<Atlas.Core.Placement.ToolBarState>? toolBars = null, System.Collections.Generic.IEnumerable<Atlas.Core.Placement.ToolBarOrderState!>? toolBarOrders = null, System.Collections.Generic.IEnumerable<Atlas.Core.Placement.AutoHideStripState!>? autoHideStrips = null) -> void
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.AutoHideStrips.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.AutoHideStripState!>!
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.Items.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Items.DockItem!>!
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.Nodes.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Layout.LayoutNode!>!
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.RootNodeId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.ToolBarOrders.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.ToolBarOrderState!>!
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.ToolBars.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Placement.ToolBarState>!
+Atlas.Core.Definitions.AtlasWorkspaceDefinition.WorkspaceId.get -> Atlas.Core.WorkspaceId
 Atlas.Core.DockItemId
 Atlas.Core.DockItemId.DockItemId() -> void
 Atlas.Core.DockItemId.DockItemId(string! value) -> void
@@ -45,6 +59,8 @@ Atlas.Core.IAtlasWorkspace.ExecuteAsync(Atlas.Core.Operations.LayoutOperation! o
 Atlas.Core.IAtlasWorkspace.Id.get -> Atlas.Core.WorkspaceId
 Atlas.Core.IAtlasWorkspace.RedoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.IAtlasWorkspace.UndoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.IAtlasWorkspaceFactory
+Atlas.Core.IAtlasWorkspaceFactory.Create(Atlas.Core.Definitions.AtlasWorkspaceDefinition! definition, Atlas.Core.AtlasWorkspaceOptions? options = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.IAtlasWorkspace!>!
 Atlas.Core.Items.ContentDeduplicationMode
 Atlas.Core.Items.ContentDeduplicationMode.ActivateExisting = 0 -> Atlas.Core.Items.ContentDeduplicationMode
 Atlas.Core.Items.ContentDeduplicationMode.AllowMultiple = 1 -> Atlas.Core.Items.ContentDeduplicationMode
@@ -82,6 +98,8 @@ Atlas.Core.Items.DocumentState.DocumentState(bool isPinned, bool isPreview) -> v
 Atlas.Core.Items.DocumentState.Equals(Atlas.Core.Items.DocumentState other) -> bool
 Atlas.Core.Items.DocumentState.IsPinned.get -> bool
 Atlas.Core.Items.DocumentState.IsPreview.get -> bool
+Atlas.Core.Items.IContentIdentityPolicy
+Atlas.Core.Items.IContentIdentityPolicy.AreEquivalent(Atlas.Core.Items.ContentReference left, Atlas.Core.Items.ContentReference right) -> bool
 Atlas.Core.Layout.EditorActivationPolicy
 Atlas.Core.Layout.EditorActivationPolicy.Adjacent = 0 -> Atlas.Core.Layout.EditorActivationPolicy
 Atlas.Core.Layout.EditorActivationPolicy.MostRecentlyVisited = 1 -> Atlas.Core.Layout.EditorActivationPolicy
@@ -309,6 +327,11 @@ Atlas.Core.Results.WorkspaceResultStatus
 Atlas.Core.Results.WorkspaceResultStatus.Failure = 2 -> Atlas.Core.Results.WorkspaceResultStatus
 Atlas.Core.Results.WorkspaceResultStatus.NoChange = 1 -> Atlas.Core.Results.WorkspaceResultStatus
 Atlas.Core.Results.WorkspaceResultStatus.Success = 0 -> Atlas.Core.Results.WorkspaceResultStatus
+Atlas.Core.WorkspaceHistoryOptions
+Atlas.Core.WorkspaceHistoryOptions.ApproximateMaxBytes.get -> long?
+Atlas.Core.WorkspaceHistoryOptions.MaxEntries.get -> int
+Atlas.Core.WorkspaceHistoryOptions.ResizeCoalescingWindow.get -> System.TimeSpan
+Atlas.Core.WorkspaceHistoryOptions.WorkspaceHistoryOptions(int maxEntries = 100, long? approximateMaxBytes = null, System.TimeSpan? resizeCoalescingWindow = null) -> void
 Atlas.Core.WorkspaceSnapshot
 Atlas.Core.WorkspaceSnapshot.AutoHideStrips.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.Placement.WorkspaceEdge, Atlas.Core.Placement.AutoHideStripState!>!
 Atlas.Core.WorkspaceSnapshot.Id.get -> Atlas.Core.WorkspaceId

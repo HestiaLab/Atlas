@@ -11,18 +11,29 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
     private readonly ConditionalWeakTable<CloseItemOperation, GuardDecision> guardDecisions = new();
     private readonly object guardGate = new();
     private readonly IDockItemCloseGuardResolver? closeGuardResolver;
+    private readonly IContentIdentityPolicy contentIdentityPolicy;
 
     internal DefaultWorkspaceOperationPlanner(IDockItemCloseGuard? closeGuard = null)
     {
         closeGuardResolver = closeGuard is null
             ? null
             : new FixedCloseGuardResolver(closeGuard);
+        contentIdentityPolicy = DefaultContentIdentityPolicy.Instance;
     }
 
     internal DefaultWorkspaceOperationPlanner(IDockItemCloseGuardResolver closeGuardResolver)
     {
         this.closeGuardResolver = closeGuardResolver
             ?? throw new ArgumentNullException(nameof(closeGuardResolver));
+        contentIdentityPolicy = DefaultContentIdentityPolicy.Instance;
+    }
+
+    internal DefaultWorkspaceOperationPlanner(AtlasWorkspaceOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        closeGuardResolver = options.CloseGuardResolver;
+        contentIdentityPolicy = options.ContentIdentityPolicy
+            ?? DefaultContentIdentityPolicy.Instance;
     }
 
     public async ValueTask<WorkspacePlan> PlanAsync(
@@ -36,7 +47,10 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
 
         return operation switch
         {
-            OpenItemOperation open => OpenItemPlanner.Plan(snapshot, open),
+            OpenItemOperation open => OpenItemPlanner.Plan(
+                snapshot,
+                open,
+                contentIdentityPolicy),
             SelectItemOperation select => PlanSelect(snapshot, select),
             ReorderItemOperation reorder => PlanReorder(snapshot, reorder),
             MoveToolOperation move => MoveToolPlanner.Plan(snapshot, move),

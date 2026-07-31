@@ -9,7 +9,8 @@ internal static class OpenItemPlanner
 {
     internal static WorkspacePlan Plan(
         WorkspaceSnapshot snapshot,
-        OpenItemOperation operation)
+        OpenItemOperation operation,
+        IContentIdentityPolicy contentIdentityPolicy)
     {
         if (!snapshot.Nodes.TryGetValue(operation.TargetGroupId, out var targetNode))
         {
@@ -41,7 +42,10 @@ internal static class OpenItemPlanner
         }
 
         var duplicate = snapshot.Items.Values
-            .FirstOrDefault(item => item.Content == operation.Item.Content);
+            .FirstOrDefault(
+                item => contentIdentityPolicy.AreEquivalent(
+                    item.Content,
+                    operation.Item.Content));
         if (duplicate is not null)
         {
             return operation.DeduplicationMode switch
