@@ -244,6 +244,22 @@ button { font: inherit; }
 .atlas-demo-empty-icon { padding-top: 1.5rem; color: #73c991; font-size: 2rem; text-align: center; }
 .atlas-demo-tool > p, .atlas-demo-tool > small { display: block; text-align: center; }
 
+.atlas-demo-verification {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    overflow: hidden;
+    background: #151619;
+}
+
+.atlas-demo-verification > section {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
 @media (max-width: 900px) {
     .atlas-demo-menu button:nth-last-child(-n + 3),
     .atlas-demo-branch,
@@ -255,4 +271,5 @@ button { font: inherit; }
     .atlas-demo-topbar { gap: 0.15rem; padding-inline: 0.35rem; }
     .atlas-demo-statusbar span:nth-last-child(-n + 3) { display: none; }
     .atlas-demo-markdown .markdown-body { padding-inline: 1rem; }
+    .atlas-demo-verification { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
 }

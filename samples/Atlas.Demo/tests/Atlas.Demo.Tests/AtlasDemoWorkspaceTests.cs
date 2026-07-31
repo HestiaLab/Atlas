@@ -1,6 +1,7 @@
 #nullable enable
 using Atlas.Blazor.DependencyInjection;
 using Atlas.Demo.Components;
+using Atlas.Demo.Pages;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -106,6 +107,81 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                 var panel = cut.Find($"#{selectedTab.GetAttribute("aria-controls")}");
                 Assert.Equal("tabpanel", panel.GetAttribute("role"));
                 Assert.Equal(selectedTab.Id, panel.GetAttribute("aria-labelledby"));
+            });
+    }
+
+    [Fact]
+    public void Workspace_uses_the_required_nested_split_tree()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-node-id='main-area']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-node-id='bottom-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='main-area'] > [data-atlas-node-id='left-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='main-area'] > [data-atlas-node-id='editor-right']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='left-dock'] > [data-atlas-group-id='left-upper']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='left-dock'] > [data-atlas-group-id='left-lower']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='editor-right'] > [data-atlas-group-id='editor']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='editor-right'] > [data-atlas-node-id='right-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='right-dock'] > [data-atlas-group-id='right-upper']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='right-dock'] > [data-atlas-group-id='right-lower']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='bottom-dock'] > [data-atlas-group-id='bottom-left']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='bottom-dock'] > [data-atlas-group-id='bottom-right']"));
+            });
+    }
+
+    [Fact]
+    public void Workspace_exposes_all_supported_interaction_sources()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(6, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
+                Assert.Equal(6, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
+                Assert.Equal(6, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
+                Assert.All(
+                    cut.FindAll("[role='separator'][data-atlas-split-id]"),
+                    splitter =>
+                    {
+                        Assert.Equal("0", splitter.GetAttribute("tabindex"));
+                        Assert.False(string.IsNullOrWhiteSpace(splitter.GetAttribute("aria-label")));
+                    });
+            });
+    }
+
+    [Fact]
+    public void Undo_restores_the_previous_editor_selection()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+        cut.WaitForElement("[role='tab'][aria-label='README.md']");
+
+        cut.InvokeAsync(
+            () => cut.Find("[role='tab'][aria-label='README.md']").Click());
+        cut.WaitForAssertion(
+            () => Assert.Contains("NuGet consumer sample", cut.Markup, StringComparison.Ordinal));
+
+        cut.InvokeAsync(
+            () => cut.Find("[aria-label='Undo layout change']").Click());
+        cut.WaitForAssertion(
+            () => Assert.Contains("Atlas.Demo ready", cut.Markup, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Verification_page_creates_two_isolated_hosts()
+    {
+        var cut = RenderComponent<Verification>();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var hosts = cut.FindAll(".atlas-v2-workspace");
+                Assert.Equal(2, hosts.Count);
+                Assert.Equal(2, hosts.Select(host => host.GetAttribute("data-atlas-host-id")).Distinct().Count());
             });
     }
 }

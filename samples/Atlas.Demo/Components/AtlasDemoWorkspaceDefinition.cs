@@ -8,8 +8,13 @@ namespace Atlas.Demo.Components;
 
 internal static class AtlasDemoWorkspaceDefinition
 {
-    internal static AtlasWorkspaceDefinition Create()
+    internal static AtlasWorkspaceDefinition Create(string workspaceName)
     {
+        if (string.IsNullOrWhiteSpace(workspaceName))
+        {
+            throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
+        }
+
         var project = Tool("project", "Project");
         var structure = Tool("structure", "Structure");
         var services = Tool("services", "Services");
@@ -121,7 +126,7 @@ internal static class AtlasDemoWorkspaceDefinition
         };
 
         return new AtlasWorkspaceDefinition(
-            new WorkspaceId("atlas-demo"),
+            new WorkspaceId(workspaceName),
             root.Id,
             nodes,
             items,

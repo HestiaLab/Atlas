@@ -30,6 +30,9 @@
     [Inject]
     private IAtlasWorkspaceFactory Factory { get; set; } = null!;
 
+    [Parameter]
+    public string WorkspaceName { get; set; } = "atlas-demo";
+
     public AtlasDemoWorkspace()
     {
         contentTemplate = content => builder =>
@@ -58,7 +61,7 @@
 
     protected override void OnInitialized()
     {
-        var result = Factory.Create(AtlasDemoWorkspaceDefinition.Create());
+        var result = Factory.Create(AtlasDemoWorkspaceDefinition.Create(WorkspaceName));
         if (!result.Succeeded || result.Value is null)
         {
             throw new InvalidOperationException(result.Error?.DiagnosticId ?? "Atlas Demo initialization failed.");
