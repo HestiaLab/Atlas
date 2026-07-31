@@ -1,0 +1,128 @@
+{
+  "workspaceRoot": {
+    "selector": ".atlas-v2-workspace",
+    "requiredAttributes": [
+      "data-atlas-host-id",
+      "data-atlas-workspace-id",
+      "data-atlas-protocol-version",
+      "data-atlas-revision",
+      "data-atlas-reduced-motion",
+      "role",
+      "aria-label"
+    ]
+  },
+  "split": {
+    "selector": "[data-atlas-node-kind=split]",
+    "requiredAttributes": [
+      "data-atlas-node-id",
+      "data-atlas-split-axis",
+      "data-atlas-split-locked",
+      "data-atlas-revision"
+    ]
+  },
+  "splitter": {
+    "selector": "[data-atlas-split-id]",
+    "requiredAttributes": [
+      "data-atlas-split-id",
+      "role",
+      "aria-label",
+      "aria-orientation",
+      "aria-disabled"
+    ]
+  },
+  "collapseControl": {
+    "selector": "[data-atlas-collapse-child]"
+  },
+  "group": {
+    "selector": "[data-atlas-group-id]"
+  },
+  "groupRegion": {
+    "selector": ".atlas-v2-group[data-atlas-group-id]",
+    "requiredAttributes": [
+      "role",
+      "aria-labelledby"
+    ]
+  },
+  "toolGroup": {
+    "selector": "[data-atlas-group-kind=tool][data-atlas-group-id]",
+    "requiredAttributes": [
+      "data-atlas-group-kind",
+      "data-atlas-group-id",
+      "role",
+      "aria-labelledby"
+    ]
+  },
+  "dragSource": {
+    "selector": "[data-atlas-drag-kind]",
+    "requiredAttributes": [
+      "data-atlas-drag-kind",
+      "data-atlas-item-id",
+      "data-atlas-command-capabilities"
+    ]
+  },
+  "documentTab": {
+    "selector": "[data-atlas-drag-kind=document-tab]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-label",
+      "aria-selected",
+      "aria-controls",
+      "tabindex"
+    ]
+  },
+  "panelHeader": {
+    "selector": "[data-atlas-panel-header]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-level"
+    ]
+  },
+  "toolbarEntry": {
+    "selector": "[data-atlas-toolbar-entry]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-toolbar-region",
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-label",
+      "aria-selected",
+      "aria-controls",
+      "tabindex"
+    ]
+  },
+  "contentOutlet": {
+    "selector": ".atlas-v2-content-outlet",
+    "requiredAttributes": [
+      "id",
+      "role",
+      "aria-labelledby",
+      "tabindex"
+    ]
+  },
+  "dropScaffold": {
+    "selector": "[data-atlas-drop-scaffold]",
+    "requiredAttributes": [
+      "data-atlas-group-id",
+      "data-atlas-toolbar-region"
+    ]
+  },
+  "sandboxFrame": {
+    "selector": "iframe[data-atlas-sandbox-frame]",
+    "requiredAttributes": [
+      "data-atlas-protocol-version",
+      "data-atlas-workspace-id",
+      "data-atlas-item-id",
+      "data-atlas-generation",
+      "data-atlas-max-message-bytes",
+      "sandbox",
+      "referrerpolicy"
+    ]
+  }
+}

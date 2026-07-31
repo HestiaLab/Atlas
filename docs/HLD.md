@@ -6,6 +6,8 @@
 - **前置文档**：[SRS.md](./SRS.md)（产品需求规范）。本文档使用与 SRS 完全相同的术语体系。
 - **如果你是集成开发者**：只需读 SRS。本文档是框架内部的设计细节。
 - **如果你是框架开发者**：本文档是第一入口——先理解架构骨架，再到 SRS 中确认要实现的用户行为细节。
+- **如果你是开发 Agent**：除 SRS 与本文档主体外，必须执行 §10 的决策闸门、契约冻结和阶段验收；
+  `Designed` 不等于允许绕过未关闭的 Open Issue。
 - **设计条目**：本文档以编号设计条目（`DES-XXX-###`）组织，格式与 SRS 需求条目一致。每条设计决策均可追溯到 SRS 中的具体需求。
 
 ---
@@ -26,6 +28,34 @@
 | Dock 容器自适应折叠 | F-154 | 侧向/Bottom Dock 无可见 Panel 时自动折叠，释放空间给 Editor Area |
 | 拖拽投放骨架 | F-155 | 隐藏 Dock Region 在拖拽期间临时渲染 Drop Scaffold 作为有效投放目标 |
 | 移动操作撤销 | F-156 | Dock Panel 跨区域移动后支持撤销恢复 |
+
+### 1.1 需求到设计的约束
+
+SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实现这些行为所采用的状态模型、模块接口、
+交互协议、失败语义和验证方式。HLD 不复制 Acceptance Criteria，也不得以实现便利为理由降低需求。
+
+每个设计条目遵循以下合同：
+
+1. `来源` 列出该设计直接承担的 SRS 需求；范围引用必须能够展开为实际需求编号
+2. committed state、derived projection 与 transient interaction state 必须明确区分
+3. 所有 mutation 必须说明成功、失败、取消、NoChange 和并发冲突时的语义
+4. 跨 Core / Blazor / TypeScript 的设计必须明确状态所有者与数据流方向
+5. 设计无法同时满足冲突需求时，必须登记为 Open Issue，不得在实现中静默选择
+6. 每个设计条目必须能够由 Core unit、Blazor component、Interop 或 E2E 中至少一层验证
+
+需求追溯状态使用 `Designed`、`Partial`、`Deferred`、`Open` 四种值。`Open` 表示 SRS 存在歧义或
+需要 ADR/Spike 才能确定实现合同，不代表可以跳过该需求。
+
+### 1.2 已知待决问题
+
+| 编号 | SRS 依据 | 问题 | HLD 处理 |
+|------|----------|------|----------|
+| OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
+| OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
+| OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
+| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、无应用项目、Node 24 LTS + npm |
+| OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
+| OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
 
 ---
 
@@ -111,6 +141,37 @@ JS commit payload 是固定 schema 的 discriminated union。
 
 ---
 
+```
+DES-ARCH-004
+状态所有权与单向数据流
+Atlas 将状态划分为三类，禁止跨类别复制同一语义的可变状态：
+
+  Committed Domain State（Core）
+    WorkspaceSnapshot、Layout Tree、DockItem、Group selection、ToolBar visibility、
+    Auto-hide placement、History 和 Revision。
+
+  Derived Render Projection（Blazor）
+    ToolBar Entry、可见 Panel、Tab header、CSS track、ARIA 属性和局部渲染 stamp。
+    Projection 可缓存，但必须能仅由 Snapshot + render options 重建。
+
+  Transient Interaction State（TypeScript / Host）
+    pointer capture、drag session、geometry snapshot、hover/flyout timer、Drop Scaffold、
+    preview、focus request 和 ResizeObserver invalidation。
+
+数据流固定为：
+
+  user input → TypeScript intent → IAtlasWorkspace.ExecuteAsync
+    → WorkspaceSnapshot + LayoutChangeSet → Blazor projection → DOM
+
+TypeScript 不持有 committed layout 副本；Blazor 不把 projection 回写为 domain state；Core 不读取
+DOM 几何。交互提交携带 BaseRevision，Core 在 linearization point 前重新验证，避免拖拽期间其他
+operation 导致旧几何覆盖新状态。
+
+来源：F-100, F-109~115, F-133, NF-004~005
+```
+
+---
+
 ## 3 领域模型
 
 ```
@@ -126,8 +187,9 @@ SRS 定义的产品概念在内部实现中按以下映射表达：
 | Editor Tab      | DockItem（Kind = Document）                | Document 类型的内容项         |
 | Editor View     | GroupNode（Kind = Document）               | Document 分组容器           |
 | Content Identifier | ContentReference                       | 内容渲染器种类 + 业务资源身份       |
-| ToolBar Entry   | Dock Panel 集合的派生投影                      | 不独立存储，从 Panel 归属推导     |
-| LT / RT         | AutoHideStrip（Edge: InlineStart / InlineEnd） | 边缘停靠条                  |
+| ToolBar Entry   | ToolBarProjectionEntry                    | 不独立存储，从 Tool Item placement 推导 |
+| LT / RT         | ToolBarState + ToolBarProjection          | 固定导航 Chrome；不是 Dock Region |
+| Auto-hide State | AutoHideStripState                        | Tool Item 的一种 committed placement |
 | Bottom Dock     | WorkArea 的子 SplitNode                     | 通过 Layout Tree 的子节点关系表达 |
 
 Dock Panel 和 Editor Tab 共享 DockItem 作为统一内容项模型。两者的差异由 DockItemKind、
@@ -135,11 +197,13 @@ Capabilities 和 DockingPolicy 表达，不维护两套独立的 model hierarchy
 持久化——它从 DockItem 的归属关系实时推导，避免第二真相源。LT/RT 不是"面板容器"，是导航入口——
 它们不参与 Panel 移动（F-020~024）。
 
-ToolBar Entry 是渲染层派生数据——WorkspaceSnapshot 中不存储 ToolBar 条目表。派生投影的更新由
-ChangeSet 中的 AddedItems/RemovedItems/UpdatedItems 触发重算。固定命名的 Region 不再作为
-domain type——IDE preset 通过 Layout Tree builder 生成对应 SplitNode/GroupNode 结构。
+ToolBar 为所有 Tool Item 提供统一入口，不等同于 AutoHideStrip。Expanded、Collapsed 与
+AutoHidden Panel 均生成恰好一个 ToolBar Entry；AutoHideStrip 只保存 AutoHidden Item 的 placement
+与 dock-back bookmark。ToolBar Entry 是渲染层派生数据——WorkspaceSnapshot 中不存储 ToolBar
+条目表。派生投影的更新由 ChangeSet 中的 Node/Item/ToolBar 更新触发重算。固定命名的 Region 不再
+作为 domain type——IDE preset 通过 Layout Tree builder 生成对应 SplitNode/GroupNode 结构。
 
-来源：§1.7 空间概念, §1.3 系统架构
+来源：§1.7 空间概念, §1.3 系统架构, F-020~024, F-149
 ```
 
 ---
@@ -155,14 +219,16 @@ WorkspaceSnapshot 是 committed state 的唯一公开快照，对 consumer 只�
       RootNodeId,           // 空间树根节点（null = 空布局）
       Nodes,                // LayoutNode 字典（SplitNode / GroupNode）
       Items,                // DockItem 字典
+      ToolBars,             // 按 LogicalSide 保存 ToolBar committed visibility
+      ToolBarOrders,        // ToolBar-only 排序；不改变 Group 内 Panel 逻辑顺序
       AutoHideStrips,       // Auto-hide 停靠条状态（按 WorkspaceEdge）
   }
 
 所有权规则：
 
-1. RootNodeId + Nodes、Items 和 AutoHideStrips 是 committed authoritative state（F-002）
+1. RootNodeId + Nodes、Items、ToolBars、ToolBarOrders 和 AutoHideStrips 是 committed authoritative state（F-002）
 2. ToolBar Entry 列表、Item 排序索引等是派生投影，不持久化、不是第二真相源（F-021）
-3. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003, F-131）
+3. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003；历史边界场景 F-131）
 4. 每个打开 Item 必须恰有一个 placement：Group 或 Auto-hide Strip（F-069, F-017）
 5. 新建 Workspace 的初始 Revision 为 0；第一次成功 mutation 发布 Revision 1
 6. Snapshot 对 consumer immutable；内部可使用 immutable collection 或 copy-on-write（F-133）
@@ -171,7 +237,7 @@ Snapshot 通过 IReadOnlyDictionary 和 IReadOnlyList 暴露，不暴露 mutable
 内部 Store 维护 Node/Item index 供 Renderer 快速查找，index 与 Snapshot 原子更新。
 Revision 使用 checked increment，溢出时拒绝提交。
 
-来源：F-001~004, F-109, F-047, F-131
+来源：F-001~004, F-109, F-047
 ```
 
 ---
@@ -383,7 +449,10 @@ DES-DOM-008
 11. 删除空 Dynamic Group 后必须递归提升单子 Split 的 sibling
 12. 任何失败 operation 不改变 published Snapshot、Revision 或 History（F-133）
 13. ContentReference kind/resourceId 非空；所有 Strong ID 不得为 default（F-006）
-14. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003, F-131）
+14. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003；历史边界场景 F-131）
+15. InlineStart / InlineEnd 各最多一个 ToolBarState；ToolBarState 不创建第三个物理侧
+16. 每个 ToolBarOrderState 只引用同一 LogicalRegion 的 Tool Item，ItemId 唯一且与 placement
+    集合构成完整排列；AutoHidden Item 的 LogicalRegion 由有效 DockBack 解析
 
 不变量是防止状态腐败的最后防线。每条不变量对应一类已知的 V1 状态 bug——重复 selection、
 孤立 Item、半应用变更等。Validator 在每次 transaction commit 前运行，与 Operation Planner
@@ -395,6 +464,146 @@ placement、basis、selection 和 visibility 必须进入 reverse patch。Core c
 是封闭规则：首版 Docking Policy 只能收紧、不能放宽 Core invariant。
 
 来源：F-133, F-019, F-031~032, F-069, F-017~018
+```
+
+---
+
+```
+DES-DOM-009
+ToolBar 状态与派生投影
+ToolBar 是 Work Area 两侧的固定导航 Chrome，不属于 Layout Tree，也不是 DockItem placement。
+每个逻辑侧维护最小 committed state：
+
+  ToolBarState = {
+      Side,                 // InlineStart | InlineEnd；Renderer 映射为物理 Left / Right
+      Visibility,           // Expanded | Collapsed
+  }
+
+ToolBar Entry 不作为实体持久化。Renderer 通过纯投影函数构建：
+
+  BuildToolBarProjection(snapshot, side) -> ToolBarProjection
+
+  ToolBarProjection = {
+      Side,
+      Visibility,
+      UpperSection: {
+          UpperDockEntries,
+          LowerDockEntries,
+      },
+      BottomSection: {
+          BottomDockEntries,
+      },
+  }
+
+  ToolBarProjectionEntry = {
+      ItemId,
+      SourceGroupId,        // AutoHidden 时由 DockBack.PreferredGroupId 解析
+      LogicalRegion,
+      Order,
+      Title,
+      Icon,
+      IsActive,
+      DisplayState,         // Expanded | Collapsed | AutoHidden
+  }
+
+投影规则：
+
+1. 每个 Tool Item 必须生成且只生成一个 Entry；Document Item 不生成 Entry
+2. Group placement 与 AutoHide placement 互斥，合并投影时按 ItemId 去重并把重复视为 invariant failure
+3. Upper / Lower / Bottom 分区由 IDE preset 的 Group semantic slot 决定，不由 DOM 位置反推
+4. Group 内 ItemIds 表达 Panel 逻辑顺序；ToolBar-only presentation order 由独立
+   `ToolBarOrderState` 保存，不修改 Group ItemIds（F-140 AC2 与 F-142）
+5. 跨侧移动后 Side 与分区由目标 placement 重新推导；标题、图标和点击 identity 保持不变
+6. 空逻辑分区在静止状态不生成虚拟 Entry；拖拽可达性由 transient PanelDropTarget 表达
+7. RTL 只交换 LogicalSide 到物理边缘的映射，不修改 persisted Side 和 ordering
+8. ToolBar 无任何 Entry 时不渲染；ToolBar Collapsed 时保留可恢复入口，不删除 Entry
+
+ToolBarProjection 是 Core 中可纯函数测试的 read model；Atlas.Blazor 负责将其渲染为 button、
+separator 和分区容器。投影不得保存 DOM 引用、focus、hover、Flyout open state 或 drag placeholder。
+
+来源：F-020~024, F-140, F-149~153
+```
+
+---
+
+```
+DES-DOM-010
+尺寸约束、折叠与空间重分配
+Layout Tree 的空间尺寸只由 SplitNode 表达；DockItem 不直接保存当前像素尺寸。开发者声明的 Panel
+初始比例和 min/max 转换为稳定的 sizing metadata：
+
+  ToolSizingDefinition = {
+      InitialRatio?,        // (0, 1]；初始化与 Reset 时使用
+      MinExtent?,           // CSS px，有限且 >= 0
+      MaxExtent?,           // CSS px，有限且 >= MinExtent
+      CollapsedExtent,      // 主题/option 给出的折叠尺寸
+  }
+
+  ResolvedSplitLayout = {
+      FirstExtent,
+      SecondExtent,
+      EffectiveConstraints,
+      IsClamped,
+  }
+
+ToolSizingDefinition 属于声明/运行时定义，不从不可信持久化文档覆盖。当前尺寸仍保存为 SplitBasis；
+ResetWorkspaceOperation 根据 initial definition 重建 basis。一个 Tool Group 有多个 Panel 时，当前
+Active Item 的 sizing definition 决定 Group 的有效约束；未指定值回退到 Group/preset 默认值。
+
+空间分配规则：
+
+1. Expanded → Collapsed 不删除 Group，也不改写其恢复 basis；Renderer 将其 resolved content extent
+   设为 CollapsedExtent，释放空间由 sibling 获得
+2. Collapsed → Expanded 恢复原 committed basis；容器不足时按 min/max 确定性 clamp
+3. Dynamic Group 删除后提升 sibling，sibling 占用原 Split 的全部可用空间；reverse patch 保存原树
+4. 多个相邻可见 child 需要重分配时按原 resolved extent 比例分配，舍入余数确定性分配给最后一个
+5. min 总和超过容器时不修改 committed basis；按最小可用 extent + overflow policy 渲染并记录 warning
+6. max 产生剩余空间时优先分配给 Editor Area 或未达到 max 的 sibling，不生成负尺寸或 NaN
+7. 所有 Tool Group 均折叠时允许 Editor Area 获得剩余空间；ToolBar Entry 继续可用
+8. Splitter collapse button 与编程式 collapse 进入同一个 SetGroupVisibilityOperation
+
+Container resize、Splitter preview 与最终 commit 均调用同一个纯 `ResolveSplitLayout` 算法，避免
+CSS、TypeScript 和 Core 各自实现一套 clamp 规则。Preview 使用相同输入但不写 Snapshot。
+
+来源：F-014~016, F-033, F-047, F-078, F-082, F-104, F-141, F-144, F-148
+```
+
+---
+
+```
+DES-DOM-011
+Editor Tab 顺序、选择与最近访问状态
+Document Group 在 GroupNode 基础上维护 Editor 行为配置：
+
+  EditorGroupState = {
+      OverflowMode,         // Scroll | Menu | Wrap
+      ActivationPolicy,     // Adjacent | MostRecentlyVisited
+      RecentlyVisitedIds,   // 最近在该 Group 被用户点击的 ItemId，最新在前
+  }
+
+Group.ItemIds 是唯一 Tab 逻辑顺序。DocumentState.IsPinned 形成稳定前缀：
+
+  [Pinned Items...] [Unpinned Items...]
+
+插入、拖拽和恢复必须保持此前缀不变量。新建非固定 Tab 插入 unpinned 分区；拖拽跨越 pin boundary
+时将目标 index clamp 到所属分区，不以拖拽隐式改变 IsPinned。固定/取消固定是独立 operation，
+提交后把 Item 移到对应分区的确定位置。
+
+关闭 Active Tab 后的 selection planner：
+
+1. ActivationPolicy = MostRecentlyVisited 时，选择 MRU 中仍存在且属于当前 Group 的第一项
+2. 否则选择被关闭 index 右侧的新同 index Item
+3. 右侧不存在时选择左侧最后一项
+4. Group 为空时 SelectedItemId = null，再按 RetentionPolicy 保留或删除 Group
+
+“访问”仅由终端用户点击 Tab 产生；编程式 activate、restore、open 自动激活和 close fallback
+不写 RecentlyVisitedIds。关闭/移动 Item 时清理无效 MRU 引用；列表按 option 上限截断。
+
+OverflowMode 与 logical ordering 是 committed/configured state；哪些 Tab 当前不可见、scrollLeft、
+menu open 和行折叠测量是 transient render state。DockItem.Title 是标题唯一来源，自定义标题更新
+通过 UpdateItemPresentationOperation 发布 Item change。
+
+来源：F-034, F-038~040, F-042~045, F-048, F-138
 ```
 
 ---
@@ -592,8 +801,9 @@ IAtlasWorkspace 公共接口与 LayoutChangeSet
   }
 
 LayoutChangeSet 是渲染器的精确定向失效输入（F-110），包含 AddedNodes / RemovedNodes /
-UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、BeforeRevision / AfterRevision、
-ChangeKind。
+UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、UpdatedToolBars / UpdatedToolBarOrders /
+UpdatedAutoHideStrips、BeforeRevision / AfterRevision、ChangeKind。集合只携带稳定 ID/side，
+不携带 RenderFragment 或 DOM reference。
 
 Typed result（WorkspaceResult<T>）：Succeeded 为 true 时 Value 必有，为 false 时 Error 必有。
 合法但没有语义变化的 operation 返回 NoChange result（空 ChangeSet，不进入 History，不递增
@@ -614,6 +824,125 @@ consumer 需要持久化时先显式 FlushAsync。WorkspaceError 提供稳定 Co
 Node/Item ID；用户可展示消息与内部 exception/stack 分离。
 
 来源：F-110~115, F-101~103
+```
+
+---
+
+```
+DES-OP-007
+Tool Panel 移动、排序与 ToolBar 操作合同
+Panel Header 与 ToolBar Entry 可以触发不同语义，不能仅凭最终索引使用同一个无类型 reorder：
+
+  MoveToolOperation
+    ItemId, TargetGroupId, TargetIndex?, BaseRevision
+    — 跨 Group/Region 移动；目标 Panel 展开并成为 Active
+
+  ReorderToolOperation
+    ItemId, GroupId, TargetIndex, BaseRevision
+    — 调整 Group.ItemIds，ToolBar 分组内顺序同步
+
+  ReorderToolBarEntryOperation
+    ItemId, LogicalRegion, TargetIndex, BaseRevision
+    — 只调整 ToolBarOrderState，不改变 Group.ItemIds 和 Panel placement
+
+  SetToolBarVisibilityOperation
+    LogicalSide, Visibility
+    — 折叠/展开 LT 或 RT，不删除 Entry
+
+MoveToolOperation 的 planning 顺序：
+
+1. 验证 BaseRevision、Item 存在、Kind = Tool、CanMove 与目标 Tool Group
+2. 捕获源 Group/Strip、源 index、DisplayState、Active state、DockBack 和源/目标 ToolBar order
+3. 从源 placement 移除 Item；按 RetentionPolicy 处理空 Group 与 ancestor Split normalization
+4. 插入目标 Group 的确定位置；未指定 index 时追加到目标逻辑顺序末尾
+5. 把 Item 转换为 Expanded，并设置为目标 Group.SelectedItemId
+6. 目标原 Active Item 转换为非 Active；其 committed DisplayState 按 SRS Panel 切换规则处理
+7. 更新 ToolBarOrderState；跨侧移动时从源侧分区移除并插入目标侧分区
+8. 生成 forward/reverse patch，在 candidate 上验证全部 invariant 后原子提交
+
+原位置、相同 index 或 resolver 归一化后语义未变化时返回 NoChange。固定 Region、Document Group、
+不存在目标、CanMove=false 与 policy 拒绝返回 typed failure；均不递增 Revision、不写 History、
+不发布事件。一次成功移动只发布一个 ChangeSet，包含 Item placement、源/目标 Group selection、
+ToolBar projection invalidation 和可能的 topology change。
+
+Reverse patch 必须恢复源 placement/index、源 DisplayState/Active、目标原 Active/DisplayState、
+ToolBarOrderState、DockBack、被移除的 Dynamic Group、被提升的 sibling 和相关 Split basis。
+Undo 不重新运行 docking policy，也不从当前 UI 猜测源状态。
+
+来源：F-022, F-069~071, F-140, F-142, F-151, F-156
+```
+
+---
+
+```
+DES-OP-008
+声明式布局定义与原子 Reconciliation
+Atlas.Blazor 的声明式 child components 只采集 immutable definition，不直接创建或修改 Workspace：
+
+  AtlasWorkspaceDefinition = {
+      WorkspaceId,
+      FixedSlots,
+      ToolDefinitions,
+      DocumentGroupDefinitions,
+      SplitDefinitions,
+      Options,
+  }
+
+Host 在一个 render batch 的声明收集完成后生成 DefinitionRevision，并调用 Core
+ReconcileDefinitionOperation。Core 在 candidate 中完成 ID/ContentReference 校验、IDE preset
+Layout Tree 构建、初始 selection、initial sizing 和 ToolBar order；全部成功后一次提交。
+
+首次定义为空时创建 RootNodeId = null 的空 Workspace，Blazor 渲染可接受 Drop 的 empty surface，
+不报错。后续参数变化按稳定声明 identity 做 diff：新增/更新/移除必须形成一个 ChangeSet，不允许
+Razor child 在 Dispose/OnParametersSet 中逐项 mutation 造成半更新。
+
+声明定义与恢复数据冲突时使用显式 InitializationPolicy：
+
+- DefinitionOnly：只使用声明
+- RestoreIfAvailable：成功 restore 后以文档为 committed state；失败回退声明
+- MergeDefinitions：仅允许 runtime definition 补充 presentation/capabilities，不修改 restored topology
+
+InitialDefinition 被 Workspace 保存为 reset blueprint。ResetWorkspaceOperation 重新运行同一 builder，
+恢复 F-144 InitialRatio、默认 selection 和 ToolBar order；不从当前 Snapshot 反推“初始状态”。
+声明 identity 重复、非法尺寸和不兼容 Group kind 返回 typed failure，原 Workspace 不变。
+
+来源：F-001~005, F-010, F-047, F-099~100, F-122, F-144
+```
+
+---
+
+```
+DES-OP-009
+Command、Query 与领域事件接口
+面向 Application Developer 的便捷 command 是 IAtlasWorkspace 的 facade，全部转换为 operation：
+
+  OpenDocumentAsync / CloseItemAsync / ActivateItemAsync
+  SetToolVisibilityAsync / SetToolBarVisibilityAsync
+  SavePresetAsync / ApplyPresetAsync / DeletePresetAsync
+
+Close/Activate 不存在 Item 返回 `ITEM_NOT_FOUND` typed result，不抛出异常。SetToolVisibility 将
+visible 映射为 Expanded，将 hidden 映射为 Collapsed；它与 Panel Header、ToolBar Entry 和
+Splitter collapse button 使用相同 operation。
+
+Query 不进入 mutation pipeline：
+
+  TryGetItem(DockItemId) -> DockItemSnapshot?
+  EnumerateItems(ItemQuery) -> immutable result
+
+自定义 predicate 作为 `WorkspaceSnapshot` extension 在锁外执行，Core 不在 lock 内调用 consumer
+delegate。ActivateFirstAsync 先从一个 immutable Snapshot 解析 ItemId，再以该 Revision 执行
+SelectItemOperation；并发变化返回 STALE_OPERATION，不静默激活另一个匹配项。
+
+一次成功 operation 先发布通用 Changed，再由同一个 LayoutChangeSet 派生强类型领域事件：
+
+  ItemOpened、ItemClosed、ItemActivated、ToolCreated、ToolRemoved、WorkspaceRestored
+
+每个事件携带 WorkspaceId、ItemId、Before/AfterRevision、ChangeKind 和必要的 previous/current
+placement；不携带 mutable model。一个 Item 在一个 ChangeSet 中最多触发每种事件一次。
+subscriber 在 dispatcher queue 中按订阅顺序、锁外调用；异常隔离记录，不改变 command result。
+NoChange、failed、cancelled operation 不发布领域事件。
+
+来源：F-030, F-101~104, F-106~115, F-121, F-141, F-146
 ```
 
 ---
@@ -668,7 +997,7 @@ DES-INT-002
 Host。
 
 DOM 通过 data-atlas-* metadata 描述：
-  <button data-atlas-drag-source="item" data-atlas-item-id="explorer">
+  <button data-atlas-drag-kind="tool-panel" data-atlas-item-id="explorer">
   <section data-atlas-drop-target="group" data-atlas-group-id="left-tools">
 
 TypeScript 通过 closest() 解析 source 和 target，不为每个 element 单独添加 listener。所有查询
@@ -708,9 +1037,9 @@ Editor Tab 拖拽停靠（F-050~068）：
 - Dynamic View 被拖空后自动移除（F-061），Template View 保留为空（F-062）
 
 Dock Panel 拖拽移动（F-069, F-150~153, F-155）：
-- 不区分方向——拖入目标 Dock Region 任意位置即完成移动
-- ToolBar 是投放目标（F-150）：用户将 Panel 或 ToolBar Entry 拖到目标 ToolBar 区域释放
-- Dock Region 不作为直接释放目标（F-150 AC2）：拖到 Dock Region 内释放 → 操作取消
+- 不区分方向——目标只表达逻辑 Region 与 insertion index，不创建分屏
+- ToolBar Entry、ToolBar 逻辑槽位、Drop Scaffold 和 Dock Region Body 使用统一目标描述
+- 哪些目标表面默认启用由 PanelTargetPolicy 决定；固定区域始终无效
 - ToolBar 内显示插入预览（高亮块挤开相邻条目），逻辑区域（Upper/Lower/Bottom）作为有效投放槽位
 - Drop Scaffold（F-155）：隐藏 Dock Region 在拖拽期间临时渲染投放骨架，使空 Region 可接收拖入的 Panel
 - 固定区域（Editor Area、Top ToolBar、Status Bar）不接受 Dock Panel 拖入（F-071）
@@ -719,9 +1048,15 @@ Editor Tab 拖拽需要方向判定（分屏方向），Dock Panel 拖拽不需�
 不应混用——Dock Panel 拖到 Editor Area 内不应该弹出方向指示器，Editor Tab 拖到 ToolBar 也不
 应该显示逻辑区域槽位。
 
-JS 层通过 data-atlas-drag-source 的 value（"item" vs "tab"）区分两种拖拽类型。Docking intent
+JS 层通过 data-atlas-drag-kind 的 value（"tool-panel" vs "document-tab"）区分两种拖拽类型。
+Document docking intent
 使用 DockingZone 枚举（Center/Before/After/InlineStart/InlineEnd/BlockStart/BlockEnd），
-不使用含糊的 Left/Right。Drop Scaffold 在 drag start 时注入 DOM，drag end/cancel 时移除。
+不使用含糊的 Left/Right。Panel drop intent 使用 PanelDropTarget，不复用 DockingZone。
+
+ADR-0007 已关闭 OI-001：Target Resolver 能识别 ToolBar、Scaffold 与 RegionBody，默认
+PanelTargetPolicy 仅启用 PanelHeaderInsertion、ToolBarInsertion、ToolBarRegion 与隐藏 Region
+Scaffold；可见 RegionBody 保持可识别但默认拒绝。命中优先级为 PanelHeaderInsertion >
+ToolBarInsertion > ToolBarRegion > DropScaffold。固定区域和其他 Host 永远不产生有效目标。
 
 来源：F-050~068, F-069, F-150~153, F-155, F-071
 ```
@@ -749,6 +1084,191 @@ callback、listener 泄漏等。每个不变量必须在 CI 中有对应的自�
 合并视觉写入保证。不变量 6~8 由 controller dispose + workspace isolation 单元测试覆盖。
 
 来源：NF-004, NF-005
+```
+
+---
+
+```
+DES-INT-005
+Panel Drag Session 与提交协议
+Panel 拖拽由 root-scoped Interaction Controller 管理，一个 Workspace 同时最多有一个 active
+pointer session：
+
+  Idle → PendingThreshold → Dragging → Committing | Cancelling → Completed
+                                                \→ Disposed
+
+pointerdown 由已预加载的 native listener 处理，在原始事件调用栈中同步 setPointerCapture。
+Primary pointer 移动超过 4px 后才进入 Dragging；阈值内 pointerup 仍按 click 处理。第二 pointer、
+非主键和固定区域 source 不启动 session。
+
+  PanelDragSession = {
+      SessionId,
+      WorkspaceId,
+      HostId,
+      PointerId,
+      ItemId,
+      SourceKind,           // PanelHeader | ToolBarEntry
+      SourceGroupId,
+      SourceIndex,
+      BaseRevision,
+      GeometrySnapshot,
+      CurrentTarget,
+  }
+
+pointermove 只在 TypeScript 内执行 hit test，并通过 requestAnimationFrame 合并 preview 写入。
+pointerup 命中合法目标时最多向 .NET 提交一次：
+
+  PanelDropIntent = {
+      ProtocolVersion,
+      SessionId,
+      WorkspaceId,
+      HostId,
+      ItemId,
+      SourceKind,
+      BaseRevision,
+      TargetKind,
+      TargetGroupId,
+      LogicalRegion,
+      InsertionIndex,
+  }
+
+Intent 不携带 DOM reference、坐标、Panel 对象、DisplayState 结果或"目标已合法"标记。Host 先验证
+protocol/session/workspace，再转换为 DES-OP-007 的 operation；Core 必须重新验证 Revision、
+identity、capability、target 与 policy。STALE_OPERATION 或 policy reject 视为 rejected commit：
+清理 transient UI，以最新 Snapshot 重渲染，不自动重放或重定向到近似目标。
+
+Escape、pointercancel、lostpointercapture、pagehide、visibility hidden、root/source disconnect、
+resize invalidation 无法安全重建几何、Host dispose 或无效位置释放均取消。取消只清理 interaction
+state，不调用 ExecuteAsync，不发布 layout event。每个 session 只有一个 terminal transition；
+迟到 promise/callback 通过 SessionId + Host generation 丢弃。
+
+来源：F-068~071, F-133, F-140, F-142, F-147, F-153, NF-004
+```
+
+---
+
+```
+DES-INT-006
+Panel Target Resolver、投放骨架与预览
+Target Resolver 是纯函数模块，输入 GeometrySnapshot + pointer position + current target，
+输出稳定的 PanelDropTarget：
+
+  PanelDropTarget = {
+      Kind,                 // PanelHeaderInsertion | ToolBarInsertion | ToolBarRegion |
+                            // DropScaffold | RegionBody
+      LogicalSide,
+      LogicalRegion,
+      TargetGroupId,
+      InsertionIndex,
+      Priority,
+  }
+
+命中优先级按 SourceKind 过滤后为 PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion >
+DropScaffold > RegionBody。Editor Area、Top Toolbar、Status Bar 与其他 Workspace 的 DOM 永不
+产生 PanelDropTarget。相同语义 target 即使由重叠 DOM 命中也必须归一化为同一个 key，避免
+preview 抖动和重复 DOM mutation。
+
+Panel Header resolver 只为同一 Tool Group 中其他 Panel Header 生成 before/after insertion；
+提交为 ReorderToolOperation 并同步 ToolBar 投影。原 Header 位置解析为 NoChange，不把同区域
+Header 排序误判为跨 Region Move。
+
+ToolBar resolver 规则：
+
+1. Entry 的 before/after 使用带迟滞的中线阈值；指针处于模糊中部时保持 CurrentTarget
+2. 相邻 Entry 对共享边界必须解析为同一 insertion index
+3. 最后 Entry 底部与虚拟尾槽解析为同一尾部 index
+4. Divider 不进入 geometry target 集合
+5. 空 Upper/Lower/Bottom 槽位仅在 Dragging 时提供至少一个 Entry 大小的 hit area
+6. ToolBar-only reorder 与 Panel logical reorder 由 SourceKind + TargetKind 明确区分
+
+Workspace Host 在首次渲染时提供一个专用 atlas interaction overlay root。TypeScript 只在该
+容器内创建 preview、placeholder、indicator 与 Drop Scaffold，不修改 Blazor 管理的结构 DOM。
+Scaffold 由预定义 Region anchor 的 geometry 产生，不展开真实 Group、不修改 Split basis。
+drag terminal/dispose 必须一次清空 overlay root。
+
+GeometrySnapshot 在 drag start 构建；scroll、ResizeObserver、device scale 或 DOM topology
+变化将其标记 invalid。能在同一 animation frame 安全重建时重新 snapshot，否则取消 session。
+target registry 使用不可变数组快照进行解析，禁止枚举期间注册/注销同一集合。
+
+来源：F-069, F-071, F-148, F-150~155, NF-004~005
+```
+
+---
+
+```
+DES-INT-007
+Splitter 高级交互与控制
+每个 SplitNodeView 渲染一个 SplitterProjection：
+
+  SplitterProjection = {
+      SplitNodeId,
+      Orientation,
+      IsLocked,
+      CanCollapseFirst,
+      CanCollapseSecond,
+      CssClass,
+      ResolvedPosition,
+  }
+
+native pointerdown listener 先检查 IsLocked；锁定时不 setPointerCapture、不创建 resize session，
+并渲染 locked visual/`aria-disabled=true`。未锁定时使用 ResizeSession 保存 pointerdown anchor、
+容器 extent、start basis、constraints 与 BaseRevision。pointermove 调用与 DES-DOM-010 相同的
+ResolveSplitLayout 生成 CSS preview，pointerup 只提交一个 ResizeSplitOperation。
+
+双击使用 EqualizeSplitOperation；折叠按钮使用 SetGroupVisibilityOperation，不在 Razor 中直接
+改 basis。折叠后 SplitNode 保留恢复 basis，按钮切换为展开语义。若对应 child 不可折叠或已被
+topology normalization 移除，返回 NoChange/typed stale，不作用于新的 sibling。
+
+Splitter 本体可获得键盘焦点并使用 `role="separator"`。Arrow key 按 orientation 以
+SplitterOptions.KeyboardStepPixels 调整；Home/End 移到有效 min/max；连续 key repeat 在
+ResizeCoalescingWindow 内合并为一个 History entry。每次键盘调整仍提交 ResizeSplitOperation，
+并同步 `aria-valuenow/min/max`，不建立只改变 CSS 的旁路。
+
+自定义样式只接受 developer-provided CSS class token 列表；拒绝空白分隔外的非法 token，不把任意
+style 字符串写入 DOM。Atlas 保留 hit target、cursor、focus ring、locked 和 dragging 等结构 class，
+自定义 class 只能叠加，不能删除可访问性状态。
+
+容器 resize 时 active ResizeSession 按 DES-INT-005 取消；静止状态重新计算 resolved position，
+不改 committed basis。IsLocked、collapse capability 和 custom class 来自 runtime definition，
+持久化文档不能提升 capability。
+
+来源：F-073~078, F-080~082, F-104, F-148, NF-003~004, NF-007
+```
+
+---
+
+```
+DES-INT-008
+Keyboard Command、焦点导航与快捷键配置
+AtlasWorkspaceHost 在 root 级处理 keyboard event，并通过 KeyboardCommandMap 映射为语义命令：
+
+  NextDocumentTab       Ctrl+Tab
+  PreviousDocumentTab   Ctrl+Shift+Tab
+  CloseActiveDocument   Ctrl+W | Ctrl+F4
+  FocusToolInlineStart  Alt+ArrowLeft（LTR）
+  FocusToolInlineEnd    Alt+ArrowRight（LTR）
+  FocusToolBlockStart   Alt+ArrowUp
+  FocusToolBlockEnd     Alt+ArrowDown
+
+快捷键使用 `KeyboardChord`（code + ctrl/alt/shift/meta）配置，不使用本地化 key 文本。RTL 下方向
+先转换为 logical direction，再解析 ToolBar/Group。developer override 在 Host 初始化时验证：
+同一 scope 冲突返回配置错误；未配置命令可禁用；Atlas 不覆盖浏览器/系统保留组合。
+
+命令作用域：
+
+1. Ctrl+Tab 只遍历当前 Active Document Group 的 ItemIds，并跳过不可用项
+2. Close 使用 CloseItemOperation，完整执行 CanClose 与 async guard
+3. Tool focus 按 Layout Tree 几何邻接和 logical direction 选择可见 Tool Group；若目标 collapsed，
+   先激活其最近/selected Item，再在 ChangeSet 后请求内容 focus
+4. 事件源为 input/textarea/select/contenteditable 且 chord 未显式声明为 global 时不拦截
+5. 没有合法目标时不 preventDefault，返回 NoChange
+
+Focus 不进入 WorkspaceSnapshot。Host 维护一次性 FocusRequest(ItemId, AfterRevision)，只在对应
+revision 的 outlet 完成渲染后执行；新 operation、Item removal、Host dispose 会取消旧 request。
+Tab/ToolBar/ContextMenu 还必须支持标准 Tab/Shift+Tab、Enter、Space、Escape 键盘语义，不能仅依赖
+全局快捷键。
+
+来源：F-035, F-041, F-116~118, NF-003, NF-007
 ```
 
 ---
@@ -897,7 +1417,133 @@ ownership、focus、ARIA、DOM order 与 disposal。
 明确不承诺"Item 在任意 Group 间拖动后组件实例绝不重建"——Blazor @key 在跨 parent reparent 时
 不能保证实例保持。V2 通过外置状态（Default 策略）提供可靠的替代方案。
 
-来源：F-027~029, F-031~032, F-069
+ADR-0012 已通过 Tool content move spike 关闭 OI-002：跨 Group move 会 remount/dispose component，
+但 ResourceId/DockItemId 外置状态可恢复。F-070 的合同因此是用户可观察业务状态而非任意组件实例
+identity；WorkspaceWideKeepAlive 不进入首版。
+
+来源：F-027~029, F-031~032, F-069~070
+```
+
+---
+
+```
+DES-RND-006
+ToolBar 渲染与交互投影
+AtlasWorkspaceHost 从 DES-DOM-009 的 ToolBarProjection 渲染 LT/RT。Razor component 不遍历
+Layout Tree 自行推导第二套 Entry，也不在 component local state 保存 ordering。
+
+静态结构：
+
+  <nav data-atlas-toolbar-side="inline-start|inline-end">
+    <section data-atlas-toolbar-region="upper">...</section>
+    <separator />
+    <section data-atlas-toolbar-region="lower">...</section>
+    <section data-atlas-toolbar-region="bottom">...</section>
+  </nav>
+
+每个 Entry 使用稳定 @key=DockItemId 和 `<button role="tab">` 语义，呈现 title、icon、
+active/expanded/auto-hidden 状态。Divider 只承担视觉/ARIA 分组语义，不携带 drag target metadata。
+空分区在静止状态不渲染空 button；DES-INT-006 的 overlay 在拖拽命中时提供虚拟槽位。
+
+Entry click 只发送 bound command：
+
+- closed/collapsed → 展开并激活目标 Tool Item
+- expanded + active → 折叠并按布局规则释放空间
+- expanded + inactive → 激活并请求内容 focus
+
+focus request 是 ChangeSet 消费后的 transient effect：Host 在目标内容 outlet 已渲染后聚焦，
+失败不回滚已提交 operation。AutoHidden Entry hover 启动 Flyout；pointer 离开 Entry + Flyout
+联合 hit region 后等待 300ms 收起。新的 hover、focus 进入 Flyout、drag start、Item move 和
+Host dispose 必须取消 timer。
+
+ToolBarProjection dependency stamp 至少包含相关 Group ItemIds/SelectedItemId、Tool Item
+presentation、ToolBarOrderState、AutoHideStrip 与 ToolBarState。其他 Editor Group 变化不得使
+两侧 ToolBar 无条件重渲染。
+
+来源：F-020~024, F-022, F-140, F-149~153, NF-003, NF-007
+```
+
+---
+
+```
+DES-RND-007
+Panel 移动时的内容身份与状态保持
+移动 operation 只改变 DockItem placement、Group selection 与 presentation state，不替换
+DockItemId 或 ContentReference。渲染层始终以 DockItemId 作为 UI occurrence identity，以
+ContentReference.ResourceId 连接 application business state。
+
+首版必须保证：
+
+1. move/reorder 不调用 close guard，不触发 content removed/disposed 语义
+2. ContentReference、DockItemId、title/icon/capability 在 move 前后保持
+3. Default lifetime 允许组件 remount，但 provider 必须能从 ResourceId + DockItemId 恢复业务状态
+4. KeepAliveWithinGroup 在同 Group reorder 时保持实例；跨 Group move 不作实例 identity 承诺
+5. 若 WorkspaceWideKeepAlive spike 获得批准，Tool Item 可升级为跨 Group 保持实例的显式策略
+6. move commit 前渲染异常不影响 Core 原子性；commit 后新 outlet 异常由 per-outlet ErrorBoundary 隔离
+
+ADR-0012 已关闭 OI-002。测试必须分别验证 identity/business state 保持与 component instance 是否
+remount，禁止用业务状态恢复冒充实例保持测试。
+
+来源：F-069~070, F-120, F-128
+```
+
+---
+
+```
+DES-RND-008
+Panel / Editor View Empty State
+Empty State 是 Group 内容为空时的渲染投影，不创建伪 DockItem、默认 Tab 或 EmptyNode：
+
+  EmptyStateContext = {
+      WorkspaceId,
+      GroupId,
+      GroupKind,
+      RetentionPolicy,
+      CanAcceptDrop,
+  }
+
+AtlasWorkspaceHost 提供 ToolEmptyTemplate 与 DocumentEmptyTemplate；未提供时使用内置安全占位。
+Template 只能接收只读 context 和显式 command callback，不能获得 mutable GroupNode。模板异常由
+独立 ErrorBoundary 隔离，不把 Group 判定为非空。
+
+Persistent/Template Group 为空时保留并显示 Empty State；Dynamic Group 通常在 transaction
+normalization 中删除，因此不产生可见 Empty State。整个 Workspace RootNodeId=null 时显示
+workspace-level empty surface。
+
+空 Document Group 仍注册 DocumentDropTarget，接收 Center docking 后把拖入 Tab 插入 index 0、
+设置 SelectedItemId 并移除 Empty State。空 Tool Region 正常状态是否可见由容器自适应规则决定，
+拖拽期间通过 Drop Scaffold 提供目标，不靠创建假 Panel 保持可达。
+
+来源：F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155
+```
+
+---
+
+```
+DES-RND-009
+Editor Tab Strip、溢出与上下文菜单
+Tab Strip 从 DES-DOM-011 的 ItemIds、Pinned state、selection 与 OverflowMode 渲染。每个 header
+使用 @key=DockItemId、button/tab 语义、完整可访问名称和独立 close affordance；长标题使用 CSS
+ellipsis，但 title/accessible name 保留完整文本。
+
+Overflow 策略：
+
+- Scroll（默认）：单行 no-wrap；wheel delta 转为水平 scroll；可选 scrollbar 只作为位置反馈
+- Menu：单行；ResizeObserver 计算不能完整显示的 ItemId，菜单按钮列出所有或隐藏项并标记 active
+- Wrap：允许多行，保持 logical order；容器高度变化进入 layout measurement，不修改 Snapshot
+
+可见性、scroll offset、menu open 与 measured hidden IDs 是 transient view state。ResizeObserver
+回调按 animation frame 合并，并以 ItemIds + container width generation 防止旧测量覆盖新 render。
+
+同 Group Tab drag 解析 Before/After index，并由 ReorderItemOperation 提交；Pinned Item 只能在
+pinned prefix 内移动，Unpinned Item 只能在其后移动。原位置释放为 NoChange。drag preview 不改变
+真实 ItemIds，提交后以 Snapshot 重渲染。
+
+右键菜单由 `TabCommandProvider` 根据 Item capability 构建 command descriptor，首版内置 Activate、
+Close、CloseOthers、CloseToRight、Pin/Unpin；显示菜单不写 Workspace。执行菜单项进入对应
+operation，Close 系列仍执行 guard。Escape、focusout、Item removal 和 Host dispose 关闭菜单。
+
+来源：F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007
 ```
 
 ---
@@ -909,8 +1555,8 @@ DES-PER-001
 序列化范围
 允许持久化：schema version、Workspace identity、Layout Tree topology（Node ID、Split
 axis/anchor/basis/constraints、Group kind/retention/visibility/item ordering/selected item）、
-Auto-hide edge/ordering 与 dock-back bookmark、DockItem ID/kind/ContentReference 和
-kind-specific committed state（如 DocumentState.IsPinned）。
+ToolBar visibility 与 ToolBar-only ordering、Auto-hide edge/ordering 与 dock-back bookmark、
+DockItem ID/kind/ContentReference 和 kind-specific committed state（如 DocumentState.IsPinned）。
 
 禁止持久化：RenderFragment、EventCallback、Delegate、DI service、ViewModel、arbitrary object
 parameter、component instance、open flyout/hover/drag/focus 等 transient state、Workspace
@@ -933,7 +1579,8 @@ DES-PER-002
 XML Schema
 V2 持久化格式为 XML。空 Workspace 使用空 <Layout />，不引入隐式默认 Group 或 EmptyNode。
 
-  <AtlasWorkspace schemaVersion="2" workspaceId="main">
+  <AtlasWorkspace xmlns="urn:atlas:workspace:2"
+                  schemaVersion="2.0" workspaceId="main">
     <Items>
       <Item id="explorer" kind="Tool" title="Explorer">
         <Content kind="explorer" resourceId="main-solution" />
@@ -959,6 +1606,14 @@ V2 持久化格式为 XML。空 Workspace 使用空 <Layout />，不引入隐式
         </Second>
       </Split>
     </Layout>
+    <ToolBars>
+      <ToolBar side="InlineStart" visibility="Expanded">
+        <RegionOrder region="InlineStartUpper">
+          <ItemRef id="explorer" />
+        </RegionOrder>
+      </ToolBar>
+      <ToolBar side="InlineEnd" visibility="Expanded" />
+    </ToolBars>
     <AutoHide>
       <Strip edge="InlineStart">
         <Entry itemId="properties" preferredGroupId="left-tools"
@@ -971,10 +1626,14 @@ XML 支持 schema validation、版本化命名空间和人类可读的层级结�
 相比 JSON 的优势：schema 版本可以随根元素属性声明、元素顺序在语义上与 Item ordering 一致、
 支持注释（便于手工调试和 golden file 审查）。
 
-最终 XML schema 需独立 ADR 与 golden file 审批。SplitAxis 枚举值与 SRS、TypeScript wire value
+XML schema 已由 ADR-0010 与 golden file 批准。严格 XSD 不允许 unknown element/attribute，
+canonical writer 使用固定 element order；reader 接受通过同一 XSD 的 2.x minor，拒绝其他 major。
+SplitAxis 枚举值与 SRS、TypeScript wire value
 使用相同定义。Items 独立于 Layout 列出，避免同一 Item 被多处引用时的重复定义。
+ToolBars 只保存 committed visibility 与独立 presentation ordering；Entry 的 title、icon、active
+和 DisplayState 仍从 Item/placement 派生，不在 XML 中复制。
 
-来源：F-085~088
+来源：F-021, F-085~088, F-140, F-149
 ```
 
 ---
@@ -1027,8 +1686,9 @@ V1 迁移
   AutoHidden display state → AutoHideStrip placement
   Parameters               → 不做 generic migration，由 consumer 显式迁移 hook
 
-Compatibility policy：Atlas 1.x 维持必要修复；Atlas 2.0 使用独立 schemaVersion 2；V2 支持
-读取 V1 layout 一个明确兼容窗口；V2 只写 V2；不支持 V1 读取 V2；migration failure 返回
+Compatibility policy：Atlas 1.x 维持必要修复；Atlas 2.0 使用独立 schemaVersion 2.0；V2 支持
+读取 ADR-0010 冻结的无 namespace `AtlasLayout` 1.0 窄兼容输入；因无真实 V1 artifact，不宣称
+通用 V1 compatibility。V2 只写 V2；不支持 V1 读取 V2；migration failure 返回
 structured report，原状态不变。
 
 旧 Parameters 如果包含业务状态，框架无法猜测其类型和语义——只能由 consumer 通过显式 migration
@@ -1070,7 +1730,262 @@ current state。Save 在调用时原子捕获一个 immutable Snapshot 和 Revis
 
 ---
 
-## 8 项目结构
+```
+DES-PER-006
+Layout Preset 生命周期
+Preset 是命名的完整 persisted workspace document，不是对 current Snapshot 的可变引用：
+
+  LayoutPresetDescriptor = {
+      Name,
+      SchemaVersion,
+      SavedRevision,
+      SavedAt?,
+  }
+
+  ILayoutPresetStore
+    SaveAsync(name, document)
+    TryLoadAsync(name)
+    DeleteAsync(name)
+    ListAsync()
+
+名称经过长度、空白和 storage-key 编码验证；比较规则由 store 明确，默认 ordinal。SavePreset 在调用
+时原子捕获 Snapshot + runtime definitions 所允许的 committed state，在 Workspace lock 外序列化，
+然后进入 per-key single-writer queue。相同 name 后写覆盖前写，较旧 Revision 的慢写不得覆盖较新值。
+
+ApplyPreset 使用 DES-PER-003 Restore Pipeline；全部成功后以一个 RestoreWorkspaceOperation 原子发布，
+清空 Undo/Redo 形成 History Barrier，并发布 WorkspaceRestored。读取失败、文档非法或内容解析失败
+不改变 current Snapshot。Preset 的 workspaceId 默认必须匹配；显式 ClonePreset request 才允许
+确定性 remap 到新 WorkspaceId。
+
+DeletePreset 只删除持久化对象，不修改当前 Workspace；不存在 name 返回 NoChange/NotFound typed
+result，由 public interface 明确。自动保存使用独立保留 key，不冒充命名 Preset，也不出现在用户
+Preset 列表。
+
+来源：F-096~098
+```
+
+---
+
+```
+DES-PER-007
+Restore Identity Remap 与报告
+Restore 在临时 DTO 图上建立所有 identity index 后再处理冲突。若 persisted Document Item ID 与
+target Workspace 中必须保留的 runtime identity 冲突，IdentityAllocator 生成新的 DockItemId，
+并在 candidate 构建前一次性重写所有引用：
+
+  IdentityRemap = {
+      OldItemId,
+      NewItemId,
+      Reason,               // Conflict | CloneImport | LegacyMigration
+  }
+
+  RestoreReport = {
+      IdentityRemaps,
+      Warnings,
+      DroppedItems,
+      PlaceholderItems,
+      AppliedRepairs,
+      SourceSchemaVersion,
+      TargetRevision,
+  }
+
+分配器使用 target Workspace scope 内的确定性 suffix/counter，生成结果必须再次通过强类型 ID、
+长度和唯一性验证。Group.ItemIds、SelectedItemId、ToolBarOrderState、AutoHideEntry、DockBack、
+history-independent references 和 provider occurrence state key 必须使用同一 remap table 更新。
+不得只改 Item dictionary key 留下悬挂引用。
+
+同一个旧 ID 在一次 restore 中只能映射到一个新 ID；persisted document 自身的重复 ID 属于
+INVALID_LAYOUT_DATA，不通过 remap 掩盖。Restore 成功时 report 与 ChangeSet 一起返回；失败时
+可返回 diagnostic report，但 TargetRevision 为空且 current state 不变。
+
+来源：F-086, F-089~090, F-123~124
+```
+
+---
+
+```
+DES-PER-008
+存储降级、Allowlisted Repair 与严重错误回退
+持久化 adapter 的 unavailable、quota、permission、serialization 与 write failure 使用独立 error
+code，并与 Workspace mutation failure 分离。初始化时 storage 不可用：
+
+1. 记录结构化 warning（WorkspaceId、adapter kind、error category，不含布局内容）
+2. 使用声明 InitialDefinition 正常创建 Workspace
+3. 标记 persistence health = Degraded，暂停自动保存并使用有界重试/backoff
+4. 所有 layout command 继续可用；显式 Save/Flush 返回 typed failure
+
+Restore repair 只处理无歧义情况：缺省可推导字段、selection 指向已存在 sibling 的 fallback、
+已知旧枚举映射。重复 ID、cycle、多 parent、非法 placement 和数值超限始终失败。
+
+运行时 committed state corruption 使用更窄的 `WorkspaceConsistencyRecovery`：
+
+- Group 引用不存在 Item：删除无效引用并重选合法 Item
+- Item 不存在任何 placement：移除孤立 Item，释放其 runtime definition/cache
+- 派生 index 不一致：从 immutable Snapshot 重建 index
+
+Repair 在 current state 的隔离 candidate 上执行并重新验证全部 invariant；成功只发布一个
+Recovery ChangeSet，并清空可能引用旧拓扑的 History。任何存在多种解释的 repair 均禁止。
+
+无法修复的 tree corruption 触发 ResetToInitialDefinition：先验证 initial candidate，再原子替换；
+reset 失败则 Workspace 进入 Faulted read-only 状态，保留安全错误 UI，不循环重试。日志保留内部
+violation，用户错误 UI 不显示 exception/stack。降级、repair 和 reset 均不得在失败路径暴露半状态。
+
+来源：F-093~095, F-123, F-125~127
+```
+
+---
+
+## 8 错误处理与质量属性
+
+```
+DES-ERR-001
+Typed Failure、Content Registry 与诊断边界
+Expected failure 不使用 exception 控制流程。WorkspaceError 至少包含稳定 Code、OperationKind、
+WorkspaceId、可选 ItemId/NodeId、可本地化 MessageKey 和非公开 DiagnosticId：
+
+  ITEM_NOT_FOUND
+  CONTENT_ALREADY_REGISTERED
+  CONTENT_NOT_REGISTERED
+  CAPABILITY_REJECTED
+  TARGET_REJECTED_BY_POLICY
+  STALE_OPERATION
+  INVALID_LAYOUT_DATA
+  PERSISTENCE_UNAVAILABLE
+  WORKSPACE_FAULTED
+
+Close/Activate/Get 不存在 Item 分别返回 typed failure 或 null（按 public interface 合同），不抛出。
+Content Registry 的 Register 使用 ordinal Kind identity 和 compare-and-add；重复 Kind 返回
+CONTENT_ALREADY_REGISTERED，原 provider 保持不变，不执行 dispose/replace。显式 ReplaceProvider
+若未来需要必须是独立接口并定义已有 outlet 的迁移语义，不能复用 Register。
+
+Programming error（null internal dependency、impossible enum、disposed object misuse）和 unexpected
+failure 可以抛出并记录，但 Atlas Host 的 user-triggered command adapter 必须转换为安全 UI state，
+不得向 DOM 输出 exception message、type 或 stack。日志通过 DiagnosticId 关联 WorkspaceError，
+敏感 ContentReference.ResourceId 按 logging policy 脱敏。
+
+来源：F-030, F-119, F-121~124, F-128
+```
+
+---
+
+```
+DES-NFR-001
+所有权、释放与内存上限
+运行时资源采用单一所有者树：
+
+  AtlasWorkspaceHost
+    ├── IAtlasWorkspace
+    ├── JS module/controller + DotNetObjectReference
+    ├── Resize/Mutation/MediaQuery observer
+    ├── transient overlay、timer、focus request
+    └── content lifetime cache / ErrorBoundary generation
+
+Item close/remove 先原子提交 domain state，再由 ChangeSet 驱动 render outlet/cache 释放；同一 Item
+即使同时出现在 RemovedItems、Group removal 和 Host dispose 路径也只能 exactly-once dispose。
+KeepAlive cache 使用 DockItemId key、entry/byte 上限和 LRU eviction；已关闭 Item 不得继续占用 cache。
+
+Host DisposeAsync 的顺序：
+
+1. 标记 generation disposed，拒绝新 interaction callback
+2. 取消 pointer session、timer、focus、save wait 和 observer callback
+3. dispose JS controller/module reference 与 DotNetObjectReference
+4. dispose content cache/outlet，再 dispose Workspace
+5. 清空事件订阅和 root-scoped registry
+
+禁止 static DOM registry、static Workspace instance 和无法按 Host 释放的 document listener。多实例
+测试要求销毁一个 Host 不影响其他 Host。内存验证使用重复 open/close/move 场景、listener/observer
+计数、post-dispose callback 计数和浏览器 heap trend；GC 时点不作为 exactly-once 的唯一断言。
+
+来源：F-029, F-114, F-147, NF-001
+```
+
+---
+
+```
+DES-NFR-002
+Reduced Motion
+AtlasWorkspaceHost 监听 `matchMedia("(prefers-reduced-motion: reduce)")`，把结果投影为 root
+`data-atlas-reduced-motion` 状态。MediaQuery listener 归 Host 所有并在 Dispose 时移除。
+
+Reduced Motion 启用时：
+
+- collapse/expand、Flyout、Tab/Panel preview 和 size change 的 transition/animation duration 设为 0
+- 不使用平滑滚动；Tab scroll 使用即时定位
+- 拖拽高亮、focus ring、active state 和 Drop Scaffold 仍即时显示，不能因禁用动画丢失反馈
+- operation timing、Auto-hide 300ms 交互延迟和 async guard 语义不改变
+
+运行期间系统偏好变化立即更新 render projection，不写 WorkspaceSnapshot、不进入 History/持久化。
+CSS 以 media query 为无脚本默认，Host state 用于需要 JavaScript 分支的 preview renderer。
+
+来源：NF-008
+```
+
+---
+
+```
+DES-NFR-003
+WAI-ARIA 语义与焦点合同
+关键交互元素使用稳定的原生/ARIA 语义：
+
+| 元素 | 语义 | 关键属性 |
+|------|------|----------|
+| LT/RT Entry 集合 | `tablist` | `aria-orientation="vertical"`、可访问名称 |
+| ToolBar Entry | `button role="tab"` | `aria-label`、`aria-selected`、`aria-controls` |
+| Editor Tab Strip | `tablist` | `aria-orientation`、当前 Group label |
+| Editor Tab | `button role="tab"` | `aria-selected`、`aria-controls`、roving tabindex |
+| Panel Header | heading + controls | 标题关联、关闭/折叠按钮 label |
+| Splitter | `separator` | `aria-orientation`、`aria-valuemin/max/now`、`aria-disabled` |
+| Context/Overflow Menu | `menu/menuitem` | expanded、controls、active descendant |
+
+DOM 顺序必须与视觉 logical order 一致；禁止仅用 CSS `order` 把焦点顺序与视觉顺序分离。Tab 键按
+DOM 顺序进入各交互区域，区域内部使用 roving tabindex 减少重复停靠点。所有可聚焦元素使用
+`:focus-visible` 提供不低于主题对比要求的可见指示器，自定义样式不得移除而不提供替代。
+
+Snapshot commit 后的 focus restoration 遵循：
+
+1. 激活 Item → 对应 tab/entry 保持 selected，内容在显式命令要求时获得 focus
+2. 关闭 focused Item → 按 selection planner 聚焦新 active header；Group 删除则聚焦最近 ancestor
+3. 折叠 Panel → 焦点回对应 ToolBar Entry
+4. 打开菜单/Flyout → focus 进入其首个有效项；Escape 回 source
+5. move/reorder → 使用 DockItemId 在新 projection 中恢复，不保存 ElementReference
+
+键盘-only E2E 覆盖 Tab/Shift+Tab、Ctrl+Tab、Ctrl+W、Alt+Arrow、Splitter Arrow/Home/End 和
+Escape；accessibility tree 断言覆盖 role、name、state 与 controls 关联。
+
+来源：F-022, F-035, F-116~118, NF-003, NF-007
+```
+
+---
+
+```
+DES-NFR-004
+内容信任模式与安全隔离
+Atlas 区分两种不能混淆的内容承载合同：
+
+  TrustedComponent
+    Application 提供 RenderFragment/DynamicComponent，与 Atlas 共享 document、DI scope 和进程。
+    Atlas 提供 ErrorBoundary、只读 AtlasContentContext 与状态接口隔离，但不能阻止组件主动查询
+    document 或访问应用共享单例，因此不构成 NF-006 所述安全沙箱。
+
+  SandboxedFrame
+    内容在独立 iframe 中运行，使用 sandbox attribute、独立 origin/CSP 和 versioned postMessage
+    protocol。默认不授予 allow-same-origin、top-navigation、popups 或任意 parent DOM 能力；
+    只通过 allowlisted message command 获取内容 identity、focus 和 resize 协作。
+
+只有 SandboxedFrame 能作为跨面板脚本访问的安全 seam。Frame message 必须验证 origin（适用时）、
+Workspace/Item identity、ProtocolVersion、payload size 和 command allowlist；未知消息忽略并记录。
+一个 frame 崩溃或拒绝响应只替换对应 outlet，不影响 Workspace。
+
+ADR-0013 已关闭 OI-006：Atlas 不得在文档或 public interface 中声称 TrustedComponent 已“沙箱化”；
+NF-006 的恶意脚本隔离仅适用于 SandboxedFrame。Frame 使用固定 deny-by-default sandbox，协议接收方
+验证 source、opaque origin、identity、version、size 与 allowlist；独立 origin/CSP 由 consumer 负责。
+
+来源：F-120, F-128, NF-006
+```
+
+---
+
+## 9 项目结构
 
 ```
 DES-PRJ-001
@@ -1078,7 +1993,7 @@ DES-PRJ-001
 项目结构：
 
   src/
-    Atlas.Core/              ← 纯 C#，NuGet 包 Atlas.Core（net10.0）
+    Atlas.Core/              ← 纯 C#，NuGet 包 Atlas.Core（net6.0）
       Model/                   Nodes/ SplitNode, GroupNode
       │                        Items/ DockItem, ContentReference
       │                        Content/
@@ -1088,7 +2003,7 @@ DES-PRJ-001
       Persistence/             Serializer, RestorePipeline, Migration
       Results/                 WorkspaceResult<T>, WorkspaceError
 
-    Atlas.Blazor/            ← NuGet 包 Atlas.Blazor（net10.0），依赖 Atlas.Core
+    Atlas.Blazor/            ← NuGet 包 Atlas.Blazor（net6.0），依赖 Atlas.Core
       Components/              Workspace/ AtlasWorkspaceHost
       │                        Nodes/ SplitNodeView, GroupNodeView
       │                        Groups/ GroupHeaderView, DockContentOutlet
@@ -1098,15 +2013,12 @@ DES-PRJ-001
       ClientScripts/           interaction-controller.ts, drag-session.ts, ...
       wwwroot/
 
-    Atlas.Demo.V2/           ← Demo 应用，不发布为 NuGet 包
-
   tests/
     Atlas.Core.Tests/        ← 纯逻辑测试（无 Blazor 依赖）
     Atlas.Blazor.Tests/      ← bUnit 组件测试
-    Atlas.Interop.Tests/     ← JS protocol 测试
-    Atlas.E2E.Tests/         ← 真实浏览器测试
+    browser/                 ← 静态真实浏览器验证 fixtures
 
-依赖方向：Atlas.Core ← Atlas.Blazor ← Atlas.Demo.V2。禁止反向依赖。
+依赖方向：Atlas.Core ← Atlas.Blazor；测试项目只依赖被测包。禁止反向依赖。
 
 V1/V2 共存规则：
 
@@ -1121,7 +2033,9 @@ V2 JS/CSS 文件名、module export 和 CSS root class 使用 atlas-v2 前缀或
 不覆盖 V1 asset。同一解决方案可以同时引用 V1/V2 以运行迁移工具，但同一 DOM subtree 同时挂载
 两个版本不作为支持场景。
 
-Target framework：net10.0（LTS，支持至 2028-11）。Atlas 1.x maintenance branch 独立维护。
+Target framework：net6.0。该版本由维护者基于兼容性约束明确指定；其官方支持已结束的风险记录在
+ADR-0001，依赖更新和安全验证不得因此降级。工程使用 Node 24 LTS + npm 构建 TypeScript。
+Atlas 1.x maintenance branch 独立维护。
 
 两个项目而非更细粒度拆分：Core/Blazor 边界是最重要的架构边界（可测试性、依赖方向），进一步拆分
 Model/Operations/Services 项目在没有独立发布需求时只会增加 solution 维护负担和 package
@@ -1143,9 +2057,14 @@ TypeScript 模块划分
     drag-session.ts
     geometry-snapshot.ts
     target-resolver.ts
+    panel-target-resolver.ts
     split-target-resolver.ts
     toolbar-target-resolver.ts
     preview-renderer.ts
+    drag-overlay.ts
+    keyboard-controller.ts
+    reduced-motion.ts
+    frame-bridge.ts
     protocol.ts
 
 CI 要求：TypeScript CI 必须分别执行 tsc --noEmit、纯函数/controller 测试和 bundle。esbuild
@@ -1159,8 +2078,380 @@ protocol.ts 定义 versioned wire protocol types——C# 与 TypeScript 共享 g
 纯函数模块（geometry-snapshot、target-resolver、preview-renderer）不依赖 DOM，可在 Node.js
 环境测试。Controller 和 session 模块需要 jsdom 或 browser 环境测试。
 
-来源：NF-004
+来源：NF-003~004, NF-006, NF-008
 ```
+
+---
+
+```
+DES-PRJ-003
+ToolBar 与 Panel 拖拽验证矩阵
+相关设计必须按状态语义分层验证，E2E 不替代纯函数和 Core transaction 测试：
+
+| 验证层 | 主要对象 | 必须覆盖 |
+|-------|---------|---------|
+| Atlas.Core.Tests | ToolBarProjection | Entry 1:1、分区、RTL logical side、Group/Strip 去重、独立 ordering |
+| Atlas.Core.Tests | Move/Reorder operations | 空/非空目标、Active 切换、Dynamic Group、NoChange、stale、policy reject、Undo |
+| Atlas.Interop.Tests | panel-target-resolver | before/after 阈值、共享边界、空槽、Divider 排除、目标优先级、跨实例隔离 |
+| Atlas.Interop.Tests | drag-session/controller | 4px 阈值、pointer capture、所有 cancel 路径、单 terminal、迟到 callback、dispose |
+| Atlas.Blazor.Tests | ToolBar rendering | 分区/Divider、button/ARIA、projection stamp、Flyout timer、focus effect |
+| Atlas.E2E.Tests | user journey | Header/Entry 拖拽、跨侧移动、Scaffold、Esc、固定区域拒绝、Undo、内容状态 |
+| Performance profile | drag hot path | pointermove 0 interop、≥30fps、相同 target 0 重复 DOM mutation |
+
+Golden fixtures 同时验证 TypeScript `PanelDropIntent` 与 C# DTO 的 ProtocolVersion、枚举 wire value、
+required/optional field 和 unknown-version rejection。测试不得依赖私有 collection 类型；Core
+行为通过 IAtlasWorkspace 接口与公开 Snapshot/ChangeSet 观察，resolver 通过纯输入输出验证。
+
+OI-001 的 policy 组合继续分别参数化测试。依据 ADR-0012，内容测试分别报告 business state
+preservation 与 component instance preservation，不能合并为一个模糊的"内容保持"断言。
+
+来源：F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007
+```
+
+---
+
+## 10 开发执行合同（Agent Implementation Contract）
+
+本节不是新的产品需求，也不改变 SRS Acceptance Criteria；它把前述设计转换为后续开发 Agent
+可执行、可阻断和可验收的工程合同。`DEV-*` 编号不进入 SRS—DES 覆盖率，但对实现工作具有规范性：
+
+- `MUST`：违反即不符合本 HLD，不得合并
+- `SHOULD`：原则上执行；偏离时必须记录理由和验证证据
+- `MAY`：在不改变公共合同和用户可感知行为时可自行选择
+
+`Designed` 只表示需求已有设计责任，并不自动表示所有前置决策已经关闭。Agent 不得把 Open Issue
+的某个分支实现成事实标准，也不得通过默认值、测试跳过或文档措辞替用户完成产品决策。
+
+### 10.1 决策与实施闸门
+
+| 闸门 | 必须关闭的事项 | 阻断范围 | 关闭证据 | 关闭前允许的工作 |
+|------|---------------|----------|----------|------------------|
+| DEV-GATE-001 Repository Baseline | OI-004 | solution、TargetFramework、PackageId、namespace、CI、NuGet 依赖 | 仓库基线 ADR + 可运行的 SDK/CI 配置 | 纯文档、与 TFM 无关的模型 Spike |
+| DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | **Closed**：ADR-0007 Accepted；SRS 已统一 enabled set、优先级、失败语义与默认策略 | 参数化 resolver、全部候选策略的纯函数测试 |
+| DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
+| DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
+| DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
+| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；150 = F142 + NF8 | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 150 个正式需求块维护矩阵 |
+
+闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、
+geometry snapshot 和参数化 target resolver，但不得选择默认 Panel drop policy，也不得把相关 E2E
+标记为最终通过。DEV-GATE-001 关闭前不得创建与未经批准的 framework 或 package topology 绑定的
+全量项目骨架。
+
+每个闸门的状态仅允许 `Open`、`Evidence Ready`、`Closed`。Agent 可以生成 Spike 和决策材料，
+不能自行把状态改为 `Closed`；关闭需要维护者批准并在 HLD 的 OI 表、相关 ADR 和追溯矩阵中同步。
+
+### 10.2 规范性公共 API Surface Manifest
+
+公共 API 必须从一份受版本控制的 manifest 生成或校验；HLD 中的示例不是允许任意改名的伪代码。
+DEV-GATE-001 关闭后，首个项目脚手架提交必须同时建立 API compatibility baseline
+（例如 `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` 或等价机制）。
+
+以下 symbol family 是 V2 基线；允许调整 namespace 以匹配最终 PackageId，但职责、输入输出语义与
+public/internal 边界不得改变：
+
+| Owner | Public symbol family | 必须提供的合同 | 禁止事项 |
+|-------|----------------------|----------------|----------|
+| Core | `IAtlasWorkspace` | `Id`、immutable `Current`、Undo/Redo、`ExecuteAsync`、`Changed`、`DisposeAsync` | 暴露 mutable collection 或 DOM/Blazor 类型 |
+| Core | `IAtlasWorkspaceFactory` | 从 validated `AtlasWorkspaceDefinition` 创建实例；失败返回 typed result | 创建半初始化 Workspace 或注册 global mutable state |
+| Core | `AtlasWorkspaceCommands` | Open/Close/Activate、Panel visibility、Reset、Preset facade；全部转成 Operation | command 直接修改 Snapshot |
+| Core | `AtlasWorkspaceQueries` | `TryGetItem`、immutable enumerate/filter、按 ID 查询 placement | 在 Workspace lock 内执行 consumer predicate |
+| Core | `WorkspaceResult<T>` / `WorkspaceError` | Success、NoChange、Expected Failure、stable ErrorCode、DiagnosticId | expected failure 使用异常控制流 |
+| Core | `WorkspaceSnapshot` / `LayoutChangeSet` | immutable read model、Revision、稳定 ID 集合 | 暴露内部 builder、patch 或可修改索引 |
+| Core | `IAtlasLayoutSerializer` | Export、Restore request/report、schema version、resource limits | 序列化 RenderFragment、delegate、service 或业务对象 |
+| Core | `ILayoutPresetStore` | Save/TryLoad/Delete/List、per-key write ordering、cancellation | 隐式静态 store 或 last-completing-write-wins |
+| Blazor | `AtlasWorkspaceHost` | Workspace/definition 初始化模式、templates、options、safe error callback | 同时启用两个 authoritative 初始化源 |
+| Blazor | definition components | Workspace、Split、Tool Group、Document Group、Tool Item、Document Item 的 immutable definition | 在生命周期回调中逐项 mutation Workspace |
+| Blazor | content contracts | `AtlasContentContext`、`AtlasContentComponent`、content/empty/header templates | 任意字符串 parameter dictionary |
+| Blazor | `AddAtlasWorkspace` | 注册 stateless factory、registry、options、serializer adapter；说明 service lifetime | 把 Workspace 或 JS controller 注册为 Singleton |
+| Interop | C# facade | root controller initialize/update/dispose、单次 semantic commit callback | public 暴露 `IJSObjectReference`、DOM handle 或坐标 DTO |
+
+API freeze 必须回答并通过编译时 contract test 固定：
+
+1. symbol 的 namespace、generic arity、nullability、默认值和 cancellation 行为
+2. result 的 Success / NoChange / Failure 区分，以及 failure code
+3. event 的顺序、线程上下文、不重入保证和 subscriber exception 隔离
+4. `DisposeAsync`、`FlushAsync` 和 in-flight callback 的先后关系
+5. options 是 create-time immutable、runtime replaceable，还是仅对下一次 operation 生效
+6. public enum 的数值与 wire name；未知值是拒绝、忽略还是 fallback
+
+`FlushAsync` 已在 DES-OP-006 的生命周期合同中出现，因此 API freeze 时 MUST 将其放入明确 owner
+（Workspace persistence facade 或独立 coordinator），不能只在 prose 中存在。DES-OP-009 的便捷
+command 也必须以 extension/facade 的确定 public symbol 出现，不能只实现低层 `ExecuteAsync` 后
+宣称 F-101~108 已完成。
+
+### 10.3 Blazor 初始化与组件参数合同
+
+`AtlasWorkspaceHost` 只支持以下两种初始化模式，并在第一次有效 render 前验证互斥性：
+
+| 模式 | Authoritative input | Workspace owner | 参数变化 |
+|------|---------------------|-----------------|----------|
+| Declarative | child definition components 生成的 `AtlasWorkspaceDefinition` | Host 通过 factory 创建并释放 | 按 DES-OP-008 生成一个 `ReconcileDefinitionOperation` |
+| Programmatic | Application 提供的 `IAtlasWorkspace` | Application；Host 默认不释放，除非显式设置 ownership | Host 只订阅/渲染，不把 child definition 回写 |
+
+同时提供 Programmatic Workspace 与 declarative layout children 属于 composition error；Host 显示安全
+错误边界并记录 typed diagnostic，不采用“后声明覆盖前声明”。声明组件只参与 definition collection，
+自身不渲染结构 DOM。稳定 declaration key 缺失、重复或在一次 render 中变化时，reconciliation
+整体失败并保留上一 Revision。
+
+所有 public component parameter 必须归入以下类别之一：
+
+- **Identity**：首次 materialize 后不可静默改变；改变等价于 remove + add
+- **Definition**：进入下一次原子 reconciliation
+- **Presentation**：只改变 derived projection，不进入 History
+- **Template/Callback**：不进入 Snapshot；在 Workspace lock 外调用
+- **Transient interaction option**：只影响 Host/JS controller，不持久化
+
+组件 API 文档与 contract tests 必须为每个参数标明类别、默认值、是否 `EditorRequired`、是否允许
+运行时变化。Agent 不得根据实现便利把 presentation 参数持久化，也不得把 identity 参数当普通
+`OnParametersSet` 更新。
+
+### 10.4 跨边界契约产物
+
+跨 C#、TypeScript、XML 和 CSS 的合同不能只依靠两份实现“保持一致”。对应实现开始前，以下产物
+必须 checked-in，并由测试同时消费：
+
+| Contract | Canonical artifact | Mirrors / Consumers | 必须验证 |
+|----------|--------------------|---------------------|----------|
+| Interaction protocol | `ClientScripts/protocol.ts` | C# interop DTO、golden JSON fixtures | ProtocolVersion、discriminator、required/optional field、enum wire name、unknown version |
+| Persistence V2 | `Persistence/Schema/atlas-workspace-v2.xsd` | Serializer DTO、V2 golden XML | namespace、element order、defaults、limits、unknown element/attribute |
+| V1 migration | V1 input fixtures + expected V2/report | importer、migration tests | deterministic ID remap、warning、unsupported parameter、failure atomicity |
+| Public .NET API | API compatibility baseline | Core/Blazor assemblies、API diff CI | symbol、visibility、nullability、default value、obsolete policy |
+| Error catalog | `WorkspaceErrorCode` enum + appendix B | command facade、interop mapping、docs | stable code、operation applicability、safe MessageKey |
+| DOM metadata | selector manifest used by controller tests | Razor markup、TypeScript resolver | host scoping、required attributes、no cross-instance match |
+
+变更规则：
+
+1. canonical artifact 与所有 mirror 必须在同一提交更新；禁止“先改 TypeScript，后续再修 C#”
+2. protocol 和 persistence 只允许 additive backward-compatible change，或提升 major schema/version
+3. unknown field 可忽略仅在 schema 明确允许时；unknown discriminator/version 必须拒绝
+4. golden fixture 是兼容性合同，不得为迁就新实现直接覆盖；行为改变需要 ADR 或 SRS 依据
+5. build 生成物不得成为唯一 source of truth；代码审查必须能看到 canonical diff
+
+DEV-GATE-005 关闭前可以实现 parser 限制和 DTO validation，但不得把 DES-PER-002 的示例 XML
+当成最终 schema。Interaction protocol 的第一版必须覆盖 drag、split resize、focus request 和
+controller lifecycle，而不是只覆盖 happy-path Panel drop。
+
+### 10.5 关键生命周期时序
+
+以下时序是模块边界与回调顺序的规范性摘要；细节仍以对应 DES 条目为准。
+
+#### 10.5.1 Declarative Host 初始化
+
+```mermaid
+sequenceDiagram
+    participant App as "Application"
+    participant Host as "AtlasWorkspaceHost"
+    participant Def as "Definition Collector"
+    participant Core as "Workspace Factory / Core"
+    participant UI as "Render Projection"
+    participant JS as "Root JS Controller"
+
+    App->>Host: "Render parameters + declaration children"
+    Host->>Def: "Begin DefinitionRevision"
+    Def-->>Host: "Immutable AtlasWorkspaceDefinition"
+    Host->>Host: "Validate initialization mode"
+    Host->>Core: "Create / Reconcile candidate"
+    Core->>Core: "Validate identity, topology, sizing, invariants"
+    alt "Candidate valid"
+        Core-->>Host: "Snapshot + one ChangeSet"
+        Host->>UI: "Render immutable projection"
+        UI-->>Host: "Root DOM ready"
+        Host->>JS: "Initialize once with HostId + ProtocolVersion"
+    else "Candidate invalid"
+        Core-->>Host: "Typed failure; committed state unchanged"
+        Host->>UI: "Keep previous projection or safe initialization error"
+    end
+```
+
+JS controller 初始化只能发生在 root DOM 可用之后；重复 render 调用 `update`，不能重复注册 document
+listener。Host 初始化失败时不得留下部分 Workspace、DotNetObjectReference 或 observer。
+
+#### 10.5.2 Operation 提交与事件发布
+
+```mermaid
+sequenceDiagram
+    participant Caller as "UI / Application / Interop Adapter"
+    participant WS as "IAtlasWorkspace"
+    participant Guard as "Consumer Guard / Provider"
+    participant Store as "Committed Snapshot"
+    participant Host as "Blazor Host"
+    participant Events as "Event Dispatcher"
+
+    Caller->>WS: "ExecuteAsync(Operation, CancellationToken)"
+    WS->>WS: "Capture BaseRevision and plan"
+    opt "External decision required"
+        WS->>Guard: "Invoke outside Workspace lock"
+        Guard-->>WS: "Decision"
+    end
+    WS->>WS: "Re-enter linearization point; revalidate Revision"
+    alt "Valid and changed"
+        WS->>Store: "Atomic snapshot swap + History entry"
+        WS-->>Caller: "Success(ChangeSet)"
+        WS->>Host: "Changed(ChangeSet)"
+        Host->>Host: "Render affected projections"
+        WS->>Events: "Queue typed events after Changed"
+    else "No semantic change"
+        WS-->>Caller: "NoChange(empty ChangeSet)"
+    else "Cancelled / stale / expected failure"
+        WS-->>Caller: "Typed failure; no state/event/history change"
+    end
+```
+
+任何 consumer callback 都不得在 Workspace lock 内运行。Caller 收到 Success 时 committed Snapshot
+已经可读；UI render 与 consumer event handler 可以稍后完成，不能回滚已经成功的 operation。
+
+#### 10.5.3 Pointer Drag Session
+
+```mermaid
+sequenceDiagram
+    participant Pointer as "Browser Pointer Events"
+    participant JS as "Root Interaction Controller"
+    participant Resolver as "Geometry / Target Resolver"
+    participant Host as "Blazor Commit Adapter"
+    participant Core as "Operation Pipeline"
+
+    Pointer->>JS: "pointerdown"
+    JS->>JS: "Native setPointerCapture + create session"
+    JS->>Resolver: "Build GeometrySnapshot once"
+    loop "pointermove before terminal"
+        Pointer->>JS: "coordinates"
+        JS->>Resolver: "Resolve semantic target"
+        Resolver-->>JS: "Normalized intent key"
+        JS->>JS: "Update preview only when key changes"
+    end
+    alt "pointerup on valid target"
+        JS->>Host: "One versioned commit intent"
+        Host->>Core: "Execute operation with BaseRevision"
+        Core-->>Host: "Success / NoChange / typed failure"
+        Host-->>JS: "Terminal acknowledgement"
+    else "Escape / pointercancel / lost capture / dispose"
+        JS->>JS: "Cancel locally; no Core mutation"
+    end
+    JS->>JS: "Clear preview, overlay, capture and session exactly once"
+```
+
+`pointermove` hot path不得调用 .NET。所有 terminal path 共享一个幂等 cleanup；迟到的 callback 通过
+Host generation/session ID 拒绝，不能复活已结束 session。
+
+#### 10.5.4 Restore 与 Host Dispose
+
+Restore 顺序固定为：读取不可变 document → schema/version 检查 → migration/remap → limits/invariant
+验证 → allowlisted repair → candidate 构建 → 一次 atomic swap → History Barrier → ChangeSet /
+RestoreReport。任何前置步骤失败均不得触碰 current Snapshot。
+
+Host Dispose 顺序固定为：标记 disposed generation → 拒绝/取消新 interaction → 停止 observer、
+timer 与 focus effect → dispose JS controller/module/DotNetObjectReference → drain render/event
+callback → 按 ownership 释放 content cache 和 Workspace。Dispose 完成后 callback/event 数量必须为 0。
+
+### 10.6 稳定 DOM、CSS 与 Overlay 合同
+
+Razor markup 是 Blazor 与 TypeScript 的内部协议。JS 只能依赖下表列出的稳定 metadata，不能依赖
+组件生成的任意层级、文本内容、CSS module hash 或 consumer 自定义 class：
+
+| Element | Required stable metadata | Owner / Purpose |
+|---------|--------------------------|-----------------|
+| Workspace root | `data-atlas-host-id`、`data-atlas-protocol-version`、direction、reduced-motion state | root-scoped lookup 与实例隔离 |
+| Layout node | `data-atlas-node-id`、node kind | geometry snapshot；不作为 public API |
+| Group | `data-atlas-group-id`、group kind、logical slot | group target 与 focus restoration |
+| Dock item occurrence | `data-atlas-item-id`、item kind | source identity；同一 Host 内唯一可见 occurrence |
+| ToolBar | `data-atlas-toolbar-side`、region container metadata | Entry projection 与 Panel target resolver |
+| Tab strip / entry | group/item ID、command capability | reorder、overflow、roving tabindex |
+| Splitter | `data-atlas-split-id`、axis、locked state | resize session 与 keyboard contract |
+| Overlay root | session ID、host ID | preview、indicator、scaffold；Host 内唯一 |
+
+DOM metadata 只携带 opaque stable ID、enum wire name 和 capability bit，不携带序列化 model、title、
+ContentReference.ResourceId 或 consumer data。所有 query 从 Workspace root 开始；禁止
+`document.querySelector` 查找未限定 HostId 的 Atlas element。
+
+结构 class 使用 `atlas-v2-*` 前缀，分为：
+
+- **layout class**：root、split、group、content outlet、toolbar、tab strip
+- **interaction class**：drag-source、drop-target、preview、splitter-hover/dragging/locked
+- **state class/data state**：active、selected、collapsed、auto-hidden、faulted、reduced-motion
+- **consumer class**：仅追加到允许的 element，不能替换结构/ARIA class
+
+布局必须使用 CSS logical properties（inline/block）表达方向，DOM logical order 与焦点顺序一致。
+Snapshot 中的 basis/constraints 通过受控 CSS custom property 或 grid/flex track 投影；CSS 不重新
+实现 Core sizing policy。overflow、min-content 和 scrollbar 只能影响呈现，不得反推 committed size。
+
+层级关系使用一组 root-scoped token，不允许组件各自硬编码互相竞争的 z-index：
+
+| Layer | Default order | 内容 |
+|-------|---------------|------|
+| content | 0 | Group content、Empty State |
+| chrome | 10 | Header、Tab Strip、ToolBar、Splitter |
+| flyout | 20 | Auto-hide Flyout、context/overflow menu |
+| drag | 30 | Drag preview、indicator、Drop Scaffold |
+| fatal overlay | 40 | Workspace-level fault UI；不得覆盖应用级 modal |
+
+Overlay root 必须位于 Workspace root 的受控 stacking context 内，不默认 portal 到 `document.body`。
+若未来为 overflow clipping 引入 portal，必须携带 HostId、focus return target 和 dispose ownership，
+并通过 ADR 修改本合同。Reduced Motion 只改变动画，不改变 layer、hit target 或可见反馈。
+
+DOM contract tests 至少验证：
+
+1. 多 Host 相同 ItemId 不发生跨实例命中
+2. consumer class/内容文本改变不影响 resolver
+3. rerender 后旧 Element/geometry 不被使用
+4. overlay、Flyout、menu 和 observer 在 Dispose 后全部移除
+5. DOM order、ARIA controls 和 visible logical order 一致
+
+### 10.7 分阶段实施与验收门禁
+
+全量开发必须按可运行的 tracer bullet 推进。允许在同一阶段并行开发不共享文件的模块，但不得越过
+入口闸门，也不得在下游先复制一份临时模型/协议后等待上游“以后统一”。
+
+| Phase | 范围 | Entry gate | Exit gate（必须全部满足） |
+|-------|------|------------|---------------------------|
+| P0 Baseline | 决策材料、solution、项目、CI、format、API baseline | DEV-GATE-001 Closed | restore/build/test/format 可在干净环境运行；无产品功能 |
+| P1 Core Model | 强类型 ID、Snapshot、Layout Tree、Item、invariants、sizing pure functions | P0 | Core 无 Blazor 引用；invariant/property tests 覆盖空树、cycle、multi-parent、selection、constraints |
+| P2 Operation Engine | planner/validator、transaction、ChangeSet、events、history、command/query facade | P1 + API surface frozen | success/no-change/failure/stale/cancel/undo 行为测试；callback 均在 lock 外 |
+| P3 Blazor Projection | Host、definition reconciliation、Group/Tab/ToolBar/Empty/Error rendering、content registry | P2 | bUnit 覆盖声明更新、局部 render、content resolution、focus request、multi-instance |
+| P4 Splitter & Keyboard | JS root controller 基础、resize、keyboard command、ARIA | P3 + interaction protocol frozen | Node/controller/component/E2E 分层通过；pointermove 0 interop |
+| P5 Drag & Dock | Tab drag、Panel drag、target resolver、preview、cancel、undo | P4 + DEV-GATE-002 Closed | resolver matrix、全部 terminal path、跨实例、stale、30fps profile 通过 |
+| P6 Persistence | V2 XML、restore、Preset、V1 migration、repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests 通过 |
+| P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame、threat model | P3 + DEV-GATE-003/004 Closed | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
+| P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 150 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
+
+P5 与 P6 可以在 P2/P4 稳定后并行，但共享的 ID、Result、Revision、protocol enum 和 public API
+必须先冻结。ADR-0013 已关闭 DEV-GATE-004；SandboxedFrame 的协议、public API 和安全声明必须严格
+遵守该 ADR 与 threat model。
+
+任何 Phase 的 Exit gate 还必须满足：
+
+- `dotnet build`、`dotnet test`、format check 和相关 TypeScript typecheck/test/bundle 全部通过
+- 没有为通过测试而削弱 assertion、跳过 CI 或扩大 public API
+- 新增行为有 SRS Requirement ID、DES ID、owner module 和测试证据
+- public API、protocol、schema 或架构边界变化已更新 contract artifact；必要时有 ADR
+- interaction hot path 变化提供 performance evidence；资源 ownership 变化提供 dispose/leak evidence
+
+### 10.8 Agent Work Package 合同
+
+每个开发任务必须是可独立验收的 work package，描述：
+
+| 字段 | 要求 |
+|------|------|
+| Scope | 明确包含和不包含的行为；不得使用“完成布局系统”一类无边界表述 |
+| Trace | 至少一个 `REQ-F-*` / `REQ-NF-*` 和承担设计的 `DES-*` |
+| Owner | 唯一主要项目/目录；跨 Core/Blazor/Interop 时列出边界 DTO |
+| Preconditions | 所需 DEV-GATE、上游 public/protocol/schema version |
+| Public impact | 新增/修改/无；存在影响时附 API diff |
+| Failure semantics | Success、NoChange、cancel、stale、expected failure、unexpected exception |
+| Tests | 测试层、可观察行为、fixture；不能只写“添加单元测试” |
+| Verification | build/test/typecheck/E2E/performance 中实际需要的命令 |
+| Traceability update | 实现完成后写入 requirement → code → test 状态 |
+
+Agent 遇到以下情况必须停止扩展实现范围并报告，而不是猜测：
+
+1. SRS 与 HLD 用户可感知语义冲突，且没有已关闭 ADR
+2. 需要修改已冻结 public API、wire protocol、persistence schema 或错误码
+3. 需要引入新的 global state、跨 Host registry、大型第三方依赖或新的安全能力
+4. 测试只能通过放宽 AC、跳过失败场景或依赖非确定 timing
+5. 当前 Phase 的上游模型尚未合并，导致必须复制临时 DTO/enum/invariant
+
+实现状态使用 `Not Started`、`In Progress`、`Implemented`、`Verified`、`Blocked`。只有代码已合并且
+对应自动化测试通过才可标为 `Verified`；HLD 中的 `Designed` 不能直接转换为 `Implemented`。
 
 ---
 
@@ -1206,7 +2497,7 @@ stateDiagram-v2
     Closed --> [*]
 ```
 
-### A.3 拖拽状态机
+### A.3 Editor Tab 拖拽状态机
 
 ```mermaid
 stateDiagram-v2
@@ -1224,6 +2515,29 @@ stateDiagram-v2
     Cancelled --> Idle: 拖拽取消，Editor Tab 回原位
 ```
 
+### A.4 Dock Panel 拖拽状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> PendingThreshold: Panel Header / ToolBar Entry pointerdown
+    PendingThreshold --> Idle: pointerup 且移动不超过 4px
+    PendingThreshold --> Dragging: 移动超过 4px
+    Dragging --> Dragging: 解析并预览 PanelDropTarget
+    Dragging --> Committing: 合法目标 pointerup
+    Dragging --> Cancelling: Esc / pointercancel / 无效释放 / 页面隐藏
+    Committing --> Completed: Operation committed
+    Committing --> Cancelling: stale / policy reject / protocol reject
+    Cancelling --> Completed: overlay 与 pointer state 清理
+    Completed --> Idle: session released
+    Idle --> Disposed: Host dispose
+    PendingThreshold --> Disposed: Host dispose
+    Dragging --> Disposed: Host dispose
+```
+
+Panel Drag Session 只管理 transient interaction state；只有 `Committing → Completed` 的成功路径
+允许产生 Workspace Revision、History 和 ChangeSet。
+
 ---
 
 ## 附录 B：错误码定义
@@ -1231,15 +2545,24 @@ stateDiagram-v2
 | 错误码 | 触发条件 | 依据 |
 |--------|---------|:--:|
 | `LAYOUT_VERSION_INCOMPATIBLE` | 导入的布局数据主版本号与当前系统不兼容 | F-088 |
-| `DUPLICATE_CONTENT_KEY` | 重复注册已存在的 Content Identifier | F-122 |
+| `CONTENT_ALREADY_REGISTERED` | 重复注册已存在的 Content Identifier，原 provider 不变 | F-122 |
 | `INVALID_LAYOUT_DATA` | 导入的布局数据结构不符合要求 | F-123 |
 | `DUPLICATE_TAB_ID` | 打开 Editor Tab 时指定的标识已存在 | F-124 |
+| `ITEM_NOT_FOUND` | Close/Activate command 指定的 Item 不存在 | F-030, F-121 |
 | `STALE_OPERATION` | 操作持有的 BaseRevision 与 current Revision 不一致 | DES-OP-003 |
 | `CONTENT_NOT_REGISTERED` | ContentReference.Kind 在 provider registry 中未找到 | F-119 |
 | `TARGET_REJECTED_BY_POLICY` | Docking Policy 拒绝目标 placement | F-069 |
+| `CAPABILITY_REJECTED` | Item capability 禁止 close/move/pin/auto-hide 等操作 | F-036~037 |
 | `CLOSE_CANCELLED_BY_GUARD` | 关闭前回调返回拒绝 | F-041 |
+| `PERSISTENCE_UNAVAILABLE` | 存储 adapter 不可用、拒绝访问或写入失败 | F-093 |
+| `WORKSPACE_FAULTED` | 状态不可修复且 InitialDefinition reset 失败 | F-127 |
+| `INTERACTION_PROTOCOL_INVALID` | JS commit payload 版本、字段或 Host/Workspace identity 非法 | DES-INT-005 |
+| `DRAG_SESSION_EXPIRED` | SessionId 已结束、Host generation 已变化或 callback 到达 disposed Host | DES-INT-005 |
+| `TARGET_NOT_FOUND` | Operation 指定的目标 Group、View 或 Layout Node 不存在 | F-101, DES-OP-006 |
+| `DUPLICATE_CONTENT_IDENTITY` | RejectDuplicate 去重模式检测到相同 ContentReference identity | F-046, DES-DOM-005 |
 
-> 部分接口使用通用失败结果（如"返回失败结果，不抛出异常"）而不返回具体错误码，详见 F-030（关闭不存在 Tab）、F-037（关闭不可关闭 Tab）、F-121（激活不存在 Tab）。
+> F-030 与 F-121 统一返回 `ITEM_NOT_FOUND`；F-037 的不可关闭能力由 operation capability validation
+> 返回 `CAPABILITY_REJECTED`，不抛出异常。`TARGET_NOT_FOUND` 不用于缺失的 Dock Item。
 
 ---
 
@@ -1250,33 +2573,199 @@ stateDiagram-v2
 | DES-ARCH-001 | 分层架构 | F-001~004, NF-004, F-109 |
 | DES-ARCH-002 | 核心设计思想 | F-133, F-047, F-110~115 |
 | DES-ARCH-003 | 边界规则 | F-109, F-133, NF-006 |
+| DES-ARCH-004 | 状态所有权与单向数据流 | F-100, F-109~115, F-133, NF-004~005 |
 | DES-DOM-001 | SRS 概念到内部模型映射 | §1.7, §1.3 |
-| DES-DOM-002 | Workspace 聚合根 | F-001~004, F-109, F-047, F-131 |
+| DES-DOM-002 | Workspace 聚合根 | F-001~004, F-109, F-047 |
 | DES-DOM-003 | Layout Tree（空间树） | F-001~004, F-049, F-025~026, F-154 |
 | DES-DOM-004 | Dock Item 统一模型 | F-019, F-145, F-143, F-006~009, F-036~037 |
 | DES-DOM-005 | Content Reference | F-006~007, F-046, F-095 |
 | DES-DOM-006 | Auto-hide 与 Collapsed | F-017~018, F-012, F-154 |
 | DES-DOM-007 | 强类型 ID | F-109, F-028, F-124 |
 | DES-DOM-008 | 不变量 | F-133 等 |
+| DES-DOM-009 | ToolBar 状态与派生投影 | F-020~024, F-140, F-149~153 |
+| DES-DOM-010 | 尺寸约束、折叠与空间重分配 | F-014~016, F-033, F-047, F-078, F-082, F-104, F-141, F-144, F-148 |
+| DES-DOM-011 | Editor Tab 顺序、选择与最近访问状态 | F-034, F-038~040, F-042~045, F-048, F-138 |
 | DES-OP-001 | Operation 模型 | F-027~029, F-069, F-049 等 |
 | DES-OP-002 | Transaction Pipeline | F-133, F-041, F-110~115 |
 | DES-OP-003 | Async Guard | F-041, F-029 |
 | DES-OP-004 | Reversible Patch | F-133, F-069, F-156 |
 | DES-OP-005 | Undo / Redo | F-156, F-047 |
 | DES-OP-006 | IAtlasWorkspace 公共接口 | F-110~115, F-101~103 |
+| DES-OP-007 | Tool Panel 移动、排序与 ToolBar 操作合同 | F-022, F-069~071, F-140, F-142, F-151, F-156 |
+| DES-OP-008 | 声明式布局定义与原子 Reconciliation | F-001~005, F-010, F-047, F-099~100, F-122, F-144 |
+| DES-OP-009 | Command、Query 与领域事件接口 | F-030, F-101~104, F-106~115, F-121, F-141, F-146 |
 | DES-INT-001 | JS / .NET 边界划分 | NF-004, F-050~068, F-073~078 |
 | DES-INT-002 | 根级 Interaction Controller | NF-004, F-109 |
 | DES-INT-003 | 拖拽投放模型 | F-050~068, F-069, F-150~153, F-155, F-071 |
 | DES-INT-004 | 性能不变量 | NF-004, NF-005 |
+| DES-INT-005 | Panel Drag Session 与提交协议 | F-068~071, F-133, F-140, F-142, F-147, F-153, NF-004 |
+| DES-INT-006 | Panel Target Resolver、投放骨架与预览 | F-069, F-071, F-148, F-150~155, NF-004~005 |
+| DES-INT-007 | Splitter 高级交互与控制 | F-073~078, F-080~082, F-104, F-148, NF-003~004, NF-007 |
+| DES-INT-008 | Keyboard Command、焦点导航与快捷键配置 | F-035, F-041, F-116~118, NF-003, NF-007 |
 | DES-RND-001 | ContentTemplate | F-006~008, F-105 |
 | DES-RND-002 | ContentProvider | F-006, F-119 |
 | DES-RND-003 | AtlasContentContext | F-007~008, F-035 |
 | DES-RND-004 | ErrorBoundary | F-119~120, F-128 |
-| DES-RND-005 | Content Lifetime | F-027~029, F-031~032, F-069 |
+| DES-RND-005 | Content Lifetime | F-027~029, F-031~032, F-069~070 |
+| DES-RND-006 | ToolBar 渲染与交互投影 | F-020~024, F-022, F-140, F-149~153, NF-003, NF-007 |
+| DES-RND-007 | Panel 移动时的内容身份与状态保持 | F-069~070, F-120, F-128 |
+| DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
+| DES-RND-009 | Editor Tab Strip、溢出与上下文菜单 | F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007 |
 | DES-PER-001 | 序列化范围 | F-085~088, F-091~092 |
-| DES-PER-002 | XML Schema | F-085~088 |
+| DES-PER-002 | XML Schema | F-021, F-085~088, F-140, F-149 |
 | DES-PER-003 | Restore Pipeline | F-086, F-088, F-094~095, F-123 |
 | DES-PER-004 | V1 迁移 | F-085~088 |
 | DES-PER-005 | 资源限制与安全 | F-088, F-123 |
+| DES-PER-006 | Layout Preset 生命周期 | F-096~098 |
+| DES-PER-007 | Restore Identity Remap 与报告 | F-086, F-089~090, F-123~124 |
+| DES-PER-008 | 存储降级、Allowlisted Repair 与严重错误回退 | F-093~095, F-123, F-125~127 |
+| DES-ERR-001 | Typed Failure、Content Registry 与诊断边界 | F-030, F-119, F-121~124, F-128 |
+| DES-NFR-001 | 所有权、释放与内存上限 | F-029, F-114, F-147, NF-001 |
+| DES-NFR-002 | Reduced Motion | NF-008 |
+| DES-NFR-003 | WAI-ARIA 语义与焦点合同 | F-022, F-035, F-116~118, NF-003, NF-007 |
+| DES-NFR-004 | 内容信任模式与安全隔离 | F-120, F-128, NF-006 |
 | DES-PRJ-001 | 模块划分与依赖方向 | F-109, NF-002 |
-| DES-PRJ-002 | TypeScript 模块划分 | NF-004 |
+| DES-PRJ-002 | TypeScript 模块划分 | NF-003~004, NF-006, NF-008 |
+| DES-PRJ-003 | ToolBar 与 Panel 拖拽验证矩阵 | F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007 |
+
+---
+
+## 附录 D：SRS—HLD 完整设计追溯矩阵
+
+本矩阵覆盖 SRS 正文中的 150 个正式需求块。连续且具有相同设计责任和状态的需求合并为一行；
+`来源` 字段与本矩阵由同一编号展开规则校验。仅出现在 SRS 索引/变更记录、没有正式需求块和 AC 的
+编号不计入覆盖率。
+
+状态含义：
+
+- `Designed`：已有明确状态、接口、失败语义和验证责任
+- `Partial`：主体设计存在，但仍有用户可感知合同待确认
+- `Open`：SRS 冲突尚未裁决，相关实现不得擅自选择
+- `Deferred`：SRS 明确不在当前 Phase
+
+追溯状态描述“需求是否已有设计责任”，不描述代码实施状态。后续 Agent 必须同时满足 §10 的
+DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 `Implemented` 或 `Verified`。
+
+### D.1 状态例外与重点验证
+
+| SRS 需求 | 主要设计条目 | 验证层 | 状态/说明 |
+|----------|-------------|-------|----------|
+| REQ-F-020 | DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Designed |
+| REQ-F-021 | DES-DOM-009、DES-RND-006、DES-PER-001~002 | Core/Blazor/Persistence | Designed |
+| REQ-F-022 | DES-NFR-003、DES-OP-007、DES-RND-006 | Core/Blazor/E2E | Designed |
+| REQ-F-023 | DES-DOM-006、DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Designed |
+| REQ-F-024 | DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Deferred，与 RTL 总体需求一致 |
+| REQ-F-069 | DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
+| REQ-F-070 | DES-RND-005、DES-RND-007 | Blazor/E2E | Designed，OI-002 已由 ADR-0012 关闭 |
+| REQ-F-071 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed |
+| REQ-F-140 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
+| REQ-F-142 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed |
+| REQ-F-147 | DES-INT-002、DES-INT-005、DES-PRJ-003 | Interop/Blazor | Designed |
+| REQ-F-148 | DES-INT-006、DES-DOM-003 | Interop/E2E | Designed |
+| REQ-F-149 | DES-DOM-009、DES-RND-006 | Core/Blazor | Designed |
+| REQ-F-150 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
+| REQ-F-151 | DES-OP-007、DES-INT-006 | Core/Interop/E2E | Designed |
+| REQ-F-152 | — | — | Deferred，Floating Window 不在当前 Phase |
+| REQ-F-153 | DES-INT-005~006、DES-PRJ-003 | Interop/E2E | Designed |
+| REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006 | Core/Interop/E2E | Designed |
+| REQ-F-155 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
+| REQ-F-156 | DES-OP-004~005、DES-OP-007 | Core/E2E | Designed |
+| REQ-NF-003 | DES-INT-007~008、DES-NFR-003 | Blazor/E2E | Designed |
+| REQ-NF-004 | DES-INT-001~006、DES-PRJ-003 | Interop/Performance | Designed |
+| REQ-NF-005 | DES-INT-004、DES-INT-006、DES-PRJ-003 | Interop/Performance | Designed |
+| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Designed，OI-006 已由 ADR-0013 关闭 |
+| REQ-NF-007 | DES-NFR-003、DES-RND-006、DES-RND-009 | Blazor/E2E | Designed |
+
+### D.2 完整需求映射
+
+| SRS 需求 | 设计条目 | 状态 |
+|----------|----------|------|
+| REQ-F-001~002、REQ-F-004 | DES-ARCH-001、DES-DOM-002、DES-DOM-003、DES-OP-008 | Designed |
+| REQ-F-003 | DES-ARCH-001、DES-DOM-002、DES-DOM-003、DES-OP-008、DES-RND-008 | Designed |
+| REQ-F-005、REQ-F-010 | DES-OP-008、DES-RND-008 | Designed |
+| REQ-F-006 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002 | Designed |
+| REQ-F-007 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-003 | Designed |
+| REQ-F-008 | DES-DOM-004、DES-RND-001、DES-RND-003 | Designed |
+| REQ-F-009 | DES-DOM-004、DES-RND-009 | Designed |
+| REQ-F-011 | DES-RND-008 | Designed |
+| REQ-F-012 | DES-DOM-006、DES-OP-001 | Designed |
+| REQ-F-014~016、REQ-F-033 | DES-DOM-010 | Designed |
+| REQ-F-017 | DES-DOM-006、DES-DOM-008、DES-OP-001 | Designed |
+| REQ-F-018 | DES-DOM-006、DES-DOM-008 | Designed |
+| REQ-F-019 | DES-DOM-004、DES-DOM-008、DES-RND-008 | Designed |
+| REQ-F-020、REQ-F-023 | DES-DOM-001、DES-DOM-009、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-021 | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-022 | DES-DOM-001、DES-DOM-009、DES-NFR-003、DES-OP-007、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-024 | DES-DOM-001、DES-DOM-009、DES-PRJ-003、DES-RND-006 | Deferred |
+| REQ-F-025~026 | DES-DOM-003 | Designed |
+| REQ-F-027 | DES-OP-001、DES-RND-005 | Designed |
+| REQ-F-028 | DES-DOM-007、DES-OP-001、DES-RND-005 | Designed |
+| REQ-F-029 | DES-NFR-001、DES-OP-001、DES-OP-003、DES-RND-005 | Designed |
+| REQ-F-030、REQ-F-121 | DES-ERR-001、DES-OP-009 | Designed |
+| REQ-F-031~032 | DES-DOM-008、DES-RND-005、DES-RND-008 | Designed |
+| REQ-F-034 | DES-DOM-011 | Designed |
+| REQ-F-035 | DES-INT-008、DES-NFR-003、DES-RND-003、DES-RND-009 | Designed |
+| REQ-F-036~037、REQ-F-143、REQ-F-145 | DES-DOM-004 | Designed |
+| REQ-F-038~040、REQ-F-042~045、REQ-F-048、REQ-F-138 | DES-DOM-011、DES-RND-009 | Designed |
+| REQ-F-041 | DES-INT-008、DES-OP-002、DES-OP-003、DES-RND-009 | Designed |
+| REQ-F-046 | DES-DOM-005 | Designed |
+| REQ-F-047 | DES-ARCH-002、DES-DOM-002、DES-DOM-010、DES-OP-001、DES-OP-005、DES-OP-008 | Designed |
+| REQ-F-049 | DES-DOM-003、DES-OP-001 | Designed |
+| REQ-F-050~060、REQ-F-063~067 | DES-INT-001、DES-INT-003 | Designed |
+| REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
+| REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
+| REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
+| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
+| REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
+| REQ-F-078 | DES-DOM-010、DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
+| REQ-F-080~081 | DES-INT-007 | Designed |
+| REQ-F-082 | DES-DOM-010、DES-INT-007 | Designed |
+| REQ-F-085、REQ-F-087 | DES-PER-001、DES-PER-002、DES-PER-004 | Designed |
+| REQ-F-086 | DES-OP-001、DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-007 | Designed |
+| REQ-F-088 | DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-005 | Designed |
+| REQ-F-089~090 | DES-PER-007 | Designed |
+| REQ-F-091~092 | DES-PER-001 | Designed |
+| REQ-F-093、REQ-F-125~127 | DES-PER-008 | Designed |
+| REQ-F-094 | DES-PER-003、DES-PER-008 | Designed |
+| REQ-F-095 | DES-DOM-005、DES-PER-003、DES-PER-008 | Designed |
+| REQ-F-096~098 | DES-PER-006 | Designed |
+| REQ-F-099 | DES-OP-008 | Designed |
+| REQ-F-100 | DES-ARCH-004、DES-OP-008 | Designed |
+| REQ-F-101~103 | DES-OP-006、DES-OP-009 | Designed |
+| REQ-F-104 | DES-DOM-010、DES-INT-007、DES-OP-009 | Designed |
+| REQ-F-105 | DES-RND-001、DES-RND-009 | Designed |
+| REQ-F-106~108、REQ-F-146 | DES-OP-009 | Designed |
+| REQ-F-109 | DES-ARCH-001、DES-ARCH-003、DES-ARCH-004、DES-DOM-002、DES-DOM-007、DES-INT-002、DES-OP-009、DES-PRJ-001 | Designed |
+| REQ-F-110~113、REQ-F-115 | DES-ARCH-002、DES-ARCH-004、DES-OP-002、DES-OP-006、DES-OP-009 | Designed |
+| REQ-F-114 | DES-ARCH-002、DES-ARCH-004、DES-NFR-001、DES-OP-002、DES-OP-006、DES-OP-009 | Designed |
+| REQ-F-116~118 | DES-INT-008、DES-NFR-003 | Designed |
+| REQ-F-119 | DES-ERR-001、DES-RND-002、DES-RND-004 | Designed |
+| REQ-F-120 | DES-NFR-004、DES-RND-004、DES-RND-007 | Designed |
+| REQ-F-122 | DES-ERR-001、DES-OP-008 | Designed |
+| REQ-F-123 | DES-ERR-001、DES-PER-003、DES-PER-005、DES-PER-007、DES-PER-008 | Designed |
+| REQ-F-124 | DES-DOM-007、DES-ERR-001、DES-PER-007 | Designed |
+| REQ-F-128 | DES-ERR-001、DES-NFR-004、DES-RND-004、DES-RND-007 | Designed |
+| REQ-F-133 | DES-ARCH-002、DES-ARCH-003、DES-ARCH-004、DES-DOM-008、DES-INT-005、DES-OP-002、DES-OP-004 | Designed |
+| REQ-F-140 | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-141 | DES-DOM-010、DES-OP-009 | Designed |
+| REQ-F-142 | DES-INT-005、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-F-144 | DES-DOM-010、DES-OP-008 | Designed |
+| REQ-F-147 | DES-INT-005、DES-NFR-001、DES-PRJ-003 | Designed |
+| REQ-F-148 | DES-DOM-010、DES-INT-006、DES-INT-007 | Designed |
+| REQ-F-149 | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-RND-006 | Designed |
+| REQ-F-150 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-151 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-OP-007、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-152 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Deferred |
+| REQ-F-153 | DES-DOM-009、DES-INT-003、DES-INT-005、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
+| REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | Designed |
+| REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Designed |
+| REQ-F-156 | DES-OP-004、DES-OP-005、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-NF-001 | DES-NFR-001 | Designed |
+| REQ-NF-002 | DES-PRJ-001 | Designed |
+| REQ-NF-003 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | Designed |
+| REQ-NF-004 | DES-ARCH-001、DES-ARCH-004、DES-INT-001、DES-INT-002、DES-INT-004、DES-INT-005、DES-INT-006、DES-INT-007、DES-PRJ-002、DES-PRJ-003 | Designed |
+| REQ-NF-005 | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | Designed |
+| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Designed |
+| REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
+| REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |

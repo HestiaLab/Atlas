@@ -10,15 +10,16 @@
 
 ## Validation
 
-- [ ] `dotnet build` — all projects (Atlas, Atlas.Demo, Atlas.Tests)
-- [ ] `dotnet test` — all xUnit tests pass
-- [ ] `dotnet format --verify-no-changes` — no style violations
+- [ ] `dotnet build Atlas.sln` — all projects
+- [ ] `dotnet test Atlas.sln` — all xUnit tests pass
+- [ ] `dotnet format Atlas.sln --verify-no-changes` — no style violations
+- [ ] `npm ci && npm run typecheck && npm run test:js && npm run build:js` in `src/Atlas.Blazor`
 - [ ] Manual smoke: `dotnet run --project src/Atlas.Demo` and inspect layout
 - [ ] Not run; reason:
 
 ## Impact
 
-- Public API impact (Atlas component model, service interfaces):
+- Public API impact (`Atlas.Core` / `Atlas.Blazor`):
 - NuGet packaging or dependency impact:
 - Documentation impact (`docs/`):
 - TypeScript / JS interop impact:

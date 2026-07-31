@@ -1,0 +1,211 @@
+#nullable enable
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition
+Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasContentLifetimeMode.Default = 0 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasContentLifetimeMode.KeepAliveWithinGroup = 1 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.get -> Atlas.Core.Layout.EditorActivationPolicy
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.set -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.AtlasDocumentGroupDefinition() -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ChildContent.set -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.Id.get -> Atlas.Core.LayoutNodeId
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.OverflowMode.get -> Atlas.Core.Layout.EditorOverflowMode
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.OverflowMode.set -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.RetentionPolicy.get -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.RetentionPolicy.set -> void
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.SelectedItemId.get -> Atlas.Core.DockItemId?
+Atlas.Blazor.Components.AtlasDocumentGroupDefinition.SelectedItemId.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.AtlasDocumentItemDefinition() -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Capabilities.get -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Capabilities.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.ContentKind.get -> string!
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.ContentKind.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.IconKey.get -> string?
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.IconKey.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Id.get -> Atlas.Core.DockItemId
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.IsPinned.get -> bool
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.IsPinned.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.ResourceId.get -> string!
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.ResourceId.set -> void
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Title.get -> string?
+Atlas.Blazor.Components.AtlasDocumentItemDefinition.Title.set -> void
+Atlas.Blazor.Components.AtlasHostError
+Atlas.Blazor.Components.AtlasHostError.AtlasHostError(Atlas.Blazor.Components.AtlasHostErrorCode code, string! diagnosticId, string! messageKey, Atlas.Core.WorkspaceId? workspaceId = null, Atlas.Core.DockItemId? itemId = null, Atlas.Core.LayoutNodeId? nodeId = null) -> void
+Atlas.Blazor.Components.AtlasHostError.Code.get -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostError.DiagnosticId.get -> string!
+Atlas.Blazor.Components.AtlasHostError.ItemId.get -> Atlas.Core.DockItemId?
+Atlas.Blazor.Components.AtlasHostError.MessageKey.get -> string!
+Atlas.Blazor.Components.AtlasHostError.NodeId.get -> Atlas.Core.LayoutNodeId?
+Atlas.Blazor.Components.AtlasHostError.WorkspaceId.get -> Atlas.Core.WorkspaceId?
+Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.ContentNotRegistered = 3 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.ContentRenderFailed = 4 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.DefinitionInvalid = 2 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.FocusFailed = 5 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.InitializationModeConflict = 1 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.Unexpected = 6 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasKeyboardBinding
+Atlas.Blazor.Components.AtlasKeyboardBinding.AtlasKeyboardBinding(Atlas.Blazor.Components.AtlasKeyboardChord! chord, Atlas.Blazor.Components.AtlasKeyboardCommand command, bool isGlobal = false) -> void
+Atlas.Blazor.Components.AtlasKeyboardBinding.Chord.get -> Atlas.Blazor.Components.AtlasKeyboardChord!
+Atlas.Blazor.Components.AtlasKeyboardBinding.Command.get -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardBinding.IsGlobal.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord
+Atlas.Blazor.Components.AtlasKeyboardChord.Alt.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.AtlasKeyboardChord(string! code, bool control = false, bool shift = false, bool alt = false, bool meta = false) -> void
+Atlas.Blazor.Components.AtlasKeyboardChord.Code.get -> string!
+Atlas.Blazor.Components.AtlasKeyboardChord.Control.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.Meta.get -> bool
+Atlas.Blazor.Components.AtlasKeyboardChord.Shift.get -> bool
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.AtlasSandboxedFrameOptions(string! source, string! title, int maxMessageBytes = 65536) -> void
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.MaxMessageBytes.get -> int
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.Source.get -> string!
+Atlas.Blazor.Components.AtlasSandboxedFrameOptions.Title.get -> string!
+Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.CloseActiveDocument = 2 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusBlockEnd = 6 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusBlockStart = 5 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusInlineEnd = 4 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.FocusInlineStart = 3 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.NextTab = 0 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommand.PreviousTab = 1 -> Atlas.Blazor.Components.AtlasKeyboardCommand
+Atlas.Blazor.Components.AtlasKeyboardCommandMap
+Atlas.Blazor.Components.AtlasKeyboardCommandMap.AtlasKeyboardCommandMap(System.Collections.Generic.IEnumerable<Atlas.Blazor.Components.AtlasKeyboardBinding!>! bindings) -> void
+Atlas.Blazor.Components.AtlasKeyboardCommandMap.Bindings.get -> System.Collections.Generic.IReadOnlyList<Atlas.Blazor.Components.AtlasKeyboardBinding!>!
+Atlas.Blazor.Components.AtlasSplitDefinition
+Atlas.Blazor.Components.AtlasSplitDefinition.AtlasSplitDefinition() -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.Axis.get -> Atlas.Core.Layout.SplitAxis
+Atlas.Blazor.Components.AtlasSplitDefinition.Axis.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.Basis.get -> Atlas.Core.Layout.SplitBasis
+Atlas.Blazor.Components.AtlasSplitDefinition.Basis.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseFirst.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseFirst.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseSecond.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.CanCollapseSecond.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasSplitDefinition.ChildContent.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.Constraints.get -> Atlas.Core.Layout.SplitConstraints
+Atlas.Blazor.Components.AtlasSplitDefinition.Constraints.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.Id.get -> Atlas.Core.LayoutNodeId
+Atlas.Blazor.Components.AtlasSplitDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.IsLocked.get -> bool
+Atlas.Blazor.Components.AtlasSplitDefinition.IsLocked.set -> void
+Atlas.Blazor.Components.AtlasSplitDefinition.SplitterClass.get -> string?
+Atlas.Blazor.Components.AtlasSplitDefinition.SplitterClass.set -> void
+Atlas.Blazor.Components.AtlasSplitterOptions
+Atlas.Blazor.Components.AtlasSplitterOptions.AtlasSplitterOptions(double keyboardStepPixels = 10, int keyboardCommitDelayMilliseconds = 500) -> void
+Atlas.Blazor.Components.AtlasSplitterOptions.KeyboardCommitDelayMilliseconds.get -> int
+Atlas.Blazor.Components.AtlasSplitterOptions.KeyboardStepPixels.get -> double
+Atlas.Blazor.Components.AtlasSplitterPresentation
+Atlas.Blazor.Components.AtlasSplitterPresentation.AtlasSplitterPresentation(bool isLocked = false, string? cssClass = null, bool canCollapseFirst = false, bool canCollapseSecond = false) -> void
+Atlas.Blazor.Components.AtlasSplitterPresentation.CanCollapseFirst.get -> bool
+Atlas.Blazor.Components.AtlasSplitterPresentation.CanCollapseSecond.get -> bool
+Atlas.Blazor.Components.AtlasSplitterPresentation.CssClass.get -> string?
+Atlas.Blazor.Components.AtlasSplitterPresentation.IsLocked.get -> bool
+Atlas.Blazor.Components.AtlasToolGroupDefinition
+Atlas.Blazor.Components.AtlasToolGroupDefinition.AtlasToolGroupDefinition() -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasToolGroupDefinition.ChildContent.set -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.Id.get -> Atlas.Core.LayoutNodeId
+Atlas.Blazor.Components.AtlasToolGroupDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.LogicalRegion.get -> Atlas.Core.Placement.LogicalRegion
+Atlas.Blazor.Components.AtlasToolGroupDefinition.LogicalRegion.set -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.RetentionPolicy.get -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Blazor.Components.AtlasToolGroupDefinition.RetentionPolicy.set -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.SelectedItemId.get -> Atlas.Core.DockItemId?
+Atlas.Blazor.Components.AtlasToolGroupDefinition.SelectedItemId.set -> void
+Atlas.Blazor.Components.AtlasToolGroupDefinition.Visibility.get -> Atlas.Core.Layout.GroupVisibility
+Atlas.Blazor.Components.AtlasToolGroupDefinition.Visibility.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition
+Atlas.Blazor.Components.AtlasToolItemDefinition.AtlasToolItemDefinition() -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.Capabilities.get -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Blazor.Components.AtlasToolItemDefinition.Capabilities.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.ContentKind.get -> string!
+Atlas.Blazor.Components.AtlasToolItemDefinition.ContentKind.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.IconKey.get -> string?
+Atlas.Blazor.Components.AtlasToolItemDefinition.IconKey.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.Id.get -> Atlas.Core.DockItemId
+Atlas.Blazor.Components.AtlasToolItemDefinition.Id.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.ResourceId.get -> string!
+Atlas.Blazor.Components.AtlasToolItemDefinition.ResourceId.set -> void
+Atlas.Blazor.Components.AtlasToolItemDefinition.Title.get -> string?
+Atlas.Blazor.Components.AtlasToolItemDefinition.Title.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost
+Atlas.Blazor.Components.AtlasWorkspaceHost.AtlasWorkspaceHost() -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasContentContext!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.get -> Atlas.Blazor.Components.WorkspaceContentLifetimeOptions!
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasEmptyStateContext!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentEmptyTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentHeaderTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasItemHeaderContext!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.DocumentHeaderTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.EnableInteractions.get -> bool
+Atlas.Blazor.Components.AtlasWorkspaceHost.EnableInteractions.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ErrorTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Components.AtlasHostError!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ErrorTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.get -> Atlas.Blazor.Components.AtlasKeyboardCommandMap?
+Atlas.Blazor.Components.AtlasWorkspaceHost.KeyboardCommands.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.get -> Microsoft.AspNetCore.Components.EventCallback<Atlas.Blazor.Components.AtlasHostError!>
+Atlas.Blazor.Components.AtlasWorkspaceHost.OnError.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SandboxedFrameResolver.get -> System.Func<Atlas.Blazor.Content.AtlasContentContext!, Atlas.Blazor.Components.AtlasSandboxedFrameOptions?>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SandboxedFrameResolver.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.get -> Atlas.Blazor.Components.AtlasSplitterOptions?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterOptions.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterPresentation.get -> System.Func<Atlas.Core.LayoutNodeId, Atlas.Blazor.Components.AtlasSplitterPresentation?>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.SplitterPresentation.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.StatusBarContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasWorkspaceHost.StatusBarContent.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ToolEmptyTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasEmptyStateContext!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ToolEmptyTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ToolHeaderTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasItemHeaderContext!>?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ToolHeaderTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.TopToolbarContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasWorkspaceHost.TopToolbarContent.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.Workspace.get -> Atlas.Core.IAtlasWorkspace?
+Atlas.Blazor.Components.AtlasWorkspaceHost.Workspace.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceId.get -> Atlas.Core.WorkspaceId?
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceId.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceOptions.get -> Atlas.Core.AtlasWorkspaceOptions?
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceOptions.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceOwnership.get -> Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.AtlasWorkspaceHost.WorkspaceOwnership.set -> void
+Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.WorkspaceOwnership.Automatic = 0 -> Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.WorkspaceOwnership.External = 1 -> Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.WorkspaceOwnership.Host = 2 -> Atlas.Blazor.Components.WorkspaceOwnership
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.MaxCachedItems.get -> int
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.Mode.get -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.WorkspaceContentLifetimeOptions.WorkspaceContentLifetimeOptions(Atlas.Blazor.Components.AtlasContentLifetimeMode mode = Atlas.Blazor.Components.AtlasContentLifetimeMode.Default, int maxCachedItems = 20) -> void
+Atlas.Blazor.Content.AtlasContentCommands
+Atlas.Blazor.Content.AtlasContentCommands.ActivateAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Blazor.Content.AtlasContentCommands.CloseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Blazor.Content.AtlasContentCommands.UpdatePresentationAsync(string? title, string? iconKey, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Blazor.Content.AtlasContentComponent
+Atlas.Blazor.Content.AtlasContentComponent.AtlasContentComponent() -> void
+Atlas.Blazor.Content.AtlasContentComponent.Content.get -> Atlas.Blazor.Content.AtlasContentContext!
+Atlas.Blazor.Content.AtlasContentComponent.Content.set -> void
+Atlas.Blazor.Content.AtlasContentContext
+Atlas.Blazor.Content.AtlasContentContext.Commands.get -> Atlas.Blazor.Content.AtlasContentCommands!
+Atlas.Blazor.Content.AtlasContentContext.Item.get -> Atlas.Core.Items.DockItem!
+Atlas.Blazor.Content.AtlasContentContext.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Blazor.Content.AtlasContentContext.Reference.get -> Atlas.Core.Items.ContentReference
+Atlas.Blazor.Content.AtlasEmptyStateContext
+Atlas.Blazor.Content.AtlasEmptyStateContext.GroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Blazor.Content.AtlasEmptyStateContext.GroupKind.get -> Atlas.Core.Items.DockItemKind
+Atlas.Blazor.Content.AtlasEmptyStateContext.RetentionPolicy.get -> Atlas.Core.Layout.GroupRetentionPolicy
+Atlas.Blazor.Content.AtlasEmptyStateContext.WorkspaceId.get -> Atlas.Core.WorkspaceId
+Atlas.Blazor.Content.AtlasItemHeaderContext
+Atlas.Blazor.Content.AtlasItemHeaderContext.IsSelected.get -> bool
+Atlas.Blazor.Content.AtlasItemHeaderContext.Item.get -> Atlas.Core.Items.DockItem!
+Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions
+static Atlas.Blazor.Components.AtlasKeyboardCommandMap.Default.get -> Atlas.Blazor.Components.AtlasKeyboardCommandMap!
+static Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions.AddAtlasContent<TComponent>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! kind) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions.AddAtlasWorkspace(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

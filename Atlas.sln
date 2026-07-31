@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Core", "src\Atlas.Core\Atlas.Core.csproj", "{B30F616A-6E5D-4F9F-A0A2-1E51375C4441}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Blazor", "src\Atlas.Blazor\Atlas.Blazor.csproj", "{3C48F2C7-C286-45B3-A156-D70327B3867B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Core.Tests", "tests\Atlas.Core.Tests\Atlas.Core.Tests.csproj", "{0A33C514-3D33-44C2-85C8-72C70C9A19DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlas.Blazor.Tests", "tests\Atlas.Blazor.Tests\Atlas.Blazor.Tests.csproj", "{6D820CA3-EF55-474A-B18E-0D7D85A7D5DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B30F616A-6E5D-4F9F-A0A2-1E51375C4441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B30F616A-6E5D-4F9F-A0A2-1E51375C4441}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B30F616A-6E5D-4F9F-A0A2-1E51375C4441}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B30F616A-6E5D-4F9F-A0A2-1E51375C4441}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C48F2C7-C286-45B3-A156-D70327B3867B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C48F2C7-C286-45B3-A156-D70327B3867B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C48F2C7-C286-45B3-A156-D70327B3867B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C48F2C7-C286-45B3-A156-D70327B3867B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A33C514-3D33-44C2-85C8-72C70C9A19DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A33C514-3D33-44C2-85C8-72C70C9A19DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A33C514-3D33-44C2-85C8-72C70C9A19DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A33C514-3D33-44C2-85C8-72C70C9A19DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D820CA3-EF55-474A-B18E-0D7D85A7D5DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D820CA3-EF55-474A-B18E-0D7D85A7D5DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D820CA3-EF55-474A-B18E-0D7D85A7D5DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D820CA3-EF55-474A-B18E-0D7D85A7D5DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

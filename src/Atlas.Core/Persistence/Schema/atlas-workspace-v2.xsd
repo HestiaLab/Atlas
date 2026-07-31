@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:atlas:workspace:2"
+           xmlns="urn:atlas:workspace:2"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+  <xs:simpleType name="Identifier">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="4096" />
+      <xs:pattern value=".*\S.*" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SchemaVersion">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="2\.[0-9]+" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="FiniteNonNegative">
+    <xs:restriction base="xs:double">
+      <xs:minInclusive value="0" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="UnitRatio">
+    <xs:restriction base="xs:double">
+      <xs:minExclusive value="0" />
+      <xs:maxExclusive value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="AtlasWorkspace">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Items" type="ItemsType" />
+        <xs:element name="Layout" type="LayoutType" />
+        <xs:element name="ToolBars" type="ToolBarsType" />
+        <xs:element name="AutoHide" type="AutoHideType" />
+      </xs:sequence>
+      <xs:attribute name="schemaVersion" type="SchemaVersion" use="required" />
+      <xs:attribute name="workspaceId" type="Identifier" use="required" />
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="ItemsType">
+    <xs:sequence>
+      <xs:element name="Item" type="ItemType" minOccurs="0" maxOccurs="4096" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ItemType">
+    <xs:sequence>
+      <xs:element name="Content" type="ContentType" />
+      <xs:element name="DocumentState" type="DocumentStateType" minOccurs="0" />
+    </xs:sequence>
+    <xs:attribute name="id" type="Identifier" use="required" />
+    <xs:attribute name="kind" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Tool" /><xs:enumeration value="Document" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="title" type="Identifier" use="required" />
+    <xs:attribute name="iconKey" type="Identifier" />
+    <xs:attribute name="capabilities" type="xs:nonNegativeInteger" use="required" />
+  </xs:complexType>
+  <xs:complexType name="ContentType">
+    <xs:attribute name="kind" type="Identifier" use="required" />
+    <xs:attribute name="resourceId" type="Identifier" use="required" />
+  </xs:complexType>
+  <xs:complexType name="DocumentStateType">
+    <xs:attribute name="isPinned" type="xs:boolean" use="required" />
+    <xs:attribute name="isPreview" type="xs:boolean" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="LayoutType">
+    <xs:choice minOccurs="0">
+      <xs:element name="Group" type="GroupType" />
+      <xs:element name="Split" type="SplitType" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="NodeContainerType">
+    <xs:choice>
+      <xs:element name="Group" type="GroupType" />
+      <xs:element name="Split" type="SplitType" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="SplitType">
+    <xs:sequence>
+      <xs:element name="First" type="NodeContainerType" />
+      <xs:element name="Second" type="NodeContainerType" />
+    </xs:sequence>
+    <xs:attribute name="id" type="Identifier" use="required" />
+    <xs:attribute name="axis" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="InlineChildren" /><xs:enumeration value="BlockChildren" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="basisKind" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="FixedPixels" /><xs:enumeration value="Proportional" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="basisValue" type="FiniteNonNegative" use="required" />
+    <xs:attribute name="basisAnchor">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="First" /><xs:enumeration value="Second" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="firstMinimum" type="FiniteNonNegative" use="required" />
+    <xs:attribute name="firstMaximum" type="FiniteNonNegative" />
+    <xs:attribute name="secondMinimum" type="FiniteNonNegative" use="required" />
+    <xs:attribute name="secondMaximum" type="FiniteNonNegative" />
+  </xs:complexType>
+  <xs:complexType name="GroupType">
+    <xs:sequence>
+      <xs:element name="EditorState" type="EditorStateType" minOccurs="0" />
+      <xs:element name="ItemRef" type="ItemRefType" minOccurs="0" maxOccurs="1024" />
+    </xs:sequence>
+    <xs:attribute name="id" type="Identifier" use="required" />
+    <xs:attribute name="kind" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Tool" /><xs:enumeration value="Document" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="retentionPolicy" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Persistent" /><xs:enumeration value="Dynamic" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="visibility" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Expanded" /><xs:enumeration value="Collapsed" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="selectedItemId" type="Identifier" />
+    <xs:attribute name="logicalRegion">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="InlineStartUpper" /><xs:enumeration value="InlineStartLower" />
+        <xs:enumeration value="InlineEndUpper" /><xs:enumeration value="InlineEndLower" />
+        <xs:enumeration value="BlockEndInlineStart" /><xs:enumeration value="BlockEndInlineEnd" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="EditorStateType">
+    <xs:sequence>
+      <xs:element name="RecentlyVisited" type="ItemRefType" minOccurs="0" maxOccurs="1024" />
+    </xs:sequence>
+    <xs:attribute name="overflowMode" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Scroll" /><xs:enumeration value="Menu" /><xs:enumeration value="Wrap" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="activationPolicy" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Adjacent" /><xs:enumeration value="MostRecentlyVisited" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="ItemRefType">
+    <xs:attribute name="id" type="Identifier" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="ToolBarsType">
+    <xs:sequence>
+      <xs:element name="ToolBar" type="ToolBarType" minOccurs="0" maxOccurs="2" />
+      <xs:element name="RegionOrder" type="RegionOrderType" minOccurs="0" maxOccurs="6" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ToolBarType">
+    <xs:attribute name="side" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="InlineStart" /><xs:enumeration value="InlineEnd" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="visibility" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Expanded" /><xs:enumeration value="Collapsed" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="RegionOrderType">
+    <xs:sequence>
+      <xs:element name="ItemRef" type="ItemRefType" minOccurs="0" maxOccurs="1024" />
+    </xs:sequence>
+    <xs:attribute name="region" type="Identifier" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="AutoHideType">
+    <xs:sequence>
+      <xs:element name="Strip" type="StripType" minOccurs="0" maxOccurs="3" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="StripType">
+    <xs:sequence>
+      <xs:element name="Entry" type="AutoHideEntryType" minOccurs="0" maxOccurs="1024" />
+    </xs:sequence>
+    <xs:attribute name="edge" type="Identifier" use="required" />
+  </xs:complexType>
+  <xs:complexType name="AutoHideEntryType">
+    <xs:attribute name="itemId" type="Identifier" use="required" />
+    <xs:attribute name="preferredGroupId" type="Identifier" use="required" />
+    <xs:attribute name="preferredIndex" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="fallbackEdge" type="Identifier" use="required" />
+  </xs:complexType>
+</xs:schema>

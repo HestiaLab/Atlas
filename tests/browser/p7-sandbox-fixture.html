@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Atlas P7 sandbox E2E</title></head>
+<body>
+  <div id="parent-secret">parent-secret</div>
+  <main id="workspace"
+        data-atlas-host-id="p7-host"
+        data-atlas-workspace-id="p7-workspace">
+    <iframe id="sandbox"
+            title="Sandboxed Atlas content"
+            sandbox="allow-scripts"
+            referrerpolicy="no-referrer"
+            data-atlas-sandbox-frame="true"
+            data-atlas-protocol-version="1"
+            data-atlas-workspace-id="p7-workspace"
+            data-atlas-item-id="sandbox-item"
+            data-atlas-generation="3"
+            data-atlas-max-message-bytes="4096"
+            src="./p7-sandbox-child.html"></iframe>
+    <button data-testid="spoof" type="button">Send spoof</button>
+    <button data-testid="unknown" type="button">Send unknown</button>
+    <button data-testid="oversized" type="button">Send oversized</button>
+  </main>
+  <script type="module">
+    import { AtlasSandboxController } from "/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.js";
+
+    const root = document.getElementById("workspace");
+    const frame = document.getElementById("sandbox");
+    const controller = new AtlasSandboxController(root, {
+      hostId: "p7-host",
+      workspaceId: "p7-workspace",
+      generation: 3,
+      protocolVersion: 1
+    });
+    document.querySelector("[data-testid=spoof]").addEventListener("click", () => {
+      window.postMessage({
+        type: "atlas-sandbox-ready",
+        protocolVersion: 1,
+        workspaceId: "p7-workspace",
+        itemId: "sandbox-item",
+        generation: 3
+      }, "*");
+    });
+    document.querySelector("[data-testid=unknown]").addEventListener("click", () => {
+      frame.contentWindow.postMessage("send-unknown", "*");
+    });
+    document.querySelector("[data-testid=oversized]").addEventListener("click", () => {
+      frame.contentWindow.postMessage("send-oversized", "*");
+    });
+    window.addEventListener("beforeunload", () => controller.dispose(), { once: true });
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Atlas P8 hardening fixture</title>
+  <link rel="stylesheet" href="/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.css">
+  <style>
+    body { margin: 24px; font-family: sans-serif; }
+    .atlas-v2-workspace { width: 900px; height: 420px; border: 1px solid #777; }
+    .atlas-v2-split { width: 900px; height: 360px; display: grid; grid-template-columns: 400px 8px 492px; }
+    .atlas-v2-splitter { background: #555; }
+  </style>
+</head>
+<body>
+  <button type="button" data-testid="motion-on">Reduced motion on</button>
+  <button type="button" data-testid="motion-off">Reduced motion off</button>
+  <button type="button" data-testid="dispose-controller">Dispose controller</button>
+  <output id="evidence" data-message-count="0"></output>
+  <div class="atlas-v2-workspace" role="region" aria-label="P8 fixture"
+       data-atlas-host-id="p8-host" data-atlas-workspace-id="p8-workspace"
+       data-atlas-protocol-version="1" data-atlas-revision="4"
+       data-atlas-reduced-motion="system">
+    <div class="atlas-v2-split atlas-v2-split-inline" data-atlas-node-kind="split"
+         data-atlas-node-id="p8-split" data-atlas-split-axis="InlineChildren"
+         data-atlas-split-locked="false" data-atlas-split-ratio="0.45"
+         data-atlas-split-basis-kind="Proportional" data-atlas-split-basis-value="0.45"
+         data-atlas-revision="4" data-atlas-first-minimum="100"
+         data-atlas-second-minimum="100">
+      <section data-atlas-group-id="first">First</section>
+      <div class="atlas-v2-splitter" role="separator" aria-label="Resize P8 split"
+           aria-orientation="vertical" aria-disabled="false" tabindex="0"
+           data-atlas-split-id="p8-split"></div>
+      <section data-atlas-group-id="second">Second</section>
+    </div>
+  </div>
+  <script type="module">
+    const nativeMatchMedia = window.matchMedia.bind(window);
+    const reducedMotionQuery = new EventTarget();
+    reducedMotionQuery.matches = false;
+    reducedMotionQuery.media = "(prefers-reduced-motion: reduce)";
+    reducedMotionQuery.onchange = null;
+    reducedMotionQuery.addListener = listener => reducedMotionQuery.addEventListener("change", listener);
+    reducedMotionQuery.removeListener = listener => reducedMotionQuery.removeEventListener("change", listener);
+    window.matchMedia = query => query === reducedMotionQuery.media
+      ? reducedMotionQuery
+      : nativeMatchMedia(query);
+    import { attachAtlasController } from "/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.js";
+    const root = document.querySelector(".atlas-v2-workspace");
+    const evidence = document.querySelector("#evidence");
+    const messages = [];
+    const controller = attachAtlasController(root, {
+      hostId: "p8-host",
+      workspaceId: "p8-workspace",
+      generation: 1,
+      protocolVersion: 1
+    }, { invokeMethodAsync: async (_method, message) => {
+      messages.push(message);
+      evidence.dataset.messageCount = String(messages.length);
+    }});
+    const setMotion = value => {
+      reducedMotionQuery.matches = value;
+      reducedMotionQuery.dispatchEvent(new Event("change"));
+      evidence.dataset.reducedMotion = root.dataset.atlasReducedMotion;
+    };
+    document.querySelector("[data-testid=motion-on]").addEventListener("click", () => setMotion(true));
+    document.querySelector("[data-testid=motion-off]").addEventListener("click", () => setMotion(false));
+    document.querySelector("[data-testid=dispose-controller]").addEventListener("click", () => {
+      controller.dispose();
+      evidence.dataset.controllerDisposed = "true";
+    });
+    evidence.dataset.reducedMotion = root.dataset.atlasReducedMotion;
+    let startedAt = 0;
+    let frames = 0;
+    let moves = 0;
+    let framePending = false;
+    root.addEventListener("pointerdown", () => {
+      startedAt = performance.now();
+      frames = 0;
+      moves = 0;
+      framePending = false;
+    });
+    root.addEventListener("pointermove", () => {
+      moves += 1;
+      if (!framePending) {
+        framePending = true;
+        requestAnimationFrame(() => {
+          frames += 1;
+          framePending = false;
+        });
+      }
+    });
+    root.addEventListener("pointerup", () => requestAnimationFrame(() => {
+      const duration = performance.now() - startedAt;
+      const fps = frames * 1000 / duration;
+      evidence.dataset.splitterMoves = String(moves);
+      evidence.dataset.splitterFrames = String(frames);
+      evidence.dataset.splitterDuration = duration.toFixed(3);
+      evidence.dataset.splitterFps = fps.toFixed(3);
+      evidence.dataset.splitterPass = String(fps >= 30);
+    }));
+    window.atlasP8Fixture = { controller, evidence, messages, root };
+    document.body.dataset.atlasReady = "true";
+  </script>
+</body>
+</html>

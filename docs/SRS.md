@@ -1597,7 +1597,7 @@ ToolBar RTL（Right-to-Left，从右到左）镜像
 
 Description
 系统应在终端用户使用 RTL（Right-to-Left，从右到左）语言模式浏览器时镜像 ToolBar 位置，与
-REQ-F-135 的 Dock 层级布局镜像规则保持一致。
+非规范 RTL 边界场景（历史编号 F-135）的 Dock 层级布局镜像规则保持一致。
 
 Acceptance Criteria
 
@@ -1617,7 +1617,8 @@ Title
 拖拽 ToolBar Entry（ToolBar 条目）移动 Dock Panel（Dock 面板）
 
 Description
-系统应支持终端用户拖拽 LT/RT 中的 ToolBar Entry 至其他 Dock Region（Dock 区域），移动完成后对应
+系统应支持终端用户拖拽 LT/RT 中的 ToolBar Entry 至其他 Dock Region（Dock 区域）对应的 ToolBar
+逻辑槽；当目标 Dock Region 因无展开 Panel 而隐藏时，也可拖至其 Drop Scaffold。移动完成后对应
 Dock Panel 迁移至目标区域，ToolBar Entry 同步迁移至目标侧 ToolBar 并按分组规则重新排列。
 
 Acceptance Criteria
@@ -1625,7 +1626,7 @@ Acceptance Criteria
 AC1：拖拽 ToolBar Entry 至其他 Dock Region
 
 Given LT 中存在一个 ToolBar Entry
-When 终端用户拖拽该 ToolBar Entry 至 Right Dock Upper 区域并释放
+When 终端用户拖拽该 ToolBar Entry 至 RT 中 Right Dock Upper 对应的逻辑槽并释放
 Then 对应 Dock Panel 应移至 Right Dock Upper
 And ToolBar Entry 从 LT 迁移至 RT
 And ToolBar Entry 在 RT 中按 Upper Dock → Lower Dock → Bottom Dock 分组顺序排列
@@ -2813,8 +2814,9 @@ And 系统不启动拖拽流程
 ## 3.5 Dock Panel（Dock 面板） 移动
 
 > **适用范围：** 本章需求针对 **Dock Panel（Dock 面板）**（工具窗口）在 Dock Region（Dock 区域）之间的移动，以及在同一 Dock Region 内的拖拽排序（REQ-F-142）。
-> 与 Editor Tab 的拖拽停靠（§3.4.1）不同，Dock Panel 的拖拽停靠**不区分方向**——拖拽至目标 Dock Region
-> 任意位置释放即完成移动（类似 VSCode / Rider 中 Tool Window 的拖拽行为），无需方向判定区域。
+> 与 Editor Tab 的拖拽停靠（§3.4.1）不同，Dock Panel 的拖拽停靠**不区分方向**。可见 Region 通过
+> ToolBar 对应逻辑槽完成投放；因无展开 Panel 而隐藏的 Region 通过 Drop Scaffold 完成投放。
+> 可见 Dock Region Body 本身不是直接释放目标，无需方向判定区域。
 > 关于 Region、Dock Panel、Editor View（编辑器视图） 与 Editor Tab 的区别，参见 [§1.7 空间概念](#17-空间概念)。
 
 ```
@@ -2824,7 +2826,8 @@ Title
 Dock Panel（Dock 面板） 跨区域移动
 
 Description
-系统应支持终端用户将任意 Dock Panel 在六个 Dock Region 之间互相拖拽移动。六个 Dock Region 为。拖拽过程中应向终端用户提供目标区域的视觉反馈（高亮指示和 Drop Scaffold（投放骨架））。
+系统应支持终端用户将任意 Dock Panel 在六个 Dock Region 之间互相拖拽移动。拖拽过程中应通过
+ToolBar 逻辑槽或隐藏 Region 的 Drop Scaffold 向终端用户提供目标区域的视觉反馈。
 Left Dock Upper、Left Dock Lower、Right Dock Upper、Right Dock Lower、Bottom Left Dock、Bottom Right Dock，
 任意两个之间均可跨区域拖拽。当目标区域已有 Active Panel 时，
 新面板展开为 Active Panel，原有 Active Panel 收起为 ToolBar Entry（ToolBar 条目）。
@@ -2833,8 +2836,8 @@ Acceptance Criteria
 
 AC1：Dock Panel 移动至空区域
 
-Given 布局中 Left Dock Upper 区域为空
-When 终端用户拖拽 Left Dock Lower 中 Dock Panel 的标题栏至 Left Dock Upper 区域并释放
+Given 布局中 Left Dock Upper 区域为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Left Dock Lower 中 Dock Panel 的标题栏至 Left Dock Upper 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Left Dock Upper 区域
 And Dock Panel 内容和状态保持不变
 And 源区域 Left Dock Lower 显示空状态（无可见 Dock Panel 时显示 Empty State）
@@ -2842,23 +2845,23 @@ And 源区域 Left Dock Lower 显示空状态（无可见 Dock Panel 时显示 E
 AC2：Dock Panel 移动至已有 Dock Panel 的区域
 
 Given Right Dock Upper 区域已有 Panel B 且处于展开状态
-When 终端用户拖拽 Panel A 的标题栏至 Right Dock Upper 区域并释放
+When 终端用户拖拽 Panel A 的标题栏至 RT 中 Right Dock Upper 对应逻辑槽并释放
 Then Panel A 应在该区域展开并成为 Active Panel
 And Panel B 收起到 ToolBar Entry
 And 对应 ToolBar Entry 同步更新
 
 AC3：Dock Panel 从 Left Dock 移动至 Bottom Dock
 
-Given 布局中 Bottom Left Dock Region为空
-When 终端用户拖拽 Left Dock Upper 中 Dock Panel 的标题栏至 Bottom Left Dock Region并释放
+Given 布局中 Bottom Left Dock Region 为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Left Dock Upper 中 Dock Panel 的标题栏至 Bottom Left Dock 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Bottom Left Dock Region
 And Dock Panel 内容和状态保持不变
 And 对应 ToolBar 条目保持在 LT（同属左侧）
 
 AC4：Dock Panel 从 Bottom Dock 移动至 Right Dock
 
-Given 布局中 Right Dock Lower 区域为空
-When 终端用户拖拽 Bottom Right 中 Dock Panel 的标题栏至 Right Dock Lower 区域并释放
+Given 布局中 Right Dock Lower 区域为空且因无展开 Panel 而隐藏
+When 终端用户拖拽 Bottom Right 中 Dock Panel 的标题栏至 Right Dock Lower 的 Drop Scaffold 并释放
 Then 系统应将该 Dock Panel 移至 Right Dock Lower 区域
 And Dock Panel 内容和状态保持不变
 And 对应 ToolBar 条目保持在 RT（同属右侧）
@@ -2866,10 +2869,11 @@ And 对应 ToolBar 条目保持在 RT（同属右侧）
 AC5：拖拽目标区域高亮指示
 
 Given 终端用户正在拖拽 Dock Panel 的标题栏
-When 拖拽预览进入某个 Dock Region 范围
-Then 该 Dock Region 应以高亮样式显示
-And 高亮指示该区域为有效放置目标
-And 拖拽离开该区域后高亮消失
+When 拖拽预览进入某个 Dock Region 对应的 ToolBar 逻辑槽或隐藏 Region 的 Drop Scaffold
+Then 当前 ToolBar 逻辑槽或 Drop Scaffold 应以高亮样式显示
+And 高亮指示释放后的目标 Dock Region
+And 可见 Dock Region Body 不应显示为直接释放目标
+And 拖拽离开有效目标后高亮消失
 ```
 
 ```
@@ -3038,17 +3042,18 @@ Title
 Dock Panel（Dock 面板） 移动后内容保持
 
 Description
-系统应在 Dock Panel 移动操作完成后保持被移动 Dock Panel 内容及其内部状态完整保留。Dock Panel 移动至已有 Dock Panel 的区域时，系统应将该 Dock Panel 加入该区域，展开为 Active Panel（活跃面板），而非替换现有 Dock Panel。
+系统应在 Dock Panel 移动操作完成后保持被移动 Dock Panel 的内容身份和用户可观察业务状态。业务状态由应用按 ContentReference.ResourceId 外置，视图状态按 DockItemId 外置；跨 Group 移动允许内容组件重新挂载，不承诺组件实例身份。Dock Panel 移动至已有 Dock Panel 的区域时，系统应将该 Dock Panel 加入该区域，展开为 Active Panel（活跃面板），而非替换现有 Dock Panel。
 
 Acceptance Criteria
 
 AC1：Dock Panel 内容完整性
 
-Given Dock Panel 中已加载内容组件且存在内部状态
+Given Dock Panel 中已加载内容组件且存在按 ResourceId 或 DockItemId 外置的业务/视图状态
 When 该 Dock Panel 被移动至另一个 Dock Region（Dock 区域）
-Then Dock Panel 内容组件及其内部状态应完整保留
-And Dock Panel 内容及其内部状态完整保留
+Then DockItemId 和 ContentReference 应保持不变
+And 新内容实例应能恢复该业务/视图状态
 And Dock Panel 内容渲染不受影响
+And 系统不应承诺跨 Group 保持原组件实例身份
 
 AC2：ToolBar Entry（ToolBar 条目）同步
 
@@ -3382,7 +3387,9 @@ AC2：恢复Editor Tab（编辑器标签页）信息
 Given 开发者调用导入布局接口恢复布局
 When 布局恢复完成
 Then 系统应恢复所有标签页信息
-And 标签页信息包含Content Identifier（内容标识）、标题、参数、可关闭标记、Pinned（固定标记）
+And 标签页信息包含Content Identifier（内容标识）、标题、可关闭标记、Pinned（固定标记）
+And 可持久化业务身份参数通过 ContentReference 的 kind/resourceId 表达
+And 任意运行时对象参数不进入布局文档，由应用在内容解析或显式迁移 hook 中恢复
 
 AC3：恢复面板比例
 
@@ -4615,16 +4622,17 @@ Title
 内容渲染安全
 
 Description
-系统应使用沙箱机制隔离各Dock Panel（Dock 面板）的内容渲染上下文，防止跨面板脚本访问和数据泄露。
+系统应明确区分 TrustedComponent 与 SandboxedFrame 内容模式。TrustedComponent 与应用共享 DOM/DI，只提供渲染异常隔离且不构成恶意脚本安全边界；不受信任内容应使用 SandboxedFrame，以浏览器沙箱和已验证消息协议防止跨面板 DOM 访问和数据泄露。
 
 Acceptance Criteria
 
 AC1：面板间内容隔离
 
-Given 布局中存在多个已渲染内容的面板
-When 任意面板中的内容脚本尝试访问其他面板的 DOM 或数据
+Given 布局中存在多个以 SandboxedFrame 渲染的不受信任内容面板
+When 任意 SandboxedFrame 中的内容脚本尝试访问 parent 或其他面板的 DOM 或数据
 Then 系统应阻止跨面板访问
 And 不抛出未捕获异常
+And 伪造、未知、超限或身份不匹配的消息应 fail closed
 
 AC2：内容组件崩溃不影响布局
 
@@ -4715,7 +4723,6 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-010 | 🟡  | Application Developer            | 自定义Empty State（空状态）模板                              |
 | REQ-F-011 | 🔴  | End User                         | 拖入Editor Tab（编辑器标签页）至空Editor View（编辑器视图）           |
 | REQ-F-012 | 🟡  | End User / Application Developer | Dock Panel（Dock 面板）折叠                              |
-| REQ-F-013 | 🟡  | End User / Application Developer | Dock Panel（Dock 面板）展开                              |
 | REQ-F-014 | 🟡  | System                           | 折叠后Dock Panel（Dock 面板）空间重分配                        |
 | REQ-F-015 | 🔴  | Application Developer            | Dock Panel（Dock 面板）最小尺寸约束                          |
 | REQ-F-016 | 🟡  | Application Developer            | Dock Panel（Dock 面板）最大尺寸约束                          |
@@ -4733,6 +4740,7 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-141 | 🔴  | End User / Application Developer | Dock Panel（Dock 面板） 显隐控制                           |
 | REQ-F-025 | 🔴  | Application Developer            | Bottom Dock 结构声明                                   |
 | REQ-F-026 | 🔴  | System                           | Bottom Dock 与 Work Area 父子关系约束                     |
+| REQ-F-154 | 🟡  | Application Developer            | Dock 容器自适应折叠                                     |
 
 ### §3.4 Editor Tab（编辑器标签页）管理（含 §3.4.1 Tab 拖拽停靠）
 
@@ -4795,6 +4803,8 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-153 | 🔴  | End User / System | ToolBar 拖拽投放交互稳定性                             |
 | REQ-F-070 | 🔴  | System            | Dock Panel（Dock 面板） 移动后内容保持                   |
 | REQ-F-071 | 🔴  | System            | Fixed Region（固定区域） 不接受 Dock Panel（Dock 面板） 拖入 |
+| REQ-F-155 | 🟡  | End User          | 隐藏 Dock Region 拖拽投放骨架                         |
+| REQ-F-156 | 🟡  | End User          | Dock Panel 移动撤销                                  |
 
 ### §3.6 Splitter（分割条）
 
@@ -4875,17 +4885,9 @@ Then 系统应在下一次交互时应用新的动画设置
 
 | 编号        | 优先级 | Actor    | 标题                                          |
 | --------- |:---:| -------- | ------------------------------------------- |
-| REQ-F-129 | 🟡  | System   | 拖拽中窗口大小调整                                   |
 | REQ-F-148 | 🟡  | System   | 容器尺寸变化时布局自适应                                |
-| REQ-F-131 | 🟡  | System   | 零Dock Panel（Dock 面板）空布局                     |
-| REQ-F-132 | 🟡  | System   | Editor Tab（编辑器标签页）标题过长截断                    |
 | REQ-F-133 | 🟡  | System   | 快速连续操作串行化                                   |
-| REQ-F-134 | 🟡  | System   | Splitter（分割条）拖拽边界限制                         |
-| REQ-F-135 | 🟢  | System   | RTL（Right-to-Left，从右到左）布局镜像                 |
-| REQ-F-136 | 🟢  | System   | 高 DPI（Dots Per Inch，每英寸点数）显示适配              |
-| REQ-F-137 | 🟡  | System   | 页面后台时暂停拖拽                                   |
 | REQ-F-138 | 🟡  | End User | Editor Tab（编辑器标签页）右键上下文菜单                   |
-| REQ-F-139 | 🟡  | System   | Auto-hide（自动隐藏）Dock Panel（Dock 面板）与窗口尺寸变化协调 |
 
 ### §4 非功能需求
 
@@ -4900,7 +4902,27 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-NF-007 | 🟡  | End User              | WAI-ARIA 可访问性 |
 | REQ-NF-008 | 🟢  | End User              | 动画偏好适配        |
 
-> 合计 **152** 条需求（F: 144 条 + NF: 8 条）。
+> 合计 **150** 条正式需求（F: 142 条 + NF: 8 条）。正式需求以正文中包含 Actor 与 Acceptance
+> Criteria 的需求块为准，附录 A 与正文一一对应。
+
+### 非规范性历史编号处置
+
+以下编号没有独立的正式需求块和 Acceptance Criteria，不计入需求数量、状态或覆盖率。它们仅作为
+相关正式需求的设计与测试输入：
+
+| 历史编号 | 场景 | 正式需求映射 |
+| -------- | ---- | ------------ |
+| F-013 | Dock Panel 展开 | REQ-F-012、REQ-F-022、REQ-F-104 |
+| F-129 | 拖拽中窗口大小调整 | REQ-F-148 与 interaction cancel 合同 |
+| F-131 | 零 Dock Panel 空布局 | REQ-F-003、REQ-F-005 |
+| F-132 | Editor Tab 标题过长截断 | REQ-F-027 AC2 |
+| F-134 | Splitter 拖拽边界限制 | REQ-F-078 |
+| F-135 | RTL 布局镜像 | REQ-F-024 |
+| F-136 | 高 DPI 显示适配 | 浏览器与 rendering hardening 输入；无独立正式需求 |
+| F-137 | 页面后台时暂停拖拽 | REQ-F-065、REQ-F-068、REQ-F-147 |
+| F-139 | Auto-hide 与窗口尺寸变化协调 | REQ-F-017、REQ-F-018、REQ-F-148 |
+
+F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求编号，同样不属于当前基线。
 
 ## 附录 B：延期需求
 
@@ -4908,8 +4930,8 @@ Then 系统应在下一次交互时应用新的动画设置
 
 | 编号        | 优先级 | 标题                             | 推迟原因                          |
 | --------- |:---:| ------------------------------ | ----------------------------- |
-| REQ-F-136 | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
-| REQ-F-135 | 🟢  | RTL（Right-to-Left，从右到左）布局镜像    | 需 i18n 基础支持，当前版本仅 LTR         |
+| 历史 F-136（非规范） | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
+| REQ-F-024（含历史 F-135 场景） | 🟢  | RTL（Right-to-Left，从右到左）布局镜像 | 需 i18n 基础支持，当前版本仅 LTR |
 | —         | 🟢  | 主题定制与国际化（i18n）                 | 需全局主题引擎和本地化框架支持               |
 | —         | 🟢  | Floating Window（浮动窗口）          | 需独立的窗口管理层，非核心路径，§3.1 已标注为后续扩展 |
 
@@ -4946,10 +4968,14 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-147     | Layout Instance 销毁                         | 新增     | 销毁接口 + DOM/事件清理 + 重复销毁 + 销毁后操作拒绝                                                                           |
 | REQ-F-148     | 容器尺寸变化时布局自适应                               | 新增     | 容器 resize 按比例自适应，含最小尺寸约束冲突处理                                                                               |
 | REQ-F-153     | ToolBar 拖拽投放交互稳定性                          | 新增     | 根据实机测试反馈新增 ToolBar 拖拽稳定性约束：拖拽预览不跳跃、Divider 不占常驻槽位、空逻辑槽位拖拽可达、拖拽渲染与注册过程无 Blazor crit 级错误                     |
+| REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；可见 RegionBody 不作为直接释放目标 |
+| REQ-F-085~088 | Persistence Schema | 修改 | 2026-07-31 依据 ADR-0010 固定 V2 namespace、`2.0` 版本、strict unknown policy、完整 committed topology；任意对象参数不持久化；无真实 V1 样本时仅支持已冻结窄兼容输入 |
+| REQ-F-070 | Content Lifetime | 修改 | 2026-07-31 依据 ADR-0012 将状态保持明确为 ResourceId/DockItemId 外置的用户可观察业务/视图状态；跨 Group 允许组件 remount，不承诺实例身份 |
+| REQ-NF-006 | Content Trust | 修改 | 2026-07-31 依据 ADR-0013 区分 TrustedComponent 异常隔离与 SandboxedFrame 恶意脚本安全边界 |
 | REQ-F-022     | ToolBar Dock Panel 切换                      | 修改     | 切换模型改为 Toggle（方案 A）：点击已打开且活跃 Panel 的条目 → 收起 Panel；AC 拆分（AC2 新增收起 / AC3 原非活跃激活 / AC4 原 API）；Flowchart 补收起分支 |
 | —             | 全文一致性                                      | 勘误     | 范围外明确排除主题/i18n/Floating Window；§1.2 范围表 + §2.2 导航去"主题、国际化"；新增附录 D 错误码汇总；附录 B 新增主题和 Floating Window 延期行     |
 | —             | 全局术语                                       | 全局     | 术语统一为 English（中文）双语格式；移除 Tab Group / Panel Tab 旧模型                                                         |
 | —             | 全局命名                                       | 全局     | Region 命名统一：Left/Right/Bottom Region → Left/Right/Bottom Dock                                              |
 | REQ-F-002     | Dock 层级布局空间结构                              | 勘误     | AC3 补齐缺失的 Then 步骤，修正 Given 残句                                                                              |
 | REQ-NF-002    | 浏览器兼容性                                     | 勘误     | AC1 移除硬编码需求编号范围（REQ-F-001 至 REQ-F-139），改为"§3 全部 REQ-F 需求"，避免随需求增删失效                                        |
-| —             | 全文一致性                                      | 勘误     | 统计与索引同步实际需求数（143 条）；编号规则注明 5 处历史空缺；附录 B 延期需求编号错位修正（F-138/139 → F-136/135）；同分段重复术语标注精简                      |
+| —             | 全文一致性                                      | 勘误     | 2026-07-31 依据 ADR-0014 固定正式需求数为 150（F:142 + NF:8）；附录 A 与正式需求块一一对应；5 个历史删除编号与 9 个非规范性边界编号不计入覆盖率 |

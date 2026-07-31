@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Atlas.Core\Atlas.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\Atlas.Core\Persistence\Schema\atlas-workspace-v2.xsd"
+          Link="Persistence\Schema\atlas-workspace-v2.xsd"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Persistence\Golden\*.xml"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

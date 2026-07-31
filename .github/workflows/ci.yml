@@ -19,39 +19,63 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '6.0.x'
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/Atlas.Blazor/package-lock.json
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore Atlas.sln
 
       - name: Atlas 2 TypeScript
         working-directory: src/Atlas.Blazor
         run: |
+          npm ci
           npm run typecheck
           npm run test:js
           npm run build:js
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build Atlas.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --no-restore --configuration Release --verbosity normal
+        run: dotnet test Atlas.sln --no-build --no-restore --configuration Release --verbosity normal
 
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.0.x'
-      - run: dotnet format --verify-no-changes --no-restore --verbosity minimal
+          dotnet-version: '6.0.x'
+      - run: dotnet restore Atlas.sln
+      - run: dotnet format Atlas.sln --verify-no-changes --no-restore --verbosity minimal
+
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '6.0.x'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/Atlas.Blazor/package-lock.json
+      - run: dotnet restore Atlas.sln
+      - run: npm ci
+        working-directory: src/Atlas.Blazor
+      - run: npm run build:js
+        working-directory: src/Atlas.Blazor
+      - run: dotnet pack src/Atlas.Core/Atlas.Core.csproj --no-restore --configuration Release --output artifacts/packages
+      - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages

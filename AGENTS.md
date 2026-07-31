@@ -21,49 +21,64 @@ For build, CI, packaging, or dependency work, also read:
 
 ## Project Shape
 
-Atlas is a **.NET 6 Blazor WebAssembly** component library that provides dockable
-tool windows, editor split views, and panel switching for web applications.
+Atlas is a **.NET 6 Blazor** component library that provides dockable tool
+windows, editor split views, and panel switching for web applications. The
+repository uses Node.js 24 LTS and npm for TypeScript interop.
 
 ```text
-src/Atlas/             Component library (NuGet package)
-  Domain/              Domain models (LayoutState, TabModel, DockPanelModel, …)
-  Services/            LayoutContext, DragService, ContentRegistry, Serializer, …
-  Components/          Blazor components (AtlasLayout, DockPanel, EditorArea, …)
-  Interop/             JS interop for drag operations
-  Results/             DockResult / DockErrorCode
-  wwwroot/             Static assets (CSS, compiled JS)
-  ClientScripts/       TypeScript source for JS interop
-src/Atlas.Demo/        Demo Blazor WASM app
-tests/Atlas.Tests/     xUnit tests
-docs/                  SRS, traceability, ADRs, guides
+src/Atlas.Core/           Pure C# domain and operation engine (NuGet: Atlas.Core)
+src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazor)
+  Components/             Public Razor components
+  Interop/                C# JS interop boundary
+  ClientScripts/          TypeScript source
+  wwwroot/atlas-v2/       Generated static assets
+tests/Atlas.Core.Tests/   Core xUnit tests
+tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
+tests/browser/            Static real-browser verification fixtures
+docs/                     SRS, HLD, traceability and ADRs
 ```
 
 ## Build And Verification
 
 ```sh
-# Restore + build all projects
-dotnet build
+# Restore NuGet dependencies
+dotnet restore Atlas.sln
+
+# Install, type-check, test and bundle TypeScript
+cd src/Atlas.Blazor
+npm ci
+npm run typecheck
+npm run test:js
+npm run build:js
+cd ../..
+
+# Build all projects
+dotnet build Atlas.sln --no-restore
 
 # Run tests
-dotnet test
+dotnet test Atlas.sln --no-build --no-restore
 
 # Format check
-dotnet format --verify-no-changes
+dotnet format Atlas.sln --verify-no-changes --no-restore
 
-# Build TypeScript interop (also runs via MSBuild BeforeBuild target)
-cd src/Atlas && npm run build:js
+# Validate NuGet packaging
+dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
+dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 ```
 
 ## Ownership Rules
 
-- Public component APIs belong in `src/Atlas/Components/` and must be documented
+- Public component APIs belong in `src/Atlas.Blazor/Components/` and must be documented
   against `docs/SRS.md`.
-- Domain models belong in `src/Atlas/Domain/`.
-- Service interfaces are in `src/Atlas/Services/`.
+- Domain models and operations belong in `src/Atlas.Core/`.
+- Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
+- `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
 - Tests should cover behaviour, not accidental implementation details.
 - Keep NuGet dependency graph narrow — prefer framework types over third-party packages.
 - Do not add new global state without a documented reason.
 - Do not weaken tests, formatting, or CI to make a change pass.
+- Changes to Target Framework, package topology, Node/npm baseline, or public API
+  compatibility policy require maintainer approval and an ADR.
 
 ## AI Agent Policy
 

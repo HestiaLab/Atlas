@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Atlas P5 browser fixture</title>
+  <link rel="stylesheet" href="/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.css">
+  <style>
+    body { margin: 20px; font-family: sans-serif; }
+    .hosts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .atlas-v2-workspace { min-height: 360px; border: 1px solid #777; }
+    .document-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-height: 220px; }
+    [data-atlas-group-kind="document"] { border: 1px solid #aaa; min-height: 200px; }
+    .atlas-v2-tab-strip button, .atlas-v2-panel-header, .atlas-v2-toolbar-region button {
+      min-height: 32px; padding: 6px 12px;
+    }
+    .atlas-v2-panel-header { margin-top: 18px; border: 1px solid #999; }
+    .atlas-v2-toolbar-region { margin-top: 12px; border: 1px dashed #999; padding: 8px; }
+  </style>
+</head>
+<body>
+  <output id="evidence" data-message-count="0"></output>
+  <div class="hosts">
+    <div class="atlas-v2-workspace" data-atlas-host-id="host-a"
+         data-atlas-workspace-id="workspace-a" data-atlas-protocol-version="1"
+         data-atlas-revision="7">
+      <div class="document-row">
+        <section data-atlas-group-kind="document" data-atlas-group-id="documents-source">
+          <div class="atlas-v2-tab-strip">
+            <button data-atlas-drag-kind="document-tab" data-atlas-item-id="document-a"
+                    data-atlas-item-kind="document" data-atlas-command-capabilities="18"
+                    data-atlas-group-id="documents-source" data-atlas-insertion-index="0">Document A</button>
+            <button data-atlas-drag-kind="document-tab" data-atlas-item-id="document-b"
+                    data-atlas-item-kind="document" data-atlas-command-capabilities="18"
+                    data-atlas-group-id="documents-source" data-atlas-insertion-index="1">Document B</button>
+          </div>
+        </section>
+        <section data-atlas-group-kind="document" data-atlas-group-id="documents-target">
+          <div class="atlas-v2-tab-strip"><button>Document target</button></div>
+        </section>
+      </div>
+      <header class="atlas-v2-panel-header" data-atlas-panel-header="true"
+              data-atlas-drag-kind="panel-header" data-atlas-item-id="tool-a"
+              data-atlas-item-kind="tool" data-atlas-command-capabilities="2"
+              data-atlas-group-id="tools-source" data-atlas-insertion-index="0">Tool A</header>
+      <section class="atlas-v2-toolbar-region" data-atlas-toolbar-region="InlineEndUpper"
+               data-atlas-group-id="tools-target">
+        <button data-atlas-toolbar-entry="true" data-atlas-drag-kind="toolbar-entry"
+                data-atlas-item-id="tool-target" data-atlas-item-kind="tool"
+                data-atlas-command-capabilities="2" data-atlas-group-id="tools-target"
+                data-atlas-toolbar-region="InlineEndUpper" data-atlas-insertion-index="0">Tool target</button>
+      </section>
+    </div>
+    <div class="atlas-v2-workspace" data-atlas-host-id="host-b"
+         data-atlas-workspace-id="workspace-b" data-atlas-protocol-version="1"
+         data-atlas-revision="3">
+      <section data-atlas-group-kind="document" data-atlas-group-id="documents-target">
+        <div class="atlas-v2-tab-strip"><button>Other host target</button></div>
+      </section>
+    </div>
+  </div>
+  <script type="module">
+    import { attachAtlasController } from "/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.js";
+    const messages = [];
+    const evidence = document.querySelector("#evidence");
+    const receiver = { invokeMethodAsync: async (_method, message) => {
+      messages.push(message);
+      evidence.dataset.messageCount = String(messages.length);
+      evidence.textContent = JSON.stringify(message);
+    } };
+    const roots = [...document.querySelectorAll(".atlas-v2-workspace")];
+    const controllers = roots.map((root, index) => attachAtlasController(root, {
+      hostId: `host-${index === 0 ? "a" : "b"}`,
+      workspaceId: `workspace-${index === 0 ? "a" : "b"}`,
+      generation: 1,
+      protocolVersion: 1
+    }, receiver));
+    let performanceStart = 0;
+    let performanceFrames = 0;
+    let performanceMoves = 0;
+    let framePending = false;
+    roots[0].addEventListener("pointerdown", () => {
+      performanceStart = performance.now();
+      performanceFrames = 0;
+      performanceMoves = 0;
+      framePending = false;
+    });
+    roots[0].addEventListener("pointermove", () => {
+      performanceMoves += 1;
+      if (!framePending) {
+        framePending = true;
+        requestAnimationFrame(() => {
+          performanceFrames += 1;
+          framePending = false;
+        });
+      }
+    });
+    roots[0].addEventListener("pointerup", () => requestAnimationFrame(() => {
+      const duration = performance.now() - performanceStart;
+      evidence.dataset.performanceMoves = String(performanceMoves);
+      evidence.dataset.performanceFrames = String(performanceFrames);
+      evidence.dataset.performanceDuration = duration.toFixed(3);
+      evidence.dataset.performanceFps = (performanceFrames * 1000 / duration).toFixed(3);
+    }));
+    window.atlasP5 = { messages, controllers, roots };
+    document.body.dataset.atlasReady = "true";
+  </script>
+</body>
+</html>
