@@ -65,6 +65,7 @@
 | REQ-F-027~030、REQ-F-041、REQ-F-046、REQ-F-101~108、REQ-F-110~115 | DES-OP-001~009 | P2 | Core public API | [ADR-0002](./adr/0002-core-operation-api-freeze.md) | In Progress | 维护者于 2026-07-31 批准 API freeze；正在公开 operation/factory/guard/command/query 并固定 lifecycle 与 `DUPLICATE_CONTENT_IDENTITY` |
 | REQ-F-029、REQ-F-035、REQ-F-041、REQ-F-069、REQ-F-073、REQ-F-103~104、REQ-F-140、REQ-F-143、REQ-F-151 | DES-OP-001、DES-OP-003、DES-OP-006~007 | P2 | `Atlas.Core/Operations` | Public API analyzer + 192 Core behavior tests | Implemented | ADR-0002 已批准的 concrete operation 与 close guard/resolver 已公开并进入 API baseline；factory/commands/queries 尚待完成 |
 | REQ-F-027~028、REQ-F-046、REQ-F-101、REQ-F-124 | DES-DOM-005、DES-OP-001~002、DES-OP-009 | P2 | `Atlas.Core/Operations/Engine` | `OpenItemOperationTests`：normal open、ActivateExisting、AllowMultiple、ReplaceExisting、RejectDuplicate、ID conflict、target failure | In Progress | P2-WP-11 实现显式 Item open 与四种内容去重；自动 ID 生成和 command facade 尚待后续切片 |
+| REQ-F-030、REQ-F-101~108、REQ-F-121、REQ-F-141 | DES-OP-006、DES-OP-009 | P2 | `Atlas.Core/AtlasWorkspaceCommands`、`AtlasWorkspaceQueries` | `WorkspaceFacadeTests`：typed operation delegation、snapshot Revision capture、no-match NoChange、immutable materialized query | In Progress | P2-WP-12 实现 command/query facade；Reset/Preset command 等待对应 operation/persistence Phase |
 
 ## 更新规则
 

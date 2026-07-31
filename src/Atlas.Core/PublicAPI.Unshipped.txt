@@ -1,4 +1,13 @@
 #nullable enable
+Atlas.Core.AtlasWorkspaceCommands
+Atlas.Core.AtlasWorkspaceCommands.ActivateFirstAsync(System.Func<Atlas.Core.Items.DockItem!, bool>! predicate, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.ActivateItemAsync(Atlas.Core.DockItemId itemId, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.AtlasWorkspaceCommands(Atlas.Core.IAtlasWorkspace! workspace) -> void
+Atlas.Core.AtlasWorkspaceCommands.CloseItemAsync(Atlas.Core.DockItemId itemId, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.OpenItemAsync(Atlas.Core.Items.DockItem! item, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.SetToolBarVisibilityAsync(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.SetToolVisibilityAsync(Atlas.Core.LayoutNodeId groupId, bool visible, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceQueries
 Atlas.Core.Changes.LayoutChangeKind
 Atlas.Core.Changes.LayoutChangeKind.Operation = 0 -> Atlas.Core.Changes.LayoutChangeKind
 Atlas.Core.Changes.LayoutChangeKind.ReconcileDefinition = 5 -> Atlas.Core.Changes.LayoutChangeKind
@@ -337,6 +346,8 @@ override Atlas.Core.Placement.DockBack.GetHashCode() -> int
 override Atlas.Core.WorkspaceId.Equals(object? obj) -> bool
 override Atlas.Core.WorkspaceId.GetHashCode() -> int
 override Atlas.Core.WorkspaceId.ToString() -> string!
+static Atlas.Core.AtlasWorkspaceQueries.EnumerateItems(this Atlas.Core.IAtlasWorkspace! workspace, System.Func<Atlas.Core.Items.DockItem!, bool>? predicate = null) -> System.Collections.Generic.IReadOnlyList<Atlas.Core.Items.DockItem!>!
+static Atlas.Core.AtlasWorkspaceQueries.TryGetItem(this Atlas.Core.IAtlasWorkspace! workspace, Atlas.Core.DockItemId itemId) -> Atlas.Core.Items.DockItem?
 static Atlas.Core.DockItemId.operator !=(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
 static Atlas.Core.DockItemId.operator ==(Atlas.Core.DockItemId left, Atlas.Core.DockItemId right) -> bool
 static Atlas.Core.Items.ContentReference.operator !=(Atlas.Core.Items.ContentReference left, Atlas.Core.Items.ContentReference right) -> bool
