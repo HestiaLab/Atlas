@@ -33,7 +33,7 @@
 | DEV-GATE-001 Repository Baseline | Closed | ADR-0001 Accepted；restore/build/test/format/npm/pack 本地验证通过 |
 | DEV-GATE-002 Panel Drop Policy | Closed | [ADR-0007](./adr/0007-panel-drop-policy.md) Accepted；SRS/HLD 已统一 ToolBar-first + hidden Scaffold enabled set、优先级与失败语义 |
 | DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`：跨 Group remount/dispose，ResourceId 外置业务状态恢复 |
-| DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据仍为 P7 Exit Gate，未提前声称 Verified |
+| DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据已在 P7 Phase Exit 补齐 |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
 | DEV-GATE-006 Traceability Baseline | Evidence Ready | 本文件已建立；SRS OI-003/OI-005 仍待勘误 |
 
@@ -92,7 +92,8 @@
 | — | DES-PER-001~008 | P6 | `Atlas.Core` | strict XSD/V1+V2 golden/adversarial parser；262 Core + 29 Blazor + 14 Node tests；restore/build/test/format；Core/Blazor Release pack；[P6 evidence](./evidence/p6-persistence.md) | Verified | P6 Phase Exit Gate 已满足；review/refactor、ADR-0010/0011、PublicAPI baseline、atomicity/history barrier/single-writer/degradation evidence 已完成；DEV-GATE-003/004/006 状态未改变，P7 未提前实现 |
 | REQ-F-070、REQ-NF-006 | DES-RND-005、DES-RND-007、DES-NFR-004 | P7 | `Atlas.Blazor/Content`、`Components/Workspace`、`ClientScripts` | `ContentLifetimeSpikeTests`、ADR-0012/0013、[content threat model](./security/content-threat-model.md) | In Progress | P7-WP-01 关闭 DEV-GATE-003/004；生命周期和 SandboxedFrame 实现、协议 golden、浏览器安全 E2E 尚未完成，不标记 Verified |
 | REQ-F-027~029、REQ-F-031~032、REQ-F-070、REQ-NF-001、REQ-NF-003、REQ-NF-007 | DES-RND-005、DES-RND-007、DES-NFR-001、DES-NFR-003 | P7 | `Atlas.Blazor/Components/Workspace` | `ContentLifetimeTests`：Default unmount、bounded LRU、同 Group instance reuse、hidden/aria-hidden/inert、close/cache eviction exactly-once dispose；PublicAPI analyzer | Implemented | P7-WP-02 实现 ADR-0012 的 Default 与 KeepAliveWithinGroup；跨 Group 仍 remount，WorkspaceWideKeepAlive 未进入 API |
-| REQ-F-120、REQ-F-128、REQ-F-147、REQ-NF-006 | DES-ARCH-003~004、DES-INT-001~002、DES-NFR-004、DES-PRJ-002~003 | P7 | `Atlas.Blazor/Components/Workspace`、`ClientScripts/sandbox.ts` | sandbox protocol v1 golden；Node source/origin/version/identity/generation/size/allowlist rejection；`SandboxedFrameTests` fixed sandbox/referrer policy/API bounds | Implemented | P7-WP-03 实现显式 SandboxedFrame seam；TrustedComponent 不声称安全沙箱；独立 origin/CSP 仍由 consumer 负责，真实浏览器 E2E 为 Phase Exit 阻断项 |
+| REQ-F-120、REQ-F-128、REQ-F-147、REQ-NF-006 | DES-ARCH-003~004、DES-INT-001~002、DES-NFR-004、DES-PRJ-002~003 | P7 | `Atlas.Blazor/Components/Workspace`、`ClientScripts/sandbox.ts` | sandbox protocol v1 golden；Node source/origin/version/identity/generation/size/allowlist rejection；`SandboxedFrameTests` fixed sandbox/referrer policy/API bounds | Implemented | P7-WP-03 实现显式 SandboxedFrame seam；TrustedComponent 不声称安全沙箱；独立 origin/CSP 仍由 consumer 负责；浏览器 E2E 已在 Phase Exit 补齐 |
+| REQ-F-070、REQ-F-120、REQ-F-128、REQ-F-147、REQ-NF-001、REQ-NF-003、REQ-NF-006~007 | DES-ARCH-003~004、DES-INT-001~002、DES-NFR-001、DES-NFR-003~004、DES-PRJ-002~003、DES-RND-005、DES-RND-007 | P7 | `Atlas.Blazor`、`Atlas.Demo` | 262 Core + 41 Blazor + 16 Node tests；真实浏览器 same-instance/state、hidden/inert/focus、bounded eviction、opaque-origin DOM denial、ready/command/size；restore/build/test/format；Core/Blazor Release pack；[P7 evidence](./evidence/p7-content-lifetime-security.md) | Verified | P7 Phase Exit Gate 已满足；ADR-0012/0013、PublicAPI/protocol/DOM golden、threat model 与浏览器证据完成；DEV-GATE-006 保持 Evidence Ready，P8 未提前实现 |
 
 ## 更新规则
 
