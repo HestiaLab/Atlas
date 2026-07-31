@@ -302,6 +302,9 @@ Atlas.Core.Operations.ReorderItemOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.ReorderItemOperation.ReorderItemOperation(Atlas.Core.DockItemId itemId, Atlas.Core.LayoutNodeId groupId, int targetIndex, long? baseRevision = null) -> void
 Atlas.Core.Operations.ReorderItemOperation.TargetIndex.get -> int
 Atlas.Core.Operations.ReorderToolBarEntryOperation
+Atlas.Core.Operations.RestoreWorkspaceOperation
+Atlas.Core.Operations.RestoreWorkspaceOperation.Document.get -> Atlas.Core.Persistence.LayoutRestoreDocument!
+Atlas.Core.Operations.RestoreWorkspaceOperation.RestoreWorkspaceOperation(Atlas.Core.Persistence.LayoutRestoreDocument! document, long? baseRevision = null) -> void
 Atlas.Core.Operations.ReorderToolBarEntryOperation.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Core.Operations.ReorderToolBarEntryOperation.LogicalRegion.get -> Atlas.Core.Placement.LogicalRegion
 Atlas.Core.Operations.ReorderToolBarEntryOperation.ReorderToolBarEntryOperation(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.LogicalRegion logicalRegion, int targetIndex, long? baseRevision = null) -> void

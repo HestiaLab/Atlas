@@ -69,6 +69,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             ReconcileDefinitionOperation reconcile => ReconcileDefinitionPlanner.Plan(
                 snapshot,
                 reconcile),
+            RestoreWorkspaceOperation restore => RestoreWorkspacePlanner.Plan(snapshot, restore),
             CloseItemOperation close => await PlanCloseAsync(
                 snapshot,
                 close,
