@@ -1,0 +1,112 @@
+@implements IAsyncDisposable
+@using Atlas.Blazor.Components
+@using Atlas.Blazor.Content
+@using Atlas.Core
+@using Atlas.Core.Changes
+
+<section class="atlas-demo-shell" aria-label="Atlas IDE consumer sample">
+    @if (workspace is null)
+    {
+        <div class="atlas-demo-loading" role="status">Preparing Atlas workspace…</div>
+    }
+    else
+    {
+        <AtlasWorkspaceHost Workspace="@workspace"
+                            WorkspaceOwnership="WorkspaceOwnership.External"
+                            ContentTemplate="@contentTemplate"
+                            TopToolbarContent="@topToolbar"
+                            StatusBarContent="@statusBar"
+                            EnableInteractions="true" />
+    }
+</section>
+
+@code {
+    private readonly RenderFragment<AtlasContentContext> contentTemplate;
+    private readonly RenderFragment topToolbar;
+    private readonly RenderFragment statusBar;
+    private IAtlasWorkspace? workspace;
+    private string operationStatus = "Ready";
+
+    [Inject]
+    private IAtlasWorkspaceFactory Factory { get; set; } = null!;
+
+    public AtlasDemoWorkspace()
+    {
+        contentTemplate = content => builder =>
+        {
+            builder.OpenComponent<AtlasDemoContent>(0);
+            builder.SetKey(content.ItemId);
+            builder.AddAttribute(1, nameof(AtlasDemoContent.Content), content);
+            builder.CloseComponent();
+        };
+        topToolbar = builder =>
+        {
+            builder.OpenComponent<AtlasDemoTopToolbar>(0);
+            builder.AddAttribute(1, nameof(AtlasDemoTopToolbar.CanUndo), workspace?.CanUndo == true);
+            builder.AddAttribute(2, nameof(AtlasDemoTopToolbar.CanRedo), workspace?.CanRedo == true);
+            builder.AddAttribute(3, nameof(AtlasDemoTopToolbar.OnUndo), EventCallback.Factory.Create(this, UndoAsync));
+            builder.AddAttribute(4, nameof(AtlasDemoTopToolbar.OnRedo), EventCallback.Factory.Create(this, RedoAsync));
+            builder.CloseComponent();
+        };
+        statusBar = builder =>
+        {
+            builder.OpenComponent<AtlasDemoStatusBar>(0);
+            builder.AddAttribute(1, nameof(AtlasDemoStatusBar.OperationStatus), operationStatus);
+            builder.CloseComponent();
+        };
+    }
+
+    protected override void OnInitialized()
+    {
+        var result = Factory.Create(AtlasDemoWorkspaceDefinition.Create());
+        if (!result.Succeeded || result.Value is null)
+        {
+            throw new InvalidOperationException(result.Error?.DiagnosticId ?? "Atlas Demo initialization failed.");
+        }
+
+        workspace = result.Value;
+        workspace.Changed += OnWorkspaceChanged;
+    }
+
+    private async Task UndoAsync()
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        var result = await workspace.UndoAsync();
+        operationStatus = result.Succeeded ? "Move undone" : "Nothing to undo";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RedoAsync()
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        var result = await workspace.RedoAsync();
+        operationStatus = result.Succeeded ? "Move redone" : "Nothing to redo";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
+    {
+        operationStatus = $"Revision {args.ChangeSet.AfterRevision}";
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        workspace.Changed -= OnWorkspaceChanged;
+        await workspace.DisposeAsync();
+        workspace = null;
+    }
+}

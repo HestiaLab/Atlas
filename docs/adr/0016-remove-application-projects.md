@@ -52,4 +52,5 @@ Blazor 43/43 tests 与 format 通过；Atlas.Core / Atlas.Blazor Release pack �
 
 ## Supersession
 
-本 ADR 取代 ADR-0001 Decision 3 和 ADR-0015。重新加入长期应用项目需要新的 superseding ADR。
+本 ADR 取代 ADR-0001 Decision 3 和 ADR-0015。其“禁止新的长期应用项目”决定由
+[ADR-0017](./0017-nuget-consumer-demo-sample.md) 取代；旧应用删除动作与历史证据处置继续有效。

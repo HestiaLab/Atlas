@@ -1,0 +1,14 @@
+<footer class="atlas-demo-statusbar" data-testid="atlas-demo-status-bar">
+    <span class="atlas-demo-ok">●</span>
+    <span>@OperationStatus</span>
+    <span class="atlas-demo-status-spacer"></span>
+    <span>LF</span>
+    <span>UTF-8</span>
+    <span>4 spaces</span>
+    <span>main</span>
+</footer>
+
+@code {
+    [Parameter]
+    public string OperationStatus { get; set; } = "Ready";
+}
