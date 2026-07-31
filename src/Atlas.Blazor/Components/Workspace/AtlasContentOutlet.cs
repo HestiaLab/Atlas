@@ -20,6 +20,12 @@ internal sealed class AtlasContentOutlet : ComponentBase
     public bool IsSelected { get; set; }
 
     [Parameter]
+    public string PanelId { get; set; } = string.Empty;
+
+    [Parameter]
+    public string LabelledById { get; set; } = string.Empty;
+
+    [Parameter]
     public object? RecoveryKey { get; set; }
 
     [Parameter]
@@ -38,6 +44,9 @@ internal sealed class AtlasContentOutlet : ComponentBase
         var sequence = 0;
         builder.OpenElement(sequence++, "div");
         builder.AddAttribute(sequence++, "class", "atlas-v2-content-outlet");
+        builder.AddAttribute(sequence++, "id", PanelId);
+        builder.AddAttribute(sequence++, "role", "tabpanel");
+        builder.AddAttribute(sequence++, "aria-labelledby", LabelledById);
         builder.AddAttribute(sequence++, "data-atlas-item-id", Item.Id.Value);
         builder.AddAttribute(
             sequence++,

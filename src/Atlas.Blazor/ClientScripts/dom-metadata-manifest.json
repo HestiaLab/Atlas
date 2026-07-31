@@ -5,7 +5,9 @@
       "data-atlas-host-id",
       "data-atlas-workspace-id",
       "data-atlas-protocol-version",
-      "data-atlas-revision"
+      "data-atlas-revision",
+      "role",
+      "aria-label"
     ]
   },
   "split": {
@@ -22,6 +24,7 @@
     "requiredAttributes": [
       "data-atlas-split-id",
       "role",
+      "aria-label",
       "aria-orientation",
       "aria-disabled"
     ]
@@ -32,8 +35,21 @@
   "group": {
     "selector": "[data-atlas-group-id]"
   },
+  "groupRegion": {
+    "selector": ".atlas-v2-group[data-atlas-group-id]",
+    "requiredAttributes": [
+      "role",
+      "aria-labelledby"
+    ]
+  },
   "toolGroup": {
-    "selector": "[data-atlas-group-kind=tool][data-atlas-group-id]"
+    "selector": "[data-atlas-group-kind=tool][data-atlas-group-id]",
+    "requiredAttributes": [
+      "data-atlas-group-kind",
+      "data-atlas-group-id",
+      "role",
+      "aria-labelledby"
+    ]
   },
   "dragSource": {
     "selector": "[data-atlas-drag-kind]",
@@ -47,14 +63,23 @@
     "selector": "[data-atlas-drag-kind=document-tab]",
     "requiredAttributes": [
       "data-atlas-group-id",
-      "data-atlas-insertion-index"
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-label",
+      "aria-selected",
+      "aria-controls",
+      "tabindex"
     ]
   },
   "panelHeader": {
     "selector": "[data-atlas-panel-header]",
     "requiredAttributes": [
       "data-atlas-group-id",
-      "data-atlas-insertion-index"
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-level"
     ]
   },
   "toolbarEntry": {
@@ -62,7 +87,22 @@
     "requiredAttributes": [
       "data-atlas-group-id",
       "data-atlas-toolbar-region",
-      "data-atlas-insertion-index"
+      "data-atlas-insertion-index",
+      "id",
+      "role",
+      "aria-label",
+      "aria-selected",
+      "aria-controls",
+      "tabindex"
+    ]
+  },
+  "contentOutlet": {
+    "selector": ".atlas-v2-content-outlet",
+    "requiredAttributes": [
+      "id",
+      "role",
+      "aria-labelledby",
+      "tabindex"
     ]
   },
   "dropScaffold": {

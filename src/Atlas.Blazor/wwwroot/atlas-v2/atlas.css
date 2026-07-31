@@ -72,6 +72,12 @@
   outline-offset: -2px;
 }
 
+.atlas-v2-workspace button:focus-visible,
+.atlas-v2-content-outlet:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 .atlas-v2-splitter:hover,
 .atlas-v2-split[data-atlas-resizing="true"] > .atlas-v2-splitter {
   opacity: 0.4;

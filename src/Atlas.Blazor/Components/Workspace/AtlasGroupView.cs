@@ -57,6 +57,9 @@ internal sealed class AtlasGroupView : ComponentBase
     [Parameter]
     public long Generation { get; set; }
 
+    [Parameter]
+    public string HostId { get; set; } = string.Empty;
+
     protected override void OnParametersSet()
     {
         UpdateLifetimeCache();
@@ -97,6 +100,17 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(sequence++, "data-atlas-node-id", Group.Id.Value);
         builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
         builder.AddAttribute(sequence++, "data-atlas-group-kind", Group.Kind.ToString().ToLowerInvariant());
+        builder.AddAttribute(sequence++, "role", "region");
+        if (Group.SelectedItemId is not null)
+        {
+            var selected = Items.First(item => item.Id == Group.SelectedItemId.Value);
+            builder.AddAttribute(
+                sequence++,
+                "aria-labelledby",
+                Group.Kind == DockItemKind.Document
+                    ? AtlasDomIdentity.ControlId(HostId, selected.Id, "document-tab")
+                    : AtlasDomIdentity.HeadingId(HostId, selected.Id));
+        }
         if (Group.LogicalRegion is not null)
         {
             builder.AddAttribute(
@@ -257,6 +271,8 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.OpenElement(sequence++, "div");
         builder.AddAttribute(sequence++, "class", "atlas-v2-tab-strip");
         builder.AddAttribute(sequence++, "role", "tablist");
+        builder.AddAttribute(sequence++, "aria-orientation", "horizontal");
+        builder.AddAttribute(sequence++, "aria-label", $"{Group.Id.Value} documents");
         builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
         for (var itemIndex = 0; itemIndex < Items.Count; itemIndex++)
         {
@@ -266,6 +282,15 @@ internal sealed class AtlasGroupView : ComponentBase
             builder.SetKey(item.Id);
             builder.AddAttribute(sequence++, "type", "button");
             builder.AddAttribute(sequence++, "role", "tab");
+            builder.AddAttribute(
+                sequence++,
+                "id",
+                AtlasDomIdentity.ControlId(HostId, item.Id, "document-tab"));
+            builder.AddAttribute(sequence++, "aria-label", item.Title);
+            builder.AddAttribute(
+                sequence++,
+                "aria-controls",
+                AtlasDomIdentity.PanelId(HostId, item.Id));
             builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
             builder.AddAttribute(sequence++, "data-atlas-item-kind", "document");
             builder.AddAttribute(sequence++, "data-atlas-drag-kind", "document-tab");
@@ -296,6 +321,12 @@ internal sealed class AtlasGroupView : ComponentBase
         var selected = SelectedItem();
         builder.OpenElement(sequence++, "header");
         builder.AddAttribute(sequence++, "class", "atlas-v2-panel-header");
+        builder.AddAttribute(sequence++, "role", "heading");
+        builder.AddAttribute(sequence++, "aria-level", "2");
+        builder.AddAttribute(
+            sequence++,
+            "id",
+            AtlasDomIdentity.HeadingId(HostId, selected.Id));
         builder.AddAttribute(sequence++, "data-atlas-panel-header", "true");
         builder.AddAttribute(sequence++, "data-atlas-drag-kind", "panel-header");
         builder.AddAttribute(sequence++, "data-atlas-item-id", selected.Id.Value);
@@ -373,6 +404,14 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(sequence++, "WorkspaceId", Workspace.Id);
         builder.AddAttribute(sequence++, "Item", item);
         builder.AddAttribute(sequence++, "IsSelected", isSelected);
+        builder.AddAttribute(sequence++, "PanelId", AtlasDomIdentity.PanelId(HostId, item.Id));
+        builder.AddAttribute(
+            sequence++,
+            "LabelledById",
+            AtlasDomIdentity.ControlId(
+                HostId,
+                item.Id,
+                Group.Kind == DockItemKind.Document ? "document-tab" : "tool-tab"));
         builder.AddAttribute(
             sequence++,
             "RecoveryKey",

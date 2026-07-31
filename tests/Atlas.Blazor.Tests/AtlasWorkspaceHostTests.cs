@@ -193,6 +193,42 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Interactive_chrome_exposes_named_aria_relationships_and_roving_focus()
+    {
+        await using var workspace = CreateWorkspace(ProjectionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        var root = cut.Find(".atlas-v2-workspace");
+        Assert.Equal("region", root.GetAttribute("role"));
+        Assert.False(string.IsNullOrWhiteSpace(root.GetAttribute("aria-label")));
+
+        var toolbar = cut.Find(".atlas-v2-toolbar");
+        Assert.Equal("tablist", toolbar.GetAttribute("role"));
+        Assert.False(string.IsNullOrWhiteSpace(toolbar.GetAttribute("aria-label")));
+        var toolEntry = cut.Find("[data-atlas-toolbar-entry]");
+        Assert.Equal("0", toolEntry.GetAttribute("tabindex"));
+        AssertRelationship(cut, toolEntry, "aria-controls", "tabpanel");
+
+        var tabList = cut.Find(".atlas-v2-tab-strip");
+        Assert.Equal("horizontal", tabList.GetAttribute("aria-orientation"));
+        Assert.False(string.IsNullOrWhiteSpace(tabList.GetAttribute("aria-label")));
+        var documentTab = cut.Find("[data-atlas-drag-kind='document-tab']");
+        Assert.Equal("0", documentTab.GetAttribute("tabindex"));
+        AssertRelationship(cut, documentTab, "aria-controls", "tabpanel");
+
+        var panelHeader = cut.Find(".atlas-v2-panel-header");
+        Assert.Equal("heading", panelHeader.GetAttribute("role"));
+        Assert.Equal("2", panelHeader.GetAttribute("aria-level"));
+
+        var splitter = cut.Find("[data-atlas-split-id]");
+        Assert.False(string.IsNullOrWhiteSpace(splitter.GetAttribute("aria-label")));
+    }
+
+    [Fact]
     public async Task Toolbar_projection_tracks_committed_visibility()
     {
         var workspace = CreateWorkspace(ProjectionDefinition());
@@ -961,7 +997,19 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 .Add(component => component.EnableInteractions, false)
                 .Add(component => component.ContentTemplate, ContentText));
 
-        foreach (var contractName in new[] { "workspaceRoot", "split", "splitter" })
+        foreach (var contractName in new[]
+        {
+            "workspaceRoot",
+            "split",
+            "splitter",
+            "groupRegion",
+            "toolGroup",
+            "dragSource",
+            "documentTab",
+            "panelHeader",
+            "toolbarEntry",
+            "contentOutlet",
+        })
         {
             var contract = manifest.RootElement.GetProperty(contractName);
             var element = cut.Find(contract.GetProperty("selector").GetString()!);
@@ -1019,6 +1067,21 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
     private static RenderFragment<AtlasContentContext> ContentText =>
         context => builder => builder.AddContent(0, $"{context.Item.Title} content");
+
+    private static void AssertRelationship(
+        IRenderedFragment cut,
+        AngleSharp.Dom.IElement control,
+        string attribute,
+        string expectedRole)
+    {
+        var controlId = control.GetAttribute("id");
+        var targetId = control.GetAttribute(attribute);
+        Assert.False(string.IsNullOrWhiteSpace(controlId));
+        Assert.False(string.IsNullOrWhiteSpace(targetId));
+        var target = cut.Find($"[id='{targetId}']");
+        Assert.Equal(expectedRole, target.GetAttribute("role"));
+        Assert.Equal(controlId, target.GetAttribute("aria-labelledby"));
+    }
 
     private static async Task InvokeInteractionAsync(
         object receiverReference,
