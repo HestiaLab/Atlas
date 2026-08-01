@@ -157,6 +157,18 @@ class FakeDocument extends EventTarget {
   public hidden = false;
   public activeElement: FakeElement | null = null;
   public pointElement: FakeElement | null = null;
+  public readonly body = new FakeElement();
+
+  public constructor() {
+    super();
+    this.body.ownerDocument = this;
+  }
+
+  public createElement(_tagName: string): FakeElement {
+    const element = new FakeElement();
+    element.ownerDocument = this;
+    return element;
+  }
 
   public elementFromPoint(_x: number, _y: number): FakeElement | null {
     return this.pointElement;
@@ -170,6 +182,8 @@ class FakeMediaQueryList extends EventTarget {
 
 class FakeWindow extends EventTarget {
   public readonly reducedMotion = new FakeMediaQueryList();
+  private readonly animationFrames = new Map<number, FrameRequestCallback>();
+  private nextAnimationFrameId = 1;
 
   public matchMedia(_query: string): MediaQueryList {
     return this.reducedMotion as unknown as MediaQueryList;
@@ -178,11 +192,40 @@ class FakeWindow extends EventTarget {
   public getComputedStyle(_element: Element): CSSStyleDeclaration {
     return { direction: "ltr" } as CSSStyleDeclaration;
   }
+
+  public requestAnimationFrame(callback: FrameRequestCallback): number {
+    const id = this.nextAnimationFrameId++;
+    this.animationFrames.set(id, callback);
+    return id;
+  }
+
+  public cancelAnimationFrame(id: number): void {
+    this.animationFrames.delete(id);
+  }
+
+  public get pendingAnimationFrameCount(): number {
+    return this.animationFrames.size;
+  }
+
+  public peekAnimationFrame(): FrameRequestCallback | undefined {
+    return this.animationFrames.values().next().value;
+  }
+
+  public flushAnimationFrames(): void {
+    const callbacks = [...this.animationFrames.values()];
+    this.animationFrames.clear();
+    for (const callback of callbacks) {
+      callback(0);
+    }
+  }
 }
 
 class FakeElement extends EventTarget {
   public readonly dataset: Record<string, string> = {};
   public readonly style = new FakeStyle();
+  public readonly children: FakeElement[] = [];
+  public className = "";
+  public textContent: string | null = null;
   public parentElement: FakeElement | null = null;
   public capturedPointer?: number;
   public releasedPointer?: number;
@@ -190,6 +233,7 @@ class FakeElement extends EventTarget {
   public ownerDocument?: FakeDocument;
   public rect = { left: 0, top: 0, width: 100, height: 100 };
   public rectReads = 0;
+  private readonly attributes = new Map<string, string>();
 
   public closest<T extends Element>(selector: string): T | null {
     if (selector === "[data-atlas-split-id]") {
@@ -247,7 +291,31 @@ class FakeElement extends EventTarget {
     return null;
   }
 
-  public querySelector<T extends Element>(_selector: string): T | null {
+  public querySelector<T extends Element>(selector: string): T | null {
+    if (selector === "[data-atlas-overlay-root=\"true\"]") {
+      const findOverlay = (element: FakeElement): FakeElement | undefined => {
+        for (const child of element.children) {
+          if (child.dataset.atlasOverlayRoot === "true") {
+            return child;
+          }
+
+          const nested = findOverlay(child);
+          if (nested) {
+            return nested;
+          }
+        }
+
+        return undefined;
+      };
+      return (findOverlay(this) ?? null) as T | null;
+    }
+
+    if (selector === ".atlas-v2-item-icon[data-atlas-icon]") {
+      return (this.children.find(child =>
+        child.className.split(" ").includes("atlas-v2-item-icon")
+        && child.dataset.atlasIcon) ?? null) as T | null;
+    }
+
     return this as unknown as T;
   }
 
@@ -276,13 +344,42 @@ class FakeElement extends EventTarget {
     this.releasedPointer = pointerId;
   }
 
+  public appendChild<T extends FakeElement>(child: T): T {
+    child.parentElement = this;
+    this.children.push(child);
+    return child;
+  }
+
+  public remove(): void {
+    const siblings = this.parentElement?.children;
+    if (siblings) {
+      const index = siblings.indexOf(this);
+      if (index >= 0) {
+        siblings.splice(index, 1);
+      }
+    }
+
+    this.parentElement = null;
+  }
+
+  public setAttribute(name: string, value: string): void {
+    this.attributes.set(name, value);
+  }
+
+  public getAttribute(name: string): string | null {
+    return this.attributes.get(name) ?? null;
+  }
+
   public removeAttribute(name: string): void {
     if (name.startsWith("data-")) {
       const property = name
         .slice(5)
         .replace(/-([a-z])/g, (_, character: string) => character.toUpperCase());
       delete this.dataset[property];
+      return;
     }
+
+    this.attributes.delete(name);
   }
 }
 
@@ -595,12 +692,22 @@ test("invalid controller options are rejected", () => {
   fixture.controller.dispose();
 });
 
-function dragFixture(kind: "document-tab" | "panel-header" | "toolbar-entry"): {
+function dragFixture(
+  kind: "document-tab" | "panel-header" | "toolbar-entry",
+  useAnimationFrame = false): {
   controller: AtlasInteractionController;
+  document: FakeDocument;
   root: FakeElement;
   messages: AtlasInteractionMessage[];
+  window: FakeWindow | undefined;
 } {
+  const document = new FakeDocument();
+  const window = useAnimationFrame ? new FakeWindow() : undefined;
+  if (window) {
+    document.defaultView = window as unknown as Window;
+  }
   const root = new FakeElement();
+  root.ownerDocument = document;
   root.dataset.atlasHostId = "drag-host";
   root.dataset.atlasWorkspaceId = "drag-workspace";
   root.dataset.atlasRevision = "12";
@@ -621,6 +728,13 @@ function dragFixture(kind: "document-tab" | "panel-header" | "toolbar-entry"): {
     root.dataset.atlasToolbarEntry = "true";
     root.dataset.atlasToolbarRegion = "InlineStartUpper";
   }
+  root.setAttribute("aria-label", kind === "toolbar-entry" ? "Explorer" : "Source");
+  const overlayRoot = new FakeElement();
+  overlayRoot.ownerDocument = document;
+  overlayRoot.className = "atlas-v2-overlay-root";
+  overlayRoot.dataset.atlasOverlayRoot = "true";
+  overlayRoot.dataset.atlasHostId = "drag-host";
+  root.appendChild(overlayRoot);
 
   const messages: AtlasInteractionMessage[] = [];
   const controller = new AtlasInteractionController(
@@ -632,8 +746,166 @@ function dragFixture(kind: "document-tab" | "panel-header" | "toolbar-entry"): {
       protocolVersion: ATLAS_PROTOCOL_VERSION
     },
     { invokeMethodAsync: async (_method, message) => { messages.push(message); } });
-  return { controller, root, messages };
+  return { controller, document, root, messages, window };
 }
+
+function dragOverlay(fixture: ReturnType<typeof dragFixture>): FakeElement | undefined {
+  return fixture.root.children.find(child =>
+    child.dataset.atlasOverlayRoot === "true"
+    && child.dataset.atlasHostId === "drag-host");
+}
+
+function dragPreview(fixture: ReturnType<typeof dragFixture>): FakeElement | undefined {
+  return dragOverlay(fixture)?.children.find(
+    child => child.className === "atlas-v2-drag-preview");
+}
+
+test("toolbar drag preview appears after the threshold, follows the pointer, and cleans up", () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 29, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 29, clientX: 13, clientY: 10
+  }));
+  assert.equal(dragPreview(fixture), undefined);
+
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 29, clientX: 20, clientY: 24
+  }));
+  assert.equal(fixture.document.body.children.length, 0);
+  const overlay = dragOverlay(fixture)!;
+  assert.equal(overlay.dataset.atlasHostId, "drag-host");
+  assert.equal(overlay.dataset.atlasDragSessionId, "drag-host:1");
+  const preview = dragPreview(fixture)!;
+  assert.equal(preview.className, "atlas-v2-drag-preview");
+  assert.equal(preview.dataset.atlasDragPreview, "toolbar-entry");
+  assert.equal(preview.getAttribute("aria-hidden"), "true");
+  assert.equal(preview.children.length, 1);
+  assert.equal(preview.children[0]?.className, "atlas-v2-drag-preview-title");
+  assert.equal(preview.children[0]?.textContent, "Explorer");
+  assert.equal(preview.style.get("transform"), "translate3d(32px, 36px, 0)");
+
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 29, clientX: 30, clientY: 40
+  }));
+  assert.equal(preview.style.get("transform"), "translate3d(42px, 52px, 0)");
+
+  fixture.root.dispatchEvent(interactionEvent("pointercancel", { pointerId: 29 }));
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(overlay.dataset.atlasDragSessionId, undefined);
+  fixture.controller.dispose();
+});
+
+test("drag preview coalesces animation frames and invalidates a queued frame on cancel", () => {
+  const fixture = dragFixture("toolbar-entry", true);
+  const window = fixture.window!;
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 32, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 32, clientX: 20, clientY: 20
+  }));
+
+  const preview = dragPreview(fixture)!;
+  assert.equal(preview.style.get("transform"), "translate3d(32px, 32px, 0)");
+  assert.equal(window.pendingAnimationFrameCount, 0);
+
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 32, clientX: 30, clientY: 40
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 32, clientX: 50, clientY: 60
+  }));
+  assert.equal(window.pendingAnimationFrameCount, 1);
+  assert.equal(preview.style.get("transform"), "translate3d(32px, 32px, 0)");
+
+  window.flushAnimationFrames();
+  assert.equal(preview.style.get("transform"), "translate3d(62px, 72px, 0)");
+
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 32, clientX: 70, clientY: 80
+  }));
+  const lateFrame = window.peekAnimationFrame();
+  assert.equal(window.pendingAnimationFrameCount, 1);
+  fixture.root.dispatchEvent(interactionEvent("pointercancel", { pointerId: 32 }));
+  assert.equal(window.pendingAnimationFrameCount, 0);
+  lateFrame?.(0);
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(preview.style.get("transform"), "translate3d(62px, 72px, 0)");
+  fixture.controller.dispose();
+});
+
+test("drag preview ignores nested and foreign-host overlay markers", () => {
+  const fixture = dragFixture("toolbar-entry");
+  const nestedContainer = new FakeElement();
+  const nestedOverlay = new FakeElement();
+  nestedOverlay.dataset.atlasOverlayRoot = "true";
+  nestedOverlay.dataset.atlasHostId = "drag-host";
+  nestedContainer.appendChild(nestedOverlay);
+  const foreignOverlay = new FakeElement();
+  foreignOverlay.dataset.atlasOverlayRoot = "true";
+  foreignOverlay.dataset.atlasHostId = "other-host";
+  fixture.root.children.unshift(nestedContainer, foreignOverlay);
+
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 33, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 33, clientX: 20, clientY: 20
+  }));
+
+  assert.equal(nestedOverlay.children.length, 0);
+  assert.equal(foreignOverlay.children.length, 0);
+  assert.notEqual(dragPreview(fixture), undefined);
+  fixture.root.dispatchEvent(interactionEvent("pointercancel", { pointerId: 33 }));
+  assert.equal(dragPreview(fixture), undefined);
+  fixture.controller.dispose();
+});
+
+test("document drag preview preserves the standard source icon", () => {
+  const fixture = dragFixture("document-tab");
+  const icon = new FakeElement();
+  icon.className = "atlas-v2-item-icon";
+  icon.dataset.atlasIcon = "file";
+  fixture.root.appendChild(icon);
+
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 30, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 30, clientX: 20, clientY: 20
+  }));
+
+  const preview = dragPreview(fixture)!;
+  assert.equal(preview.children.length, 2);
+  assert.equal(preview.children[0]?.className, "atlas-v2-item-icon");
+  assert.equal(preview.children[0]?.dataset.atlasIcon, "file");
+  assert.equal(preview.children[1]?.className, "atlas-v2-drag-preview-title");
+  assert.equal(preview.children[1]?.textContent, "Source");
+  fixture.controller.dispose();
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(dragOverlay(fixture)?.dataset.atlasDragSessionId, undefined);
+});
+
+test("page visibility invalidation clears the drag preview without committing", () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 31, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 31, clientX: 20, clientY: 20
+  }));
+  assert.notEqual(dragPreview(fixture), undefined);
+
+  fixture.document.hidden = true;
+  fixture.document.dispatchEvent(new Event("visibilitychange"));
+
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(dragOverlay(fixture)?.dataset.atlasDragSessionId, undefined);
+  assert.equal(fixture.messages.length, 0);
+  fixture.controller.dispose();
+});
 
 test("toolbar tail scaffold wins over its parent region and commits the tail index", async () => {
   const fixture = dragFixture("toolbar-entry");
@@ -762,6 +1034,7 @@ test("document drag crosses threshold previews and commits one host-scoped inten
     insertionIndex: 1
   });
   assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
+  assert.equal(dragPreview(fixture), undefined);
   fixture.controller.dispose();
 });
 
@@ -778,6 +1051,7 @@ test("drag terminal paths cancel without callback and generation update expires 
     fixture.root.dispatchEvent(interactionEvent("pointerup", { pointerId: 41 }));
     await flushCallbacks();
     assert.equal(fixture.messages.length, 0);
+    assert.equal(dragPreview(fixture), undefined);
     fixture.controller.dispose();
   }
 
@@ -797,6 +1071,7 @@ test("drag terminal paths cancel without callback and generation update expires 
   await flushCallbacks();
   assert.equal(escaped.messages.length, 0);
   assert.equal(escaped.root.dataset.atlasDropPreview, undefined);
+  assert.equal(dragPreview(escaped), undefined);
   escaped.controller.dispose();
 
   const stale = dragFixture("document-tab");
@@ -815,6 +1090,7 @@ test("drag terminal paths cancel without callback and generation update expires 
   stale.root.dispatchEvent(interactionEvent("pointerup", { pointerId: 42 }));
   await flushCallbacks();
   assert.equal(stale.messages.length, 0);
+  assert.equal(dragPreview(stale), undefined);
   stale.controller.dispose();
 });
 

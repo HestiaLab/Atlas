@@ -61,6 +61,7 @@ interface ActiveDrag {
   documentGeometry: ReadonlyMap<HTMLElement, DOMRect>;
   documentTabGeometry: ReadonlyMap<HTMLElement, DOMRect>;
   dragging: boolean;
+  preview: HTMLElement | undefined;
   target?: DropTarget;
 }
 
@@ -75,6 +76,9 @@ export class AtlasInteractionController {
   private activeResize: ActiveResize | undefined;
   private activeDrag: ActiveDrag | undefined;
   private dragSequence = 0;
+  private dragPreviewFrame: number | undefined;
+  private pendingDragPreviewPosition:
+    { readonly preview: HTMLElement; readonly x: number; readonly y: number } | undefined;
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
   private keyboardRatio: number | undefined;
@@ -213,7 +217,8 @@ export class AtlasInteractionController {
             : { sourceGroupId }),
           documentGeometry: new Map(),
           documentTabGeometry: new Map(),
-          dragging: false
+          dragging: false,
+          preview: undefined
         };
         dragSource.setPointerCapture?.(event.pointerId);
         event.preventDefault();
@@ -256,15 +261,21 @@ export class AtlasInteractionController {
   private readonly onPointerMove = (event: PointerEvent): void => {
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
+      let previewCreated = false;
       if (!drag.dragging
         && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 4) {
         drag.documentGeometry = this.captureDocumentGeometry();
         drag.documentTabGeometry = this.captureDocumentTabGeometry();
         drag.dragging = true;
+        drag.preview = this.createDragPreview(drag, event.clientX, event.clientY);
+        previewCreated = true;
         this.root.dataset.atlasDragging = "true";
       }
 
       if (drag.dragging) {
+        if (!previewCreated) {
+          this.positionDragPreview(drag.preview, event.clientX, event.clientY);
+        }
         this.previewDropTarget(
           drag,
           this.resolveDropTarget(event.clientX, event.clientY, event.target, drag));
@@ -604,8 +615,116 @@ export class AtlasInteractionController {
     }
 
     this.clearDropPreview(drag.target);
+    this.clearDragPreview(drag.preview);
     this.root.removeAttribute("data-atlas-dragging");
     drag.source.releasePointerCapture?.(drag.pointerId);
+  }
+
+  private createDragPreview(
+    drag: ActiveDrag,
+    x: number,
+    y: number): HTMLElement | undefined {
+    const document = this.ownerDocument;
+    const overlayRoot = this.findOverlayRoot();
+    if (!document || !overlayRoot) {
+      return undefined;
+    }
+
+    overlayRoot.dataset.atlasDragSessionId = drag.sessionId;
+
+    const preview = document.createElement("div");
+    preview.className = "atlas-v2-drag-preview";
+    preview.dataset.atlasDragPreview = drag.sourceKind;
+    preview.setAttribute("aria-hidden", "true");
+    preview.setAttribute("role", "presentation");
+    preview.style.setProperty("pointer-events", "none");
+    this.writeDragPreviewPosition(preview, x, y);
+
+    const label = drag.source.getAttribute("aria-label")?.trim()
+      || drag.source.textContent?.trim()
+      || drag.itemId;
+
+    const iconKey = drag.source
+      .querySelector<HTMLElement>(".atlas-v2-item-icon[data-atlas-icon]")
+      ?.dataset.atlasIcon;
+    if (iconKey) {
+      const icon = document.createElement("span");
+      icon.className = "atlas-v2-item-icon";
+      icon.dataset.atlasIcon = iconKey;
+      preview.appendChild(icon);
+    }
+
+    const title = document.createElement("span");
+    title.className = "atlas-v2-drag-preview-title";
+    title.textContent = label;
+    preview.appendChild(title);
+
+    overlayRoot.appendChild(preview);
+    return preview;
+  }
+
+  private positionDragPreview(
+    preview: HTMLElement | undefined,
+    x: number,
+    y: number): void {
+    if (!preview) {
+      return;
+    }
+
+    this.pendingDragPreviewPosition = { preview, x, y };
+    if (this.dragPreviewFrame !== undefined) {
+      return;
+    }
+
+    const flush = (): void => {
+      this.dragPreviewFrame = undefined;
+      const pending = this.pendingDragPreviewPosition;
+      this.pendingDragPreviewPosition = undefined;
+      if (pending) {
+        this.writeDragPreviewPosition(pending.preview, pending.x, pending.y);
+      }
+    };
+
+    if (this.ownerWindow) {
+      this.dragPreviewFrame = this.ownerWindow.requestAnimationFrame(flush);
+    } else {
+      flush();
+    }
+  }
+
+  private writeDragPreviewPosition(preview: HTMLElement, x: number, y: number): void {
+    preview.style.setProperty(
+      "transform",
+      `translate3d(${x + 12}px, ${y + 12}px, 0)`);
+  }
+
+  private clearDragPreview(preview: HTMLElement | undefined): void {
+    if (this.dragPreviewFrame !== undefined) {
+      this.ownerWindow?.cancelAnimationFrame(this.dragPreviewFrame);
+      this.dragPreviewFrame = undefined;
+    }
+
+    this.pendingDragPreviewPosition = undefined;
+    const overlayRoot = this.findOverlayRoot();
+    preview?.remove();
+    overlayRoot?.removeAttribute("data-atlas-drag-session-id");
+  }
+
+  private findOverlayRoot(): HTMLElement | undefined {
+    const hostId = this.root.dataset.atlasHostId;
+    if (!hostId || hostId !== this.identity.hostId) {
+      return undefined;
+    }
+
+    for (const child of Array.from(this.root.children)) {
+      const candidate = child as HTMLElement;
+      if (candidate.dataset.atlasOverlayRoot === "true"
+        && candidate.dataset.atlasHostId === hostId) {
+        return candidate;
+      }
+    }
+
+    return undefined;
   }
 
   private previewDropTarget(drag: ActiveDrag, target: DropTarget | undefined): void {

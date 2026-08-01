@@ -276,6 +276,12 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         builder.AddAttribute(sequence++, "data-atlas-direction", "inherit");
         builder.AddAttribute(sequence++, "data-atlas-reduced-motion", "system");
         builder.AddElementReferenceCapture(sequence++, element => rootElement = element);
+        builder.OpenElement(sequence++, "div");
+        builder.AddAttribute(sequence++, "class", "atlas-v2-overlay-root");
+        builder.AddAttribute(sequence++, "data-atlas-overlay-root", "true");
+        builder.AddAttribute(sequence++, "data-atlas-host-id", hostId);
+        builder.AddAttribute(sequence++, "aria-hidden", "true");
+        builder.CloseElement();
 
         RenderFixedSlot(builder, ref sequence, "top-toolbar", TopToolbarContent);
         RenderHostError(builder, ref sequence);
@@ -858,6 +864,18 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 EventCallback.Factory.Create(
                     this,
                     () => ToggleToolAsync(region.Group, item.Id, isActive)));
+            builder.OpenRegion(sequence++);
+            var iconSequence = 0;
+            if (item.IconKey is not null)
+            {
+                builder.OpenElement(iconSequence++, "span");
+                builder.AddAttribute(iconSequence++, "class", "atlas-v2-item-icon");
+                builder.AddAttribute(iconSequence++, "data-atlas-icon", item.IconKey);
+                builder.AddAttribute(iconSequence++, "aria-hidden", "true");
+                builder.CloseElement();
+            }
+
+            builder.CloseRegion();
             builder.AddContent(sequence++, item.Title);
             builder.CloseElement();
         }

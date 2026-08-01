@@ -425,6 +425,12 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var root = cut.Find(".atlas-v2-workspace");
         Assert.Equal("region", root.GetAttribute("role"));
         Assert.False(string.IsNullOrWhiteSpace(root.GetAttribute("aria-label")));
+        var overlayRoot = cut.Find(
+            ".atlas-v2-workspace > [data-atlas-overlay-root='true']");
+        Assert.Equal("true", overlayRoot.GetAttribute("aria-hidden"));
+        Assert.Equal(
+            root.GetAttribute("data-atlas-host-id"),
+            overlayRoot.GetAttribute("data-atlas-host-id"));
 
         var toolbar = cut.Find(".atlas-v2-toolbar");
         Assert.Equal("tablist", toolbar.GetAttribute("role"));
@@ -446,6 +452,57 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
         var splitter = cut.Find("[data-atlas-split-id]");
         Assert.False(string.IsNullOrWhiteSpace(splitter.GetAttribute("aria-label")));
+    }
+
+    [Fact]
+    public async Task ToolBar_entry_projects_the_standard_item_icon_for_drag_preview()
+    {
+        await using var workspace = CreateWorkspace(ProjectionDefinition("tool-icon"));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        var icon = cut.Find(
+            "[data-atlas-toolbar-entry] > .atlas-v2-item-icon[data-atlas-icon='tool-icon']");
+        Assert.Equal("true", icon.GetAttribute("aria-hidden"));
+    }
+
+    [Fact]
+    public async Task Overlay_root_remains_stable_when_status_bar_content_changes()
+    {
+        await using var workspace = CreateWorkspace(ProjectionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+        var withoutStatusBar = ProjectedAttributeSequence(
+            cut.Instance,
+            "data-atlas-overlay-root",
+            "true");
+
+        cut.SetParametersAndRender(
+            parameters => parameters.Add(
+                component => component.StatusBarContent,
+                builder => builder.AddContent(0, "Status")));
+        var withStatusBar = ProjectedAttributeSequence(
+            cut.Instance,
+            "data-atlas-overlay-root",
+            "true");
+
+        cut.SetParametersAndRender(
+            parameters => parameters.Add(
+                component => component.StatusBarContent,
+                (RenderFragment?)null));
+        var withoutStatusBarAgain = ProjectedAttributeSequence(
+            cut.Instance,
+            "data-atlas-overlay-root",
+            "true");
+
+        Assert.Equal(withoutStatusBar, withStatusBar);
+        Assert.Equal(withoutStatusBar, withoutStatusBarAgain);
     }
 
     [Fact]
@@ -2072,14 +2129,15 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             new[] { item });
     }
 
-    private static AtlasWorkspaceDefinition ProjectionDefinition()
+    private static AtlasWorkspaceDefinition ProjectionDefinition(string? toolIconKey = null)
     {
         var tool = new DockItem(
             new DockItemId("tool"),
             DockItemKind.Tool,
             new ContentReference("tool", "tool-resource"),
             DockItemCapabilityPresets.Tool,
-            "Tool");
+            "Tool",
+            toolIconKey);
         var toolGroup = new GroupNode(
             new LayoutNodeId("tools"),
             DockItemKind.Tool,
