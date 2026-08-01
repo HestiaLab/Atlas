@@ -145,7 +145,7 @@
 | REQ-F-138 | Not Started | DES-DOM-011、DES-RND-009 | 仅有设计/枚举或场景描述；无承担全部 AC 的 operation/render/E2E。 |
 | REQ-F-140 | Verified | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-141 | In Progress | DES-DOM-010、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-142 | Verified | DES-INT-005、DES-OP-007、DES-PRJ-003 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
+| REQ-F-142 | Implemented | DES-INT-005、DES-OP-007、DES-PRJ-003 | 单 Active Panel 模型下，Panel Header 命中同组 ToolBar Entry before/after；controller 发送 `TargetItemId`，Host 映射到 Group logical index 并执行 `ReorderItemOperation`。Node/component/history 自动化已覆盖；尚无最终 bundle 的真实浏览器证据，因此不标记 Verified。 |
 | REQ-F-143 | In Progress | DES-DOM-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-144 | In Progress | DES-DOM-010、DES-OP-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-145 | In Progress | DES-DOM-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |

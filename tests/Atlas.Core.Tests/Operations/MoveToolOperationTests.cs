@@ -80,6 +80,53 @@ public sealed class MoveToolOperationTests
     }
 
     [Fact]
+    public async Task Empty_persistent_target_without_toolbar_order_accepts_move_and_round_trips_history()
+    {
+        var moved = CreateTool("moved");
+        var source = CreateToolGroup(
+            "source",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineStartUpper,
+            moved);
+        var target = new GroupNode(
+            new LayoutNodeId("target"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineEndUpper);
+        var split = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspace(
+            split.Id,
+            new LayoutNode[] { split, source, target },
+            new[] { moved },
+            omittedOrderRegion: LogicalRegion.InlineEndUpper);
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(moved.Id, target.Id));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        Assert.Equal(
+            new[] { moved.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineEndUpper].ItemIds);
+
+        await workspace.UndoAsync();
+
+        Assert.DoesNotContain(
+            LogicalRegion.InlineEndUpper,
+            workspace.Current.ToolBarOrders.Keys);
+        Assert.Empty(
+            Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
+
+        await workspace.RedoAsync();
+
+        Assert.Equal(
+            new[] { moved.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineEndUpper].ItemIds);
+    }
+
+    [Fact]
     public async Task Explicit_missing_or_incompatible_target_returns_typed_failure()
     {
         var tool = CreateTool("tool");
@@ -145,11 +192,13 @@ public sealed class MoveToolOperationTests
     private static AtlasWorkspace CreateWorkspace(
         LayoutNodeId rootId,
         IReadOnlyList<LayoutNode> nodes,
-        IReadOnlyList<DockItem> items)
+        IReadOnlyList<DockItem> items,
+        LogicalRegion? omittedOrderRegion = null)
     {
         var orders = nodes
             .OfType<GroupNode>()
             .Where(group => group.LogicalRegion is not null)
+            .Where(group => group.LogicalRegion != omittedOrderRegion)
             .Select(
                 group => new KeyValuePair<LogicalRegion, ToolBarOrderState>(
                     group.LogicalRegion!.Value,

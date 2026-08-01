@@ -96,7 +96,9 @@ internal static class MoveToolPlanner
             target.LogicalRegion);
         if (target.LogicalRegion is LogicalRegion targetRegion)
         {
-            var targetOrder = orders[targetRegion].ItemIds.ToList();
+            var targetOrder = orders.TryGetValue(targetRegion, out var currentOrder)
+                ? currentOrder.ItemIds.ToList()
+                : target.ItemIds.ToList();
             targetOrder.Insert(targetIndex, item.Id);
             orders[targetRegion] = new ToolBarOrderState(targetRegion, targetOrder);
         }
@@ -193,9 +195,12 @@ internal static class MoveToolPlanner
 
         if (source.LogicalRegion is LogicalRegion sourceRegion)
         {
+            var sourceOrder = orders.TryGetValue(sourceRegion, out var currentSourceOrder)
+                ? currentSourceOrder.ItemIds.Where(id => id != itemId)
+                : remaining;
             orders[sourceRegion] = new ToolBarOrderState(
                 sourceRegion,
-                orders[sourceRegion].ItemIds.Where(id => id != itemId));
+                sourceOrder);
         }
     }
 

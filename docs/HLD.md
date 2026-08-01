@@ -53,7 +53,7 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
-| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、无应用项目、Node 24 LTS + npm |
+| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
 | OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
 
@@ -837,9 +837,9 @@ Panel Header 与 ToolBar Entry 可以触发不同语义，不能仅凭最终索�
     ItemId, TargetGroupId, TargetIndex?, BaseRevision
     — 跨 Group/Region 移动；目标 Panel 展开并成为 Active
 
-  ReorderToolOperation
+  ReorderItemOperation
     ItemId, GroupId, TargetIndex, BaseRevision
-    — 调整 Group.ItemIds，ToolBar 分组内顺序同步
+    — Panel Header 同 Group 调序；调整 Group.ItemIds，并同步 ToolBar 分组内顺序
 
   ReorderToolBarEntryOperation
     ItemId, LogicalRegion, TargetIndex, BaseRevision
@@ -1159,6 +1159,7 @@ Target Resolver 是纯函数模块，输入 GeometrySnapshot + pointer position 
       LogicalSide,
       LogicalRegion,
       TargetGroupId,
+      TargetItemId?,         // ToolBar Entry target identity
       InsertionIndex,
       Priority,
   }
@@ -1168,9 +1169,12 @@ DropScaffold > RegionBody。Editor Area、Top Toolbar、Status Bar 与其他 Wor
 产生 PanelDropTarget。相同语义 target 即使由重叠 DOM 命中也必须归一化为同一个 key，避免
 preview 抖动和重复 DOM mutation。
 
-Panel Header resolver 只为同一 Tool Group 中其他 Panel Header 生成 before/after insertion；
-提交为 ReorderToolOperation 并同步 ToolBar 投影。原 Header 位置解析为 NoChange，不把同区域
-Header 排序误判为跨 Region Move。
+Panel Header 同 Group 排序必须命中目标 ToolBar Entry 的 before/after 区域。resolver 在 intent 中同时
+提供 ToolBar wire `InsertionIndex` 与 `TargetItemId`；Host 仅用 wire slot 判断相对目标 Entry 的
+before/after，再按 `TargetItemId` 映射到 `Group.ItemIds` 的 logical index，提交
+`ReorderItemOperation` 并同步 ToolBar 投影。禁止把 ToolBar wire index 直接当作 Group index。
+原 Entry 位置解析为 NoChange；同 Group 的 ToolBar Region/DropScaffold 不承担 Panel logical reorder。
+该交互与 `AtlasGroupView` 只投影一个 Active Panel Header 的模型兼容，不要求多 Header 同时可见。
 
 ToolBar resolver 规则：
 
@@ -2018,7 +2022,12 @@ DES-PRJ-001
     Atlas.Blazor.Tests/      ← bUnit 组件测试
     browser/                 ← 静态真实浏览器验证 fixtures
 
-依赖方向：Atlas.Core ← Atlas.Blazor；测试项目只依赖被测包。禁止反向依赖。
+  samples/
+    Atlas.Demo/              ← 独立 Blazor WASM NuGet consumer（单独 solution）
+
+依赖方向：Atlas.Core ← Atlas.Blazor ← Atlas.Demo；测试项目只依赖被测产物。禁止反向依赖。
+`Atlas.Demo` 不加入 `Atlas.sln`，不属于 Atlas 双包实现层，不引用源码项目；它只从 Release pack feed
+消费 `Atlas.Core` / `Atlas.Blazor`，因此主 solution 的干净恢复不依赖本地预生成包。详见 ADR-0017。
 
 V1/V2 共存规则：
 
@@ -2413,6 +2422,7 @@ DOM contract tests 至少验证：
 | P6 Persistence | V2 XML、restore、Preset、V1 migration、repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests 通过 |
 | P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame、threat model | P3 + DEV-GATE-003/004 Closed | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
 | P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 150 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
+| Consumer Demo | 可迁移的 SRS §3.1 IDE 工作区、consumer boundary 与真实浏览器复验 | P8 + ADR-0017 Accepted | 双包 Release pack；独立 solution restore/build/test/format；仓库外 restore/build/test/run；当前浏览器证据单独记录且不替代 P7/P8 历史证据 |
 
 P5 与 P6 可以在 P2/P4 稳定后并行，但共享的 ID、Result、Revision、protocol enum 和 public API
 必须先冻结。ADR-0013 已关闭 DEV-GATE-004；SandboxedFrame 的协议、public API 和安全声明必须严格

@@ -29,6 +29,14 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 # Validate NuGet packages
 dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
+
+# Verify the independent consumer sample against the packed feed
+cd samples/Atlas.Demo
+dotnet restore Atlas.Demo.sln --configfile NuGet.Config
+dotnet build Atlas.Demo.sln --no-restore
+dotnet test Atlas.Demo.sln --no-build --no-restore
+dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
+cd ../..
 ```
 
 ## Branches
@@ -70,8 +78,10 @@ maintenance requests.
 
 - Atlas domain, operation, history, and persistence code belongs in `src/Atlas.Core` and must not reference Blazor or JS interop.
 - Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
-- Browser verification fixtures belong in `tests/browser`; consumer applications are not part of
-  the repository topology unless a maintainer approves a new ADR.
+- Browser verification fixtures belong in `tests/browser`.
+- The maintainer-approved `samples/Atlas.Demo` project is an independent NuGet consumer under
+  ADR-0017. It stays outside `Atlas.sln`, never references Atlas source projects, and must remain
+  portable by changing only its NuGet feed or package version.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in

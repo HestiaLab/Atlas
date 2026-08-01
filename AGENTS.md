@@ -35,6 +35,7 @@ src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazo
 tests/Atlas.Core.Tests/   Core xUnit tests
 tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
 tests/browser/            Static real-browser verification fixtures
+samples/Atlas.Demo/       Independent NuGet consumer sample and tests
 docs/                     SRS, HLD, traceability and ADRs
 ```
 
@@ -64,6 +65,14 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 # Validate NuGet packaging
 dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
+
+# Verify the independent NuGet consumer sample after packing
+cd samples/Atlas.Demo
+dotnet restore Atlas.Demo.sln --configfile NuGet.Config
+dotnet build Atlas.Demo.sln --no-restore
+dotnet test Atlas.Demo.sln --no-build --no-restore
+dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
+cd ../..
 ```
 
 ## Ownership Rules
@@ -72,6 +81,8 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-re
   against `docs/SRS.md`.
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
+- `samples/Atlas.Demo` is a portable NuGet consumer, is not part of `Atlas.sln`, and
+  must not reference or link Atlas source projects or copy RCL assets.
 - `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
 - Tests should cover behaviour, not accidental implementation details.
 - Keep NuGet dependency graph narrow — prefer framework types over third-party packages.

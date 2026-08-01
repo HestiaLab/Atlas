@@ -61,6 +61,42 @@ public sealed class ToolBarOperationTests
     }
 
     [Fact]
+    public async Task Toolbar_only_reorder_uses_independent_order_and_preserves_group_through_history()
+    {
+        var (workspace, items) = CreateWorkspace(
+            independentToolBarOrder: true,
+            selectSecond: true);
+        await using (workspace)
+        {
+            var result = await workspace.ExecuteAsync(
+                new ReorderToolBarEntryOperation(
+                    items[2].Id,
+                    LogicalRegion.InlineStartUpper,
+                    targetIndex: 1));
+
+            Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+            AssertToolGroupState(
+                workspace.Current,
+                items,
+                new[] { items[0].Id, items[2].Id, items[1].Id });
+
+            var undo = await workspace.UndoAsync();
+            Assert.Equal(WorkspaceResultStatus.Success, undo.Status);
+            AssertToolGroupState(
+                workspace.Current,
+                items,
+                new[] { items[2].Id, items[0].Id, items[1].Id });
+
+            var redo = await workspace.RedoAsync();
+            Assert.Equal(WorkspaceResultStatus.Success, redo.Status);
+            AssertToolGroupState(
+                workspace.Current,
+                items,
+                new[] { items[0].Id, items[2].Id, items[1].Id });
+        }
+    }
+
+    [Fact]
     public async Task Repeated_state_or_position_is_no_change()
     {
         var (workspace, items) = CreateWorkspace();
@@ -112,7 +148,25 @@ public sealed class ToolBarOperationTests
         }
     }
 
-    private static (AtlasWorkspace Workspace, DockItem[] Items) CreateWorkspace()
+    private static void AssertToolGroupState(
+        WorkspaceSnapshot snapshot,
+        IReadOnlyList<DockItem> items,
+        IEnumerable<DockItemId> expectedToolBarOrder)
+    {
+        var group = Assert.IsType<GroupNode>(
+            snapshot.Nodes[new LayoutNodeId("tools")]);
+        Assert.Equal(items.Select(item => item.Id), group.ItemIds);
+        Assert.Equal(items[1].Id, group.SelectedItemId);
+        Assert.Equal(GroupVisibility.Expanded, group.Visibility);
+        Assert.Null(group.EditorState);
+        Assert.Equal(
+            expectedToolBarOrder,
+            snapshot.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+    }
+
+    private static (AtlasWorkspace Workspace, DockItem[] Items) CreateWorkspace(
+        bool independentToolBarOrder = false,
+        bool selectSecond = false)
     {
         var items = new[]
         {
@@ -126,7 +180,7 @@ public sealed class ToolBarOperationTests
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             items.Select(item => item.Id),
-            items[0].Id,
+            selectSecond ? items[1].Id : items[0].Id,
             logicalRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
@@ -148,7 +202,9 @@ public sealed class ToolBarOperationTests
                     LogicalRegion.InlineStartUpper,
                     new ToolBarOrderState(
                         LogicalRegion.InlineStartUpper,
-                        items.Select(item => item.Id))),
+                        independentToolBarOrder
+                            ? new[] { items[2].Id, items[0].Id, items[1].Id }
+                            : items.Select(item => item.Id))),
             },
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
         return (
