@@ -15,7 +15,9 @@ using Atlas.Core.Results;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 using System.Text.Json;
 using Xunit;
 
@@ -31,6 +33,18 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         trackingFactory = new TrackingWorkspaceFactory(new AtlasWorkspaceFactory());
         Services.AddSingleton<IAtlasWorkspaceFactory>(trackingFactory);
         JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    [Fact]
+    public void Interaction_protocol_exposes_target_item_identity()
+    {
+        var messageType = typeof(AtlasWorkspaceHost).Assembly.GetType(
+            "Atlas.Blazor.Interop.AtlasInteractionMessage");
+        Assert.NotNull(messageType);
+        Assert.NotNull(
+            messageType!.GetProperty(
+                "TargetItemId",
+                BindingFlags.Instance | BindingFlags.Public));
     }
 
     [Fact]
@@ -204,6 +218,198 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
         cut.WaitForAssertion(
             () => Assert.Equal(20, cut.FindAll("[data-atlas-toolbar-entry]").Count));
+    }
+
+    [Fact]
+    public void Toolbar_partitions_bottom_regions_below_upper_regions()
+    {
+        var workspace = CreateWorkspace(ToolBarPartitionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".atlas-v2-toolbar")));
+        var start = cut.Find("[data-atlas-toolbar-side='inline-start']");
+        var upperArea = start.QuerySelector("[data-atlas-toolbar-area='upper']");
+        var bottomArea = start.QuerySelector("[data-atlas-toolbar-area='bottom']");
+        Assert.NotNull(upperArea);
+        Assert.NotNull(bottomArea);
+        Assert.NotNull(upperArea!.QuerySelector("[data-atlas-toolbar-region='InlineStartUpper']"));
+        Assert.NotNull(upperArea.QuerySelector("[data-atlas-toolbar-region='InlineStartLower']"));
+        Assert.NotNull(bottomArea!.QuerySelector("[data-atlas-toolbar-region='BlockEndInlineStart']"));
+        Assert.Equal(
+            "true",
+            start.QuerySelector(".atlas-v2-toolbar-section-divider")
+                ?.GetAttribute("data-atlas-toolbar-section-divider"));
+    }
+
+    [Fact]
+    public void Empty_tool_region_keeps_toolbar_rendered_as_drop_target()
+    {
+        var workspace = CreateWorkspace(EmptyToolRegionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".atlas-v2-toolbar")));
+        var start = cut.Find("[data-atlas-toolbar-side='inline-start']");
+        var emptyRegion = start.QuerySelector("[data-atlas-toolbar-region='InlineStartLower']");
+        Assert.NotNull(emptyRegion);
+        Assert.Equal("true", emptyRegion!.GetAttribute("data-atlas-region-empty"));
+        Assert.False(string.IsNullOrWhiteSpace(emptyRegion.GetAttribute("data-atlas-group-id")));
+        Assert.Empty(cut.FindAll("[data-atlas-toolbar-region='InlineStartLower'] [data-atlas-toolbar-entry]"));
+    }
+
+    [Fact]
+    public void Toolbar_region_projects_a_tail_drop_scaffold_after_its_entries()
+    {
+        var workspace = CreateWorkspace(ToolBarPartitionDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        var region = cut.Find("[data-atlas-toolbar-region='InlineStartUpper']");
+        var scaffold = region.QuerySelector(":scope > [data-atlas-drop-scaffold]");
+
+        Assert.NotNull(scaffold);
+        Assert.Equal("true", scaffold!.GetAttribute("data-atlas-drop-scaffold"));
+        Assert.Equal("1", scaffold.GetAttribute("data-atlas-insertion-index"));
+        Assert.Equal("upper", scaffold.GetAttribute("data-atlas-group-id"));
+        Assert.Equal("presentation", scaffold.GetAttribute("role"));
+        Assert.Equal("true", scaffold.GetAttribute("aria-hidden"));
+    }
+
+    [Fact]
+    public async Task Moving_toolbar_entry_across_sides_preserves_layout_tree_projection()
+    {
+        var workspace = CreateWorkspace(CrossSideToolMoveDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+        var expectedSplitIds = new[]
+        {
+            "bottom-dock",
+            "editor-right",
+            "left-dock",
+            "main-area",
+            "right-dock",
+            "root",
+        };
+
+        Assert.Equal(expectedSplitIds, ProjectedSplitIds(cut));
+        Assert.Contains("Terminal content", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Problems content", cut.Markup, StringComparison.Ordinal);
+        var committedSplitBases = workspace.Current.Nodes.Values
+            .OfType<SplitNode>()
+            .ToDictionary(split => split.Id, split => split.Basis);
+        var rootNodeIdSequence = ProjectedAttributeSequence(
+            cut.Instance,
+            "data-atlas-node-id",
+            "root");
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(
+                new DockItemId("project"),
+                new LayoutNodeId("right-upper"),
+                targetIndex: 1));
+
+        Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(expectedSplitIds, ProjectedSplitIds(cut));
+                Assert.Equal(6, cut.FindAll(".atlas-v2-split").Count);
+                Assert.NotNull(
+                    cut.Find("[data-atlas-node-id='root']")
+                        .QuerySelector(":scope > [data-atlas-node-id='main-area']"));
+                Assert.NotNull(
+                    cut.Find("[data-atlas-node-id='root']")
+                        .QuerySelector(":scope > [data-atlas-node-id='bottom-dock']"));
+                Assert.Contains("Terminal content", cut.Markup, StringComparison.Ordinal);
+                Assert.Contains("Problems content", cut.Markup, StringComparison.Ordinal);
+                Assert.Equal(
+                    rootNodeIdSequence,
+                    ProjectedAttributeSequence(
+                        cut.Instance,
+                        "data-atlas-node-id",
+                        "root"));
+                Assert.NotNull(
+                    cut.Find("[data-atlas-toolbar-side='inline-end']")
+                        .QuerySelector("[data-atlas-item-id='project']"));
+                AssertCommittedSplitBases(workspace.Current, committedSplitBases);
+            });
+
+        var undo = await workspace.UndoAsync();
+
+        Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(expectedSplitIds, ProjectedSplitIds(cut));
+                Assert.NotNull(
+                    cut.Find("[data-atlas-toolbar-side='inline-start']")
+                        .QuerySelector("[data-atlas-item-id='project']"));
+                Assert.Contains("Terminal content", cut.Markup, StringComparison.Ordinal);
+                Assert.Contains("Problems content", cut.Markup, StringComparison.Ordinal);
+                AssertCommittedSplitBases(workspace.Current, committedSplitBases);
+            });
+
+        var redo = await workspace.RedoAsync();
+
+        Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(expectedSplitIds, ProjectedSplitIds(cut));
+                Assert.NotNull(
+                    cut.Find("[data-atlas-toolbar-side='inline-end']")
+                        .QuerySelector("[data-atlas-item-id='project']"));
+                Assert.Contains("Terminal content", cut.Markup, StringComparison.Ordinal);
+                Assert.Contains("Problems content", cut.Markup, StringComparison.Ordinal);
+                AssertCommittedSplitBases(workspace.Current, committedSplitBases);
+            });
+    }
+
+    [Fact]
+    public async Task Toolbar_move_preserves_region_section_metadata_after_entry_count_change()
+    {
+        var workspace = CreateWorkspace(CrossSideToolMoveDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(component => component.ContentTemplate, ContentText));
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(
+                new DockItemId("services"),
+                new LayoutNodeId("left-lower"),
+                targetIndex: 0));
+
+        Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
+        cut.WaitForAssertion(
+            () =>
+            {
+                var rightLower = cut.Find("[data-atlas-toolbar-region='InlineEndLower']");
+                Assert.Equal("atlas-v2-toolbar-region", rightLower.ClassName);
+                Assert.Equal("right-lower", rightLower.GetAttribute("data-atlas-group-id"));
+                Assert.Equal("false", rightLower.GetAttribute("data-atlas-region-empty"));
+                Assert.Contains(
+                    rightLower.QuerySelectorAll("[data-atlas-toolbar-entry]"),
+                    entry => entry.GetAttribute("data-atlas-item-id") == "database");
+                var rightUpper = cut.Find("[data-atlas-toolbar-region='InlineEndUpper']");
+                Assert.Equal("atlas-v2-toolbar-region", rightUpper.ClassName);
+                Assert.Equal("true", rightUpper.GetAttribute("data-atlas-region-empty"));
+                Assert.Empty(rightUpper.QuerySelectorAll("[data-atlas-toolbar-entry]"));
+            });
     }
 
     [Fact]
@@ -530,6 +736,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
         var root = cut.Find("[data-atlas-node-id='root']");
         var splitter = root.QuerySelector("[data-atlas-split-id='root']");
+        var committedBasis = Assert.IsType<SplitNode>(
+            workspace.Current.Nodes[new LayoutNodeId("root")]).Basis;
 
         Assert.NotNull(splitter);
         Assert.Equal("true", root.GetAttribute("data-atlas-split-locked"));
@@ -545,10 +753,41 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var collapse = cut.Find("[data-atlas-collapse-child='first']");
         collapse.Click();
         cut.WaitForAssertion(
-            () => Assert.Equal(
-                GroupVisibility.Collapsed,
-                Assert.IsType<GroupNode>(
-                    workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility));
+            () =>
+            {
+                Assert.Equal(
+                    GroupVisibility.Collapsed,
+                    Assert.IsType<GroupNode>(
+                        workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility);
+                Assert.Equal(
+                    committedBasis,
+                    Assert.IsType<SplitNode>(
+                        workspace.Current.Nodes[new LayoutNodeId("root")]).Basis);
+                Assert.Equal(
+                    "first",
+                    cut.Find("[data-atlas-node-id='root']")
+                        .GetAttribute("data-atlas-split-hidden"));
+            });
+
+        var undo = await workspace.UndoAsync();
+
+        Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(
+                    GroupVisibility.Expanded,
+                    Assert.IsType<GroupNode>(
+                        workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility);
+                Assert.Equal(
+                    committedBasis,
+                    Assert.IsType<SplitNode>(
+                        workspace.Current.Nodes[new LayoutNodeId("root")]).Basis);
+                Assert.Equal(
+                    "none",
+                    cut.Find("[data-atlas-node-id='root']")
+                        .GetAttribute("data-atlas-split-hidden"));
+            });
     }
 
     [Fact]
@@ -903,7 +1142,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
-    public async Task Panel_dock_intent_maps_approved_target_to_move_tool_operation()
+    public async Task Same_group_panel_toolbar_invalid_intents_are_rejected()
     {
         var module = JSInterop.SetupModule(
             "./_content/Atlas.Blazor/atlas-v2/atlas.js");
@@ -936,13 +1175,105 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             workspaceId: tracked.Id.Value,
             itemId: "tool",
             sourceKind: "panel-header",
-            targetKind: "toolbar-region",
-            logicalRegion: "InlineStartUpper");
+            targetKind: "panel-header-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 0);
 
-        var operation = Assert.IsType<MoveToolOperation>(tracked.LastOperation);
-        Assert.Equal(new DockItemId("tool"), operation.ItemId);
-        Assert.Equal(new LayoutNodeId("tools"), operation.TargetGroupId);
-        Assert.Equal(1, tracked.ExecuteCount);
+        Assert.Null(tracked.LastOperation);
+        Assert.Equal(0, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:2",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "tool",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 0);
+
+        Assert.Null(tracked.LastOperation);
+        Assert.Equal(0, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:3",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "tool",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            targetItemId: "tool",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 2);
+
+        Assert.Null(tracked.LastOperation);
+        Assert.Equal(0, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:4",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "tool",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            targetItemId: "missing",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 0);
+
+        Assert.Null(tracked.LastOperation);
+        Assert.Equal(0, tracked.ExecuteCount);
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:5",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "tool",
+            sourceKind: "toolbar-entry",
+            targetKind: "panel-header-insertion",
+            insertionIndex: 0);
+
+        Assert.Null(tracked.LastOperation);
+        Assert.Equal(0, tracked.ExecuteCount);
 
         await cut.Instance.DisposeAsync();
         await tracked.DisposeAsync();
@@ -991,6 +1322,563 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             new[] { new DockItemId("second"), new DockItemId("first") },
             Assert.IsType<GroupNode>(
                 tracked.Current.Nodes[new LayoutNodeId("documents")]).ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Same_group_toolbar_entry_forward_insertion_uses_post_removal_index()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "first",
+            sourceKind: "toolbar-entry",
+            targetKind: "toolbar-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 2);
+
+        var operation = Assert.IsType<ReorderToolBarEntryOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("first"),
+                new DockItemId("second"),
+                new DockItemId("third"),
+            },
+            Assert.IsType<GroupNode>(
+                tracked.Current.Nodes[new LayoutNodeId("tools")]).ItemIds);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("second"),
+                new DockItemId("first"),
+                new DockItemId("third"),
+            },
+            tracked.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Cross_group_toolbar_entry_insertion_keeps_wire_index_unchanged()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(CrossSideToolMoveDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "right-upper",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "project",
+            sourceKind: "toolbar-entry",
+            targetKind: "drop-scaffold",
+            logicalRegion: "InlineEndUpper",
+            insertionIndex: 1);
+
+        var operation = Assert.IsType<MoveToolOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("services"),
+                new DockItemId("project"),
+            },
+            Assert.IsType<GroupNode>(
+                tracked.Current.Nodes[new LayoutNodeId("right-upper")]).ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Theory]
+    [InlineData("panel-header", "toolbar-insertion", "InlineEndUpper")]
+    [InlineData("toolbar-entry", "panel-header-insertion", null)]
+    public async Task Cross_group_cross_index_domain_targets_map_to_move_operation(
+        string sourceKind,
+        string targetKind,
+        string? logicalRegion)
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(CrossSideToolMoveDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "right-upper",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "project",
+            sourceKind: sourceKind,
+            targetKind: targetKind,
+            logicalRegion: logicalRegion,
+            insertionIndex: 1);
+
+        var operation = Assert.IsType<MoveToolOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("services"),
+                new DockItemId("project"),
+            },
+            Assert.IsType<GroupNode>(
+                tracked.Current.Nodes[new LayoutNodeId("right-upper")]).ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Same_group_toolbar_entry_backward_insertion_keeps_wire_index()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "third",
+            sourceKind: "toolbar-entry",
+            targetKind: "toolbar-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 0);
+
+        var operation = Assert.IsType<ReorderToolBarEntryOperation>(tracked.LastOperation);
+        Assert.Equal(0, operation.TargetIndex);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("first"),
+                new DockItemId("second"),
+                new DockItemId("third"),
+            },
+            Assert.IsType<GroupNode>(
+                tracked.Current.Nodes[new LayoutNodeId("tools")]).ItemIds);
+        Assert.Equal(
+            new[]
+            {
+                new DockItemId("third"),
+                new DockItemId("first"),
+                new DockItemId("second"),
+            },
+            tracked.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData(3, true)]
+    [InlineData(4, false)]
+    public async Task Same_group_toolbar_entry_tail_slot_validates_wire_boundary(
+        int? insertionIndex,
+        bool expectedExecution)
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "first",
+            sourceKind: "toolbar-entry",
+            targetKind: "toolbar-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: insertionIndex);
+
+        Assert.Equal(expectedExecution ? 1 : 0, tracked.ExecuteCount);
+        if (expectedExecution)
+        {
+            var operation = Assert.IsType<ReorderToolBarEntryOperation>(tracked.LastOperation);
+            Assert.Equal(2, operation.TargetIndex);
+            Assert.Equal(
+                new[]
+                {
+                    new DockItemId("second"),
+                    new DockItemId("third"),
+                    new DockItemId("first"),
+                },
+                tracked.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+        }
+        else
+        {
+            Assert.Null(tracked.LastOperation);
+        }
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Toolbar_entry_reorder_uses_toolbar_order_and_preserves_group_state_through_history()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(
+                ThreeToolEntriesDefinition(
+                    independentToolBarOrder: true,
+                    selectSecond: true)));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "third",
+            sourceKind: "toolbar-entry",
+            targetKind: "toolbar-insertion",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 2);
+
+        var operation = Assert.IsType<ReorderToolBarEntryOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "second", "third" },
+            selectedItemId: "second",
+            new[] { "first", "third", "second" });
+
+        var undo = await tracked.UndoAsync();
+        Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "second", "third" },
+            selectedItemId: "second",
+            new[] { "third", "first", "second" });
+
+        var redo = await tracked.RedoAsync();
+        Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "second", "third" },
+            selectedItemId: "second",
+            new[] { "first", "third", "second" });
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Same_group_panel_header_to_toolbar_entry_reorders_group_through_history()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(
+                ThreeToolEntriesDefinition(
+                    independentToolBarOrder: true,
+                    selectSecond: true)));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "third",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            targetItemId: "first",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 1);
+
+        var operation = Assert.IsType<ReorderItemOperation>(tracked.LastOperation);
+        Assert.Equal(0, operation.TargetIndex);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "third", "first", "second" },
+            selectedItemId: "second",
+            new[] { "third", "first", "second" });
+
+        var undo = await tracked.UndoAsync();
+        Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "second", "third" },
+            selectedItemId: "second",
+            new[] { "third", "first", "second" });
+
+        var redo = await tracked.RedoAsync();
+        Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "third", "first", "second" },
+            selectedItemId: "second",
+            new[] { "third", "first", "second" });
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Same_group_panel_header_to_toolbar_entry_after_target_reorders_group()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(
+                ThreeToolEntriesDefinition(
+                    independentToolBarOrder: true,
+                    selectSecond: true)));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "third",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            targetItemId: "first",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: 2);
+
+        var operation = Assert.IsType<ReorderItemOperation>(tracked.LastOperation);
+        Assert.Equal(1, operation.TargetIndex);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "third", "second" },
+            selectedItemId: "second",
+            new[] { "first", "third", "second" });
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public async Task Same_group_panel_header_to_own_toolbar_entry_is_no_change(
+        int insertionIndex)
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(
+                ThreeToolEntriesDefinition(
+                    independentToolBarOrder: true,
+                    selectSecond: true)));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.ContentTemplate, ContentText));
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single().Arguments[2]!;
+        var hostId = cut.Find(".atlas-v2-workspace")
+            .GetAttribute("data-atlas-host-id")!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "dock-item",
+            splitId: null,
+            firstRatio: 0,
+            mode: null,
+            command: null,
+            generation: 1,
+            baseRevision: 0,
+            targetGroupId: "tools",
+            protocolVersion: 1,
+            sessionId: $"{hostId}:1",
+            hostId: hostId,
+            workspaceId: tracked.Id.Value,
+            itemId: "third",
+            sourceKind: "panel-header",
+            targetKind: "toolbar-insertion",
+            targetItemId: "third",
+            logicalRegion: "InlineStartUpper",
+            insertionIndex: insertionIndex);
+
+        var operation = Assert.IsType<ReorderItemOperation>(tracked.LastOperation);
+        Assert.Equal(2, operation.TargetIndex);
+        Assert.Equal(1, tracked.ExecuteCount);
+        Assert.Equal(0, tracked.Current.Revision);
+        AssertToolGroupState(
+            tracked.Current,
+            new[] { "first", "second", "third" },
+            selectedItemId: "second",
+            new[] { "third", "first", "second" });
 
         await cut.Instance.DisposeAsync();
         await tracked.DisposeAsync();
@@ -1115,6 +2003,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         string? itemId = null,
         string? sourceKind = null,
         string? targetKind = null,
+        string? targetItemId = null,
         string? logicalRegion = null,
         int? insertionIndex = null,
         string? newGroupId = null,
@@ -1142,6 +2031,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         messageType.GetProperty("ItemId")!.SetValue(message, itemId);
         messageType.GetProperty("SourceKind")!.SetValue(message, sourceKind);
         messageType.GetProperty("TargetKind")!.SetValue(message, targetKind);
+        messageType.GetProperty("TargetItemId")!.SetValue(message, targetItemId);
         messageType.GetProperty("LogicalRegion")!.SetValue(message, logicalRegion);
         messageType.GetProperty("InsertionIndex")!.SetValue(message, insertionIndex);
         messageType.GetProperty("NewGroupId")!.SetValue(message, newGroupId);
@@ -1153,7 +2043,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     {
         var factory = Services.GetRequiredService<IAtlasWorkspaceFactory>();
         var result = factory.Create(definition);
-        Assert.True(result.Succeeded);
+        Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
         return result.Value!;
     }
 
@@ -1284,6 +2174,409 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             new LayoutNode[] { group },
             new[] { first, second });
     }
+
+    private static AtlasWorkspaceDefinition ToolBarPartitionDefinition()
+    {
+        var upperTool = new DockItem(
+            new DockItemId("upper-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "upper-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Upper");
+        var lowerTool = new DockItem(
+            new DockItemId("lower-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "lower-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Lower");
+        var bottomTool = new DockItem(
+            new DockItemId("bottom-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "bottom-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Bottom");
+        var upperGroup = new GroupNode(
+            new LayoutNodeId("upper"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { upperTool.Id },
+            upperTool.Id,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var lowerGroup = new GroupNode(
+            new LayoutNodeId("lower"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { lowerTool.Id },
+            lowerTool.Id,
+            logicalRegion: LogicalRegion.InlineStartLower);
+        var bottomGroup = new GroupNode(
+            new LayoutNodeId("bottom"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { bottomTool.Id },
+            bottomTool.Id,
+            logicalRegion: LogicalRegion.BlockEndInlineStart);
+        var split = new SplitNode(
+            new LayoutNodeId("root"),
+            SplitAxis.BlockChildren,
+            SplitBasis.Proportional(0.7),
+            new SplitConstraints(),
+            upperGroup.Id,
+            lowerGroup.Id);
+        var bottomSplit = new SplitNode(
+            new LayoutNodeId("bottom-root"),
+            SplitAxis.BlockChildren,
+            SplitBasis.Proportional(0.7),
+            new SplitConstraints(),
+            split.Id,
+            bottomGroup.Id);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("partition"),
+            bottomSplit.Id,
+            new LayoutNode[]
+            {
+                bottomSplit,
+                split,
+                upperGroup,
+                lowerGroup,
+                bottomGroup,
+            },
+            new[] { upperTool, lowerTool, bottomTool },
+            toolBars: new[]
+            {
+                new ToolBarState(
+                    LogicalSide.InlineStart,
+                    ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    new[] { upperTool.Id }),
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartLower,
+                    new[] { lowerTool.Id }),
+                new ToolBarOrderState(
+                    LogicalRegion.BlockEndInlineStart,
+                    new[] { bottomTool.Id }),
+            });
+    }
+
+    private static AtlasWorkspaceDefinition EmptyToolRegionDefinition()
+    {
+        var upperTool = new DockItem(
+            new DockItemId("upper-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "upper-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Upper");
+        var upperGroup = new GroupNode(
+            new LayoutNodeId("upper"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { upperTool.Id },
+            upperTool.Id,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var emptyLowerGroup = new GroupNode(
+            new LayoutNodeId("lower"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartLower);
+        var split = new SplitNode(
+            new LayoutNodeId("root"),
+            SplitAxis.BlockChildren,
+            SplitBasis.Proportional(0.7),
+            new SplitConstraints(),
+            upperGroup.Id,
+            emptyLowerGroup.Id);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("empty-region"),
+            split.Id,
+            new LayoutNode[] { split, upperGroup, emptyLowerGroup },
+            new[] { upperTool },
+            toolBars: new[]
+            {
+                new ToolBarState(
+                    LogicalSide.InlineStart,
+                    ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    new[] { upperTool.Id }),
+            });
+    }
+
+    private static void AssertToolGroupState(
+        WorkspaceSnapshot snapshot,
+        IEnumerable<string> expectedGroupOrder,
+        string selectedItemId,
+        IEnumerable<string> expectedToolBarOrder)
+    {
+        var group = Assert.IsType<GroupNode>(
+            snapshot.Nodes[new LayoutNodeId("tools")]);
+        Assert.Equal(
+            expectedGroupOrder.Select(id => new DockItemId(id)),
+            group.ItemIds);
+        Assert.Equal(new DockItemId(selectedItemId), group.SelectedItemId);
+        Assert.Equal(GroupVisibility.Expanded, group.Visibility);
+        Assert.Null(group.EditorState);
+        Assert.Equal(
+            expectedToolBarOrder.Select(id => new DockItemId(id)),
+            snapshot.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+    }
+
+    private static AtlasWorkspaceDefinition ThreeToolEntriesDefinition(
+        bool independentToolBarOrder = false,
+        bool selectSecond = false)
+    {
+        var first = new DockItem(
+            new DockItemId("first"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "first-resource"),
+            DockItemCapabilityPresets.Tool,
+            "First");
+        var second = new DockItem(
+            new DockItemId("second"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "second-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Second");
+        var third = new DockItem(
+            new DockItemId("third"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "third-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Third");
+        var group = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { first.Id, second.Id, third.Id },
+            selectSecond ? second.Id : first.Id,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("three-tools"),
+            group.Id,
+            new LayoutNode[] { group },
+            new[] { first, second, third },
+            toolBars: new[]
+            {
+                new ToolBarState(
+                    LogicalSide.InlineStart,
+                    ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    independentToolBarOrder
+                        ? new[] { third.Id, first.Id, second.Id }
+                        : new[] { first.Id, second.Id, third.Id }),
+            });
+    }
+
+    private static AtlasWorkspaceDefinition CrossSideToolMoveDefinition()
+    {
+        static DockItem Tool(string id, string title)
+        {
+            return new DockItem(
+                new DockItemId(id),
+                DockItemKind.Tool,
+                new ContentReference("tool", id),
+                DockItemCapabilityPresets.Tool,
+                title);
+        }
+
+        static GroupNode ToolGroup(string id, LogicalRegion region, DockItem item)
+        {
+            return new GroupNode(
+                new LayoutNodeId(id),
+                DockItemKind.Tool,
+                GroupRetentionPolicy.Persistent,
+                GroupVisibility.Expanded,
+                new[] { item.Id },
+                item.Id,
+                logicalRegion: region);
+        }
+
+        static SplitNode Split(
+            string id,
+            SplitAxis axis,
+            double ratio,
+            LayoutNodeId firstId,
+            LayoutNodeId secondId)
+        {
+            return new SplitNode(
+                new LayoutNodeId(id),
+                axis,
+                SplitBasis.Proportional(ratio),
+                new SplitConstraints(),
+                firstId,
+                secondId);
+        }
+
+        var project = Tool("project", "Project");
+        var structure = Tool("structure", "Structure");
+        var services = Tool("services", "Services");
+        var database = Tool("database", "Database");
+        var terminal = Tool("terminal", "Terminal");
+        var problems = Tool("problems", "Problems");
+        var document = Document("document", "document", "Document");
+        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, project);
+        var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, structure);
+        var editor = DocumentGroup("editor", document);
+        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, services);
+        var rightLower = ToolGroup("right-lower", LogicalRegion.InlineEndLower, database);
+        var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, terminal);
+        var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, problems);
+        var leftDock = Split(
+            "left-dock",
+            SplitAxis.BlockChildren,
+            0.56,
+            leftUpper.Id,
+            leftLower.Id);
+        var rightDock = Split(
+            "right-dock",
+            SplitAxis.BlockChildren,
+            0.54,
+            rightUpper.Id,
+            rightLower.Id);
+        var editorAndRight = Split(
+            "editor-right",
+            SplitAxis.InlineChildren,
+            0.74,
+            editor.Id,
+            rightDock.Id);
+        var mainArea = Split(
+            "main-area",
+            SplitAxis.InlineChildren,
+            0.21,
+            leftDock.Id,
+            editorAndRight.Id);
+        var bottomDock = Split(
+            "bottom-dock",
+            SplitAxis.InlineChildren,
+            0.62,
+            bottomLeft.Id,
+            bottomRight.Id);
+        var root = Split(
+            "root",
+            SplitAxis.BlockChildren,
+            0.72,
+            mainArea.Id,
+            bottomDock.Id);
+        var items = new[]
+        {
+            project,
+            structure,
+            services,
+            database,
+            terminal,
+            problems,
+            document,
+        };
+        var toolGroups = new[]
+        {
+            leftUpper,
+            leftLower,
+            rightUpper,
+            rightLower,
+            bottomLeft,
+            bottomRight,
+        };
+
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("cross-side-tool-move"),
+            root.Id,
+            new LayoutNode[]
+            {
+                root,
+                mainArea,
+                leftDock,
+                editorAndRight,
+                rightDock,
+                bottomDock,
+                leftUpper,
+                leftLower,
+                editor,
+                rightUpper,
+                rightLower,
+                bottomLeft,
+                bottomRight,
+            },
+            items,
+            toolBars: new[]
+            {
+                new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
+                new ToolBarState(LogicalSide.InlineEnd, ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: toolGroups.Select(
+                group => new ToolBarOrderState(
+                    group.LogicalRegion!.Value,
+                    group.ItemIds)));
+    }
+
+    private static string[] ProjectedSplitIds(IRenderedFragment cut)
+    {
+        return cut.FindAll("[data-atlas-node-kind='split']")
+            .Select(element => element.GetAttribute("data-atlas-node-id")!)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static void AssertCommittedSplitBases(
+        WorkspaceSnapshot snapshot,
+        IReadOnlyDictionary<LayoutNodeId, SplitBasis> expected)
+    {
+        var actual = snapshot.Nodes.Values
+            .OfType<SplitNode>()
+            .ToDictionary(split => split.Id, split => split.Basis);
+        Assert.Equal(expected.Count, actual.Count);
+        foreach (var pair in expected)
+        {
+            Assert.Equal(pair.Value, actual[pair.Key]);
+        }
+    }
+
+#pragma warning disable BL0006 // This regression test verifies the RenderTree sequence contract directly.
+    private static int ProjectedAttributeSequence(
+        AtlasWorkspaceHost host,
+        string attributeName,
+        string attributeValue)
+    {
+        var builder = new RenderTreeBuilder();
+        typeof(AtlasWorkspaceHost)
+            .GetMethod(
+                "BuildRenderTree",
+                BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(host, new object[] { builder });
+        var frames = builder.GetFrames();
+
+        for (var index = 0; index < frames.Count; index++)
+        {
+            var frame = frames.Array[index];
+            if (frame.FrameType == RenderTreeFrameType.Attribute
+                && string.Equals(frame.AttributeName, attributeName, StringComparison.Ordinal)
+                && string.Equals(frame.AttributeValue?.ToString(), attributeValue, StringComparison.Ordinal))
+            {
+                return frame.Sequence;
+            }
+        }
+
+        throw new Xunit.Sdk.XunitException(
+            $"Attribute '{attributeName}={attributeValue}' was not projected.");
+    }
+#pragma warning restore BL0006
 
     private static DockItem Document(
         string id,

@@ -61,6 +61,7 @@ export interface DockItemCommit {
   readonly baseRevision: number;
   readonly targetKind: AtlasDropTargetKind;
   readonly targetGroupId: string;
+  readonly targetItemId?: string;
   readonly logicalRegion?: string;
   readonly insertionIndex?: number;
   readonly newGroupId?: string;

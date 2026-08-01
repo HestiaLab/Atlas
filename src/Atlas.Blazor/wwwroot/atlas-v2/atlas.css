@@ -104,7 +104,15 @@
 }
 
 .atlas-v2-group-collapsed {
-  display: none;
+  visibility: hidden;
+}
+
+.atlas-v2-split[data-atlas-split-hidden="both"] {
+  visibility: hidden;
+}
+
+.atlas-v2-splitter[data-atlas-splitter-hidden="true"] {
+  visibility: hidden;
 }
 
 .atlas-v2-content-outlet,
@@ -129,11 +137,28 @@
 .atlas-v2-toolbar {
   display: flex;
   flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.atlas-v2-toolbar-area {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.atlas-v2-toolbar-area-bottom {
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .atlas-v2-toolbar-region {
   display: flex;
   flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  position: relative;
 }
 
 .atlas-v2-toolbar-divider {
@@ -141,18 +166,52 @@
   opacity: 0.25;
 }
 
-.atlas-v2-drop-scaffold {
-  display: none;
-  min-block-size: 2rem;
+.atlas-v2-toolbar-section-divider {
+  flex: 0 0 auto;
 }
 
-.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-drop-scaffold {
+.atlas-v2-toolbar-section-divider[data-atlas-toolbar-section-divider="false"] {
+  visibility: hidden;
+}
+
+.atlas-v2-drop-scaffold {
+  display: none;
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  block-size: 2rem;
+  box-sizing: border-box;
+  opacity: 0;
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-drop-scaffold[data-atlas-drop-scaffold="true"] {
   display: block;
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-toolbar-region[data-atlas-region-empty="true"] {
+  min-block-size: 2rem;
+  min-inline-size: 100%;
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-toolbar {
+  min-inline-size: 2rem;
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-toolbar-area {
+  min-inline-size: 100%;
 }
 
 [data-atlas-drop-preview] {
   outline: 2px solid Highlight;
   outline-offset: -2px;
+  background: color-mix(in srgb, Highlight 15%, transparent);
+}
+
+.atlas-v2-workspace[data-atlas-dragging="true"] .atlas-v2-drop-scaffold[data-atlas-drop-scaffold="true"][data-atlas-drop-preview="drop-scaffold"] {
+  opacity: 1;
+  border: 2px solid Highlight;
+  outline: 0;
+  background: color-mix(in srgb, Highlight 15%, transparent);
 }
 
 [data-atlas-dragging="true"] {

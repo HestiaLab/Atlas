@@ -42,6 +42,7 @@ interface DropTarget {
   readonly element: HTMLElement;
   readonly kind: AtlasDropTargetKind;
   readonly groupId: string;
+  readonly targetItemId?: string;
   readonly logicalRegion?: string;
   readonly insertionIndex?: number;
 }
@@ -311,6 +312,9 @@ export class AtlasInteractionController {
           baseRevision: drag.baseRevision,
           targetKind: target.kind,
           targetGroupId: target.groupId,
+          ...(target.targetItemId === undefined
+            ? {}
+            : { targetItemId: target.targetItemId }),
           ...(target.logicalRegion === undefined
             ? {}
             : { logicalRegion: target.logicalRegion }),
@@ -671,6 +675,10 @@ export class AtlasInteractionController {
 
     const panelHeader = hit.closest<HTMLElement>("[data-atlas-panel-header]");
     if (panelHeader?.dataset.atlasGroupId) {
+      if (panelHeader.dataset.atlasGroupId === drag.sourceGroupId) {
+        return undefined;
+      }
+
       return {
         element: panelHeader,
         kind: "panel-header-insertion",
@@ -681,19 +689,58 @@ export class AtlasInteractionController {
 
     const toolbarEntry = hit.closest<HTMLElement>("[data-atlas-toolbar-entry]");
     if (toolbarEntry?.dataset.atlasGroupId) {
+      const targetItemId = toolbarEntry.dataset.atlasItemId;
+      if (!targetItemId) {
+        return undefined;
+      }
+
+      const entryIndex = readNonNegativeInteger(
+        toolbarEntry.dataset.atlasInsertionIndex);
+      const rect = toolbarEntry.getBoundingClientRect();
+      const insertionIndex = entryIndex === undefined
+        ? 0
+        : rect.height > 0 && y >= rect.top + (rect.height / 2)
+          ? entryIndex + 1
+          : entryIndex;
       return {
         element: toolbarEntry,
         kind: "toolbar-insertion",
         groupId: toolbarEntry.dataset.atlasGroupId,
+        targetItemId,
         ...(toolbarEntry.dataset.atlasToolbarRegion === undefined
           ? {}
           : { logicalRegion: toolbarEntry.dataset.atlasToolbarRegion }),
-        insertionIndex: readNonNegativeInteger(toolbarEntry.dataset.atlasInsertionIndex) ?? 0
+        insertionIndex
+      };
+    }
+
+    const scaffold = hit.closest<HTMLElement>("[data-atlas-drop-scaffold=\"true\"]");
+    if (scaffold?.dataset.atlasGroupId) {
+      if (drag.sourceKind === "panel-header"
+        && scaffold.dataset.atlasGroupId === drag.sourceGroupId) {
+        return undefined;
+      }
+
+      const insertionIndex = readNonNegativeInteger(
+        scaffold.dataset.atlasInsertionIndex);
+      return {
+        element: scaffold,
+        kind: "drop-scaffold",
+        groupId: scaffold.dataset.atlasGroupId,
+        ...(scaffold.dataset.atlasToolbarRegion === undefined
+          ? {}
+          : { logicalRegion: scaffold.dataset.atlasToolbarRegion }),
+        ...(insertionIndex === undefined ? {} : { insertionIndex })
       };
     }
 
     const toolbarRegion = hit.closest<HTMLElement>("[data-atlas-toolbar-region]");
     if (toolbarRegion?.dataset.atlasGroupId) {
+      if (drag.sourceKind === "panel-header"
+        && toolbarRegion.dataset.atlasGroupId === drag.sourceGroupId) {
+        return undefined;
+      }
+
       return {
         element: toolbarRegion,
         kind: "toolbar-region",
@@ -701,18 +748,6 @@ export class AtlasInteractionController {
         ...(toolbarRegion.dataset.atlasToolbarRegion === undefined
           ? {}
           : { logicalRegion: toolbarRegion.dataset.atlasToolbarRegion })
-      };
-    }
-
-    const scaffold = hit.closest<HTMLElement>("[data-atlas-drop-scaffold]");
-    if (scaffold?.dataset.atlasGroupId) {
-      return {
-        element: scaffold,
-        kind: "drop-scaffold",
-        groupId: scaffold.dataset.atlasGroupId,
-        ...(scaffold.dataset.atlasToolbarRegion === undefined
-          ? {}
-          : { logicalRegion: scaffold.dataset.atlasToolbarRegion })
       };
     }
 

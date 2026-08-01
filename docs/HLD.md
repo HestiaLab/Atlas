@@ -837,9 +837,9 @@ Panel Header 与 ToolBar Entry 可以触发不同语义，不能仅凭最终索�
     ItemId, TargetGroupId, TargetIndex?, BaseRevision
     — 跨 Group/Region 移动；目标 Panel 展开并成为 Active
 
-  ReorderToolOperation
+  ReorderItemOperation
     ItemId, GroupId, TargetIndex, BaseRevision
-    — 调整 Group.ItemIds，ToolBar 分组内顺序同步
+    — Panel Header 同 Group 调序；调整 Group.ItemIds，并同步 ToolBar 分组内顺序
 
   ReorderToolBarEntryOperation
     ItemId, LogicalRegion, TargetIndex, BaseRevision
@@ -1159,6 +1159,7 @@ Target Resolver 是纯函数模块，输入 GeometrySnapshot + pointer position 
       LogicalSide,
       LogicalRegion,
       TargetGroupId,
+      TargetItemId?,         // ToolBar Entry target identity
       InsertionIndex,
       Priority,
   }
@@ -1168,9 +1169,12 @@ DropScaffold > RegionBody。Editor Area、Top Toolbar、Status Bar 与其他 Wor
 产生 PanelDropTarget。相同语义 target 即使由重叠 DOM 命中也必须归一化为同一个 key，避免
 preview 抖动和重复 DOM mutation。
 
-Panel Header resolver 只为同一 Tool Group 中其他 Panel Header 生成 before/after insertion；
-提交为 ReorderToolOperation 并同步 ToolBar 投影。原 Header 位置解析为 NoChange，不把同区域
-Header 排序误判为跨 Region Move。
+Panel Header 同 Group 排序必须命中目标 ToolBar Entry 的 before/after 区域。resolver 在 intent 中同时
+提供 ToolBar wire `InsertionIndex` 与 `TargetItemId`；Host 仅用 wire slot 判断相对目标 Entry 的
+before/after，再按 `TargetItemId` 映射到 `Group.ItemIds` 的 logical index，提交
+`ReorderItemOperation` 并同步 ToolBar 投影。禁止把 ToolBar wire index 直接当作 Group index。
+原 Entry 位置解析为 NoChange；同 Group 的 ToolBar Region/DropScaffold 不承担 Panel logical reorder。
+该交互与 `AtlasGroupView` 只投影一个 Active Panel Header 的模型兼容，不要求多 Header 同时可见。
 
 ToolBar resolver 规则：
 

@@ -107,10 +107,13 @@
     ]
   },
   "dropScaffold": {
-    "selector": "[data-atlas-drop-scaffold]",
+    "selector": "[data-atlas-drop-scaffold=\"true\"]",
     "requiredAttributes": [
       "data-atlas-group-id",
-      "data-atlas-toolbar-region"
+      "data-atlas-toolbar-region",
+      "data-atlas-insertion-index",
+      "role",
+      "aria-hidden"
     ]
   },
   "sandboxFrame": {

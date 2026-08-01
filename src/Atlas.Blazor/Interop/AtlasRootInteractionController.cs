@@ -219,6 +219,8 @@ internal sealed class AtlasInteractionMessage
 
     public string? TargetGroupId { get; set; }
 
+    public string? TargetItemId { get; set; }
+
     public int ProtocolVersion { get; set; }
 
     public string? SessionId { get; set; }

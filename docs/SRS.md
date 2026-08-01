@@ -209,7 +209,7 @@ Application Window
 | 出现位置  | Dock Region                                                                                |
 | 切换方式  | **LT/RT 的 ToolBar Entry 点击**                                                               |
 | 多面板共存 | 同一 Dock Region 可容纳多个 Dock Panel；同时仅有一个 Active Panel 展开显示，其余 Dock Panel 通过 ToolBar Entry 切换 |
-| 拖拽排序  | 拖拽 Panel Header（面板标题栏） 在同一区域内排序，或拖至另一个 Dock Region                                         |
+| 拖拽排序  | 拖拽 Panel Header（面板标题栏） 到同组 ToolBar Entry 前/后排序，或拖至另一个 Dock Region                              |
 | 关闭    | 通过 Panel Header 关闭按钮；关闭后 ToolBar Entry 保留（Template Panel）或随面板移除（Dynamic Panel）             |
 | 溢出处理  | 不适用——Dock Panel 始终全宽，靠 ToolBar Entry 切换                                                    |
 | 去重    | 不适用——每个 Dock Panel 是独立的工具窗口实例                                                              |
@@ -3007,22 +3007,22 @@ Title
 Dock Panel（Dock 面板） 同区域拖拽排序
 
 Description
-系统应支持终端用户在同一 Dock Region（Dock 区域）内拖拽 Panel Header（面板标题栏）调整 Dock Panel 的排列顺序。排序结果通过 ToolBar Entry（ToolBar 条目）的分组内顺序体现（与 REQ-F-140 AC2 的区别：ToolBar Entry 调序不改变 Panel 在区域内的逻辑顺序，而 Panel Header 拖拽排序改变 Panel 的逻辑顺序并同步更新 ToolBar 条目顺序）。
+系统应支持终端用户在同一 Dock Region（Dock 区域）内拖拽当前 Active Panel 的 Panel Header（面板标题栏）到同组 ToolBar Entry（ToolBar 条目）之前或之后，以调整 Dock Panel 的逻辑排列顺序。排序结果同步更新 ToolBar Entry 的分组内顺序（与 REQ-F-140 AC2 的区别：直接拖动 ToolBar Entry 只改变 ToolBar 展示顺序，不改变 Panel 在区域内的逻辑顺序）。该交互保持同一时刻只显示一个 Active Panel，不要求同时投影多个 Panel Header。
 
 Acceptance Criteria
 
-AC1：拖拽 Panel Header 至同区域目标位置之前
+AC1：拖拽 Panel Header 至同组目标 ToolBar Entry 之前
 
-Given 同一 Dock Region 中存在多个 Dock Panel
-When 终端用户拖拽 Panel A 的 Panel Header 至 Panel B 的 Header 之前并释放
+Given 同一 Dock Region 中存在多个 Dock Panel 且 ToolBar 显示对应条目
+When 终端用户拖拽 Panel A 的 Panel Header 至 Panel B 的 ToolBar Entry 之前并释放
 Then Panel A 的逻辑顺序应调整至 Panel B 之前
 And 该区域 ToolBar 条目分组内顺序同步更新
 And Panel 内容和状态保持不变
 
-AC2：拖拽 Panel Header 至同区域目标位置之后
+AC2：拖拽 Panel Header 至同组目标 ToolBar Entry 之后
 
-Given 同一 Dock Region 中存在多个 Dock Panel
-When 终端用户拖拽 Panel A 的 Panel Header 至 Panel B 的 Header 之后并释放
+Given 同一 Dock Region 中存在多个 Dock Panel 且 ToolBar 显示对应条目
+When 终端用户拖拽 Panel A 的 Panel Header 至 Panel B 的 ToolBar Entry 之后并释放
 Then Panel A 的逻辑顺序应调整至 Panel B 之后
 And 该区域 ToolBar 条目分组内顺序同步更新
 And Panel 内容和状态保持不变
@@ -3030,7 +3030,7 @@ And Panel 内容和状态保持不变
 AC3：拖拽 Panel Header 至原位置释放
 
 Given 终端用户正在拖拽 Dock Panel 的 Panel Header
-When 终端用户在源 Panel 原位置释放
+When 终端用户在源 Panel 对应的 ToolBar Entry 原位置释放
 Then Dock Panel 顺序不变
 And 操作视为取消
 ```
@@ -4960,7 +4960,7 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | REQ-F-130     | 禁止全部 Dock Panel 折叠                         | 删除     | 全部面板折叠应为合法操作                                                                                               |
 | REQ-F-140     | 拖拽 ToolBar Entry 移动 Dock Panel             | 新增     | 拖拽 ToolBar Entry 移动 Dock Panel                                                                             |
 | REQ-F-141     | Dock Panel 显隐控制                            | 新增     | Panel Header 关闭按钮 + 编程 API 显隐；ToolBar Entry 点击收起逻辑由 F-022（方案 A）覆盖                                          |
-| REQ-F-142     | Dock Panel 同区域拖拽排序                         | 新增     | 同一 Dock Region 内拖拽 Panel Header 调整 Panel 顺序，同步 ToolBar 条目分组顺序                                              |
+| REQ-F-142     | Dock Panel 同区域拖拽排序                         | 新增     | 拖拽 Active Panel Header 到同组 ToolBar Entry 前/后，调整 Panel 逻辑顺序并同步 ToolBar 条目顺序                               |
 | REQ-F-143     | Dock Panel 标题与图标声明                         | 新增     | 开发者指定 Panel 标题和图标，支持运行时更新                                                                                  |
 | REQ-F-144     | Dock Panel 初始尺寸比例                          | 新增     | 开发者声明 Panel 初始尺寸比例，未指定时均分或占满                                                                               |
 | REQ-F-145     | Editor View 类型声明                           | 新增     | Template View / Dynamic View 生命周期类型声明，对标 F-019                                                             |

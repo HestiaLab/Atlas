@@ -232,8 +232,8 @@ class FakeElement extends EventTarget {
       return this.dataset.atlasToolbarRegion ? this as unknown as T : null;
     }
 
-    if (selector === "[data-atlas-drop-scaffold]") {
-      return this.dataset.atlasDropScaffold ? this as unknown as T : null;
+    if (selector === "[data-atlas-drop-scaffold=\"true\"]") {
+      return this.dataset.atlasDropScaffold === "true" ? this as unknown as T : null;
     }
 
     if (selector === ".atlas-v2-workspace") {
@@ -595,7 +595,7 @@ test("invalid controller options are rejected", () => {
   fixture.controller.dispose();
 });
 
-function dragFixture(kind: "document-tab" | "panel-header"): {
+function dragFixture(kind: "document-tab" | "panel-header" | "toolbar-entry"): {
   controller: AtlasInteractionController;
   root: FakeElement;
   messages: AtlasInteractionMessage[];
@@ -606,13 +606,20 @@ function dragFixture(kind: "document-tab" | "panel-header"): {
   root.dataset.atlasRevision = "12";
   root.dataset.atlasDragKind = kind;
   root.dataset.atlasItemId = kind === "document-tab" ? "document" : "tool";
-  root.dataset.atlasGroupId = kind === "document-tab" ? "documents" : "tools";
+  root.dataset.atlasGroupId = kind === "document-tab"
+    ? "documents"
+    : kind === "toolbar-entry"
+      ? "left-upper"
+      : "tools";
   root.dataset.atlasCommandCapabilities = "2";
   root.dataset.atlasInsertionIndex = "0";
   if (kind === "document-tab") {
     root.dataset.atlasGroupKind = "document";
-  } else {
+  } else if (kind === "panel-header") {
     root.dataset.atlasPanelHeader = "true";
+  } else {
+    root.dataset.atlasToolbarEntry = "true";
+    root.dataset.atlasToolbarRegion = "InlineStartUpper";
   }
 
   const messages: AtlasInteractionMessage[] = [];
@@ -627,6 +634,96 @@ function dragFixture(kind: "document-tab" | "panel-header"): {
     { invokeMethodAsync: async (_method, message) => { messages.push(message); } });
   return { controller, root, messages };
 }
+
+test("toolbar tail scaffold wins over its parent region and commits the tail index", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 30, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+
+  delete fixture.root.dataset.atlasToolbarEntry;
+  fixture.root.dataset.atlasDropScaffold = "true";
+  fixture.root.dataset.atlasGroupId = "right-upper";
+  fixture.root.dataset.atlasToolbarRegion = "InlineEndUpper";
+  fixture.root.dataset.atlasInsertionIndex = "1";
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 30, clientX: 5, clientY: 0
+  }));
+
+  assert.equal(fixture.root.dataset.atlasDropPreview, "drop-scaffold");
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 30, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 1);
+  assert.deepEqual(fixture.messages[0], {
+    type: "dock-item",
+    protocolVersion: 1,
+    sessionId: "drag-host:1",
+    hostId: "drag-host",
+    workspaceId: "drag-workspace",
+    generation: 5,
+    itemId: "tool",
+    sourceKind: "toolbar-entry",
+    baseRevision: 12,
+    targetKind: "drop-scaffold",
+    targetGroupId: "right-upper",
+    logicalRegion: "InlineEndUpper",
+    insertionIndex: 1
+  });
+  fixture.controller.dispose();
+});
+
+test("toolbar entry bottom half commits the after index matching the tail scaffold", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dataset.atlasInsertionIndex = "1";
+  fixture.root.rect = { left: 0, top: 0, width: 60, height: 24 };
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 33, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 33, clientX: 5, clientY: 20
+  }));
+
+  assert.equal(fixture.root.dataset.atlasDropPreview, "toolbar-insertion");
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 33, clientX: 5, clientY: 20
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 1);
+  const message = fixture.messages[0]!;
+  assert.equal(message.type, "dock-item");
+  const dock = message as { targetKind: string; insertionIndex?: number };
+  assert.equal(dock.targetKind, "toolbar-insertion");
+  assert.equal(dock.insertionIndex, 2);
+  fixture.controller.dispose();
+});
+
+test("toolbar entry top half commits the before index", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dataset.atlasInsertionIndex = "1";
+  fixture.root.rect = { left: 0, top: 0, width: 60, height: 24 };
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 34, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 34, clientX: 5, clientY: 5
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 34, clientX: 5, clientY: 5
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 1);
+  const message = fixture.messages[0]!;
+  assert.equal(message.type, "dock-item");
+  const dock = message as { targetKind: string; insertionIndex?: number };
+  assert.equal(dock.targetKind, "toolbar-insertion");
+  assert.equal(dock.insertionIndex, 1);
+  fixture.controller.dispose();
+});
 
 test("document drag crosses threshold previews and commits one host-scoped intent", async () => {
   const fixture = dragFixture("document-tab");
@@ -721,7 +818,7 @@ test("drag terminal paths cancel without callback and generation update expires 
   stale.controller.dispose();
 });
 
-test("panel drag uses approved header target while threshold click remains untouched", async () => {
+test("panel drag rejects its same-group header while threshold click remains untouched", async () => {
   const click = dragFixture("panel-header");
   click.root.dispatchEvent(interactionEvent("pointerdown", {
     pointerId: 50, clientX: 0, clientY: 0, button: 0, isPrimary: true
@@ -744,22 +841,121 @@ test("panel drag uses approved header target while threshold click remains untou
     pointerId: 51, clientX: 4, clientY: 0
   }));
   await flushCallbacks();
-  assert.equal(drag.messages.length, 1);
-  assert.deepEqual(drag.messages[0], {
-    type: "dock-item",
-    protocolVersion: 1,
-    sessionId: "drag-host:1",
-    hostId: "drag-host",
-    workspaceId: "drag-workspace",
-    generation: 5,
-    itemId: "tool",
-    sourceKind: "panel-header",
-    baseRevision: 12,
-    targetKind: "panel-header-insertion",
-    targetGroupId: "tools",
-    insertionIndex: 0
-  });
+  assert.equal(drag.messages.length, 0);
   drag.controller.dispose();
+});
+
+test("same-group panel header drag targets a toolbar entry while the reverse drag stays rejected", async () => {
+  const panel = dragFixture("panel-header");
+  panel.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 52, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete panel.root.dataset.atlasPanelHeader;
+  panel.root.dataset.atlasToolbarEntry = "true";
+  panel.root.dataset.atlasToolbarRegion = "InlineStartUpper";
+  panel.root.dataset.atlasItemId = "target-tool";
+  panel.root.dataset.atlasInsertionIndex = "1";
+  panel.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 52, clientX: 5, clientY: 0
+  }));
+  panel.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 52, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(panel.messages.length, 1);
+  assert.equal(
+    (panel.messages[0] as { targetKind: string }).targetKind,
+    "toolbar-insertion");
+  assert.equal(
+    (panel.messages[0] as { targetItemId?: string }).targetItemId,
+    "target-tool");
+  panel.controller.dispose();
+
+  const panelAfter = dragFixture("panel-header");
+  panelAfter.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 56, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete panelAfter.root.dataset.atlasPanelHeader;
+  panelAfter.root.dataset.atlasToolbarEntry = "true";
+  panelAfter.root.dataset.atlasToolbarRegion = "InlineStartUpper";
+  panelAfter.root.dataset.atlasItemId = "target-tool";
+  panelAfter.root.dataset.atlasInsertionIndex = "1";
+  panelAfter.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 56, clientX: 5, clientY: 75
+  }));
+  panelAfter.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 56, clientX: 5, clientY: 75
+  }));
+  await flushCallbacks();
+  assert.equal(panelAfter.messages.length, 1);
+  assert.equal(
+    (panelAfter.messages[0] as { insertionIndex?: number }).insertionIndex,
+    2);
+  assert.equal(
+    (panelAfter.messages[0] as { targetItemId?: string }).targetItemId,
+    "target-tool");
+  panelAfter.controller.dispose();
+
+  const toolbar = dragFixture("toolbar-entry");
+  toolbar.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 53, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete toolbar.root.dataset.atlasToolbarEntry;
+  delete toolbar.root.dataset.atlasToolbarRegion;
+  toolbar.root.dataset.atlasPanelHeader = "true";
+  toolbar.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 53, clientX: 5, clientY: 0
+  }));
+  toolbar.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 53, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(toolbar.messages.length, 0);
+  toolbar.controller.dispose();
+});
+
+test("cross-group panel and toolbar drags retain migration targets", async () => {
+  const panel = dragFixture("panel-header");
+  panel.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 54, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete panel.root.dataset.atlasPanelHeader;
+  panel.root.dataset.atlasToolbarEntry = "true";
+  panel.root.dataset.atlasGroupId = "right-upper";
+  panel.root.dataset.atlasToolbarRegion = "InlineEndUpper";
+  panel.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 54, clientX: 5, clientY: 0
+  }));
+  panel.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 54, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(panel.messages.length, 1);
+  assert.equal(
+    (panel.messages[0] as { targetKind: string }).targetKind,
+    "toolbar-insertion");
+  panel.controller.dispose();
+
+  const toolbar = dragFixture("toolbar-entry");
+  toolbar.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 55, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete toolbar.root.dataset.atlasToolbarEntry;
+  delete toolbar.root.dataset.atlasToolbarRegion;
+  toolbar.root.dataset.atlasPanelHeader = "true";
+  toolbar.root.dataset.atlasGroupId = "right-upper";
+  toolbar.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 55, clientX: 5, clientY: 0
+  }));
+  toolbar.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 55, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(toolbar.messages.length, 1);
+  assert.equal(
+    (toolbar.messages[0] as { targetKind: string }).targetKind,
+    "panel-header-insertion");
+  toolbar.controller.dispose();
 });
 
 test("pointerup re-resolves target and rejects a stale preview from another host", async () => {
