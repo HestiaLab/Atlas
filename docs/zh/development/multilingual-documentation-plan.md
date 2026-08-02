@@ -1,5 +1,9 @@
 # Atlas 多语言文档改造方案
 
+> [English](../../en/development/multilingual-documentation-plan.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
 - 状态：Proposed
 - 日期：2026-08-02
 - 范围：仓库根目录 README、`docs/`、文档引用、文档协作规则，以及直接读取文档的验证测试

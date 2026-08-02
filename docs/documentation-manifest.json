@@ -830,16 +830,17 @@
         "zh": "docs/zh/development/multilingual-documentation-plan.md"
       },
       "authority": {
-        "path": "docs/multilingual-documentation-plan.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/development/multilingual-documentation-plan.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "186291667c1fc9c88303225d900bfb3b4db17f37",
+        "reviewedCandidateBlob": "768e4d2e8128cd6cba1f5d3dfaa895b712c493af",
+        "canonicalBlob": "768e4d2e8128cd6cba1f5d3dfaa895b712c493af"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     }
   },
   "validationInputs": {
@@ -893,12 +894,6 @@
       "reason": "Translation status table; not a document language pair",
       "lifetime": "permanent",
       "removalCondition": null
-    },
-    {
-      "path": "docs/multilingual-documentation-plan.md",
-      "reason": "Migration control document kept at docs/ root for P0-P5; archived to language directories in P6",
-      "lifetime": "P0-P5",
-      "removalCondition": "Archive the reviewed language pair under docs/en/development and docs/zh/development in P6"
     }
   ]
 }
