@@ -5,7 +5,7 @@
 
 ## SRS Coverage
 
-- Relevant SRS requirements (`docs/SRS.md`): REQ-F-xxx
+- Relevant SRS requirements (`docs/en/SRS.md`): REQ-F-xxx
 - New SRS requirements (if any): REQ-F-xxx
 
 ## Validation
@@ -21,7 +21,9 @@
 
 - Public API impact (`Atlas.Core` / `Atlas.Blazor`):
 - NuGet packaging or dependency impact:
-- Documentation impact (`docs/`):
+- Documentation impact (`docs/`): keep English canonical under `docs/en/`
+  and mark the Chinese translation `Outdated` when a normative document
+  changes without a synchronized translation.
 - TypeScript / JS interop impact:
 
 ## AI Assistance

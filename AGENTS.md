@@ -8,16 +8,30 @@ Dock Layout component.
 Before changing files, read:
 
 - `CONTRIBUTING.md`
-- `docs/SRS.md` — the software requirements specification
+- `docs/en/SRS.md` — the software requirements specification
 
 For architecture-sensitive changes, also read:
 
-- `docs/adr/README.md`
-- `docs/requirements-traceability.md` — implementation status per SRS
+- `docs/en/adr/README.md`
+- `docs/en/requirements-traceability.md` — implementation status per SRS
 
 For build, CI, packaging, or dependency work, also read:
 
 - `SECURITY.md`
+
+## Documentation Language And Authority
+
+English is the default documentation language and the canonical version of
+every language pair. Chinese translations live under `docs/zh/` and English
+documents under `docs/en/`. The English document under `docs/en/` is the
+authority for each language pair.
+
+- Do not silently rewrite contract semantics while translating; preserve IDs,
+  Actor/Priority/Source fields, AC counts and order, code identifiers, numeric
+  constraints, and must/should/may strength.
+- Keep `docs/SRS.md`, `docs/HLD.md` and `docs/requirements-traceability.md`
+  as stable compatibility entry points that point at the canonical English
+  versions.
 
 ## Project Shape
 
@@ -78,7 +92,7 @@ cd ../..
 ## Ownership Rules
 
 - Public component APIs belong in `src/Atlas.Blazor/Components/` and must be documented
-  against `docs/SRS.md`.
+  against `docs/en/SRS.md`.
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
 - `samples/Atlas.Demo` is a portable NuGet consumer, is not part of `Atlas.sln`, and
@@ -136,11 +150,11 @@ practical, fix the project cause rather than masking the check.
 ## SRS Traceability
 
 Every functional change must be traceable to a `REQ-F-xxx` or `REQ-NF-xxx`
-requirement in `docs/SRS.md`. The traceability matrix is maintained in
-`docs/requirements-traceability.md`.
+requirement in `docs/en/SRS.md`. The traceability matrix is maintained in
+`docs/en/requirements-traceability.md`.
 
 ## Documentation
 
-Update `docs/requirements-traceability.md` when implementations change.
-Update `docs/SRS.md` when requirements change.
-Create `docs/adr/` entries for architecture decisions.
+Update `docs/en/requirements-traceability.md` when implementations change.
+Update `docs/en/SRS.md` when requirements change.
+Create `docs/en/adr/` entries for architecture decisions.

@@ -1,11 +1,24 @@
 # Contributing
 
 Atlas uses focused, reviewable changes. Every change must be traceable to an
-SRS requirement — see `docs/SRS.md`.
+SRS requirement — see `docs/en/SRS.md`.
 
-Start with the [developer documentation index](docs/README.md) for the project
+Start with the [developer documentation index](docs/en/README.md) for the project
 architecture, development workflow, testing strategy, ADRs, evidence, and
 security documentation.
+
+## Documentation Language And Authority
+
+English is the canonical version of every documentation language pair. Chinese
+translations live in `docs/zh/` and English documents in `docs/en/`; the
+English document under `docs/en/` is the authority for each pair.
+
+- When a normative document (SRS, HLD, traceability) changes, update the
+  Chinese translation in the same PR or mark it `Chinese Outdated`; never
+  silently leave an out-of-date translation looking synchronized.
+- Do not change contract semantics while translating: preserve requirement and
+  design IDs, Actor/Priority/Source, AC counts and order, code identifiers,
+  numeric constraints, and must/should/may strength.
 
 ## Local Checks
 
@@ -71,7 +84,7 @@ Before opening a PR:
 - Run `dotnet format` to ensure consistent code style.
 - Fill in the PR template sections that apply to the change.
 - Reference relevant SRS requirements (`REQ-F-xxx`).
-- Update `docs/requirements-traceability.md` for implementation changes.
+- Update `docs/en/requirements-traceability.md` for implementation changes.
 - Add tests for behaviour changes.
 - Keep unrelated cleanup out of feature or fix PRs.
 
@@ -89,4 +102,4 @@ maintenance requests.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in
-  `docs/adr/0001-runtime-and-package-baseline.md`.
+  `docs/en/adr/0001-runtime-and-package-baseline.md`.

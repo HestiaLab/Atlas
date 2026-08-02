@@ -1,41 +1,51 @@
 # Atlas
 
-**面向 Blazor 的可停靠工作区组件库。**
+English | [简体中文](README.zh.md)
 
-Atlas 为 IDE、设计器、管理后台和其他复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。项目将布局领域模型、Blazor 渲染和浏览器交互分层，避免 UI 层维护第二份布局状态。
+**A dockable workspace component library for Blazor.**
 
-> Atlas 当前以源代码构建和本地 NuGet consumer 验证为准。仓库定义 `Atlas.Core` 和 `Atlas.Blazor` 两个可打包项目，但本 README 不假定它们已经发布到 NuGet.org。
+Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout
+persistence for IDEs, designers, admin consoles, and other complex web
+applications. The project separates the layout domain model, Blazor rendering,
+and browser interaction into layers so that the UI layer never maintains a
+second copy of layout state.
 
-## 核心能力
+> Atlas is currently validated through source builds and a local NuGet consumer.
+> The repository defines two packable projects, `Atlas.Core` and `Atlas.Blazor`,
+> but this README does not assume they have been published to NuGet.org.
 
-- Tool Panel 与 Document Tab 工作区
-- 面板和标签页拖放、Dock 与跨 Group 移动
-- Splitter 鼠标拖动和键盘调整
-- 布局历史、撤销与重做
-- XML 布局持久化、恢复和预设
-- Blazor 内容承载与 SandboxedFrame 安全边界
-- 多 Workspace、多个 Host 的状态与 DOM 隔离
-- ARIA、焦点协调和 reduced-motion 支持
+## Core Capabilities
 
-详细产品行为以 [`docs/SRS.md`](docs/SRS.md) 为准。
+- Tool Panel and Document Tab workspaces
+- Panel and tab drag-and-drop, docking, and cross-Group moves
+- Splitter mouse dragging and keyboard resizing
+- Layout history with undo and redo
+- XML layout persistence, restore, and presets
+- Blazor content hosting with a SandboxedFrame security boundary
+- Multi-Workspace, multi-Host state and DOM isolation
+- ARIA, focus coordination, and reduced-motion support
 
-## 项目组成
+Detailed product behavior is defined in [`docs/en/SRS.md`](docs/en/SRS.md).
+
+## Project Structure
 
 ```text
 Atlas.Core ← Atlas.Blazor ← Application
 ```
 
-| 项目 | 职责 |
-|------|------|
-| `Atlas.Core` | 与 UI 无关的布局模型、操作引擎、历史、不变量和持久化 |
-| `Atlas.Blazor` | Blazor RenderTree、内容承载、CSS 和浏览器交互 |
-| `Atlas.Demo` | 通过本地 NuGet 包验证公共 API 和静态资源的独立示例 |
+| Project | Responsibility |
+|---------|----------------|
+| `Atlas.Core` | UI-independent layout model, operation engine, history, invariants, and persistence |
+| `Atlas.Blazor` | Blazor RenderTree, content hosting, CSS, and browser interaction |
+| `Atlas.Demo` | Independent sample that validates the public API and static assets through local NuGet packages |
 
-`Atlas.Core` 不依赖 Blazor 或 JavaScript。浏览器输入由 TypeScript 转换为结构化 intent，经 Core operation 提交后生成新的 immutable snapshot，再由 Blazor 投影到 DOM。
+`Atlas.Core` does not depend on Blazor or JavaScript. Browser input is converted
+by TypeScript into structured intents, committed through Core operations into a
+new immutable snapshot, and then projected by Blazor into the DOM.
 
-## 从源码构建
+## Building From Source
 
-环境要求：
+Requirements:
 
 - .NET 6 SDK
 - Node.js 24 LTS
@@ -56,29 +66,35 @@ dotnet test Atlas.sln --no-build --no-restore
 dotnet format Atlas.sln --verify-no-changes --no-restore
 ```
 
-完整的 Release pack、真实浏览器和独立 consumer 验证流程见[测试指南](docs/guides/testing-guide.md)。
+The full Release pack, real-browser, and independent consumer verification
+workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
 
-## 示例项目
+## Sample Project
 
-[`samples/Atlas.Demo`](samples/Atlas.Demo/) 是一个独立 Blazor WebAssembly consumer。它从本地 NuGet feed 使用 `Atlas.Core` 和 `Atlas.Blazor`，不引用 Atlas 源码项目。
+[`samples/Atlas.Demo`](samples/Atlas.Demo/) is an independent Blazor WebAssembly
+consumer. It uses `Atlas.Core` and `Atlas.Blazor` from a local NuGet feed and
+does not reference Atlas source projects.
 
-构建和运行方式见 [`samples/Atlas.Demo/README.md`](samples/Atlas.Demo/README.md)。
+Build and run instructions live in
+[`samples/Atlas.Demo/README.md`](samples/Atlas.Demo/README.md).
 
-## 文档
+## Documentation
 
-| 文档 | 内容 |
-|------|------|
-| [开发文档入口](docs/README.md) | 文档分类和按任务组织的阅读路径 |
-| [架构概览](docs/guides/architecture-overview.md) | 分层、状态所有权和运行时数据流 |
-| [SRS](docs/SRS.md) | 用户可观察行为和非功能需求 |
-| [HLD](docs/HLD.md) | 内部架构和设计合同 |
-| [测试指南](docs/guides/testing-guide.md) | 测试分层和验证命令 |
-| [ADR 索引](docs/adr/README.md) | 已接受的架构决策 |
+| Document | Content |
+|----------|---------|
+| [Documentation index](docs/en/README.md) | Document categories and task-oriented reading paths |
+| [Architecture overview](docs/en/guides/architecture-overview.md) | Layers, state ownership, and runtime data flow |
+| [SRS](docs/en/SRS.md) | User-observable behavior and non-functional requirements |
+| [HLD](docs/en/HLD.md) | Internal architecture and design contracts |
+| [Testing guide](docs/en/guides/testing-guide.md) | Test layers and verification commands |
+| [ADR index](docs/en/adr/README.md) | Accepted architecture decisions |
 
-## 参与开发
+## Contributing
 
-提交改动前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。安全问题和受支持版本说明见 [`SECURITY.md`](SECURITY.md)。
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting changes. Security
+issues and supported-version notes are described in
+[`SECURITY.md`](SECURITY.md).
 
-## 许可证
+## License
 
-Atlas 使用 [MIT License](LICENSE)。
+Atlas is released under the [MIT License](LICENSE).
