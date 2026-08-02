@@ -11,7 +11,7 @@ policy are in [`SECURITY.md`](../../../SECURITY.md).
 - [Content Threat Model](./content-threat-model.md): Trusted Blazor content,
   SandboxedFrame, message protocol, attack surface, and verification
   responsibilities.
-- [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md): the
+- [ADR-0013](../../en/adr/0013-content-trust-and-sandboxed-frame.md): the
   accepted architecture decision for content trust and SandboxedFrame.
 
 ## Boundaries That Must Be Preserved
@@ -37,7 +37,7 @@ Check in order:
 
 1. [SRS non-functional requirements](../../SRS.md)
 2. [HLD §8](../../HLD.md#8-错误处理与质量属性)
-3. [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md)
+3. [ADR-0013](../../en/adr/0013-content-trust-and-sandboxed-frame.md)
 4. [Content Threat Model](./content-threat-model.md)
 5. `tests/Atlas.Blazor.Tests/SandboxedFrameTests.cs`
 6. `tests/browser/p7-sandbox-fixture.html`

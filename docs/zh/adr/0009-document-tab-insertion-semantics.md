@@ -1,5 +1,10 @@
 # ADR-0009：Document Tab Insertion 语义
 
+> [English](../../en/adr/0009-document-tab-insertion-semantics.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（P5 门禁决策授权）

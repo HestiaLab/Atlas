@@ -4,7 +4,7 @@
 
 This file records the P3 tracer-bullet boundaries and acceptance contracts.
 Public API, declarative reconciliation, and ownership semantics are governed
-by [ADR-0004](../../../adr/0004-blazor-projection-api-and-reconciliation.md).
+by [ADR-0004](../../../en/adr/0004-blazor-projection-api-and-reconciliation.md).
 P3 does not close or change DEV-GATE-002~006, and does not implement the P4
 controller, P5 drag/drop, P6 persistence, or new P7 content
 lifetime/security capabilities.

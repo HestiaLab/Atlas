@@ -51,9 +51,9 @@ SRS/HLD and accepted ADRs win.
 
 ### Architecture Decisions
 
-[`adr/`](../adr/) stores decisions that affect the public API, package
+[`adr/`](./adr/) stores decisions that affect the public API, package
 structure, cross-language protocol, persistence compatibility, or security
-boundaries. Full status and index are in the [ADR README](../adr/README.md).
+boundaries. Full status and index are in the [ADR README](./adr/README.md).
 Accepted ADRs cannot be silently overridden by ordinary implementation changes;
 changing one requires a new ADR that records the supersession.
 

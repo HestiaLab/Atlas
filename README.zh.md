@@ -75,7 +75,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 | [SRS](docs/SRS.md) | 用户可观察行为和非功能需求 |
 | [HLD](docs/HLD.md) | 内部架构和设计合同 |
 | [测试指南](docs/zh/guides/testing-guide.md) | 测试分层和验证命令 |
-| [ADR 索引](docs/adr/README.md) | 已接受的架构决策 |
+| [ADR 索引](docs/zh/adr/README.md) | 已接受的架构决策 |
 
 ## 参与开发
 

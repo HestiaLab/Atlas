@@ -87,7 +87,7 @@ Build and run instructions live in
 | [SRS](docs/SRS.md) | User-observable behavior and non-functional requirements |
 | [HLD](docs/HLD.md) | Internal architecture and design contracts |
 | [Testing guide](docs/en/guides/testing-guide.md) | Test layers and verification commands |
-| [ADR index](docs/adr/README.md) | Accepted architecture decisions |
+| [ADR index](docs/en/adr/README.md) | Accepted architecture decisions |
 
 ## Contributing
 

@@ -1,5 +1,10 @@
 # ADR-0017：独立 NuGet Consumer Demo
 
+> [English](../../en/adr/0017-nuget-consumer-demo-sample.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-08-01
 - 决策者：Atlas Maintainer（已明确批准新增 `Atlas.Demo`）

@@ -1,5 +1,10 @@
 # ADR-0013：Content Trust 与 SandboxedFrame 安全边界
 
+> [English](../../en/adr/0013-content-trust-and-sandboxed-frame.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确批准 P7 方案）

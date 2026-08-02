@@ -1,5 +1,10 @@
 # ADR-0010：Persistence V2 Schema 与 V1 窄兼容契约
 
+> [English](../../en/adr/0010-persistence-schema-and-v1-compatibility.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确批准且确认无真实 V1 样本）

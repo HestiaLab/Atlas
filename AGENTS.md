@@ -12,7 +12,7 @@ Before changing files, read:
 
 For architecture-sensitive changes, also read:
 
-- `docs/adr/README.md`
+- `docs/en/adr/README.md`
 - `docs/requirements-traceability.md` — implementation status per SRS
 
 For build, CI, packaging, or dependency work, also read:
@@ -166,4 +166,4 @@ requirement in `docs/SRS.md`. The traceability matrix is maintained in
 
 Update `docs/requirements-traceability.md` when implementations change.
 Update `docs/SRS.md` when requirements change.
-Create `docs/adr/` entries for architecture decisions.
+Create `docs/en/adr/` entries for architecture decisions.

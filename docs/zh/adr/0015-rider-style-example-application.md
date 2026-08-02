@@ -1,5 +1,10 @@
 # ADR-0015：独立 Rider 风格示例应用
 
+> [English](../../en/adr/0015-rider-style-example-application.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Superseded by ADR-0016
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确要求添加 Rider 编辑器风格示例项目）

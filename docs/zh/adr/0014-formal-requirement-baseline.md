@@ -1,5 +1,10 @@
 # ADR-0014：正式需求基线与历史编号处置
 
+> [English](../../en/adr/0014-formal-requirement-baseline.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确批准 DEV-GATE-006 处置方案）

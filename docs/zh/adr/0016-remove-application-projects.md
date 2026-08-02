@@ -1,5 +1,10 @@
 # ADR-0016：删除应用与示例项目
 
+> [English](../../en/adr/0016-remove-application-projects.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确要求删除 Atlas.Demo 与 Atlas.Examples.Rider）

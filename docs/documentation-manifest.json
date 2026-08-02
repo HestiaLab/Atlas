@@ -302,16 +302,17 @@
         "zh": "docs/zh/adr/README.md"
       },
       "authority": {
-        "path": "docs/adr/README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/README.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "6b710a107c884c8d24793fad0261fda9b8cfeef6",
+        "reviewedCandidateBlob": "bfee18367669a7abffae3063aff7734dbd867748",
+        "canonicalBlob": "bfee18367669a7abffae3063aff7734dbd867748"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0001": {
       "documentId": "adr-0001",
@@ -322,16 +323,17 @@
         "zh": "docs/zh/adr/0001-runtime-and-package-baseline.md"
       },
       "authority": {
-        "path": "docs/adr/0001-runtime-and-package-baseline.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0001-runtime-and-package-baseline.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "5e3b6350761179c5e2534c73ddb6b646a81e9b61",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0002": {
       "documentId": "adr-0002",
@@ -342,16 +344,17 @@
         "zh": "docs/zh/adr/0002-core-operation-api-freeze.md"
       },
       "authority": {
-        "path": "docs/adr/0002-core-operation-api-freeze.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0002-core-operation-api-freeze.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "92115c6f242875c179d8ba3682a6674febd2933f",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0003": {
       "documentId": "adr-0003",
@@ -362,16 +365,17 @@
         "zh": "docs/zh/adr/0003-domain-events-and-reconciliation.md"
       },
       "authority": {
-        "path": "docs/adr/0003-domain-events-and-reconciliation.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0003-domain-events-and-reconciliation.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "b60ad6da54c18494b0e4c712cb4d048d98973fb1",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0004": {
       "documentId": "adr-0004",
@@ -382,16 +386,17 @@
         "zh": "docs/zh/adr/0004-blazor-projection-api-and-reconciliation.md"
       },
       "authority": {
-        "path": "docs/adr/0004-blazor-projection-api-and-reconciliation.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0004-blazor-projection-api-and-reconciliation.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "601dbdb229abd218d11e7533c0ec3849cb4d4b96",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0005": {
       "documentId": "adr-0005",
@@ -402,16 +407,17 @@
         "zh": "docs/zh/adr/0005-interaction-protocol-and-p4-api.md"
       },
       "authority": {
-        "path": "docs/adr/0005-interaction-protocol-and-p4-api.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0005-interaction-protocol-and-p4-api.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "28e973613a5e3e4b1a90ec9a572146c7bae06ee0",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0006": {
       "documentId": "adr-0006",
@@ -422,16 +428,17 @@
         "zh": "docs/zh/adr/0006-keyboard-resize-history-coalescing.md"
       },
       "authority": {
-        "path": "docs/adr/0006-keyboard-resize-history-coalescing.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0006-keyboard-resize-history-coalescing.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "072618d8044b4a6a3fad8b7f6bf04f49dc0e8b9e",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0007": {
       "documentId": "adr-0007",
@@ -442,16 +449,17 @@
         "zh": "docs/zh/adr/0007-panel-drop-policy.md"
       },
       "authority": {
-        "path": "docs/adr/0007-panel-drop-policy.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0007-panel-drop-policy.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "86763fc8e036293da96c9865c04788556a79d56d",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0008": {
       "documentId": "adr-0008",
@@ -462,16 +470,17 @@
         "zh": "docs/zh/adr/0008-p5-drag-protocol-and-document-docking-api.md"
       },
       "authority": {
-        "path": "docs/adr/0008-p5-drag-protocol-and-document-docking-api.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0008-p5-drag-protocol-and-document-docking-api.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "605ac4a5dd2141cc30c1dc82f067433c9606c660",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0009": {
       "documentId": "adr-0009",
@@ -482,16 +491,17 @@
         "zh": "docs/zh/adr/0009-document-tab-insertion-semantics.md"
       },
       "authority": {
-        "path": "docs/adr/0009-document-tab-insertion-semantics.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0009-document-tab-insertion-semantics.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "4e4da960a92310b3a7fd3aefc47ec2c4b00aa459",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0010": {
       "documentId": "adr-0010",
@@ -502,16 +512,17 @@
         "zh": "docs/zh/adr/0010-persistence-schema-and-v1-compatibility.md"
       },
       "authority": {
-        "path": "docs/adr/0010-persistence-schema-and-v1-compatibility.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0010-persistence-schema-and-v1-compatibility.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "73a4616783e1ecd8492b3f68e175c530d78d7f31",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0011": {
       "documentId": "adr-0011",
@@ -522,16 +533,17 @@
         "zh": "docs/zh/adr/0011-p6-persistence-public-api.md"
       },
       "authority": {
-        "path": "docs/adr/0011-p6-persistence-public-api.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0011-p6-persistence-public-api.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "d996cfce024d40693a58edd3938bc9b2b8ecf045",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0012": {
       "documentId": "adr-0012",
@@ -542,16 +554,17 @@
         "zh": "docs/zh/adr/0012-content-lifetime-and-state-preservation.md"
       },
       "authority": {
-        "path": "docs/adr/0012-content-lifetime-and-state-preservation.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0012-content-lifetime-and-state-preservation.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "283962048eaae425482838e1e31378ae9168e386",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0013": {
       "documentId": "adr-0013",
@@ -562,16 +575,17 @@
         "zh": "docs/zh/adr/0013-content-trust-and-sandboxed-frame.md"
       },
       "authority": {
-        "path": "docs/adr/0013-content-trust-and-sandboxed-frame.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0013-content-trust-and-sandboxed-frame.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "6c4fc93cfd87e1a0fd9ce64075a7e0aca6e280b3",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0014": {
       "documentId": "adr-0014",
@@ -582,16 +596,17 @@
         "zh": "docs/zh/adr/0014-formal-requirement-baseline.md"
       },
       "authority": {
-        "path": "docs/adr/0014-formal-requirement-baseline.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0014-formal-requirement-baseline.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "4cb79c78fb2da77c6706bb3cde1dbc173619e747",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0015": {
       "documentId": "adr-0015",
@@ -602,16 +617,17 @@
         "zh": "docs/zh/adr/0015-rider-style-example-application.md"
       },
       "authority": {
-        "path": "docs/adr/0015-rider-style-example-application.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0015-rider-style-example-application.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "c68832b2778b4cc09daddf9e613bfd373f569b93",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0016": {
       "documentId": "adr-0016",
@@ -622,16 +638,17 @@
         "zh": "docs/zh/adr/0016-remove-application-projects.md"
       },
       "authority": {
-        "path": "docs/adr/0016-remove-application-projects.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0016-remove-application-projects.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "9a60ec6e3462d131cf6c83d9fd97b4e2c9384917",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-0017": {
       "documentId": "adr-0017",
@@ -642,16 +659,17 @@
         "zh": "docs/zh/adr/0017-nuget-consumer-demo-sample.md"
       },
       "authority": {
-        "path": "docs/adr/0017-nuget-consumer-demo-sample.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/adr/0017-nuget-consumer-demo-sample.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "baf1d3e94a3a7c7a5314aa5853e530f3bde54771",
+        "reviewedCandidateBlob": "",
+        "canonicalBlob": ""
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-readme": {
       "documentId": "evidence-readme",

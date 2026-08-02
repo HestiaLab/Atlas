@@ -9,7 +9,7 @@
 ## 当前文档
 
 - [Content Threat Model](./content-threat-model.md)：Trusted Blazor content、SandboxedFrame、消息协议、攻击面和验证责任。
-- [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
+- [ADR-0013](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
 
 ## 必须保持的边界
 
@@ -27,7 +27,7 @@
 
 1. [SRS 非功能需求](../../SRS.md)
 2. [HLD §8](../../HLD.md#8-错误处理与质量属性)
-3. [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md)
+3. [ADR-0013](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)
 4. [Content Threat Model](./content-threat-model.md)
 5. `tests/Atlas.Blazor.Tests/SandboxedFrameTests.cs`
 6. `tests/browser/p7-sandbox-fixture.html`

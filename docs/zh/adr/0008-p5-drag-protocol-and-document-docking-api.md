@@ -1,5 +1,10 @@
 # ADR-0008：P5 Drag Protocol 与 Document Docking API
 
+> [English](../../en/adr/0008-p5-drag-protocol-and-document-docking-api.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（P5 门禁决策授权）

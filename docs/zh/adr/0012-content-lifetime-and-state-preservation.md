@@ -1,5 +1,10 @@
 # ADR-0012：Content Lifetime 与状态保持
 
+> [English](../../en/adr/0012-content-lifetime-and-state-preservation.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer（明确批准 P7 方案）

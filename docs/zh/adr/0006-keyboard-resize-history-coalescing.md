@@ -1,5 +1,10 @@
 # ADR-0006：键盘 Resize 提交与 Core History 合并
 
+> [English](../../en/adr/0006-keyboard-resize-history-coalescing.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：维护者（已授权本阶段门禁与 API 决策）

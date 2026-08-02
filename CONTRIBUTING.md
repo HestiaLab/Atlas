@@ -108,4 +108,4 @@ maintenance requests.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in
-  `docs/adr/0001-runtime-and-package-baseline.md`.
+  `docs/en/adr/0001-runtime-and-package-baseline.md`.

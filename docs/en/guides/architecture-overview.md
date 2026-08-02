@@ -183,6 +183,6 @@ ADR requirements first when compatibility policy is involved.
 
 - Product behavior: [SRS](../../SRS.md)
 - Full internal design: [HLD](../../HLD.md)
-- Accepted decisions: [ADR index](../../adr/README.md)
+- Accepted decisions: [ADR index](../../en/adr/README.md)
 - Implementation status: [requirements traceability](../../requirements-traceability.md)
 - Actual development workflow: [development guide](./development-guide.md)

@@ -1,5 +1,10 @@
 # Architecture Decision Records
 
+> [English](../../en/adr/README.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 Atlas 使用 ADR 记录会影响公共 API、包结构、跨语言协议、持久化兼容性或安全边界的架构决策。
 
 ## 状态

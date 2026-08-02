@@ -1,5 +1,10 @@
 # ADR-0004：Blazor Projection API 与声明协调语义
 
+> [English](../../en/adr/0004-blazor-projection-api-and-reconciliation.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - **状态**：Accepted
 - **日期**：2026-07-31
 - **决策者**：Atlas Maintainer

@@ -1,5 +1,10 @@
 # ADR-0001：运行时、包结构与前端工具链基线
 
+> [English](../../en/adr/0001-runtime-and-package-baseline.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - **状态**：Accepted
 - **日期**：2026-07-30
 - **决策者**：Atlas Maintainer

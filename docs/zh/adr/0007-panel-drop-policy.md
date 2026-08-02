@@ -1,5 +1,10 @@
 # ADR-0007：Panel Drop Policy
 
+> [English](../../en/adr/0007-panel-drop-policy.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 状态：Accepted
 - 日期：2026-07-31
 - 决策者：Atlas Maintainer

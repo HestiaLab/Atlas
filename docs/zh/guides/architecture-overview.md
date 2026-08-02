@@ -140,7 +140,7 @@ Atlas.Core ← Atlas.Blazor ← Atlas.Demo
 
 - 产品行为：[SRS](../../SRS.md)
 - 完整内部设计：[HLD](../../HLD.md)
-- 已批准决策：[ADR 索引](../../adr/README.md)
+- 已批准决策：[ADR 索引](../../zh/adr/README.md)
 - 实现状态：[需求追溯矩阵](../../requirements-traceability.md)
 - 实际开发流程：[开发指南](./development-guide.md)
 - 验证层选择：[测试指南](./testing-guide.md)
