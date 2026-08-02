@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "currentPhase": "P6",
   "description": "Atlas documentation manifest. Machine-readable source of document roles, current authority paths, migration phases, integrity blob records, legacy routes, and mirror exceptions. Human-readable process status lives in docs/translation-status.md; CI checks that the two do not contradict.",
   "documents": {
     "root-readme": {

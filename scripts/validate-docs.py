@@ -243,12 +243,40 @@ def validate_path_existence(manifest: dict, repo: Path, current_phase: str, erro
 
 def validate_status_consistency(manifest: dict, status_text: str, errors: list[str]) -> None:
     docs = manifest["documents"]
-    status_ids = set(re.findall(r"`([a-z0-9-]+)`", status_text))
-    # Only document IDs appear as backticked lowercase keys in the table rows.
     manifest_ids = set(docs.keys())
+
+    # Document IDs in the status table are backticked lowercase keys in rows.
+    status_ids = set(re.findall(r"^\| `([a-z0-9-]+)` \|", status_text, re.MULTILINE))
     for doc_id in manifest_ids:
-        if doc_id not in status_text:
+        if doc_id not in status_ids:
             errors.append(f"status table missing row for document {doc_id}")
+    for doc_id in sorted(status_ids - manifest_ids):
+        errors.append(f"status table has row for unknown document {doc_id}")
+
+    # The status table's authority column must agree with the manifest.
+    # Rows look like: | `srs` | `docs/en/SRS.md` | `docs/zh/SRS.md` | Role |
+    # `docs/en/SRS.md` / English Canonical | ... |
+    for match in re.finditer(
+        r"^\| `([a-z0-9-]+)` \| `([^`]+)` \| `([^`]+)` \| [^`|]+ \| `([^`]+)` / ([A-Za-z ]+) \|",
+        status_text,
+        re.MULTILINE,
+    ):
+        doc_id, en_path, zh_path, auth_path, state = match.groups()
+        doc = docs.get(doc_id)
+        if doc is None:
+            continue
+        if en_path != doc["targets"]["en"]:
+            errors.append(f"status table English path mismatch for {doc_id}: {en_path}")
+        if zh_path != doc["targets"]["zh"]:
+            errors.append(f"status table Chinese path mismatch for {doc_id}: {zh_path}")
+        if auth_path != doc["authority"]["path"]:
+            errors.append(
+                f"status table authority path mismatch for {doc_id}: {auth_path} vs {doc['authority']['path']}"
+            )
+        if state.strip() != doc["authority"]["state"]:
+            errors.append(
+                f"status table authority state mismatch for {doc_id}: {state} vs {doc['authority']['state']}"
+            )
 
 
 def extract_links(md_path: Path, repo: Path) -> list[tuple[int, str, str]]:
@@ -294,6 +322,10 @@ def validate_links(repo: Path, errors: list[str]) -> None:
                 errors.append(f"{md.relative_to(repo)}:{line_no}: broken link target: {target}")
                 continue
             if fragment:
+                if resolved.suffix != ".md":
+                    # Anchor into a non-Markdown target (image, binary, etc.) is
+                    # not something we can validate; skip without decoding.
+                    continue
                 target_anchors = anchors_cache.get(resolved)
                 if target_anchors is None:
                     target_anchors = collect_anchors(resolved.read_text(encoding="utf-8"))
@@ -397,9 +429,16 @@ def validate_hld_tuple(repo: Path, manifest: dict, errors: list[str]) -> None:
         errors.append("HLD contains no DES identifiers")
     if not oi:
         errors.append("HLD contains no OI identifiers")
-    duplicates = [item for item in des if list(des).count(item) > 1]  # set already unique
-    if duplicates:
-        errors.append(f"HLD duplicate DES identifiers: {sorted(set(duplicates))}")
+    # Count raw occurrences to catch duplicates (the set only tells existence).
+    # Only definition rows count: a line whose first token is the DES id.
+    hld_text = ""
+    hld_path = authority_path(repo, manifest, "hld")
+    if hld_path is not None and hld_path.exists():
+        hld_text = hld_path.read_text(encoding="utf-8")
+    raw_des = re.findall(r"^(DES-[A-Z]+-\d{3})\s*$", hld_text, re.MULTILINE)
+    dupes = sorted({item for item in raw_des if raw_des.count(item) > 1})
+    if dupes:
+        errors.append(f"HLD duplicate DES definitions: {dupes}")
 
 
 def validate_adr_tuple(repo: Path, manifest: dict, errors: list[str]) -> None:
@@ -454,7 +493,8 @@ def validate_mirror_set(repo: Path, manifest: dict, current_phase: str, errors: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate Atlas documentation contract")
-    parser.add_argument("--phase", default="P0", choices=PHASE_ORDER, help="current migration phase")
+    parser.add_argument("--phase", default=None, choices=PHASE_ORDER,
+                        help="current migration phase (default: manifest currentPhase)")
     parser.add_argument("--repo", default=".", help="repository root")
     args = parser.parse_args()
 
@@ -463,15 +503,23 @@ def main() -> int:
     warnings: list[str] = []
 
     manifest = load_manifest(repo)
+    phase = args.phase or manifest.get("currentPhase")
+    if phase is None:
+        errors.append("manifest.currentPhase is required when --phase is omitted")
+        phase = "P0"
+    elif phase not in PHASE_ORDER:
+        errors.append(f"manifest.currentPhase invalid: {phase!r}")
+        phase = "P0"
+
     validate_manifest_schema(manifest, errors)
     validate_status_consistency(manifest, load_status(repo), errors)
-    validate_path_existence(manifest, repo, args.phase, errors)
+    validate_path_existence(manifest, repo, phase, errors)
     validate_links(repo, errors)
     validate_internal_links_within_doc(repo, errors)
     validate_srs_tuple(repo, manifest, errors)
     validate_hld_tuple(repo, manifest, errors)
     validate_adr_tuple(repo, manifest, errors)
-    validate_mirror_set(repo, manifest, args.phase, errors)
+    validate_mirror_set(repo, manifest, phase, errors)
 
     for warning in warnings:
         print(f"WARN: {warning}")
@@ -479,9 +527,9 @@ def main() -> int:
         print(f"ERROR: {error}")
 
     if errors:
-        print(f"\nValidation FAILED with {len(errors)} error(s) at phase {args.phase}.")
+        print(f"\nValidation FAILED with {len(errors)} error(s) at phase {phase}.")
         return 1
-    print(f"Validation PASSED at phase {args.phase}.")
+    print(f"Validation PASSED at phase {phase}.")
     return 0
 
 
