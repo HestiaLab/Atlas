@@ -3,6 +3,10 @@
 Atlas uses focused, reviewable changes. Every change must be traceable to an
 SRS requirement — see `docs/SRS.md`.
 
+Start with the [developer documentation index](docs/README.md) for the project
+architecture, development workflow, testing strategy, ADRs, evidence, and
+security documentation.
+
 ## Local Checks
 
 ```sh
