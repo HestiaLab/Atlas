@@ -25,4 +25,4 @@
 5. 失败或未执行的检查必须明确写出，不能用计划结果代替。
 6. 涉及 JavaScript 的证据应确认使用的是当前 `npm run build:js` 产物；涉及 Demo 的证据应确认没有复用旧 NuGet/browser cache。
 
-测试层和复验方式见 [测试指南](../guides/testing-guide.md)。
+测试层和复验方式见 [测试指南](../zh/guides/testing-guide.md)。

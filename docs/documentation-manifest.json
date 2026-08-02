@@ -12,15 +12,16 @@
       },
       "authority": {
         "path": "README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "eacf0cee2a32c8f72c205ea1886f13b4b375205e",
+        "reviewedCandidateBlob": "a0aab91298b7083a85c7ec70495e7438a1421456",
+        "canonicalBlob": "a0aab91298b7083a85c7ec70495e7438a1421456"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "docs-readme": {
       "documentId": "docs-readme",
@@ -31,16 +32,17 @@
         "zh": "docs/zh/README.md"
       },
       "authority": {
-        "path": "docs/README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/README.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "7d4091b6355a387bb45bcb2af23b17d0b035de26",
+        "reviewedCandidateBlob": "cff3428a993b5a5c8d4c62adc9b2ce96dad53feb",
+        "canonicalBlob": "cff3428a993b5a5c8d4c62adc9b2ce96dad53feb"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "srs": {
       "documentId": "srs",
@@ -111,16 +113,17 @@
         "zh": "docs/zh/guides/architecture-overview.md"
       },
       "authority": {
-        "path": "docs/guides/architecture-overview.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/guides/architecture-overview.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "a4428bcca6716fe64074e6e8d767e854e7aae95e",
+        "reviewedCandidateBlob": "82eff76891acd837d0a79b51629c56bc6ed31414",
+        "canonicalBlob": "82eff76891acd837d0a79b51629c56bc6ed31414"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "guide-development": {
       "documentId": "guide-development",
@@ -131,16 +134,17 @@
         "zh": "docs/zh/guides/development-guide.md"
       },
       "authority": {
-        "path": "docs/guides/development-guide.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/guides/development-guide.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "1e60ad2f1ee3ae3345ead20976c4402a62abb4e2",
+        "reviewedCandidateBlob": "6a395eed6bd96e9b4e894b1e25b7fd9f52cad6fc",
+        "canonicalBlob": "6a395eed6bd96e9b4e894b1e25b7fd9f52cad6fc"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "guide-testing": {
       "documentId": "guide-testing",
@@ -151,16 +155,17 @@
         "zh": "docs/zh/guides/testing-guide.md"
       },
       "authority": {
-        "path": "docs/guides/testing-guide.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/guides/testing-guide.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "4693ceebca8c3d1f6105584a90cb65de032ea1cb",
+        "reviewedCandidateBlob": "04c10a5dd1f5d4e25ab541ef2aa18f18cbabbd27",
+        "canonicalBlob": "04c10a5dd1f5d4e25ab541ef2aa18f18cbabbd27"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "security-readme": {
       "documentId": "security-readme",
@@ -171,16 +176,17 @@
         "zh": "docs/zh/security/README.md"
       },
       "authority": {
-        "path": "docs/security/README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/security/README.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "b7b9ea224572d546603def5c5e6b931ca02f36c1",
+        "reviewedCandidateBlob": "3cf3eb7a453e2a07b92eb6b510172b2d784dd289",
+        "canonicalBlob": "3cf3eb7a453e2a07b92eb6b510172b2d784dd289"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "security-content-threat-model": {
       "documentId": "security-content-threat-model",
@@ -191,16 +197,17 @@
         "zh": "docs/zh/security/content-threat-model.md"
       },
       "authority": {
-        "path": "docs/security/content-threat-model.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/security/content-threat-model.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "e2edc457ba08bc63bbb04af97dd47d17047165df",
+        "reviewedCandidateBlob": "6729bf925ba71513c1fb97aa24aeee1928b9222c",
+        "canonicalBlob": "6729bf925ba71513c1fb97aa24aeee1928b9222c"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "development-readme": {
       "documentId": "development-readme",

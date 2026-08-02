@@ -1,5 +1,9 @@
 # Atlas Content Threat Model
 
+> [English](../../en/security/content-threat-model.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
 ## Scope
 
 本模型覆盖 Atlas.Blazor P7 的两种 content mode。Atlas.Core 不执行内容代码，也不依赖浏览器安全 API。

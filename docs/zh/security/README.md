@@ -1,11 +1,15 @@
 # Atlas 安全文档
 
-本目录记录 Atlas 的内容信任模型和安全边界。仓库级漏洞报告、受支持版本和依赖策略见 [`SECURITY.md`](../../SECURITY.md)。
+> [English](../../en/security/README.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+本目录记录 Atlas 的内容信任模型和安全边界。仓库级漏洞报告、受支持版本和依赖策略见 [`SECURITY.md`](../../../SECURITY.md)。
 
 ## 当前文档
 
 - [Content Threat Model](./content-threat-model.md)：Trusted Blazor content、SandboxedFrame、消息协议、攻击面和验证责任。
-- [ADR-0013](../adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
+- [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
 
 ## 必须保持的边界
 
@@ -21,9 +25,9 @@
 
 依次检查：
 
-1. [SRS 非功能需求](../SRS.md)
-2. [HLD §8](../HLD.md#8-错误处理与质量属性)
-3. [ADR-0013](../adr/0013-content-trust-and-sandboxed-frame.md)
+1. [SRS 非功能需求](../../SRS.md)
+2. [HLD §8](../../HLD.md#8-错误处理与质量属性)
+3. [ADR-0013](../../adr/0013-content-trust-and-sandboxed-frame.md)
 4. [Content Threat Model](./content-threat-model.md)
 5. `tests/Atlas.Blazor.Tests/SandboxedFrameTests.cs`
 6. `tests/browser/p7-sandbox-fixture.html`

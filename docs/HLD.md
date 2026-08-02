@@ -2138,7 +2138,7 @@ preservation 与 component instance preservation，不能合并为一个模糊�
 | DEV-GATE-001 Repository Baseline | OI-004 | solution、TargetFramework、PackageId、namespace、CI、NuGet 依赖 | 仓库基线 ADR + 可运行的 SDK/CI 配置 | 纯文档、与 TFM 无关的模型 Spike |
 | DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver 默认策略、Panel drag E2E、用户文档 | **Closed**：ADR-0007 Accepted；SRS 已统一 enabled set、优先级、失败语义与默认策略 | 参数化 resolver、全部候选策略的纯函数测试 |
 | DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
-| DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
+| DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./zh/security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；150 = F142 + NF8 | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 150 个正式需求块维护矩阵 |
 

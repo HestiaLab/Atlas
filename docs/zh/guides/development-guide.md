@@ -1,6 +1,10 @@
 # Atlas 开发指南
 
-本文说明如何在不破坏 Atlas 架构边界和兼容合同的前提下修改框架。分支、提交和 PR 基本规则见 [`CONTRIBUTING.md`](../../CONTRIBUTING.md)。
+> [English](../../en/guides/development-guide.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+本文说明如何在不破坏 Atlas 架构边界和兼容合同的前提下修改框架。分支、提交和 PR 基本规则见 [`CONTRIBUTING.md`](../../../CONTRIBUTING.md)。
 
 ## 1. 开始前
 

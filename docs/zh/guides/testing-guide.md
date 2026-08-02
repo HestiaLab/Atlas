@@ -1,5 +1,9 @@
 # Atlas 测试指南
 
+> [English](../../en/guides/testing-guide.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
 Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet consumer。单一测试层不能覆盖全部合同。本指南说明每层验证什么，以及改动后如何选择最小但充分的测试集合。
 
 ## 1. 测试分层

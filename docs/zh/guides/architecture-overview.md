@@ -1,6 +1,10 @@
 # Atlas 架构概览
 
-本文帮助框架开发者快速建立 Atlas 的代码和运行时心智模型。它是 [HLD](../HLD.md) 的简明导览，不替代 HLD、[SRS](../SRS.md) 或 ADR。
+> [English](../../en/guides/architecture-overview.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+本文帮助框架开发者快速建立 Atlas 的代码和运行时心智模型。它是 [HLD](../../HLD.md) 的简明导览，不替代 HLD、[SRS](../../SRS.md) 或 ADR。
 
 ## 1. Atlas 是什么
 
@@ -134,9 +138,9 @@ Atlas.Core ← Atlas.Blazor ← Atlas.Demo
 
 ## 7. 从哪里继续阅读
 
-- 产品行为：[SRS](../SRS.md)
-- 完整内部设计：[HLD](../HLD.md)
-- 已批准决策：[ADR 索引](../adr/README.md)
-- 实现状态：[需求追溯矩阵](../requirements-traceability.md)
+- 产品行为：[SRS](../../SRS.md)
+- 完整内部设计：[HLD](../../HLD.md)
+- 已批准决策：[ADR 索引](../../adr/README.md)
+- 实现状态：[需求追溯矩阵](../../requirements-traceability.md)
 - 实际开发流程：[开发指南](./development-guide.md)
 - 验证层选择：[测试指南](./testing-guide.md)
