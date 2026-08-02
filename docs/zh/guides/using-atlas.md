@@ -87,7 +87,7 @@ return new AtlasWorkspaceDefinition(
 
 - `DockItem` — 一个工具面板或文档标签页，包含 `DockItemId`、`ContentReference`、能力、标题和图标键。
 - `GroupNode` — 按顺序容纳 Tool 或 Document 条目的容器。
-- `SplitNode` — 两个子节点，含轴、基准和约束。
+- `SplitNode` — 两个子节点，含轴、split basis（分割基准）和约束。
 - `ToolBarState` / `ToolBarOrderState` — 哪些逻辑侧/区域显示工具栏及条目顺序。
 - `AtlasWorkspaceDefinition` — 由工厂验证的不可变根。
 
@@ -167,7 +167,7 @@ var result = await commands.OpenItemAsync(
     deduplicationMode: ContentDeduplicationMode.ActivateExisting);
 ```
 
-用无锁查询读取不可变快照：
+用无锁查询读取不可变快照（`AtlasWorkspaceQueries` 扩展方法）：
 
 ```csharp
 var item = workspace.TryGetItem(new DockItemId("program"));
@@ -220,6 +220,32 @@ var document = serializer.DeserializeWithOptions(
     contentRegistered: kind => IsRegistered(kind),
     missingContentPolicy: MissingContentPolicy.PreservePlaceholder);
 ```
+
+### 恢复（Restore）
+
+用恢复操作原子发布已验证的文档（恢复是 history barrier）：
+
+```csharp
+var commands = new AtlasWorkspaceCommands(workspace);
+var result = await commands.RestoreAsync(
+    document,
+    cancellationToken: default);
+```
+
+恢复在一次提交中替换工作区状态；失败或 stale 的恢复保持当前 snapshot、revision 和 history 不变。
+
+### 预设（Preset）
+
+通过预设服务保存、应用、列出和删除命名布局快照（服务自身捕获工作区快照）：
+
+```csharp
+var presets = new LayoutPresetService(workspace, serializer, store);
+await presets.SaveAsync("my-layout");
+var apply = await presets.ApplyAsync("my-layout");
+var list = await presets.ListAsync();
+```
+
+服务保持 single-writer 路径：一次只保存一个，同一 key 以最新写入为准。
 
 ## 接下来去哪里
 

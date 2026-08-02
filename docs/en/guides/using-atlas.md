@@ -96,7 +96,7 @@ Key types:
 - `DockItem` — one tool panel or document tab, with a `DockItemId`, a
   `ContentReference`, capabilities, a title, and an icon key.
 - `GroupNode` — a container that holds Tool or Document items in order.
-- `SplitNode` — two children with an axis, a basis, and constraints.
+- `SplitNode` — two children with an axis, a split basis, and constraints.
 - `ToolBarState` / `ToolBarOrderState` — which logical sides/regions show
   toolbars and the order of entries.
 - `AtlasWorkspaceDefinition` — the immutable root that the factory validates.
@@ -181,7 +181,8 @@ var result = await commands.OpenItemAsync(
     deduplicationMode: ContentDeduplicationMode.ActivateExisting);
 ```
 
-Read state with lock-free queries over the immutable snapshot:
+Read state with lock-free queries over the immutable snapshot (the
+`AtlasWorkspaceQueries` extension methods):
 
 ```csharp
 var item = workspace.TryGetItem(new DockItemId("program"));
@@ -239,6 +240,36 @@ var document = serializer.DeserializeWithOptions(
     contentRegistered: kind => IsRegistered(kind),
     missingContentPolicy: MissingContentPolicy.PreservePlaceholder);
 ```
+
+### Restore
+
+Publish a validated document atomically with a restore operation (a history
+barrier):
+
+```csharp
+var commands = new AtlasWorkspaceCommands(workspace);
+var result = await commands.RestoreAsync(
+    document,
+    cancellationToken: default);
+```
+
+Restore replaces the workspace state in one commit; failed or stale restores
+leave the current snapshot, revision and history unchanged.
+
+### Presets
+
+Save, apply, list and delete named layout snapshots through the preset
+service (the service captures the workspace snapshot itself):
+
+```csharp
+var presets = new LayoutPresetService(workspace, serializer, store);
+await presets.SaveAsync("my-layout");
+var apply = await presets.ApplyAsync("my-layout");
+var list = await presets.ListAsync();
+```
+
+The service keeps a single-writer path: one save at a time, latest write wins
+for the same key.
 
 ## Where To Go Next
 
