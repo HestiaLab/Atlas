@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -21,7 +20,7 @@ public sealed class RequirementsBaselineTests
     public void Srs_formal_blocks_and_appendix_define_the_same_150_requirements()
     {
         var root = RepositoryRoot();
-        var srs = File.ReadAllText(Path.Combine(root, ManifestAuthorityPath("srs")));
+        var srs = File.ReadAllText(Path.Combine(root, "docs", "en", "SRS.md"));
         var indexStart = srs.IndexOf(RequirementsIndexStart, StringComparison.Ordinal);
         var indexEnd = srs.IndexOf(RequirementsIndexEnd, StringComparison.Ordinal);
 
@@ -49,9 +48,9 @@ public sealed class RequirementsBaselineTests
     public void P8_audit_has_one_evidence_status_for_every_formal_requirement()
     {
         var root = RepositoryRoot();
-        var srs = File.ReadAllText(Path.Combine(root, ManifestAuthorityPath("srs")));
+        var srs = File.ReadAllText(Path.Combine(root, "docs", "en", "SRS.md"));
         var audit = File.ReadAllText(
-            Path.Combine(root, ManifestAuthorityPath("requirement-audit")));
+            Path.Combine(root, "docs", "en", "evidence", "p8-requirement-audit.md"));
         var formalIds = FormalRequirement.Matches(srs)
             .Select(match => match.Value.Split(' ')[0])
             .OrderBy(id => id, StringComparer.Ordinal)
@@ -67,23 +66,6 @@ public sealed class RequirementsBaselineTests
         Assert.Equal(auditedRows.Length, auditedRows.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(formalIds, auditedRows.OrderBy(id => id, StringComparer.Ordinal));
         Assert.DoesNotContain("| Designed |", audit, StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    /// Resolves the current authority path for a document from
-    /// docs/documentation-manifest.json so that path cutovers only update the
-    /// manifest, never hard-coded filenames in this test.
-    /// </summary>
-    private static string ManifestAuthorityPath(string documentId)
-    {
-        using var manifest = JsonDocument.Parse(
-            File.ReadAllText(Path.Combine(RepositoryRoot(), "docs", "documentation-manifest.json")));
-        var authority = manifest.RootElement
-            .GetProperty("documents")
-            .GetProperty(documentId)
-            .GetProperty("authority");
-        return authority.GetProperty("path").GetString()
-            ?? throw new InvalidOperationException($"Manifest authority path missing for {documentId}.");
     }
 
     private static string RepositoryRoot()

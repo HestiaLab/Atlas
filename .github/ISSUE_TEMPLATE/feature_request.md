@@ -33,5 +33,6 @@ Describe alternatives considered or why this should not stay out of scope.
 ## Compatibility
 
 Describe expected API, NuGet packaging, or documentation impact. For
-documentation changes, follow the language/authority rules in
-`docs/translation-status.md` and `docs/documentation-manifest.json`.
+documentation changes, keep English canonical under `docs/en/` and mark the
+Chinese translation `Outdated` when a normative document changes without a
+synchronized translation.

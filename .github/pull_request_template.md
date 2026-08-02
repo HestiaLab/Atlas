@@ -21,10 +21,9 @@
 
 - Public API impact (`Atlas.Core` / `Atlas.Blazor`):
 - NuGet packaging or dependency impact:
-- Documentation impact (`docs/`): update `docs/translation-status.md` and
-  `docs/documentation-manifest.json` when paths, authority, or translation
-  status change; keep English canonical and mark Chinese `Outdated` when a
-  normative document changes without a synchronized translation.
+- Documentation impact (`docs/`): keep English canonical under `docs/en/`
+  and mark the Chinese translation `Outdated` when a normative document
+  changes without a synchronized translation.
 - TypeScript / JS interop impact:
 
 ## AI Assistance

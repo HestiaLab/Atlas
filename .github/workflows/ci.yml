@@ -60,16 +60,6 @@ jobs:
       - run: dotnet restore Atlas.sln
       - run: dotnet format Atlas.sln --verify-no-changes --no-restore --verbosity minimal
 
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Validate documentation manifest, links and structure tuples
-        # The migration phase is read from manifest.currentPhase, so CI always
-        # runs the phase-gated checks for the migration's current state (P6
-        # after completion: every mirrorRequired target must exist).
-        run: python3 scripts/validate-docs.py --repo "$GITHUB_WORKSPACE"
-
   pack:
     runs-on: ubuntu-latest
     steps:
