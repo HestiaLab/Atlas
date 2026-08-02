@@ -1,7 +1,7 @@
 # P3 Blazor Projection Work Packages
 
 本文件记录 P3 的 tracer-bullet 边界与验收合同。公共 API、声明协调和 ownership 语义以
-[ADR-0004](./adr/0004-blazor-projection-api-and-reconciliation.md) 为准。P3 不关闭或改变
+[ADR-0004](../../adr/0004-blazor-projection-api-and-reconciliation.md) 为准。P3 不关闭或改变
 DEV-GATE-002～006，也不实现 P4 controller、P5 drag/drop、P6 persistence 或 P7 新的
 content lifetime/security 能力。
 
