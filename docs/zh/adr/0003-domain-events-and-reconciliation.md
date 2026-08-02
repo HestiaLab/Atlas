@@ -105,9 +105,9 @@ ReconcileDefinitionOperation(
 - definition WorkspaceId 必须等于 workspace Id，否则 `INVALID_LAYOUT_DATA`；
 - candidate 整体验证后一次 commit；
 - identical definition 返回 NoChange；
--成功 ChangeSet.Kind = `ReconcileDefinition`；
--进入正常 History；`ResetWorkspaceOperation` 才是 history barrier；
--声明 identity 重复或 topology/sizing 不合法返回 `INVALID_LAYOUT_DATA`，不交换 state。
+- 成功 ChangeSet.Kind = `ReconcileDefinition`；
+- 进入正常 History；`ResetWorkspaceOperation` 才是 history barrier；
+- 声明 identity 重复或 topology/sizing 不合法返回 `INVALID_LAYOUT_DATA`，不交换 state。
 
 ## Alternatives
 
