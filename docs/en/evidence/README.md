@@ -28,7 +28,7 @@ holds on the current branch.
 1. First check the evidence record's date, branch/commit, package, bundle, and
    environment.
 2. Current state is governed by the actual code, current test output, and the
-   [requirements traceability](../../requirements-traceability.md).
+   [requirements traceability](../requirements-traceability.md).
 3. Historical browser screenshots or manual operations cannot replace current
    automated tests.
 4. New evidence must record the actual commands, output, environment, and

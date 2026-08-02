@@ -334,17 +334,17 @@ def validate_internal_links_within_doc(repo: Path, errors: list[str]) -> None:
                         )
 
 
-def extract_srs_ids(repo: Path) -> set[str]:
-    srs_path = repo / "docs" / "SRS.md"
-    if not srs_path.exists():
+def extract_srs_ids(repo: Path, manifest: dict | None = None) -> set[str]:
+    srs_path = authority_path(repo, manifest, "srs")
+    if srs_path is None or not srs_path.exists():
         return set()
     text = srs_path.read_text(encoding="utf-8")
     return set(re.findall(r"^REQ-(?:F|NF)-\d{3} .*\[Actor:", text, re.MULTILINE))
 
 
-def extract_hld_ids(repo: Path) -> tuple[set[str], set[str]]:
-    hld_path = repo / "docs" / "HLD.md"
-    if not hld_path.exists():
+def extract_hld_ids(repo: Path, manifest: dict | None = None) -> tuple[set[str], set[str]]:
+    hld_path = authority_path(repo, manifest, "hld")
+    if hld_path is None or not hld_path.exists():
         return set(), set()
     text = hld_path.read_text(encoding="utf-8")
     des = set(re.findall(r"\bDES-[A-Z]+-\d{3}\b", text))
@@ -352,9 +352,20 @@ def extract_hld_ids(repo: Path) -> tuple[set[str], set[str]]:
     return des, oi
 
 
-def validate_srs_tuple(repo: Path, errors: list[str]) -> None:
-    srs_path = repo / "docs" / "SRS.md"
-    if not srs_path.exists():
+def authority_path(repo: Path, manifest: dict | None, doc_id: str) -> Path | None:
+    """Resolve a document's current authority path from the manifest."""
+    if manifest is None:
+        return None
+    doc = manifest.get("documents", {}).get(doc_id)
+    if doc is None:
+        return None
+    path = doc.get("authority", {}).get("path")
+    return repo / path if path else None
+
+
+def validate_srs_tuple(repo: Path, manifest: dict, errors: list[str]) -> None:
+    srs_path = authority_path(repo, manifest, "srs")
+    if srs_path is None or not srs_path.exists():
         return
     text = srs_path.read_text(encoding="utf-8")
     formal = re.findall(r"^REQ-(?:F|NF)-\d{3} .*\[Actor:", text, re.MULTILINE)
@@ -380,8 +391,8 @@ def validate_srs_tuple(repo: Path, errors: list[str]) -> None:
         errors.append("SRS index markers out of order")
 
 
-def validate_hld_tuple(repo: Path, errors: list[str]) -> None:
-    des, oi = extract_hld_ids(repo)
+def validate_hld_tuple(repo: Path, manifest: dict, errors: list[str]) -> None:
+    des, oi = extract_hld_ids(repo, manifest)
     if not des:
         errors.append("HLD contains no DES identifiers")
     if not oi:
@@ -391,11 +402,11 @@ def validate_hld_tuple(repo: Path, errors: list[str]) -> None:
         errors.append(f"HLD duplicate DES identifiers: {sorted(set(duplicates))}")
 
 
-def validate_adr_tuple(repo: Path, errors: list[str]) -> None:
-    adr_dir = repo / "docs" / "adr"
-    if not adr_dir.exists():
+def validate_adr_tuple(repo: Path, manifest: dict, errors: list[str]) -> None:
+    adr_dir = authority_path(repo, manifest, "adr-index")
+    if adr_dir is None or not adr_dir.exists():
         return
-    adr_files = sorted(adr_dir.glob("*.md"))
+    adr_files = sorted(adr_dir.parent.glob("*.md"))
     for adr in adr_files:
         if adr.name == "README.md":
             continue
@@ -404,6 +415,7 @@ def validate_adr_tuple(repo: Path, errors: list[str]) -> None:
             errors.append(f"{adr.relative_to(repo)}: missing '# ADR-0000' title")
         if not re.search(r"^#{1,3}\s*(状态|Status)\s*$", text, re.MULTILINE) \
                 and not re.search(r"^- \**状态\**：", text, re.MULTILINE) \
+                and not re.search(r"^- \**Status\**:", text, re.MULTILINE) \
                 and "Status:" not in text:
             errors.append(f"{adr.relative_to(repo)}: missing status section")
         if not re.search(r"^#{1,3}\s*(Proposed )?(决策|Decision)\s*$", text, re.MULTILINE):
@@ -456,9 +468,9 @@ def main() -> int:
     validate_path_existence(manifest, repo, args.phase, errors)
     validate_links(repo, errors)
     validate_internal_links_within_doc(repo, errors)
-    validate_srs_tuple(repo, errors)
-    validate_hld_tuple(repo, errors)
-    validate_adr_tuple(repo, errors)
+    validate_srs_tuple(repo, manifest, errors)
+    validate_hld_tuple(repo, manifest, errors)
+    validate_adr_tuple(repo, manifest, errors)
     validate_mirror_set(repo, manifest, args.phase, errors)
 
     for warning in warnings:

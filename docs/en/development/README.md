@@ -19,7 +19,7 @@ failure semantics, and acceptance requirements:
 
 A Work Package is a phase implementation record. To judge the current
 implementation state, consult the
-[requirements traceability](../../requirements-traceability.md) and current
+[requirements traceability](../requirements-traceability.md) and current
 tests instead of relying only on historical Phase documents.
 
 ### Remediations
@@ -38,9 +38,9 @@ the same implementation.
 
 Authority order:
 
-1. [SRS](../../SRS.md): user-observable behavior.
-2. [HLD](../../HLD.md) and Accepted ADRs: internal design contracts.
-3. [Requirements traceability](../../requirements-traceability.md): current
+1. [SRS](../SRS.md): user-observable behavior.
+2. [HLD](../HLD.md) and Accepted ADRs: internal design contracts.
+3. [Requirements traceability](../requirements-traceability.md): current
    implementation status.
 4. Work Packages, Remediations, and Evidence: implementation and verification
    history.

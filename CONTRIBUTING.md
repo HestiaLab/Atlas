@@ -1,7 +1,7 @@
 # Contributing
 
 Atlas uses focused, reviewable changes. Every change must be traceable to an
-SRS requirement — see `docs/SRS.md`.
+SRS requirement — see `docs/en/SRS.md`.
 
 Start with the [developer documentation index](docs/README.md) for the project
 architecture, development workflow, testing strategy, ADRs, evidence, and
@@ -90,7 +90,7 @@ Before opening a PR:
 - Run `dotnet format` to ensure consistent code style.
 - Fill in the PR template sections that apply to the change.
 - Reference relevant SRS requirements (`REQ-F-xxx`).
-- Update `docs/requirements-traceability.md` for implementation changes.
+- Update `docs/en/requirements-traceability.md` for implementation changes.
 - Add tests for behaviour changes.
 - Keep unrelated cleanup out of feature or fix PRs.
 

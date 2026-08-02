@@ -25,8 +25,8 @@
 
 依次检查：
 
-1. [SRS 非功能需求](../../SRS.md)
-2. [HLD §8](../../HLD.md#8-错误处理与质量属性)
+1. [SRS 非功能需求](../SRS.md)
+2. [HLD §8](../HLD.md#8-错误处理与质量属性)
 3. [ADR-0013](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)
 4. [Content Threat Model](./content-threat-model.md)
 5. `tests/Atlas.Blazor.Tests/SandboxedFrameTests.cs`

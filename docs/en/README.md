@@ -17,9 +17,9 @@ When you first encounter the project, we recommend reading in this order:
    responsibilities, change paths, and collaboration rules.
 3. [Testing guide](./guides/testing-guide.md): choose the verification layer
    that matches the scope of your change.
-4. [SRS](../SRS.md): confirm user-observable behavior.
-5. [HLD](../HLD.md): confirm internal design contracts and module boundaries.
-6. [Requirements traceability](../requirements-traceability.md): confirm the
+4. [SRS](./SRS.md): confirm user-observable behavior.
+5. [HLD](./HLD.md): confirm internal design contracts and module boundaries.
+6. [Requirements traceability](./requirements-traceability.md): confirm the
    current implementation and verification status.
 
 Repository-level commit, branch, and local check rules are in
@@ -32,9 +32,9 @@ agents are in [`AGENTS.md`](../../AGENTS.md).
 
 | Document | Responsibility | When to modify |
 |----------|----------------|----------------|
-| [SRS](../SRS.md) | Authoritative source for user-observable and non-functional requirements | When product requirements change |
-| [HLD](../HLD.md) | Internal architecture, state model, failure semantics, and design contracts | When implementation design or architecture contracts change |
-| [Requirements traceability](../requirements-traceability.md) | Current state of requirements to implementation and test evidence | When implementation or verification status changes |
+| [SRS](./SRS.md) | Authoritative source for user-observable and non-functional requirements | When product requirements change |
+| [HLD](./HLD.md) | Internal architecture, state model, failure semantics, and design contracts | When implementation design or architecture contracts change |
+| [Requirements traceability](./requirements-traceability.md) | Current state of requirements to implementation and test evidence | When implementation or verification status changes |
 
 Core specifications stay at the `docs/` root to keep links stable and to
 emphasize their authority.

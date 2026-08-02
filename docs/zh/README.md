@@ -13,9 +13,9 @@
 1. [架构概览](./guides/architecture-overview.md)：先建立代码和运行时心智模型。
 2. [开发指南](./guides/development-guide.md)：了解目录职责、改动路径和协作规则。
 3. [测试指南](./guides/testing-guide.md)：根据改动范围选择验证层。
-4. [SRS](../SRS.md)：确认用户可观察行为。
-5. [HLD](../HLD.md)：确认内部设计合同和模块边界。
-6. [需求追溯矩阵](../requirements-traceability.md)：确认当前实现与验证状态。
+4. [SRS](./SRS.md)：确认用户可观察行为。
+5. [HLD](./HLD.md)：确认内部设计合同和模块边界。
+6. [需求追溯矩阵](./requirements-traceability.md)：确认当前实现与验证状态。
 
 仓库级提交、分支和本地检查规则见 [`CONTRIBUTING.md`](../../CONTRIBUTING.md)。AI Agent 的额外约束见 [`AGENTS.md`](../../AGENTS.md)。
 
@@ -25,9 +25,9 @@
 
 | 文档 | 责任 | 何时修改 |
 |------|------|----------|
-| [SRS](../SRS.md) | 用户可观察行为和非功能需求的权威来源 | 产品需求发生变化时 |
-| [HLD](../HLD.md) | 内部架构、状态模型、失败语义和设计合同 | 实现设计或架构合同发生变化时 |
-| [需求追溯矩阵](../requirements-traceability.md) | 需求到实现和测试证据的当前状态 | 功能实现或验证状态变化时 |
+| [SRS](./SRS.md) | 用户可观察行为和非功能需求的权威来源 | 产品需求发生变化时 |
+| [HLD](./HLD.md) | 内部架构、状态模型、失败语义和设计合同 | 实现设计或架构合同发生变化时 |
+| [需求追溯矩阵](./requirements-traceability.md) | 需求到实现和测试证据的当前状态 | 功能实现或验证状态变化时 |
 
 核心规范保留在 `docs/` 根目录，以保持稳定链接并突出其权威性。
 

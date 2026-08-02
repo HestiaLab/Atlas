@@ -19,7 +19,7 @@ Atlas 为 IDE、设计器、管理后台和其他复杂 Web 应用提供工具�
 - 多 Workspace、多个 Host 的状态与 DOM 隔离
 - ARIA、焦点协调和 reduced-motion 支持
 
-详细产品行为以 [`docs/SRS.md`](docs/SRS.md) 为准。
+详细产品行为以 [`docs/zh/SRS.md`](docs/zh/SRS.md) 为准。
 
 ## 项目组成
 
@@ -72,8 +72,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 |------|------|
 | [开发文档入口](docs/zh/README.md) | 文档分类和按任务组织的阅读路径 |
 | [架构概览](docs/zh/guides/architecture-overview.md) | 分层、状态所有权和运行时数据流 |
-| [SRS](docs/SRS.md) | 用户可观察行为和非功能需求 |
-| [HLD](docs/HLD.md) | 内部架构和设计合同 |
+| [SRS](docs/zh/SRS.md) | 用户可观察行为和非功能需求 |
+| [HLD](docs/zh/HLD.md) | 内部架构和设计合同 |
 | [测试指南](docs/zh/guides/testing-guide.md) | 测试分层和验证命令 |
 | [ADR 索引](docs/zh/adr/README.md) | 已接受的架构决策 |
 

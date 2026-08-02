@@ -3,8 +3,8 @@
 > English (canonical) | [简体中文](../../zh/guides/architecture-overview.md)
 
 This document helps framework developers quickly build a mental model of
-Atlas's code and runtime. It is a concise tour of the [HLD](../../HLD.md) and
-does not replace the HLD, the [SRS](../../SRS.md), or the ADRs.
+Atlas's code and runtime. It is a concise tour of the [HLD](../HLD.md) and
+does not replace the HLD, the [SRS](../SRS.md), or the ADRs.
 
 ## 1. What Atlas Is
 
@@ -181,8 +181,8 @@ ADR requirements first when compatibility policy is involved.
 
 ## 7. Where To Continue Reading
 
-- Product behavior: [SRS](../../SRS.md)
-- Full internal design: [HLD](../../HLD.md)
+- Product behavior: [SRS](../SRS.md)
+- Full internal design: [HLD](../HLD.md)
 - Accepted decisions: [ADR index](../../en/adr/README.md)
-- Implementation status: [requirements traceability](../../requirements-traceability.md)
+- Implementation status: [requirements traceability](../requirements-traceability.md)
 - Actual development workflow: [development guide](./development-guide.md)

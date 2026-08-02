@@ -5,7 +5,7 @@
 
 ## SRS Coverage
 
-- Relevant SRS requirements (`docs/SRS.md`): REQ-F-xxx
+- Relevant SRS requirements (`docs/en/SRS.md`): REQ-F-xxx
 - New SRS requirements (if any): REQ-F-xxx
 
 ## Validation

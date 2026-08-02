@@ -15,7 +15,7 @@
 - [P3 Blazor Projection Work Packages](./work-packages/p3-blazor-projection-work-packages.md)
 - [P4 Splitter and Keyboard Work Packages](./work-packages/p4-splitter-keyboard-work-packages.md)
 
-Work Package 是阶段实施记录。判断当前实现状态时，应查看 [需求追溯矩阵](../../requirements-traceability.md) 和当前测试，而不是仅依据历史 Phase 文档。
+Work Package 是阶段实施记录。判断当前实现状态时，应查看 [需求追溯矩阵](../requirements-traceability.md) 和当前测试，而不是仅依据历史 Phase 文档。
 
 ### Remediations
 
@@ -29,9 +29,9 @@ Remediation 中的分支、日期、测试数量和运行环境是历史事实�
 
 权威顺序：
 
-1. [SRS](../../SRS.md)：用户可观察行为。
-2. [HLD](../../HLD.md) 和 Accepted ADR：内部设计合同。
-3. [需求追溯矩阵](../../requirements-traceability.md)：当前实施状态。
+1. [SRS](../SRS.md)：用户可观察行为。
+2. [HLD](../HLD.md) 和 Accepted ADR：内部设计合同。
+3. [需求追溯矩阵](../requirements-traceability.md)：当前实施状态。
 4. Work Package、Remediation 和 Evidence：实施与验证历史。
 
 历史记录与当前规范冲突时，不能直接按历史记录修改代码；应先确认规范、ADR 和现有实现。

@@ -24,7 +24,7 @@
 ## 使用规则
 
 1. 先检查证据记录的日期、branch/commit、package、bundle 和环境。
-2. 当前状态以实际代码、当前测试输出和 [需求追溯矩阵](../../requirements-traceability.md) 为准。
+2. 当前状态以实际代码、当前测试输出和 [需求追溯矩阵](../requirements-traceability.md) 为准。
 3. 历史浏览器截图或人工操作不能替代当前自动化测试。
 4. 新 evidence 必须记录实际命令、输出、环境和未覆盖限制。
 5. 失败或未执行的检查必须明确写出，不能用计划结果代替。

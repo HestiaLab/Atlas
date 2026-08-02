@@ -8,12 +8,12 @@ Dock Layout component.
 Before changing files, read:
 
 - `CONTRIBUTING.md`
-- `docs/SRS.md` — the software requirements specification
+- `docs/en/SRS.md` — the software requirements specification
 
 For architecture-sensitive changes, also read:
 
 - `docs/en/adr/README.md`
-- `docs/requirements-traceability.md` — implementation status per SRS
+- `docs/en/requirements-traceability.md` — implementation status per SRS
 
 For build, CI, packaging, or dependency work, also read:
 
@@ -101,7 +101,7 @@ cd ../..
 ## Ownership Rules
 
 - Public component APIs belong in `src/Atlas.Blazor/Components/` and must be documented
-  against `docs/SRS.md`.
+  against `docs/en/SRS.md`.
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
 - `samples/Atlas.Demo` is a portable NuGet consumer, is not part of `Atlas.sln`, and
@@ -159,11 +159,11 @@ practical, fix the project cause rather than masking the check.
 ## SRS Traceability
 
 Every functional change must be traceable to a `REQ-F-xxx` or `REQ-NF-xxx`
-requirement in `docs/SRS.md`. The traceability matrix is maintained in
-`docs/requirements-traceability.md`.
+requirement in `docs/en/SRS.md`. The traceability matrix is maintained in
+`docs/en/requirements-traceability.md`.
 
 ## Documentation
 
-Update `docs/requirements-traceability.md` when implementations change.
-Update `docs/SRS.md` when requirements change.
+Update `docs/en/requirements-traceability.md` when implementations change.
+Update `docs/en/SRS.md` when requirements change.
 Create `docs/en/adr/` entries for architecture decisions.

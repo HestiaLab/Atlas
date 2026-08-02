@@ -25,7 +25,7 @@ second copy of layout state.
 - Multi-Workspace, multi-Host state and DOM isolation
 - ARIA, focus coordination, and reduced-motion support
 
-Detailed product behavior is defined in [`docs/SRS.md`](docs/SRS.md).
+Detailed product behavior is defined in [`docs/en/SRS.md`](docs/en/SRS.md).
 
 ## Project Structure
 
@@ -84,8 +84,8 @@ Build and run instructions live in
 |----------|---------|
 | [Documentation index](docs/en/README.md) | Document categories and task-oriented reading paths |
 | [Architecture overview](docs/en/guides/architecture-overview.md) | Layers, state ownership, and runtime data flow |
-| [SRS](docs/SRS.md) | User-observable behavior and non-functional requirements |
-| [HLD](docs/HLD.md) | Internal architecture and design contracts |
+| [SRS](docs/en/SRS.md) | User-observable behavior and non-functional requirements |
+| [HLD](docs/en/HLD.md) | Internal architecture and design contracts |
 | [Testing guide](docs/en/guides/testing-guide.md) | Test layers and verification commands |
 | [ADR index](docs/en/adr/README.md) | Accepted architecture decisions |
 
