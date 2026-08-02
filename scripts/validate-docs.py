@@ -411,24 +411,33 @@ def validate_adr_tuple(repo: Path, errors: list[str]) -> None:
 
 
 def validate_mirror_set(repo: Path, manifest: dict, current_phase: str, errors: list[str]) -> None:
-    """en/zh mirror file sets must match once migration is complete."""
+    """en/zh mirror file sets must match for documents that have cut over.
+
+    Only documents whose manifest authority state is English Canonical are
+    required to have both targets. Documents that have not reached their
+    migration phase (for example SRS before P5d) may have an English
+    translation without a Chinese mirror yet.
+    """
     if not phase_reached(current_phase, "P1"):
         return
-    en_dir = repo / "docs" / "en"
-    zh_dir = repo / "docs" / "zh"
-    if not en_dir.exists() or not zh_dir.exists():
-        return
-    en_files = {p.relative_to(en_dir).as_posix() for p in en_dir.rglob("*.md")}
-    zh_files = {p.relative_to(zh_dir).as_posix() for p in zh_dir.rglob("*.md")}
+    docs = manifest.get("documents", {})
     exceptions = {e["path"] for e in manifest.get("mirrorExceptions", [])}
-    for rel in en_files - zh_files:
-        full = f"docs/en/{rel}"
-        if full not in exceptions and rel not in exceptions:
-            errors.append(f"mirror set: {full} has no docs/zh counterpart")
-    for rel in zh_files - en_files:
-        full = f"docs/zh/{rel}"
-        if full not in exceptions and rel not in exceptions:
-            errors.append(f"mirror set: {full} has no docs/en counterpart")
+    for doc_id, doc in docs.items():
+        if doc.get("authority", {}).get("state") != "English Canonical":
+            continue
+        if not doc.get("mirrorRequired", False):
+            continue
+        targets = doc.get("targets", {})
+        en_path = targets.get("en")
+        zh_path = targets.get("zh")
+        if not en_path or not zh_path:
+            continue
+        en_exists = (repo / en_path).exists()
+        zh_exists = (repo / zh_path).exists()
+        if not en_exists:
+            errors.append(f"mirror set: canonical document {doc_id} missing English target: {en_path}")
+        if not zh_exists:
+            errors.append(f"mirror set: canonical document {doc_id} missing Chinese target: {zh_path}")
 
 
 def main() -> int:

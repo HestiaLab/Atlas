@@ -55,11 +55,11 @@
       "authority": {
         "path": "docs/SRS.md",
         "language": "zh",
-        "state": "Legacy Canonical"
+        "state": "English Ready for Cutover"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
+        "translatedFromBlob": "89acc3012276ad1fc6b748fcf5a8112937cdbdb6",
+        "reviewedCandidateBlob": "5f711fa7490e0b6c5eceb2bb39e17e24f27d183a",
         "canonicalBlob": null
       },
       "mirrorRequired": true
@@ -75,11 +75,11 @@
       "authority": {
         "path": "docs/HLD.md",
         "language": "zh",
-        "state": "Legacy Canonical"
+        "state": "English Ready for Cutover"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
+        "translatedFromBlob": "d1d7120e68927179b275674ac1cad2a68ac76d2c",
+        "reviewedCandidateBlob": "acd3f26814935cf5be3d6233cd5852931f0a00bd",
         "canonicalBlob": null
       },
       "mirrorRequired": true
@@ -95,11 +95,11 @@
       "authority": {
         "path": "docs/requirements-traceability.md",
         "language": "zh",
-        "state": "Legacy Canonical"
+        "state": "English Ready for Cutover"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
+        "translatedFromBlob": "6982574798cb4dac4642d7b4861b109df42d9dbf",
+        "reviewedCandidateBlob": "dd18f035f44a57373ac42f665403e957967b7e6a",
         "canonicalBlob": null
       },
       "mirrorRequired": true
