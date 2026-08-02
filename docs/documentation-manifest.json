@@ -680,16 +680,17 @@
         "zh": "docs/zh/evidence/README.md"
       },
       "authority": {
-        "path": "docs/evidence/README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/README.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "37e5f3167434ab5f8209d75d48816412b75c6fbe",
+        "reviewedCandidateBlob": "b2309cf3d92097aa30edc5c07008c4b247990018",
+        "canonicalBlob": "b2309cf3d92097aa30edc5c07008c4b247990018"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-atlas-demo-consumer": {
       "documentId": "evidence-atlas-demo-consumer",
@@ -700,16 +701,17 @@
         "zh": "docs/zh/evidence/atlas-demo-consumer-verification.md"
       },
       "authority": {
-        "path": "docs/evidence/atlas-demo-consumer-verification.md",
+        "path": "docs/en/evidence/atlas-demo-consumer-verification.md",
         "language": "en",
-        "state": "Legacy Canonical"
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "1318693a35ab090c36810eb03636aa1e614e648b",
+        "reviewedCandidateBlob": "1318693a35ab090c36810eb03636aa1e614e648b",
+        "canonicalBlob": "1318693a35ab090c36810eb03636aa1e614e648b"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-p5-drag-and-dock": {
       "documentId": "evidence-p5-drag-and-dock",
@@ -720,16 +722,17 @@
         "zh": "docs/zh/evidence/p5-drag-and-dock.md"
       },
       "authority": {
-        "path": "docs/evidence/p5-drag-and-dock.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/p5-drag-and-dock.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "a1fe55fe65f2150e5589e8c3ea19d320b6f19006",
+        "reviewedCandidateBlob": "80f16be96d5f6b690f69813849d0dac8272bb5c3",
+        "canonicalBlob": "80f16be96d5f6b690f69813849d0dac8272bb5c3"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-p6-persistence": {
       "documentId": "evidence-p6-persistence",
@@ -740,16 +743,17 @@
         "zh": "docs/zh/evidence/p6-persistence.md"
       },
       "authority": {
-        "path": "docs/evidence/p6-persistence.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/p6-persistence.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "f9ac0cd0c7a7eefb17c3394dac1e0ae372f701fb",
+        "reviewedCandidateBlob": "8fd9050404a655b6942bfc73232494f1982ac68d",
+        "canonicalBlob": "8fd9050404a655b6942bfc73232494f1982ac68d"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-p7-content-lifetime": {
       "documentId": "evidence-p7-content-lifetime",
@@ -760,16 +764,17 @@
         "zh": "docs/zh/evidence/p7-content-lifetime-security.md"
       },
       "authority": {
-        "path": "docs/evidence/p7-content-lifetime-security.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/p7-content-lifetime-security.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "6b46aee2f5fdfe8ba64c67c7cd93dafd64ad2f30",
+        "reviewedCandidateBlob": "556976a7819e7bade1f43dccb6133a1ff21c3362",
+        "canonicalBlob": "556976a7819e7bade1f43dccb6133a1ff21c3362"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "requirement-audit": {
       "documentId": "requirement-audit",
@@ -780,16 +785,17 @@
         "zh": "docs/zh/evidence/p8-requirement-audit.md"
       },
       "authority": {
-        "path": "docs/evidence/p8-requirement-audit.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/p8-requirement-audit.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "27fc856fcae44fb46da397459ea42beb1aee086a",
+        "reviewedCandidateBlob": "e329a0f92ca77a5870e096a9cbfb9a14564a4cf4",
+        "canonicalBlob": "e329a0f92ca77a5870e096a9cbfb9a14564a4cf4"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "evidence-p8-system-hardening": {
       "documentId": "evidence-p8-system-hardening",
@@ -800,16 +806,17 @@
         "zh": "docs/zh/evidence/p8-system-hardening.md"
       },
       "authority": {
-        "path": "docs/evidence/p8-system-hardening.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/evidence/p8-system-hardening.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "965e5d25f53534a82e95880e74550ab7a0e8c752",
+        "reviewedCandidateBlob": "130e2a37a504fb54069b032a5b5895b379df3234",
+        "canonicalBlob": "130e2a37a504fb54069b032a5b5895b379df3234"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "multilingual-documentation-plan": {
       "documentId": "multilingual-documentation-plan",

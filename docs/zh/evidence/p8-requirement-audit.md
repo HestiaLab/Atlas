@@ -1,5 +1,10 @@
 # P8 Formal Requirement Audit
 
+> [English](../../en/evidence/p8-requirement-audit.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 日期：2026-07-31
 - 基线：ADR-0014；150 = REQ-F 142 + REQ-NF 8
 - 规则：每个正式需求恰好一行；状态是实现状态，不继承 HLD 的 Designed。

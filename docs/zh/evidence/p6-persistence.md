@@ -1,5 +1,10 @@
 # P6 Persistence Verification Evidence
 
+> [English](../../en/evidence/p6-persistence.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 日期：2026-07-31
 - 分支：`chore/dev-gate-001-baseline`
 - Entry Gate：P2 Verified；DEV-GATE-005 Closed

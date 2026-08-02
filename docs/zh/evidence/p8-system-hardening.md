@@ -1,5 +1,10 @@
 # P8 System Hardening Evidence
 
+> [English](../../en/evidence/p8-system-hardening.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 > 历史证据说明：20 Panel 测量所用 `Atlas.Demo` 页面已按 ADR-0016 删除。以下测量记录保持为
 > 对应提交时的历史证据；静态 Splitter fixture 仍保留在 `tests/browser`。
 

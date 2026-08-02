@@ -71,7 +71,7 @@ product specifications.
 
 ### Verification Evidence
 
-[`evidence/`](../evidence/) stores phase acceptance, real-browser, and
+[`evidence/`](./evidence/) stores phase acceptance, real-browser, and
 independent NuGet consumer verification records. Evidence only describes the
 result at the time it was recorded; current state must be re-verified by
 running tests and consulting the requirements traceability matrix.

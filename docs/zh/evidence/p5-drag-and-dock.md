@@ -1,5 +1,10 @@
 # P5 Drag & Dock Verification Evidence
 
+> [English](../../en/evidence/p5-drag-and-dock.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 - 日期：2026-07-31
 - 分支：`chore/dev-gate-001-baseline`
 - Entry Gate：P4 Verified；DEV-GATE-002 Closed（ADR-0007）

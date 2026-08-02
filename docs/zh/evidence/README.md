@@ -1,5 +1,10 @@
 # 验证证据索引
 
+> [English](../../en/evidence/README.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
+
 本目录保存 Atlas 在特定阶段、分支、构建产物和环境中的验证记录。Evidence 用于审计“当时验证了什么”，不等同于当前分支持续成立的测试结果。
 
 ## 阶段证据
@@ -19,10 +24,10 @@
 ## 使用规则
 
 1. 先检查证据记录的日期、branch/commit、package、bundle 和环境。
-2. 当前状态以实际代码、当前测试输出和 [需求追溯矩阵](../requirements-traceability.md) 为准。
+2. 当前状态以实际代码、当前测试输出和 [需求追溯矩阵](../../requirements-traceability.md) 为准。
 3. 历史浏览器截图或人工操作不能替代当前自动化测试。
 4. 新 evidence 必须记录实际命令、输出、环境和未覆盖限制。
 5. 失败或未执行的检查必须明确写出，不能用计划结果代替。
 6. 涉及 JavaScript 的证据应确认使用的是当前 `npm run build:js` 产物；涉及 Demo 的证据应确认没有复用旧 NuGet/browser cache。
 
-测试层和复验方式见 [测试指南](../zh/guides/testing-guide.md)。
+测试层和复验方式见 [测试指南](../../zh/guides/testing-guide.md)。
