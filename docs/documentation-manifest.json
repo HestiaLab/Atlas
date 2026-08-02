@@ -1,0 +1,865 @@
+{
+  "schemaVersion": 1,
+  "description": "Atlas documentation manifest. Machine-readable source of document roles, current authority paths, migration phases, integrity blob records, legacy routes, and mirror exceptions. Human-readable process status lives in docs/translation-status.md; CI checks that the two do not contradict.",
+  "documents": {
+    "root-readme": {
+      "documentId": "root-readme",
+      "role": "project-home",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "README.md",
+        "zh": "README.zh.md"
+      },
+      "authority": {
+        "path": "README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "docs-readme": {
+      "documentId": "docs-readme",
+      "role": "docs-index",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/README.md",
+        "zh": "docs/zh/README.md"
+      },
+      "authority": {
+        "path": "docs/README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "srs": {
+      "documentId": "srs",
+      "role": "normative-requirements",
+      "migrationPhase": "P5d",
+      "targets": {
+        "en": "docs/en/SRS.md",
+        "zh": "docs/zh/SRS.md"
+      },
+      "authority": {
+        "path": "docs/SRS.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "hld": {
+      "documentId": "hld",
+      "role": "architecture-design",
+      "migrationPhase": "P5d",
+      "targets": {
+        "en": "docs/en/HLD.md",
+        "zh": "docs/zh/HLD.md"
+      },
+      "authority": {
+        "path": "docs/HLD.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "requirements-traceability": {
+      "documentId": "requirements-traceability",
+      "role": "traceability",
+      "migrationPhase": "P5d",
+      "targets": {
+        "en": "docs/en/requirements-traceability.md",
+        "zh": "docs/zh/requirements-traceability.md"
+      },
+      "authority": {
+        "path": "docs/requirements-traceability.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "guide-architecture-overview": {
+      "documentId": "guide-architecture-overview",
+      "role": "guide",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/guides/architecture-overview.md",
+        "zh": "docs/zh/guides/architecture-overview.md"
+      },
+      "authority": {
+        "path": "docs/guides/architecture-overview.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "guide-development": {
+      "documentId": "guide-development",
+      "role": "guide",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/guides/development-guide.md",
+        "zh": "docs/zh/guides/development-guide.md"
+      },
+      "authority": {
+        "path": "docs/guides/development-guide.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "guide-testing": {
+      "documentId": "guide-testing",
+      "role": "guide",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/guides/testing-guide.md",
+        "zh": "docs/zh/guides/testing-guide.md"
+      },
+      "authority": {
+        "path": "docs/guides/testing-guide.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "security-readme": {
+      "documentId": "security-readme",
+      "role": "security",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/security/README.md",
+        "zh": "docs/zh/security/README.md"
+      },
+      "authority": {
+        "path": "docs/security/README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "security-content-threat-model": {
+      "documentId": "security-content-threat-model",
+      "role": "security",
+      "migrationPhase": "P1",
+      "targets": {
+        "en": "docs/en/security/content-threat-model.md",
+        "zh": "docs/zh/security/content-threat-model.md"
+      },
+      "authority": {
+        "path": "docs/security/content-threat-model.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "development-readme": {
+      "documentId": "development-readme",
+      "role": "development-history",
+      "migrationPhase": "P2",
+      "targets": {
+        "en": "docs/en/development/README.md",
+        "zh": "docs/zh/development/README.md"
+      },
+      "authority": {
+        "path": "docs/development/README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "work-package-p3": {
+      "documentId": "work-package-p3",
+      "role": "development-history",
+      "migrationPhase": "P2",
+      "targets": {
+        "en": "docs/en/development/work-packages/p3-blazor-projection-work-packages.md",
+        "zh": "docs/zh/development/work-packages/p3-blazor-projection-work-packages.md"
+      },
+      "authority": {
+        "path": "docs/development/work-packages/p3-blazor-projection-work-packages.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "work-package-p4": {
+      "documentId": "work-package-p4",
+      "role": "development-history",
+      "migrationPhase": "P2",
+      "targets": {
+        "en": "docs/en/development/work-packages/p4-splitter-keyboard-work-packages.md",
+        "zh": "docs/zh/development/work-packages/p4-splitter-keyboard-work-packages.md"
+      },
+      "authority": {
+        "path": "docs/development/work-packages/p4-splitter-keyboard-work-packages.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "remediation-toolbar-drag-collapse": {
+      "documentId": "remediation-toolbar-drag-collapse",
+      "role": "development-history",
+      "migrationPhase": "P2",
+      "targets": {
+        "en": "docs/en/development/remediations/toolbar-drag-collapse-remediation.md",
+        "zh": "docs/zh/development/remediations/toolbar-drag-collapse-remediation.md"
+      },
+      "authority": {
+        "path": "docs/development/remediations/toolbar-drag-collapse-remediation.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-index": {
+      "documentId": "adr-index",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/README.md",
+        "zh": "docs/zh/adr/README.md"
+      },
+      "authority": {
+        "path": "docs/adr/README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0001": {
+      "documentId": "adr-0001",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0001-runtime-and-package-baseline.md",
+        "zh": "docs/zh/adr/0001-runtime-and-package-baseline.md"
+      },
+      "authority": {
+        "path": "docs/adr/0001-runtime-and-package-baseline.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0002": {
+      "documentId": "adr-0002",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0002-core-operation-api-freeze.md",
+        "zh": "docs/zh/adr/0002-core-operation-api-freeze.md"
+      },
+      "authority": {
+        "path": "docs/adr/0002-core-operation-api-freeze.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0003": {
+      "documentId": "adr-0003",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0003-domain-events-and-reconciliation.md",
+        "zh": "docs/zh/adr/0003-domain-events-and-reconciliation.md"
+      },
+      "authority": {
+        "path": "docs/adr/0003-domain-events-and-reconciliation.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0004": {
+      "documentId": "adr-0004",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0004-blazor-projection-api-and-reconciliation.md",
+        "zh": "docs/zh/adr/0004-blazor-projection-api-and-reconciliation.md"
+      },
+      "authority": {
+        "path": "docs/adr/0004-blazor-projection-api-and-reconciliation.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0005": {
+      "documentId": "adr-0005",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0005-interaction-protocol-and-p4-api.md",
+        "zh": "docs/zh/adr/0005-interaction-protocol-and-p4-api.md"
+      },
+      "authority": {
+        "path": "docs/adr/0005-interaction-protocol-and-p4-api.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0006": {
+      "documentId": "adr-0006",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0006-keyboard-resize-history-coalescing.md",
+        "zh": "docs/zh/adr/0006-keyboard-resize-history-coalescing.md"
+      },
+      "authority": {
+        "path": "docs/adr/0006-keyboard-resize-history-coalescing.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0007": {
+      "documentId": "adr-0007",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0007-panel-drop-policy.md",
+        "zh": "docs/zh/adr/0007-panel-drop-policy.md"
+      },
+      "authority": {
+        "path": "docs/adr/0007-panel-drop-policy.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0008": {
+      "documentId": "adr-0008",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0008-p5-drag-protocol-and-document-docking-api.md",
+        "zh": "docs/zh/adr/0008-p5-drag-protocol-and-document-docking-api.md"
+      },
+      "authority": {
+        "path": "docs/adr/0008-p5-drag-protocol-and-document-docking-api.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0009": {
+      "documentId": "adr-0009",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0009-document-tab-insertion-semantics.md",
+        "zh": "docs/zh/adr/0009-document-tab-insertion-semantics.md"
+      },
+      "authority": {
+        "path": "docs/adr/0009-document-tab-insertion-semantics.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0010": {
+      "documentId": "adr-0010",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0010-persistence-schema-and-v1-compatibility.md",
+        "zh": "docs/zh/adr/0010-persistence-schema-and-v1-compatibility.md"
+      },
+      "authority": {
+        "path": "docs/adr/0010-persistence-schema-and-v1-compatibility.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0011": {
+      "documentId": "adr-0011",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0011-p6-persistence-public-api.md",
+        "zh": "docs/zh/adr/0011-p6-persistence-public-api.md"
+      },
+      "authority": {
+        "path": "docs/adr/0011-p6-persistence-public-api.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0012": {
+      "documentId": "adr-0012",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0012-content-lifetime-and-state-preservation.md",
+        "zh": "docs/zh/adr/0012-content-lifetime-and-state-preservation.md"
+      },
+      "authority": {
+        "path": "docs/adr/0012-content-lifetime-and-state-preservation.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0013": {
+      "documentId": "adr-0013",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0013-content-trust-and-sandboxed-frame.md",
+        "zh": "docs/zh/adr/0013-content-trust-and-sandboxed-frame.md"
+      },
+      "authority": {
+        "path": "docs/adr/0013-content-trust-and-sandboxed-frame.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0014": {
+      "documentId": "adr-0014",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0014-formal-requirement-baseline.md",
+        "zh": "docs/zh/adr/0014-formal-requirement-baseline.md"
+      },
+      "authority": {
+        "path": "docs/adr/0014-formal-requirement-baseline.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0015": {
+      "documentId": "adr-0015",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0015-rider-style-example-application.md",
+        "zh": "docs/zh/adr/0015-rider-style-example-application.md"
+      },
+      "authority": {
+        "path": "docs/adr/0015-rider-style-example-application.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0016": {
+      "documentId": "adr-0016",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0016-remove-application-projects.md",
+        "zh": "docs/zh/adr/0016-remove-application-projects.md"
+      },
+      "authority": {
+        "path": "docs/adr/0016-remove-application-projects.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "adr-0017": {
+      "documentId": "adr-0017",
+      "role": "architecture-decision",
+      "migrationPhase": "P3",
+      "targets": {
+        "en": "docs/en/adr/0017-nuget-consumer-demo-sample.md",
+        "zh": "docs/zh/adr/0017-nuget-consumer-demo-sample.md"
+      },
+      "authority": {
+        "path": "docs/adr/0017-nuget-consumer-demo-sample.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-readme": {
+      "documentId": "evidence-readme",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/README.md",
+        "zh": "docs/zh/evidence/README.md"
+      },
+      "authority": {
+        "path": "docs/evidence/README.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-atlas-demo-consumer": {
+      "documentId": "evidence-atlas-demo-consumer",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/atlas-demo-consumer-verification.md",
+        "zh": "docs/zh/evidence/atlas-demo-consumer-verification.md"
+      },
+      "authority": {
+        "path": "docs/evidence/atlas-demo-consumer-verification.md",
+        "language": "en",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-p5-drag-and-dock": {
+      "documentId": "evidence-p5-drag-and-dock",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/p5-drag-and-dock.md",
+        "zh": "docs/zh/evidence/p5-drag-and-dock.md"
+      },
+      "authority": {
+        "path": "docs/evidence/p5-drag-and-dock.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-p6-persistence": {
+      "documentId": "evidence-p6-persistence",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/p6-persistence.md",
+        "zh": "docs/zh/evidence/p6-persistence.md"
+      },
+      "authority": {
+        "path": "docs/evidence/p6-persistence.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-p7-content-lifetime": {
+      "documentId": "evidence-p7-content-lifetime",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/p7-content-lifetime-security.md",
+        "zh": "docs/zh/evidence/p7-content-lifetime-security.md"
+      },
+      "authority": {
+        "path": "docs/evidence/p7-content-lifetime-security.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "requirement-audit": {
+      "documentId": "requirement-audit",
+      "role": "historical-requirement-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/p8-requirement-audit.md",
+        "zh": "docs/zh/evidence/p8-requirement-audit.md"
+      },
+      "authority": {
+        "path": "docs/evidence/p8-requirement-audit.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "evidence-p8-system-hardening": {
+      "documentId": "evidence-p8-system-hardening",
+      "role": "historical-evidence",
+      "migrationPhase": "P4",
+      "targets": {
+        "en": "docs/en/evidence/p8-system-hardening.md",
+        "zh": "docs/zh/evidence/p8-system-hardening.md"
+      },
+      "authority": {
+        "path": "docs/evidence/p8-system-hardening.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    },
+    "multilingual-documentation-plan": {
+      "documentId": "multilingual-documentation-plan",
+      "role": "migration-control",
+      "migrationPhase": "P6",
+      "targets": {
+        "en": "docs/en/development/multilingual-documentation-plan.md",
+        "zh": "docs/zh/development/multilingual-documentation-plan.md"
+      },
+      "authority": {
+        "path": "docs/multilingual-documentation-plan.md",
+        "language": "zh",
+        "state": "Legacy Canonical"
+      },
+      "integrity": {
+        "translatedFromBlob": null,
+        "reviewedCandidateBlob": null,
+        "canonicalBlob": null
+      },
+      "mirrorRequired": true
+    }
+  },
+  "validationInputs": {
+    "srs": "srs",
+    "requirementAudit": "requirement-audit"
+  },
+  "legacyRoutes": [
+    {
+      "sourcePath": "docs/SRS.md",
+      "targetDocumentId": "srs",
+      "kind": "compatibility-pointer",
+      "activeFromPhase": "P5d",
+      "removeAfterPhase": null,
+      "removalCondition": "permanent",
+      "reason": "Preserve the stable SRS entry point"
+    },
+    {
+      "sourcePath": "docs/HLD.md",
+      "targetDocumentId": "hld",
+      "kind": "compatibility-pointer",
+      "activeFromPhase": "P5d",
+      "removeAfterPhase": null,
+      "removalCondition": "permanent",
+      "reason": "Preserve the stable HLD entry point"
+    },
+    {
+      "sourcePath": "docs/requirements-traceability.md",
+      "targetDocumentId": "requirements-traceability",
+      "kind": "compatibility-pointer",
+      "activeFromPhase": "P5d",
+      "removeAfterPhase": null,
+      "removalCondition": "permanent",
+      "reason": "Preserve the stable traceability entry point"
+    }
+  ],
+  "mirrorExceptions": [
+    {
+      "path": "docs/README.md",
+      "reason": "Language selector for docs/; must not be mirrored",
+      "lifetime": "permanent",
+      "removalCondition": null
+    },
+    {
+      "path": "docs/documentation-manifest.json",
+      "reason": "Machine-readable control file; not a document language pair",
+      "lifetime": "permanent",
+      "removalCondition": null
+    },
+    {
+      "path": "docs/translation-status.md",
+      "reason": "Translation status table; not a document language pair",
+      "lifetime": "permanent",
+      "removalCondition": null
+    },
+    {
+      "path": "docs/multilingual-documentation-plan.md",
+      "reason": "Migration control document kept at docs/ root for P0-P5; archived to language directories in P6",
+      "lifetime": "P0-P5",
+      "removalCondition": "Archive the reviewed language pair under docs/en/development and docs/zh/development in P6"
+    }
+  ]
+}

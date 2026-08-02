@@ -19,6 +19,29 @@ For build, CI, packaging, or dependency work, also read:
 
 - `SECURITY.md`
 
+## Documentation Language And Authority
+
+English is the default documentation language and the canonical version of
+every language pair. Chinese translations live under `docs/zh/` and English
+documents under `docs/en/`. The machine-readable authority for each document
+(current path, state, translation blobs) is `docs/documentation-manifest.json`;
+human-readable status is `docs/translation-status.md`. Before changing
+documentation, check both files for the document's current authority path and
+migration state.
+
+- Do not declare a document `English Canonical` unless the manifest says so;
+  a file under `docs/en/` alone is not canonical.
+- When the SRS/HLD/traceability contract changes, either update the Chinese
+  translation in the same change or mark it `Chinese Outdated` explicitly.
+- Do not silently rewrite contract semantics while translating; preserve IDs,
+  Actor/Priority/Source fields, AC counts and order, code identifiers, numeric
+  constraints, and must/should/may strength.
+- Run `python scripts/validate-docs.py --phase <CURRENT_PHASE>` after any
+  documentation move or link change.
+- Keep `docs/SRS.md`, `docs/HLD.md` and `docs/requirements-traceability.md`
+  as stable compatibility entry points that point at the canonical English
+  versions.
+
 ## Project Shape
 
 Atlas is a **.NET 6 Blazor** component library that provides dockable tool

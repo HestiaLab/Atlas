@@ -60,6 +60,17 @@ jobs:
       - run: dotnet restore Atlas.sln
       - run: dotnet format Atlas.sln --verify-no-changes --no-restore --verbosity minimal
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate documentation manifest, links and structure tuples
+        # Adaptive mode: state-driven checks only enforce targets once the
+        # manifest records a migration state that requires them, so the same
+        # command is green during the migration and enforces the full mirror
+        # set once every document is canonical.
+        run: python3 scripts/validate-docs.py --repo "$GITHUB_WORKSPACE"
+
   pack:
     runs-on: ubuntu-latest
     steps:

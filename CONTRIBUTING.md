@@ -7,6 +7,25 @@ Start with the [developer documentation index](docs/README.md) for the project
 architecture, development workflow, testing strategy, ADRs, evidence, and
 security documentation.
 
+## Documentation Language And Authority
+
+English is the canonical version of every documentation language pair. Chinese
+translations live in `docs/zh/` and English documents in `docs/en/`. The
+machine-readable authority (current path, state, translation blobs) for each
+document is `docs/documentation-manifest.json`; human-readable status is
+`docs/translation-status.md`.
+
+- A file under `docs/en/` is not canonical unless the manifest records it as
+  `English Canonical`.
+- When a normative document (SRS, HLD, traceability) changes, update the
+  Chinese translation in the same PR or mark it `Chinese Outdated`; never
+  silently leave an out-of-date translation looking synchronized.
+- Do not change contract semantics while translating: preserve requirement and
+  design IDs, Actor/Priority/Source, AC counts and order, code identifiers,
+  numeric constraints, and must/should/may strength.
+- Run `python scripts/validate-docs.py --phase <CURRENT_PHASE>` after any
+  documentation move or link change.
+
 ## Local Checks
 
 ```sh

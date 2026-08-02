@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -13,20 +14,24 @@ public sealed class RequirementsBaselineTests
         @"^\| (REQ-(?:F|NF)-\d{3}) \|",
         RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
+    private const string RequirementsIndexStart = "<!-- atlas:requirements-index:start -->";
+    private const string RequirementsIndexEnd = "<!-- atlas:requirements-index:end -->";
+
     [Fact]
     public void Srs_formal_blocks_and_appendix_define_the_same_150_requirements()
     {
-        var srs = File.ReadAllText(Path.Combine(RepositoryRoot(), "docs", "SRS.md"));
-        var appendixStart = srs.IndexOf("## 附录A：需求统计", StringComparison.Ordinal);
-        var appendixEnd = srs.IndexOf("## 附录 B：延期需求", StringComparison.Ordinal);
+        var root = RepositoryRoot();
+        var srs = File.ReadAllText(Path.Combine(root, ManifestAuthorityPath("srs")));
+        var indexStart = srs.IndexOf(RequirementsIndexStart, StringComparison.Ordinal);
+        var indexEnd = srs.IndexOf(RequirementsIndexEnd, StringComparison.Ordinal);
 
-        Assert.True(appendixStart >= 0);
-        Assert.True(appendixEnd > appendixStart);
+        Assert.True(indexStart >= 0);
+        Assert.True(indexEnd > indexStart);
 
         var formalIds = FormalRequirement.Matches(srs)
             .Select(match => match.Value.Split(' ')[0])
             .ToArray();
-        var indexedIds = IndexedRequirement.Matches(srs[appendixStart..appendixEnd])
+        var indexedIds = IndexedRequirement.Matches(srs[indexStart..indexEnd])
             .Select(match => match.Groups[1].Value)
             .ToArray();
 
@@ -44,9 +49,9 @@ public sealed class RequirementsBaselineTests
     public void P8_audit_has_one_evidence_status_for_every_formal_requirement()
     {
         var root = RepositoryRoot();
-        var srs = File.ReadAllText(Path.Combine(root, "docs", "SRS.md"));
+        var srs = File.ReadAllText(Path.Combine(root, ManifestAuthorityPath("srs")));
         var audit = File.ReadAllText(
-            Path.Combine(root, "docs", "evidence", "p8-requirement-audit.md"));
+            Path.Combine(root, ManifestAuthorityPath("requirement-audit")));
         var formalIds = FormalRequirement.Matches(srs)
             .Select(match => match.Value.Split(' ')[0])
             .OrderBy(id => id, StringComparer.Ordinal)
@@ -62,6 +67,23 @@ public sealed class RequirementsBaselineTests
         Assert.Equal(auditedRows.Length, auditedRows.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(formalIds, auditedRows.OrderBy(id => id, StringComparer.Ordinal));
         Assert.DoesNotContain("| Designed |", audit, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Resolves the current authority path for a document from
+    /// docs/documentation-manifest.json so that path cutovers only update the
+    /// manifest, never hard-coded filenames in this test.
+    /// </summary>
+    private static string ManifestAuthorityPath(string documentId)
+    {
+        using var manifest = JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(RepositoryRoot(), "docs", "documentation-manifest.json")));
+        var authority = manifest.RootElement
+            .GetProperty("documents")
+            .GetProperty(documentId)
+            .GetProperty("authority");
+        return authority.GetProperty("path").GetString()
+            ?? throw new InvalidOperationException($"Manifest authority path missing for {documentId}.");
     }
 
     private static string RepositoryRoot()

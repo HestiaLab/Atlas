@@ -32,4 +32,6 @@ Describe alternatives considered or why this should not stay out of scope.
 
 ## Compatibility
 
-Describe expected API, NuGet packaging, or documentation impact.
+Describe expected API, NuGet packaging, or documentation impact. For
+documentation changes, follow the language/authority rules in
+`docs/translation-status.md` and `docs/documentation-manifest.json`.

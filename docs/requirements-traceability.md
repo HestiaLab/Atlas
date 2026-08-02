@@ -1,7 +1,7 @@
 # Requirements Traceability
 
 本文件记录 SRS 正式需求从设计到实现和验证的状态。设计映射的规范来源是
-[HLD 附录 D](./HLD.md#附录-dsrs-hld-完整设计追溯矩阵)。
+[HLD 附录 D](./HLD.md#附录-dsrshld-完整设计追溯矩阵)。
 
 ## Baseline
 
