@@ -1,5 +1,9 @@
 # ToolBar 拖放布局坍塌修复：起因、经过与结果
 
+> [English](../../../en/development/remediations/toolbar-drag-collapse-remediation.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
 - 日期：2026-08-01
 - 分支：`feature/atlas-demo`（工作区，**尚未提交**）
 - 范围：ToolBar 拖放导致的布局坍塌、槽位缺失、空侧投放不可达等问题的一次完整返工

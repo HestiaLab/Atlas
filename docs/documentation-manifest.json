@@ -218,16 +218,17 @@
         "zh": "docs/zh/development/README.md"
       },
       "authority": {
-        "path": "docs/development/README.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/development/README.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "e0e4e1f66582befc279186ef4a8b8d9261843035",
+        "reviewedCandidateBlob": "913beb0dcb02e2170685cfd274d065640692dbaf",
+        "canonicalBlob": "913beb0dcb02e2170685cfd274d065640692dbaf"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "work-package-p3": {
       "documentId": "work-package-p3",
@@ -238,16 +239,17 @@
         "zh": "docs/zh/development/work-packages/p3-blazor-projection-work-packages.md"
       },
       "authority": {
-        "path": "docs/development/work-packages/p3-blazor-projection-work-packages.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/development/work-packages/p3-blazor-projection-work-packages.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "96b3cc63cbe19f041390c6976487693f06e8dae7",
+        "reviewedCandidateBlob": "85c0b71a324aefa4901b3b26d09ebb3156f88efd",
+        "canonicalBlob": "85c0b71a324aefa4901b3b26d09ebb3156f88efd"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "work-package-p4": {
       "documentId": "work-package-p4",
@@ -258,16 +260,17 @@
         "zh": "docs/zh/development/work-packages/p4-splitter-keyboard-work-packages.md"
       },
       "authority": {
-        "path": "docs/development/work-packages/p4-splitter-keyboard-work-packages.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/development/work-packages/p4-splitter-keyboard-work-packages.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "a06e40ad9d4a60189c4b30fadcbc275ef455f5b2",
+        "reviewedCandidateBlob": "2abbabd49814af4d2316aa1c6269f66c1ad263c5",
+        "canonicalBlob": "2abbabd49814af4d2316aa1c6269f66c1ad263c5"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "remediation-toolbar-drag-collapse": {
       "documentId": "remediation-toolbar-drag-collapse",
@@ -278,16 +281,17 @@
         "zh": "docs/zh/development/remediations/toolbar-drag-collapse-remediation.md"
       },
       "authority": {
-        "path": "docs/development/remediations/toolbar-drag-collapse-remediation.md",
-        "language": "zh",
-        "state": "Legacy Canonical"
+        "path": "docs/en/development/remediations/toolbar-drag-collapse-remediation.md",
+        "language": "en",
+        "state": "English Canonical"
       },
       "integrity": {
-        "translatedFromBlob": null,
-        "reviewedCandidateBlob": null,
-        "canonicalBlob": null
+        "translatedFromBlob": "653266b316b24c96560fd4d3a9fc3267a27e2807",
+        "reviewedCandidateBlob": "e75cad99d96d6176a00c2ca9d4daa97961ffd773",
+        "canonicalBlob": "e75cad99d96d6176a00c2ca9d4daa97961ffd773"
       },
-      "mirrorRequired": true
+      "mirrorRequired": true,
+      "chineseState": "Chinese Synchronized"
     },
     "adr-index": {
       "documentId": "adr-index",

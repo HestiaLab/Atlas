@@ -45,7 +45,7 @@
 
 ### 开发实施记录
 
-[`development/`](../development/) 保存阶段 Work Package 和重大修复复盘：
+[`development/`](./development/) 保存阶段 Work Package 和重大修复复盘：
 
 - `work-packages/`：阶段范围、前置条件和验收合同。
 - `remediations/`：具体故障的起因、根因、修复和验证记录。

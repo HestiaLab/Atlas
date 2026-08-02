@@ -1,5 +1,9 @@
 # P4 Splitter / Keyboard Tracer-Bullet Work Packages
 
+> [English](../../../en/development/work-packages/p4-splitter-keyboard-work-packages.md) | 简体中文
+>
+> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+
 P4 Entry Gate：P3 已 Verified；ADR-0005 已接受 interaction protocol v1、P4 API 与
 failure semantics。各切片必须保持 Atlas.Core/Atlas.Blazor 双包边界。
 

@@ -59,7 +59,7 @@ changing one requires a new ADR that records the supersession.
 
 ### Development Implementation Records
 
-[`development/`](../development/) stores phase Work Packages and major fix
+[`development/`](./development/) stores phase Work Packages and major fix
 retrospectives:
 
 - `work-packages/`: phase scope, preconditions, and acceptance contracts.
