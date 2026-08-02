@@ -33,6 +33,8 @@
 
 ### 开发者指南
 
+- [使用 Atlas（完整示例）](./guides/using-atlas.md)
+- [开发 Atlas（完整示例）](./guides/developing-atlas.md)
 - [架构概览](./guides/architecture-overview.md)
 - [开发指南](./guides/development-guide.md)
 - [测试指南](./guides/testing-guide.md)
