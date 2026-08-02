@@ -41,6 +41,8 @@ emphasize their authority.
 
 ### Developer Guides
 
+- [Using Atlas (worked example)](./guides/using-atlas.md)
+- [Developing Atlas (worked example)](./guides/developing-atlas.md)
 - [Architecture overview](./guides/architecture-overview.md)
 - [Development guide](./guides/development-guide.md)
 - [Testing guide](./guides/testing-guide.md)
