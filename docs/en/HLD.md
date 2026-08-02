@@ -971,8 +971,6 @@ Source: F-030, F-101~104, F-106~115, F-121, F-141, F-146
 
 ## 5 Interaction Architecture
 
-## 5 Interaction Architecture
-
 ```
 DES-INT-001
 JS / .NET Boundary Split
