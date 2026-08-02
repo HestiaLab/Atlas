@@ -185,7 +185,7 @@ Each requirement contains the following fields:
 
 ## 1.7 Spatial Concepts
 
-This system involves four spatial concepts that must be strictly distinguished: **Region (区域)**, **Dock Panel (Dock 面板)**, **Editor View (视图)**, and **Editor Tab (标签页)**. They correspond respectively to layout slots, Dock tool windows, Editor split sub-containers, and content switching units.
+This system involves four spatial concepts that must be strictly distinguished: **Region (区域)**, **Dock Panel (Dock 面板)**, **Editor View (视图)**, and **Editor Tab (标签页)**. They correspond respectively to layout slots, Dock Tool Panels, Editor split sub-containers, and content switching units.
 
 ### 1.7.1 Region
 
@@ -202,7 +202,7 @@ A Region is a spatial slot in the layout used to define the positional relations
 
 ### 1.7.2 Dock Panel
 
-Functional tool windows that appear in **Dock Regions** (Left Dock Upper / Left Dock Lower, Right Dock Upper / Right Dock Lower, Bottom Left Dock / Bottom Right Dock), such as Explorer, Search, and Terminal. A Dock Panel does not host Editor Tabs; its content is determined by the content components provided by the Application Developer.
+Functional Tool Panels that appear in **Dock Regions** (Left Dock Upper / Left Dock Lower, Right Dock Upper / Right Dock Lower, Bottom Left Dock / Bottom Right Dock), such as Explorer, Search, and Terminal. A Dock Panel does not host Editor Tabs; its content is determined by the content components provided by the Application Developer.
 
 | Property | Description |
 | ----- | ------------------------------------------------------------------------------------------ |
@@ -1258,15 +1258,15 @@ AC1: Upper section — Up Dock and Lower Dock entry zones
 Given the ToolBar on a side contains entries from Left/Right Dock Upper and Left/Right Dock Lower
 When the system renders the ToolBar on that side
 Then the ToolBar's upper section should contain two vertical sub-zones
-And the upper sub-zone should arrange the entries belonging to the Upper Dock region (in order of addition)
-And the lower sub-zone should arrange the entries belonging to the Lower Dock region (in order of addition)
+And the upper sub-zone should arrange the entries belonging to the Upper Dock Region (in order of addition)
+And the lower sub-zone should arrange the entries belonging to the Lower Dock Region (in order of addition)
 And the upper and lower sub-zones should be separated by a visual Divider
 
 AC2: Lower section — Bottom Dock entry zone
 
 Given the ToolBar on a side contains entries from Bottom Left Dock or Bottom Right Dock
 When the system renders the ToolBar on that side
-Then the ToolBar's lower section should arrange the entries belonging to the Bottom Dock region
+Then the ToolBar's lower section should arrange the entries belonging to the Bottom Dock Region
 And the entries should stack upward starting from the bottom of the ToolBar's lower section
 And the upper and lower sections should be separated by a visual Divider
 
@@ -1288,7 +1288,7 @@ And the Divider between the upper and lower sections should not be displayed
 
 AC5: Zones updated after panel movement
 
-Given a Dock Panel moves from an Up Dock region to the Bottom Dock region
+Given a Dock Panel moves from an Up Dock Region to the Bottom Dock Region
 When the system updates the ToolBar after the move completes
 Then the Panel's ToolBar Entry should move from the upper section (Up/Lower sub-zones) to the lower section (Bottom zone)
 And the entry should be re-arranged according to the target zone rules
@@ -1303,7 +1303,7 @@ Drag target area flyout highlight indicator
 
 Description
 During a Panel or ToolBar Entry drag, the system should show valid drop-target previews only in the ToolBar.
-The ToolBar is the primary interaction target for placing and ordering Dock Panels; the six Dock Regions are not direct release targets for Panels and do not show dockable previews of Dock regions.
+The ToolBar is the primary interaction target for placing and ordering Dock Panels; the six Dock Regions are not direct release targets for Panels and do not show dockable previews of Dock Regions.
 Left / Right ToolBar each contain two docking preview areas: UpperArea (continuously hosting the two logical slots of Upper Dock and Lower Dock) and BottomArea (hosting the Bottom Dock slot alone).
 
 Acceptance Criteria
@@ -1759,7 +1759,6 @@ And it should not produce errors
 
 ---
 
-## 3.4 Editor Tab Management
 ## 3.4 Editor Tab Management
 
 > **Requirement index for this section (44):** REQ-F-027~068, REQ-F-138, REQ-F-145
@@ -2816,7 +2815,7 @@ And the system does not start the drag flow
 
 ## 3.5 Dock Panel Movement
 
-> **Scope:** The requirements in this section cover moving **Dock Panels** (tool windows) between Dock Regions, as well as drag-reordering within the same Dock Region (REQ-F-142).
+> **Scope:** The requirements in this section cover moving **Dock Panels** (Tool Panels) between Dock Regions, as well as drag-reordering within the same Dock Region (REQ-F-142).
 > Unlike Editor Tab drag-docking (§3.4.1), Dock Panel drag-docking does **not distinguish directions**. Visible Regions accept the drop through
 > the corresponding ToolBar logic slot; Regions hidden because they have no expanded Panel accept the drop through a Drop Scaffold.
 > The visible Dock Region Body itself is not a direct drop target and requires no direction-detection region.
@@ -3072,7 +3071,7 @@ Title
 Fixed Regions do not accept Dock Panel drops
 
 Description
-The system must forbid dragging Dock Panels into Fixed Regions such as the Editor Area, Top Toolbar, and Status Bar.
+The system should forbid dragging Dock Panels into Fixed Regions such as the Editor Area, Top Toolbar, and Status Bar.
 
 Acceptance Criteria
 
