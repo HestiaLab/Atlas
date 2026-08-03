@@ -490,6 +490,22 @@ public sealed class ContentCatalogTests : TestContext
         };
     }
 
+    [Fact]
+    public void Duplicate_startup_di_kind_fails_the_composition_root()
+    {
+        Services.AddAtlasContent<DiContent>("duplicate");
+        Services.AddAtlasContent<OtherDiContent>("duplicate");
+        var workspace = CreateWorkspace(Item("doc", "duplicate"));
+
+        // The scoped AtlasContentCatalog factory (AddAtlasWorkspace) combines
+        // every AtlasContentRegistration and throws deterministically before
+        // any Host or Outlet exists (REQ-F-122 AC1).
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => RenderComponent<AtlasWorkspaceHost>(
+                parameters => parameters.Add(host => host.Workspace, workspace)));
+        Assert.Contains("duplicate", exception.Message, StringComparison.Ordinal);
+    }
+
     private static RenderFragment InvalidRouteFragment()
     {
         return builder =>
@@ -526,6 +542,14 @@ public sealed class ContentCatalogTests : TestContext
     private sealed class DiTracker
     {
         internal int Created { get; set; }
+    }
+
+    private sealed class OtherDiContent : AtlasContentComponent
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.AddContent(0, "OTHER-DI");
+        }
     }
 
     private sealed class RouteContent : ComponentBase

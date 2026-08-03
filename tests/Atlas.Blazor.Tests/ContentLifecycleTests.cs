@@ -182,7 +182,9 @@ public sealed class ContentLifecycleTests : TestContext
                 Assert.Contains(
                     renderErrors,
                     error => error.Code == AtlasHostErrorCode.ContentRenderFailed
-                        && error.DiagnosticId == "ATLAS-CONTENT-RENDER-FAILED");
+                        && error.DiagnosticId.StartsWith(
+                            "ATLAS-CONTENT-RENDER-FAILED-",
+                            StringComparison.Ordinal));
                 Assert.DoesNotContain(
                     "boom",
                     throwingCut.Markup,
@@ -191,6 +193,108 @@ public sealed class ContentLifecycleTests : TestContext
                     "Exception",
                     throwingCut.Markup,
                     StringComparison.OrdinalIgnoreCase);
+            });
+    }
+
+    [Fact]
+    public void Render_failure_shows_per_occurrence_diagnostic_id_in_content_area()
+    {
+        var renderErrors = new List<AtlasHostError>();
+        Services.AddAtlasContent<ThrowingLifecycleContent>("throw-kind");
+        var workspace = CreateWorkspace(Item("throw-doc", "throw-kind"));
+
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(
+                    component => component.OnError,
+                    EventCallback.Factory.Create<AtlasHostError>(
+                        this,
+                        error => renderErrors.Add(error))));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var error = Assert.Single(renderErrors);
+                Assert.Equal(AtlasHostErrorCode.ContentRenderFailed, error.Code);
+                Assert.StartsWith(
+                    "ATLAS-CONTENT-RENDER-FAILED-",
+                    error.DiagnosticId,
+                    StringComparison.Ordinal);
+                Assert.Contains(
+                    error.DiagnosticId,
+                    cut.Find(".atlas-v2-content-error").TextContent);
+                Assert.Contains(
+                    "could not be rendered",
+                    cut.Find(".atlas-v2-content-error").TextContent);
+                Assert.DoesNotContain("boom", cut.Markup, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain("Exception", cut.Markup, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(
+                    workspace.Id.Value,
+                    error.DiagnosticId,
+                    StringComparison.Ordinal);
+                Assert.DoesNotContain("throw-doc", error.DiagnosticId, StringComparison.Ordinal);
+            });
+    }
+
+    [Fact]
+    public void Failed_retry_after_structural_change_receives_a_new_diagnostic_id()
+    {
+        var renderErrors = new List<AtlasHostError>();
+        var workspace = CreateWorkspace(Item("doc", "throw-kind"));
+        var firstMap = AtlasContentMap.Create(
+            map => map.MapComponent<ThrowingLifecycleContent>(
+                "throw-kind",
+                _ => { }));
+
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.ContentMap, firstMap)
+                .Add(
+                    component => component.OnError,
+                    EventCallback.Factory.Create<AtlasHostError>(
+                        this,
+                        error => renderErrors.Add(error))));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                // The first projection reports a missing Kind (the Map generation
+                // commits in OnAfterRenderAsync); the committed projection then
+                // throws and receives a fresh per-occurrence DiagnosticId.
+                Assert.Contains(
+                    renderErrors,
+                    error => error.Code == AtlasHostErrorCode.ContentRenderFailed);
+            });
+
+        var first = renderErrors.Single(
+            error => error.Code == AtlasHostErrorCode.ContentRenderFailed);
+        Assert.StartsWith(
+            "ATLAS-CONTENT-RENDER-FAILED-",
+            first.DiagnosticId,
+            StringComparison.Ordinal);
+
+        // A structural Map replacement changes the renderer revision, which
+        // changes the Outlet RecoveryKey; the failed Retry then receives a new
+        // per-occurrence DiagnosticId.
+        var secondMap = AtlasContentMap.Create(
+            map => map.MapComponent<SecondThrowingContent>(
+                "throw-kind",
+                _ => { }));
+        cut.SetParametersAndRender(
+            parameters => parameters.Add(
+                component => component.ContentMap,
+                secondMap));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var failed = renderErrors
+                    .Where(error => error.Code == AtlasHostErrorCode.ContentRenderFailed)
+                    .ToList();
+                Assert.Equal(2, failed.Count);
+                Assert.NotEqual(first.DiagnosticId, failed[1].DiagnosticId);
             });
     }
 
@@ -303,6 +407,14 @@ public sealed class ContentLifecycleTests : TestContext
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             throw new InvalidOperationException("boom must remain private");
+        }
+    }
+
+    private sealed class SecondThrowingContent : AtlasContentComponent
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            throw new InvalidOperationException("second boom must remain private");
         }
     }
 }

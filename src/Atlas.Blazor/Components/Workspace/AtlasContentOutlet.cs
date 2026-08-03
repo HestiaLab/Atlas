@@ -15,6 +15,7 @@ namespace Atlas.Blazor.Components;
 internal sealed class AtlasContentOutlet : ComponentBase
 {
     private ElementReference element;
+    private string renderErrorDiagnosticId = string.Empty;
 
     [Parameter]
     public AtlasContentContext Content { get; set; } = null!;
@@ -80,7 +81,10 @@ internal sealed class AtlasContentOutlet : ComponentBase
                 "Atlas.Content.RenderFailed",
                 Content.WorkspaceId,
                 Content.ItemId));
-        builder.AddAttribute(sequence++, "OnSafeError", OnError);
+        builder.AddAttribute(
+            sequence++,
+            "OnSafeError",
+            EventCallback.Factory.Create<AtlasHostError>(this, HandleSafeError));
         builder.AddAttribute(sequence++, "RecoveryKey", (Content.ItemId, RecoveryKey));
         builder.AddAttribute(
             sequence++,
@@ -90,6 +94,17 @@ internal sealed class AtlasContentOutlet : ComponentBase
                 errorBuilder.OpenElement(0, "div");
                 errorBuilder.AddAttribute(1, "class", "atlas-v2-content-error");
                 errorBuilder.AddContent(2, "Content could not be rendered.");
+                if (renderErrorDiagnosticId.Length > 0)
+                {
+                    errorBuilder.OpenElement(3, "span");
+                    errorBuilder.AddAttribute(
+                        4,
+                        "class",
+                        "atlas-v2-content-error-diagnostic");
+                    errorBuilder.AddContent(5, renderErrorDiagnosticId);
+                    errorBuilder.CloseElement();
+                }
+
                 errorBuilder.CloseElement();
             }));
         builder.AddAttribute(
@@ -98,6 +113,16 @@ internal sealed class AtlasContentOutlet : ComponentBase
             (RenderFragment)(contentBuilder => RenderProjectedContent(contentBuilder)));
         builder.CloseComponent();
         builder.CloseElement();
+    }
+
+    private async Task HandleSafeError(AtlasHostError error)
+    {
+        // F-128 AC1: the per-occurrence DiagnosticId is shown in this Item's
+        // content area, correlated with the OnError callback, and never
+        // contains exception details or sensitive identity values.
+        renderErrorDiagnosticId = error.DiagnosticId;
+        await OnError.InvokeAsync(error);
+        StateHasChanged();
     }
 
     private void RenderProjectedContent(RenderTreeBuilder builder)

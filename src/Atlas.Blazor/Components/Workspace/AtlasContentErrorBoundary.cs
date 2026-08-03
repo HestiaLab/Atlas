@@ -35,7 +35,22 @@ internal sealed class AtlasContentErrorBoundary : ErrorBoundary
         await base.OnErrorAsync(exception);
         if (SafeError is not null && OnSafeError.HasDelegate)
         {
-            await OnSafeError.InvokeAsync(SafeError);
+            // F-128 AC2: every failure occurrence receives a new opaque
+            // DiagnosticId that does not encode WorkspaceId, ResourceId,
+            // DockItemId, or exception type; a later failed Retry gets a new
+            // identifier again because this method runs once per occurrence.
+            var occurrenceId =
+                $"{SafeError.DiagnosticId}-{Guid.NewGuid():N}"[..44];
+            var occurrence = new AtlasHostError(
+                SafeError.Code,
+                occurrenceId,
+                SafeError.MessageKey,
+                SafeError.WorkspaceId,
+                SafeError.ItemId,
+                SafeError.NodeId);
+            Console.Error.WriteLine(
+                $"Atlas content render failure: {occurrenceId}");
+            await OnSafeError.InvokeAsync(occurrence);
         }
     }
 }
