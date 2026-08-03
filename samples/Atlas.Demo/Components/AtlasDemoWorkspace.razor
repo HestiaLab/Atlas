@@ -3,6 +3,7 @@
 @using Atlas.Blazor.Content
 @using Atlas.Core
 @using Atlas.Core.Changes
+@using Atlas.Demo.Models
 
 <section class="atlas-demo-shell" aria-label="Atlas IDE consumer sample">
     @if (workspace is null)
@@ -13,13 +14,30 @@
     {
         <AtlasWorkspaceHost Workspace="@workspace"
                             WorkspaceOwnership="WorkspaceOwnership.External"
+                            ContentMap="@contentMap"
                             TopToolbarContent="@topToolbar"
                             StatusBarContent="@statusBar"
-                            EnableInteractions="true" />
+                            EnableInteractions="true">
+            <ContentRoutes>
+                <AtlasContentRoute Kind="product-actions">
+                    <ChildContent Context="content">
+                        <ProductTableActionsPanel ProductCount="@products.Count"
+                                                  OnClear="ClearProducts" />
+                    </ChildContent>
+                </AtlasContentRoute>
+            </ContentRoutes>
+        </AtlasWorkspaceHost>
     }
 </section>
 
 @code {
+    private readonly List<ProductItem> products = new()
+    {
+        new("prod-1", "Alpha", 12.50m),
+        new("prod-2", "Beta", 7.25m),
+        new("prod-3", "Gamma", 99.00m),
+    };
+    private readonly AtlasContentMap contentMap;
     private readonly RenderFragment topToolbar;
     private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
@@ -33,6 +51,10 @@
 
     public AtlasDemoWorkspace()
     {
+        contentMap = AtlasContentMap.Create(
+            map => map.MapComponent<BootstrapTablePanel>(
+                "bootstrap-table",
+                component => component.Bind(x => x.Items, _ => products)));
         topToolbar = builder =>
         {
             builder.OpenComponent<AtlasDemoTopToolbar>(0);
@@ -84,6 +106,16 @@
         var result = await workspace.RedoAsync();
         operationStatus = result.Succeeded ? "Move redone" : "Nothing to redo";
         await InvokeAsync(StateHasChanged);
+    }
+
+    private void ClearProducts()
+    {
+        // The product collection is owned by this parent component. Clearing it
+        // mutates application state; mounted content re-reads it on the next
+        // render and unmounted content reads the cleared value when remounting.
+        products.Clear();
+        operationStatus = "Products cleared";
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
