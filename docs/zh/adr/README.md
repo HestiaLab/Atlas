@@ -37,6 +37,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0015](./0015-rider-style-example-application.md) | Superseded | 独立 Rider 风格示例；由 ADR-0016 删除 |
 | [ADR-0016](./0016-remove-application-projects.md) | Accepted | 删除 Atlas.Demo 与 Atlas.Examples.Rider，只保留双包、测试和静态 fixtures |
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | 新增独立 NuGet consumer sample；取代 ADR-0016 的长期应用项目禁令 |
+| [ADR-0018](./0018-unified-content-catalog-and-runtime-binding.md) | Accepted | 统一启动期 DI、Host-local Route 与强类型 Map 内容注册；跨 Panel 状态由应用拥有 |
 
 ## 编写约定
 

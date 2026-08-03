@@ -57,6 +57,7 @@ an ADR/Spike is required to settle the implementation contract; it does not mean
 | OI-004 | AGENTS.md, DES-PRJ-001 | Target Framework, PackageId, and the project structure need to be unified | **Closed**: ADR-0001/0016/0017 adopt .NET 6.0, dual packages Atlas.Core/Atlas.Blazor, a standalone NuGet consumer sample, and Node 24 LTS + npm; the sample is not part of the dual-package implementation layers and is not added to the main solution |
 | OI-005 | SRS Appendix A §3.10 | Edge cases such as F-129 and F-131 previously appeared in indexes/references but had no formal requirement block and AC | **Closed**: ADR-0014 classifies the 9 IDs as non-normative design/test inputs, not counted toward requirement status or coverage |
 | OI-006 | NF-006, DES-RND-001 | A Blazor RenderFragment in the same DOM cannot prevent content from accessing other DOM nodes, and ErrorBoundary is not a security sandbox either | **Closed**: ADR-0013 keeps TrustedComponent as the default and clarifies it is not a security sandbox; untrusted content uses SandboxedFrame |
+| OI-007 | F-006~008, F-122, DES-RND-001~003 | Host ContentTemplate and DI registration currently form mutually exclusive rendering pipelines and cannot express one deterministic catalog or strongly typed functional binding | **Closed**: ADR-0018 adopts one effective Content Catalog with startup DI, Host-local Route, and immutable Host-local Map sources; duplicate startup DI fails registry construction, while Host-local conflicts are isolated to the affected Kind |
 
 ---
 
@@ -79,8 +80,8 @@ Each layer has clear responsibility boundaries and dependency direction.
 ├──────────────────────────────────────────────────────────────────────────────────────┤
 │  Core Layer (pure C#, no Blazor dependency)                                          │
 │  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ │
-│  │   Layout State   │ │ Operation Engine │ │   Persistence    │ │ Content Registry │ │
-│  │    (Snapshot)    │ │   (Operation)    │ │   (Serializer)   │ │   (ContentReg)   │ │
+│  │   Layout State   │ │ Operation Engine │ │   Persistence    │ │ Content Identity │ │
+│  │    (Snapshot)    │ │   (Operation)    │ │   (Serializer)   │ │ Kind/ResourceId  │ │
 │  └──────────────────┘ └──────────────────┘ └──────────────────┘ └──────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 
@@ -927,7 +928,7 @@ restoring the F-144 InitialRatio, default selection, and ToolBar order; the "ini
 the current Snapshot. Duplicate declaration identity, illegal sizes, and incompatible Group kinds return typed failures,
 leaving the original Workspace unchanged.
 
-Source: F-001~005, F-010, F-047, F-099~100, F-122, F-144
+Source: F-001~005, F-010, F-047, F-099~100, F-144
 ```
 
 ---
@@ -1350,48 +1351,89 @@ Source: F-035, F-041, F-116~118, NF-003, NF-007
 
 ```
 DES-RND-001
-ContentTemplate (Default Path)
-Application Developers define content rendering through ContentTemplate — this is the default,
-recommended path:
+Unified Effective Content Catalog
+Every AtlasWorkspaceHost resolves TrustedComponent content through one effective Content Catalog.
+The Catalog merges three registration sources:
 
-  <AtlasWorkspaceHost Workspace="@_workspace">
-      <ContentTemplate Context="content">
-          <WorkspaceContent Content="@content" />
-      </ContentTemplate>
-  </AtlasWorkspaceHost>
+  Startup DI Registration       services.AddAtlasContent<TComponent>(kind)
+  Host-local Declarative Route  <AtlasContentRoute Kind="...">...</AtlasContentRoute>
+  Host-local Functional Map     AtlasContentMap.Create(...)
 
-The application's routing component dispatches to concrete business components based on
-Content.Reference.Kind:
+The Host stages `ContentRoutes` and `ContentMap` from one parameter/render cycle as one candidate
+Host-local source generation. It continues using the previously committed Route/Map generation
+until declaration collection completes, then atomically commits both candidate sources under one
+generation ID. An incomplete or faulting collection leaves the previous generation active. The
+Catalog therefore never combines a new Map with old Routes and never exposes a transient missing or
+conflicting Kind during a Route-to-Map or Map-to-Route swap.
 
-  @switch (Content.Reference.Kind)
-  {
-      case "explorer":
-          <SolutionExplorer State="@ExplorerStore.Get(Content.Reference.ResourceId)" />
-          break;
-      case "document-editor":
-          <DocumentEditor State="@DocumentStore.Get(Content.Reference.ResourceId)" />
-          break;
-  }
+Each source contributes a descriptor containing Kind and one renderer. The Catalog stores
+descriptors only; it never stores component instances or resource models and does not expose
+callbacks, delegates, fragments, or per-view state as independently queryable catalog data. A
+Host-local descriptor may capture those runtime values in its renderer closure; the capture is
+Host-owned, non-persisted binding state rather than a cataloged business resource.
+ContentReference.Kind selects a descriptor, ContentReference.ResourceId identifies the application
+resource/session, and DockItemId identifies one concrete view. Multiple views may use the same Kind
+and ResourceId.
 
-This path provides compile-time parameter checking, compile-time EventCallback checking, Razor
-language tooling, no string parameter names, and no reflection-based parameter map — compared with
-the V1 DynamicComponent + Dictionary<string, object?> path, it eliminates all runtime binding
-risks.
+Resolution is Trust Policy first, then the effective Catalog. SandboxedFrame content never enters
+the TrustedComponent Catalog path. For trusted content, one projection resolves a Kind once and
+shares that result between rendering, unavailable-state selection, and diagnostics. Unregistered
+Kinds retain the Item and ContentReference and render a safe unavailable placeholder.
+`SandboxedFrameResolver` is evaluated at most once per projection. If it throws, that Item reports
+`AtlasHostErrorCode.ContentRenderFailed`; the Catalog and Binding factories are not evaluated, and
+unrelated Items continue normally.
 
-ContentTemplate is a Blazor RenderFragment<AtlasContentContext> template. Inside the template, the
-application dispatches by Kind via a switch or dictionary; DynamicComponent is not mandatory.
-Content resolution order: the Host ContentTemplate takes priority when it explicitly handles a
-Kind → provider registry → placeholder or typed failure.
+One Kind has exactly one owner in an effective Catalog. Duplicate startup DI registrations fail at
+composition-root construction before a Host or per-Item outlet exists. Conflicts involving
+Host-local Route or Map descriptors invalidate only the conflicting Kind and produce
+`AtlasHostErrorCode.ContentRegistrationConflict`; unrelated Kinds remain available and
+registration order never selects an implicit winner. Runtime Register/Unregister/Replace and
+plugin unload are outside this decision.
 
-Source: F-006~008, F-105
+Source: F-006~008, F-119~120, F-122, NF-006
 ```
 
 ---
 
 ```
 DES-RND-002
-ContentProvider (Plugin Path)
-Runtime modules or third-party plugins register via ContentProvider:
+Strongly Typed Runtime Binding
+Host-local declarative content uses ordinary Razor component syntax:
+
+  <ContentRoutes>
+      <AtlasContentRoute Kind="orders.table" Context="content">
+          <OrderTable Rows="@_state.Rows" OnSaved="@HandleSaved" />
+      </AtlasContentRoute>
+  </ContentRoutes>
+
+Host-local functional configuration builds the same renderer descriptor through an immutable
+AtlasContentMap:
+
+  AtlasContentMap.Create(map =>
+      map.MapComponent<OrderTable>("orders.table", component => component
+          .Bind(x => x.Rows, _ => _state.Rows)
+          .Bind(x => x.OnSaved, _ => _onSaved)));
+
+AtlasContentRoute delegates parameter application to normal Razor rendering. AtlasContentMap uses a
+direct parameter-member expression plus a value factory; it validates that the selected member is a
+writable Blazor Parameter and evaluates values at projection time. Ordinary objects, EventCallback,
+EventCallback<T>, Action<T>, Func<T, Task>, RenderFragment, and RenderFragment<T> remain strongly
+typed. Internally DynamicComponent may receive a generated parameter map, but no public API accepts
+Dictionary<string, object?>, string parameter names, or a naked component instance.
+The owning Blazor Renderer instantiates or reuses the component and applies the generated
+`ParameterView` through `SetParametersAsync`; Atlas never assigns those component properties
+directly and never invokes a captured component's `StateHasChanged`.
+
+Each committed renderer descriptor has a structural revision. Its structural signature contains
+the source owner, Kind, renderer category/component type, and ordered bound Parameter member set;
+current values and value-factory results are not structural. A value-only update with the same
+signature preserves the outlet component identity and supplies the complete bound Parameter set on
+every render. Changing component type, adding/removing a binding, replacing a Route declaration, or
+switching ownership between Route and Map increments the revision used in the outlet key and
+remounts the content. This prevents a Parameter omitted by a replacement descriptor from retaining
+an old callback or captured value under .NET 6 `SetParametersAsync` semantics.
+
+Startup DI content retains its narrow protocol:
 
   services.AddAtlasContent<ExplorerContent>("explorer");
 
@@ -1403,31 +1445,27 @@ Components follow the single-parameter protocol:
       public AtlasContentContext Content { get; set; } = null!;
   }
 
-DynamicComponent may be used internally, but only the fixed Content parameter is passed.
-Re-exposing Dictionary<string, object?> Parameters or SetParameter(string, object?) is prohibited.
+The DI registration is a composition-root descriptor, not the currently mounted component instance.
+Host-local routes/maps may capture the parent component, callback receiver, delegates, fragments,
+and local state, so they must not be promoted to Singleton services. Replacing the Host parameter
+stages a replacement immutable functional map for the next atomic Host-local generation. After no
+outlet references a retired generation, Atlas releases its references to that generation's Route
+and Map descriptors. Collection additionally requires the application/parent to release any old
+Map or Fragment references it still owns. This is not a runtime plugin registry. The exact public
+symbols, validation failures, defaults, and replacement rules are frozen by section 10.2.
 
-The Provider path provides runtime registration for plugin/modular scenarios, while the
-single-parameter protocol constraint ensures no regression to V1's arbitrary parameter
-dictionaries. Duplicate registration of the same Kind is a composition-root failure by default;
-last-write-wins is not used.
-
-The Content resolution order is unique: the Host ContentTemplate takes priority when it explicitly
-handles a Kind; otherwise the provider registry is consulted; if still missing, a placeholder or
-typed failure is produced per the respective open/restore policy. Late registration by a Provider
-only triggers rendering resolution invalidation; it never modifies the Workspace Snapshot or
-History.
-
-Source: F-006, F-119
+Source: F-006~008, F-122, F-128
 ```
 
 ---
 
 ```
 DES-RND-003
-AtlasContentContext
+AtlasContentContext and Cross-Panel Coordination
 Every content outlet receives a stable AtlasContentContext:
 
   AtlasContentContext = {
+      WorkspaceId,  // Workspace/Host state-partition key
       ItemId,       // Identifier of the current DockItem
       Reference,    // ContentReference (Kind + ResourceId)
       Item,         // Read-only projection of the current Revision
@@ -1445,10 +1483,23 @@ modifying the layout structure).
 
 Item is a read-only projection of the Revision that Reference belongs to. Commands re-validate the
 current Revision on every call — if the Item has been removed or its state has changed, a typed
-failure is returned. Context objects are created by the Renderer at render time; their references
-are never shared between components.
+failure is returned. Context objects are created by the Renderer at render time; their references are never shared
+between components. WorkspaceId lets application state/coordinators partition state when a Blazor
+DI scope contains multiple Atlas Hosts; ResourceId partitions a business resource/session and
+DockItemId partitions per-view state.
 
-Source: F-007~008, F-035
+Cross-Panel collaboration follows semantic ownership rather than component lookup:
+
+1. explicit parent/child interaction uses Parameters and EventCallback<T>;
+2. business data changes use an application-owned State/Coordinator scoped by WorkspaceId and/or
+   ResourceId, so an unmounted or LRU-evicted view observes the latest state when it mounts;
+3. a mounted-only UI capability may use a future restricted typed command port addressed by
+   DockItemId, but Atlas does not expose Get<TComponent>(), mutable Parameter properties, or
+   StateHasChanged;
+4. multi-subscriber business notification remains Host-local and typed if an application needs it;
+   Atlas does not introduce a global string/object event bus.
+
+Source: F-007~008, F-035, F-070, F-109
 ```
 
 ---
@@ -1464,11 +1515,15 @@ Every selected content outlet requires its own ErrorBoundary:
   Workspace and other Groups keep working
 
 Each outlet uses @key=(ItemId, ContentReference, ErrorGeneration) as the ErrorBoundary identity.
-An unregistered Content Identifier (F-119) shows an error notice instead of crashing. A component
-rendering exception (F-128) surfaces the ErrorBoundary without affecting other Panels/Tabs. The
-Error UI does not show exception messages, stack traces, or type names; diagnostic information
-goes to the log. Retry increments the transient error generation via a bound command and does not
-reuse the faulted boundary. The boundary is rebuilt when the identity changes.
+An unregistered Kind (F-119) shows a safe unavailable notice instead of crashing. A Host-local
+Route/Map conflict (F-122) invalidates only that Kind; duplicate startup DI registrations instead
+fail before Host creation. Parameter-factory and component-rendering exceptions (F-128) surface the
+ErrorBoundary without affecting other Panels/Tabs. The Error UI shows only a generic summary and an
+opaque DiagnosticId. Each failure occurrence creates a new value; its UI and internal log share
+that value, a later failed Retry creates another value, and the value encodes no Workspace,
+Resource, Item, exception, or other sensitive identity. Exception messages, stacks, and type names
+go only to the log. Retry increments the transient error generation via a bound command and does
+not reuse the faulted boundary. The boundary is rebuilt when the identity changes.
 
 In V1, a content exception could crash the entire Layout. In V2, the per-outlet ErrorBoundary +
 @key mechanism ensures errors are isolated within a single item, Retry rebuilds the component
@@ -1479,7 +1534,7 @@ ErrorBoundary is a wrapper around Blazor's standard ErrorBoundary component. Err
 monotonically increasing counter that a bound command increments on Retry. Log records include
 ItemId, ContentReference, Exception type, and message.
 
-Source: F-119~120, F-128
+Source: F-119~120, F-122, F-128
 ```
 
 ---
@@ -1510,7 +1565,17 @@ component, but ResourceId/DockItemId-externalized state can be restored. The F-0
 therefore user-observable business state rather than arbitrary component instance identity;
 WorkspaceWideKeepAlive is not part of the first release.
 
-Source: F-027~029, F-031~032, F-069~070
+Catalog descriptors outlive individual outlets but not their owning registration scope. Startup DI
+descriptors follow the application service-provider lifetime. Active Host-local Route and Map
+descriptors follow AtlasWorkspaceHost. Replacing either source retires the previous atomic
+generation; after no outlet references it, Atlas releases all Atlas-owned references to its
+descriptors and captures. Host disposal releases all remaining Atlas-owned Host-local references.
+Collection additionally requires the application/parent to release any Map, RenderFragment, or
+other input reference it owns; Atlas does not promise unconditional GC of caller-owned objects.
+Outlet remount recreates the component and reapplies current runtime bindings; it never reuses a
+stored component reference. Snapshot restore restores ItemId, layout, and ContentReference only.
+
+Source: F-008, F-027~029, F-031~032, F-069~070, F-147, NF-001
 ```
 
 ---
@@ -1983,10 +2048,12 @@ Source: F-093~095, F-123, F-125~127
 
 ```
 DES-ERR-001
-Typed Failure, Content Registry, and Diagnostic Boundary
-Expected failures do not use exceptions for control flow. WorkspaceError contains at
-least a stable Code, OperationKind, WorkspaceId, optional ItemId/NodeId, a localizable
-MessageKey, and a non-public DiagnosticId:
+Typed Failure, Content Catalog, and Diagnostic Boundary
+Expected failures do not use exceptions for control flow. `WorkspaceError` contains at
+least a stable Code, OperationKind, optional ItemId/NodeId, a localizable MessageKey, and
+an opaque DiagnosticId that is safe to expose for support correlation. `AtlasHostError`
+separately carries its host error Code, DiagnosticId, MessageKey, and optional WorkspaceId,
+ItemId, and NodeId:
 
   ITEM_NOT_FOUND
   CONTENT_ALREADY_REGISTERED
@@ -1999,20 +2066,32 @@ MessageKey, and a non-public DiagnosticId:
   WORKSPACE_FAULTED
 
 Close/Activate/Get on a non-existent Item return a typed failure or null respectively
-(per the public interface contract), without throwing. The Content Registry's Register
-uses ordinal Kind identity and compare-and-add; a duplicate Kind returns
-CONTENT_ALREADY_REGISTERED and the original provider remains unchanged, with no
-dispose/replace performed. If an explicit ReplaceProvider is ever needed in the future,
-it must be a separate interface that defines migration semantics for existing outlets;
-Register must not be reused.
+(per the public interface contract), without throwing. Startup DI descriptors use ordinal
+Kind identity and duplicate registrations fail deterministically during composition-root
+construction. Host-local Route/Map conflicts produce a safe per-Kind diagnostic without
+overwriting either descriptor; unrelated Kinds remain available. The first release exposes
+no runtime Register, Unregister, or ReplaceProvider API.
+
+Content resolution uses explicit Host error codes: an invalid declarative Route reports
+`DefinitionInvalid`, an unregistered Kind reports `ContentNotRegistered`, and a Host-local ownership
+collision reports `ContentRegistrationConflict`. Trust/Sandbox Resolver, Renderer, Callback, or Parameter
+Factory execution failure reports `ContentRenderFailed`. `ContentRegistrationConflict = 7` is appended to
+`AtlasHostErrorCode`; existing numeric values 1~6 remain unchanged.
 
 Programming errors (null internal dependency, impossible enum, disposed object misuse)
 and unexpected failures may be thrown and logged, but the Atlas Host's user-triggered
 command adapter must convert them into a safe UI state and must not output exception
-messages, types, or stacks to the DOM. Logs correlate WorkspaceError via DiagnosticId;
-sensitive ContentReference.ResourceId values are redacted per the logging policy.
+messages, types, or stacks to the DOM. `WorkspaceError.DiagnosticId` and
+`AtlasHostError.DiagnosticId` are public, non-sensitive diagnostic values and encode no
+WorkspaceId, ResourceId, DockItemId, exception type, or other sensitive value. Existing
+Core operation diagnostics may remain stable non-localized identifiers. For content
+projection, Callback, or Parameter Factory failures specifically, the Host creates a fresh
+opaque `AtlasHostError.DiagnosticId` for each failure occurrence; the safe UI and matching
+internal log record use the same ID, and a failed Retry receives a new ID. Consumers treat
+every DiagnosticId as an opaque diagnostic/correlation value and do not parse it or use it
+for control flow. Logs redact sensitive ContentReference.ResourceId values per policy.
 
-Source: F-030, F-119, F-121~124, F-128
+Source: F-030, F-119~124, F-128
 ```
 
 ---
@@ -2333,6 +2412,7 @@ the user's behalf through default values, skipped tests, or documentation wordin
 | DEV-GATE-004 Content Trust | **Closed**: ADR-0013; [threat model](../zh/security/content-threat-model.md) | External security commitments, SandboxedFrame public API, threat model E2E | Product decision + threat model + Accepted ADR; browser E2E remains a P7 Exit condition | TrustedComponent + ErrorBoundary, but must not claim a security sandbox |
 | DEV-GATE-005 Persistence Schema | **Closed**: ADR-0010 Accepted; namespace/version/order/default/limits/unknown policy and V1 narrow compatibility are frozen | V2 Serializer, V1 importer, Preset compatibility | Schema ADR, XSD, V1/V2 golden files, schema validation tests | DTO/validator interfaces and adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | **Closed**: ADR-0014; 150 = F142 + NF8 | Automated coverage statistics and "all requirements complete" claims | SRS/appendix set consistency tests; historical removals and non-canonical IDs already have an explicit disposition | Maintain the matrix with the 150 formal requirement blocks |
+| DEV-GATE-007 Unified Content Catalog | **Closed**: ADR-0018; startup DI, Host-local Route, and immutable Host-local Map contribute to one strict Catalog | Removal of the legacy host-wide template API, public Route/Map API, and cross-Panel coordination sample | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | TDD implementation and package/browser evidence under the frozen contract |
 
 Gates only block the scope listed in the table; they do not block modules without
 dependencies. For example, while DEV-GATE-002 is open, Core transactions, geometry
@@ -2373,6 +2453,31 @@ boundaries must not change:
 | Blazor | content contracts | `AtlasContentContext`, `AtlasContentComponent`, content/empty/header templates | Arbitrary string parameter dictionaries |
 | Blazor | `AddAtlasWorkspace` | Registers stateless factory, registry, options, serializer adapter; documents service lifetimes | Registering the Workspace or JS controller as a Singleton |
 | Interop | C# facade | Root controller initialize/update/dispose, single semantic commit callback | Publicly exposing `IJSObjectReference`, DOM handles, or coordinate DTOs |
+
+The unified content-hosting API is frozen in namespace and shape as follows. These are
+public contracts to be added to the API compatibility baseline during implementation,
+not illustrative names:
+
+| Owner | Exact public symbol | Parameter category / default | Validation and runtime contract |
+|-------|---------------------|------------------------------|---------------------------------|
+| `Atlas.Blazor.Components` | `AtlasWorkspaceHost.ContentRoutes : RenderFragment?` | Template/Callback; default `null`; runtime replaceable | Renders only under the internal route collector; the staged Route source commits atomically with the staged Map after a completed declaration pass; incomplete/faulting collection keeps the previous generation; after outlets release a retired generation Atlas releases its references |
+| `Atlas.Blazor.Components` | `AtlasWorkspaceHost.ContentMap : AtlasContentMap?` | Immutable configuration object; default `null`; runtime replaceable | A new Map or `null` is staged with ContentRoutes and atomically replaces/removes the previous Map source at generation commit; no new-Map/old-Route mix is observable; Atlas releases retired references after outlets do, but caller-owned Map references can extend capture lifetime |
+| `Atlas.Blazor.Components` | `AtlasContentRoute` | Renderless declaration component | Has `[Parameter, EditorRequired] string Kind` and `[Parameter, EditorRequired] RenderFragment<AtlasContentContext>? ChildContent`; blank Kind or null ChildContent reports `AtlasHostErrorCode.DefinitionInvalid` and contributes no renderer |
+| `Atlas.Blazor.Content` | `AtlasContentMap` | Immutable Host-local configuration | Public sealed type with no public constructor; `static AtlasContentMap Create(Action<AtlasContentMapBuilder> configure)` is the only creation entry, executes a non-null configure delegate synchronously once, and returns an immutable copy; null throws `ArgumentNullException`; a configure exception propagates and no partial Map is returned |
+| `Atlas.Blazor.Content` | `AtlasContentMapBuilder` | Create-time builder only | Public sealed type with no public constructor; instances are supplied only to `AtlasContentMap.Create`; `MapComponent<TComponent>(string kind, Action<AtlasComponentBinding<TComponent>> configure)` returns the same builder and requires `where TComponent : IComponent`; blank Kind or null configure throws `ArgumentException`/`ArgumentNullException`; duplicate Kind contributions are retained for deterministic Catalog conflict detection rather than overwritten; after `Create`'s configure delegate returns, captured Builder/Binding calls throw `InvalidOperationException` and cannot mutate the returned Map |
+| `Atlas.Blazor.Content` | `AtlasComponentBinding<TComponent>` | Create-time typed binding builder | Public sealed type with no public constructor; instances are supplied only by `MapComponent`; requires `where TComponent : IComponent`; `Bind<TValue>(Expression<Func<TComponent, TValue>> parameter, Func<AtlasContentContext, TValue> valueFactory)` returns the same binding builder |
+| `Atlas.Blazor.Content` | `AtlasComponentBinding<TComponent>.Bind<TValue>` | Runtime Binding; not persisted | Selector must be a direct public writable `[Parameter]` property with exact `TValue`; field, method, nested member, indexer, `[CascadingParameter]`, non-Parameter, reserved `AtlasContentComponent.Content`, duplicate property, null selector, or null factory fails during `Create` with `ArgumentException`/`ArgumentNullException`; value-factory exceptions are per-outlet F-128 failures |
+| `Atlas.Blazor.Content` | `AtlasContentComponent.Content : AtlasContentContext` | Renderer-supplied required Parameter | When `TComponent : AtlasContentComponent`, Atlas automatically includes the current Context in every complete generated Parameter set; the consumer cannot override or bind this reserved member |
+| `Atlas.Blazor.Content` | `AtlasContentContext.WorkspaceId : WorkspaceId` | Immutable runtime identity | Set with ItemId/Reference/Item/Commands when the context is created; it is not a component Parameter and does not enter persistence |
+| `Atlas.Blazor.DependencyInjection` | `AddAtlasContent<TComponent>(this IServiceCollection services, string kind)` | Startup DI source; no runtime replacement | Requires `where TComponent : AtlasContentComponent`; null services or Kind throws `ArgumentNullException`, blank Kind throws `ArgumentException`, and duplicate ordinal Kind fails when the scoped content registry is constructed |
+| `Atlas.Blazor.Components` | `AtlasHostErrorCode.ContentRegistrationConflict = 7` | Additive Host error code | Reports a Host-local Route/Map ownership collision; existing values 1~6 retain their numeric values |
+
+`AtlasContentRoute`'s Razor `Context="..."` syntax names the
+`RenderFragment<AtlasContentContext>` receiver and is not a separate component Parameter.
+`ContentTemplate` is removed from `AtlasWorkspaceHost` and from the unshipped API
+baseline after Route/Map migration; it has no fallback or compatibility replacement
+semantics. Host-local Route/Map conflict handling follows DES-RND-001 and differs from
+the composition-fatal duplicate-DI rule above.
 
 The API freeze must answer and fix via compile-time contract tests:
 
@@ -2805,12 +2910,12 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | Error code | Trigger condition | Basis |
 |--------|---------|:--:|
 | `LAYOUT_VERSION_INCOMPATIBLE` | The imported layout data's major version is incompatible with the current system | F-088 |
-| `CONTENT_ALREADY_REGISTERED` | A duplicate registration of an existing Content Identifier; the original provider is unchanged | F-122 |
+| `CONTENT_ALREADY_REGISTERED` | Reserved legacy `WorkspaceErrorCode`; no Phase-1 Catalog runtime path. Duplicate startup DI fails registry construction; Host-local ownership conflicts use `AtlasHostErrorCode.ContentRegistrationConflict` | F-122 |
 | `INVALID_LAYOUT_DATA` | The imported layout data structure does not meet the requirements | F-123 |
 | `DUPLICATE_TAB_ID` | The specified identifier already exists when opening an Editor Tab | F-124 |
 | `ITEM_NOT_FOUND` | The Item specified by a Close/Activate command does not exist | F-030, F-121 |
 | `STALE_OPERATION` | The operation's BaseRevision does not match the current Revision | DES-OP-003 |
-| `CONTENT_NOT_REGISTERED` | ContentReference.Kind is not found in the provider registry | F-119 |
+| `CONTENT_NOT_REGISTERED` | ContentReference.Kind is not found in the effective Content Catalog | F-119 |
 | `TARGET_REJECTED_BY_POLICY` | The Docking Policy rejects the target placement | F-069 |
 | `CAPABILITY_REJECTED` | Item capability forbids operations such as close/move/pin/auto-hide | F-036~037 |
 | `CLOSE_CANCELLED_BY_GUARD` | The pre-close callback returns a rejection | F-041 |
@@ -2853,7 +2958,7 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | DES-OP-005 | Undo / Redo | F-156, F-047 |
 | DES-OP-006 | IAtlasWorkspace Public Interface | F-110~115, F-101~103 |
 | DES-OP-007 | Tool Panel Move, Reorder, and ToolBar Operation Contract | F-022, F-069~071, F-140, F-142, F-151, F-156 |
-| DES-OP-008 | Declarative Layout Definition and Atomic Reconciliation | F-001~005, F-010, F-047, F-099~100, F-122, F-144 |
+| DES-OP-008 | Declarative Layout Definition and Atomic Reconciliation | F-001~005, F-010, F-047, F-099~100, F-144 |
 | DES-OP-009 | Command, Query, and Domain Event Interfaces | F-030, F-101~104, F-106~115, F-121, F-141, F-146 |
 | DES-INT-001 | JS / .NET Boundary Partitioning | NF-004, F-050~068, F-073~078 |
 | DES-INT-002 | Root-Level Interaction Controller | NF-004, F-109 |
@@ -2863,11 +2968,11 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | DES-INT-006 | Panel Target Resolver, Drop Scaffold, and Preview | F-069, F-071, F-148, F-150~155, NF-004~005 |
 | DES-INT-007 | Splitter Advanced Interaction and Control | F-073~078, F-080~082, F-104, F-148, NF-003~004, NF-007 |
 | DES-INT-008 | Keyboard Commands, Focus Navigation, and Shortcut Configuration | F-035, F-041, F-116~118, NF-003, NF-007 |
-| DES-RND-001 | ContentTemplate | F-006~008, F-105 |
-| DES-RND-002 | ContentProvider | F-006, F-119 |
-| DES-RND-003 | AtlasContentContext | F-007~008, F-035 |
-| DES-RND-004 | ErrorBoundary | F-119~120, F-128 |
-| DES-RND-005 | Content Lifetime | F-027~029, F-031~032, F-069~070 |
+| DES-RND-001 | Unified Effective Content Catalog | F-006~008, F-119~120, F-122, NF-006 |
+| DES-RND-002 | Strongly Typed Runtime Binding | F-006~008, F-122, F-128 |
+| DES-RND-003 | AtlasContentContext and Cross-Panel Coordination | F-007~008, F-035, F-070, F-109 |
+| DES-RND-004 | ErrorBoundary | F-119~120, F-122, F-128 |
+| DES-RND-005 | Content Lifetime | F-008, F-027~029, F-031~032, F-069~070, F-147, NF-001 |
 | DES-RND-006 | ToolBar Rendering and Interaction Projection | F-020~024, F-022, F-140, F-149~153, NF-003, NF-007 |
 | DES-RND-007 | Content Identity and State Preservation During Panel Movement | F-069~070, F-120, F-128 |
 | DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
@@ -2880,7 +2985,7 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | DES-PER-006 | Layout Preset Lifecycle | F-096~098 |
 | DES-PER-007 | Restore Identity Remap and Report | F-086, F-089~090, F-123~124 |
 | DES-PER-008 | Storage Degradation, Allowlisted Repair, and Severe-Error Fallback | F-093~095, F-123, F-125~127 |
-| DES-ERR-001 | Typed Failure, Content Registry, and Diagnostic Boundary | F-030, F-119, F-121~124, F-128 |
+| DES-ERR-001 | Typed Failure, Content Catalog, and Diagnostic Boundary | F-030, F-119~124, F-128 |
 | DES-NFR-001 | Ownership, Release, and Memory Bounds | F-029, F-114, F-147, NF-001 |
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA Semantics and Focus Contract | F-022, F-035, F-116~118, NF-003, NF-007 |
@@ -2952,8 +3057,8 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-003 | DES-ARCH-001, DES-DOM-002, DES-DOM-003, DES-OP-008, DES-RND-008 | Designed |
 | REQ-F-005, REQ-F-010 | DES-OP-008, DES-RND-008 | Designed |
 | REQ-F-006 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002 | Designed |
-| REQ-F-007 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-003 | Designed |
-| REQ-F-008 | DES-DOM-004, DES-RND-001, DES-RND-003 | Designed |
+| REQ-F-007 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002, DES-RND-003 | Designed |
+| REQ-F-008 | DES-DOM-004, DES-RND-001, DES-RND-002, DES-RND-003, DES-RND-005 | Designed |
 | REQ-F-009 | DES-DOM-004, DES-RND-009 | Designed |
 | REQ-F-011 | DES-RND-008 | Designed |
 | REQ-F-012 | DES-DOM-006, DES-OP-001 | Designed |
@@ -2983,7 +3088,7 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-061~062 | DES-INT-001, DES-INT-003, DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001, DES-INT-003, DES-INT-005 | Designed |
 | REQ-F-069 | DES-DOM-008, DES-INT-003, DES-INT-005, DES-INT-006, DES-OP-001, DES-OP-004, DES-OP-007, DES-PRJ-003, DES-RND-005, DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005, DES-OP-007, DES-PRJ-003, DES-RND-005, DES-RND-007 | Designed |
+| REQ-F-070 | DES-INT-005, DES-OP-007, DES-PRJ-003, DES-RND-003, DES-RND-005, DES-RND-007 | Designed |
 | REQ-F-071 | DES-INT-003, DES-INT-005, DES-INT-006, DES-OP-007, DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001, DES-INT-007, DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010, DES-INT-001, DES-INT-007, DES-OP-001 | Designed |
@@ -3002,24 +3107,24 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-100 | DES-ARCH-004, DES-OP-008 | Designed |
 | REQ-F-101~103 | DES-OP-006, DES-OP-009 | Designed |
 | REQ-F-104 | DES-DOM-010, DES-INT-007, DES-OP-009 | Designed |
-| REQ-F-105 | DES-RND-001, DES-RND-009 | Designed |
+| REQ-F-105 | DES-RND-009 | Designed |
 | REQ-F-106~108, REQ-F-146 | DES-OP-009 | Designed |
-| REQ-F-109 | DES-ARCH-001, DES-ARCH-003, DES-ARCH-004, DES-DOM-002, DES-DOM-007, DES-INT-002, DES-OP-009, DES-PRJ-001 | Designed |
+| REQ-F-109 | DES-ARCH-001, DES-ARCH-003, DES-ARCH-004, DES-DOM-002, DES-DOM-007, DES-INT-002, DES-OP-009, DES-PRJ-001, DES-RND-003 | Designed |
 | REQ-F-110~113, REQ-F-115 | DES-ARCH-002, DES-ARCH-004, DES-OP-002, DES-OP-006, DES-OP-009 | Designed |
 | REQ-F-114 | DES-ARCH-002, DES-ARCH-004, DES-NFR-001, DES-OP-002, DES-OP-006, DES-OP-009 | Designed |
 | REQ-F-116~118 | DES-INT-008, DES-NFR-003 | Designed |
-| REQ-F-119 | DES-ERR-001, DES-RND-002, DES-RND-004 | Designed |
-| REQ-F-120 | DES-NFR-004, DES-RND-004, DES-RND-007 | Designed |
-| REQ-F-122 | DES-ERR-001, DES-OP-008 | Designed |
+| REQ-F-119 | DES-ERR-001, DES-RND-001, DES-RND-004 | Designed |
+| REQ-F-120 | DES-ERR-001, DES-NFR-004, DES-RND-001, DES-RND-004, DES-RND-007 | Designed |
+| REQ-F-122 | DES-ERR-001, DES-RND-001, DES-RND-002, DES-RND-004 | Designed |
 | REQ-F-123 | DES-ERR-001, DES-PER-003, DES-PER-005, DES-PER-007, DES-PER-008 | Designed |
 | REQ-F-124 | DES-DOM-007, DES-ERR-001, DES-PER-007 | Designed |
-| REQ-F-128 | DES-ERR-001, DES-NFR-004, DES-RND-004, DES-RND-007 | Designed |
+| REQ-F-128 | DES-ERR-001, DES-NFR-004, DES-RND-002, DES-RND-004, DES-RND-007 | Designed |
 | REQ-F-133 | DES-ARCH-002, DES-ARCH-003, DES-ARCH-004, DES-DOM-008, DES-INT-005, DES-OP-002, DES-OP-004 | Designed |
 | REQ-F-140 | DES-DOM-009, DES-INT-005, DES-OP-007, DES-PER-002, DES-PRJ-003, DES-RND-006 | Designed |
 | REQ-F-141 | DES-DOM-010, DES-OP-009 | Designed |
 | REQ-F-142 | DES-INT-005, DES-OP-007, DES-PRJ-003 | Designed |
 | REQ-F-144 | DES-DOM-010, DES-OP-008 | Designed |
-| REQ-F-147 | DES-INT-005, DES-NFR-001, DES-PRJ-003 | Designed |
+| REQ-F-147 | DES-INT-005, DES-NFR-001, DES-PRJ-003, DES-RND-005 | Designed |
 | REQ-F-148 | DES-DOM-010, DES-INT-006, DES-INT-007 | Designed |
 | REQ-F-149 | DES-DOM-001, DES-DOM-009, DES-PER-002, DES-RND-006 | Designed |
 | REQ-F-150 | DES-DOM-009, DES-INT-003, DES-INT-006, DES-PRJ-003, DES-RND-006 | Designed |
@@ -3029,11 +3134,11 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-154 | DES-DOM-003, DES-DOM-006, DES-INT-006, DES-PRJ-003 | Designed |
 | REQ-F-155 | DES-INT-003, DES-INT-006, DES-PRJ-003, DES-RND-008 | Designed |
 | REQ-F-156 | DES-OP-004, DES-OP-005, DES-OP-007, DES-PRJ-003 | Designed |
-| REQ-NF-001 | DES-NFR-001 | Designed |
+| REQ-NF-001 | DES-NFR-001, DES-RND-005 | Designed |
 | REQ-NF-002 | DES-PRJ-001 | Designed |
 | REQ-NF-003 | DES-INT-007, DES-INT-008, DES-NFR-003, DES-PRJ-002, DES-RND-006, DES-RND-009 | Designed |
 | REQ-NF-004 | DES-ARCH-001, DES-ARCH-004, DES-INT-001, DES-INT-002, DES-INT-004, DES-INT-005, DES-INT-006, DES-INT-007, DES-PRJ-002, DES-PRJ-003 | Designed |
 | REQ-NF-005 | DES-ARCH-004, DES-INT-004, DES-INT-006, DES-PRJ-003 | Designed |
-| REQ-NF-006 | DES-ARCH-003, DES-NFR-004, DES-PRJ-002 | Designed |
+| REQ-NF-006 | DES-ARCH-003, DES-NFR-004, DES-PRJ-002, DES-RND-001 | Designed |
 | REQ-NF-007 | DES-INT-007, DES-INT-008, DES-NFR-003, DES-PRJ-003, DES-RND-006, DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002, DES-PRJ-002 | Designed |

@@ -11,9 +11,9 @@
 
 - 基线日期：2026-07-31
 - 正式需求块：150（REQ-F 142 + REQ-NF 8）
-- 当前功能实施状态：见 P8 逐项审计；Verified 49、Implemented 16、In Progress 78、
+- 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 17、In Progress 80、
   Not Started 5、Deferred 2
-- 已完成工程工作：P0~P8 Verified；DEV-GATE-001~006 Closed
+- 已完成工程工作：P0~P8 Verified；DEV-GATE-001~007 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
 在首个功能 work package 合并前，所有 150 个正式需求默认继承 `Not Started`。开始实施后，只在
@@ -44,6 +44,7 @@ P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-a
 | DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据已在 P7 Phase Exit 补齐 |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
 | DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 150 = F142 + NF8 且附录与正文集合相同 |
+| DEV-GATE-007 Unified Content Catalog | Closed | [ADR-0018](./adr/0018-unified-content-catalog-and-runtime-binding.md) Accepted；SRS/HLD 合同已冻结，实施证据仍作为 In Progress 单独跟踪 |
 
 ## 实施状态变更
 
@@ -80,6 +81,7 @@ P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-001~005、REQ-F-099~100、REQ-F-109、REQ-F-133、REQ-F-144 | DES-ARCH-004、DES-DOM-002~004、DES-OP-008 | P3 | `Atlas.Blazor/Components/Definitions`、`Components/Workspace` | `AtlasWorkspaceHostTests`：declarative initial create、单次 `ReconcileDefinitionOperation`、重复声明 rollback、Programmatic/Declarative 互斥、runtime Item 保留 | In Progress | P3-WP-01 已实现 Host/definition/reconciliation 垂直切片；跨 persistence、runtime definition editing 等其他 AC 仍由后续 Phase 承担；公共合同由 [ADR-0004](./adr/0004-blazor-projection-api-and-reconciliation.md) 与 Blazor PublicAPI baseline 固定 |
 | REQ-F-003、REQ-F-005、REQ-F-009~011、REQ-F-019~024、REQ-F-035、REQ-F-039、REQ-F-105、REQ-F-149、REQ-NF-003、REQ-NF-007 | DES-DOM-003、DES-DOM-008~011、DES-RND-006、DES-RND-008~009、DES-NFR-003 | P3 | `Atlas.Blazor/Components/Workspace`、`wwwroot/atlas-v2/atlas.css` | `AtlasWorkspaceHostTests`：Split/Group/Tab/Tool Panel/ToolBar/Empty、ToolBar visibility、stable scoped metadata、multi-Host isolation | In Progress | P3-WP-02 已实现 immutable Snapshot 的基础 Blazor projection；P4 keyboard/splitter、P5 drag/drop、overflow observer 与完整 E2E/a11y AC 未提前实现 |
 | REQ-F-006~008、REQ-F-035、REQ-F-105、REQ-F-119~120、REQ-F-128 | DES-RND-001~004、DES-ERR-001、DES-NFR-004 | P3 | `Atlas.Blazor/Content`、`DependencyInjection`、`Components/Workspace` | `AtlasWorkspaceHostTests`：ContentTemplate/provider success、missing provider typed safe error、content/empty template ErrorBoundary | In Progress | P3-WP-03 已实现 DI-scoped registry、单参数 context、bound commands、placeholder 与 TrustedComponent 异常隔离；DEV-GATE-003/004 保持 Open，未声称 keep-alive 或安全沙箱 |
+| REQ-F-006~008、REQ-F-119~120、REQ-F-122、REQ-F-128 | DES-RND-001~005、DES-ERR-001 | Content Catalog remediation | `Atlas.Blazor/Content`、`Components/Workspace`、`samples/Atlas.Demo` | ADR-0018；计划中的 catalog/route/map/binding/conflict/lifecycle/sandbox 与 NuGet consumer tests | In Progress | 2026-08-03 决策合同已冻结且 DEV-GATE-007 已关闭；实施必须用一个 Effective Catalog 替换尚未 shipped 的 ContentTemplate 分裂管线，验证应用拥有的未挂载状态协作，并在本行升级为 Implemented/Verified 前完成计划中的 package/browser 证据 |
 | REQ-F-028~029、REQ-F-035、REQ-F-100、REQ-F-110~115、REQ-F-120、REQ-F-128、REQ-NF-004~005、REQ-NF-008 | DES-ARCH-004、DES-OP-006、DES-OP-008~009、DES-RND-003~004、DES-NFR-001、DES-NFR-004 | P3 | `Atlas.Blazor/Components/Workspace` | `AtlasWorkspaceHostTests`：Changed affected-Group render、domain-event focus、相同 ItemId 多 Host、Host/External ownership、rebind、idempotent Dispose 后订阅数为零 | In Progress | P3-WP-04 使用 Blazor `FocusAsync`，未冻结或新增 C#/TypeScript controller protocol；更广 performance/browser lifecycle AC 留给 P4/P8 |
 | — | DES-ARCH-004、DES-OP-008、DES-RND-001~004、DES-RND-006、DES-RND-008~009 | P3 | `Atlas.Blazor` | 17 Blazor/bUnit tests + 217 Core tests；solution restore/build/test/format、npm ci/typecheck/test/bundle、Core/Blazor Release pack；Blazor nupkg 含 CSS/JS static assets | Verified | P3 Phase Exit Gate 已满足；review/refactor 与 PublicAPI baseline 已完成；ADR-0004 Accepted；DEV-GATE-002～006 状态未改变，P4/P5/P6/P7 范围未提前实现 |
 | REQ-F-109、REQ-F-147、REQ-NF-004 | DES-INT-001~002、DES-INT-004 | P4 | `Atlas.Blazor/Interop`、`ClientScripts/controller.ts` | Node controller lifecycle；`AtlasWorkspaceHostTests` attach/update/rebind/dispose 与 multi-Host；Chrome 实测相同 SplitId 隔离及 dispose 后零 callback | In Progress | P4-WP-01 实现每 Host 一个 root controller、稳定 identity/generation 与幂等释放；REQ-NF-004 的 Panel drag FPS AC 留待 P5/P8 性能门禁，DEV-GATE-002 保持 Open |

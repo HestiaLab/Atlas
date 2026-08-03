@@ -102,9 +102,13 @@ Application Window
 | Dock Region | Dock 区域 | A region slot that can host Dock Panels, including Left Dock Upper / Left Dock Lower, Right Dock Upper / Right Dock Lower, Bottom Left Dock / Bottom Right Dock |
 | Dock Panel | Dock 面板 | A tool-window container located in a Dock Region; it can be moved, collapsed, or auto-hidden, and is switched via the ToolBar Entries of LT/RT |
 | Editor View | 视图 / 编辑器视图 | An editor sub-container inside the Editor Area that hosts a set of Editor Tabs and displays the content of one active Tab; splitting creates multiple Editor Views |
-| Editor Tab | 标签页 / 编辑器标签页 | A content switching unit inside an Editor View, comprising a Content Identifier, title, parameters, and state markers |
+| Editor Tab | 标签页 / 编辑器标签页 | A content switching unit inside an Editor View, comprising a DockItemId view identity, ContentReference, title, and presentation state |
 | Splitter | 分割条 | A draggable separator between adjacent regions, panels, or views, used to adjust sizes |
-| Content Identifier | 内容标识 | A unique string identifier declared by the developer and used to associate with a specific component |
+| Content Identifier | 内容标识 | Historical alias for `ContentReference.Kind`; new contracts use Kind directly to select one Content Registration/Renderer |
+| ContentReference | 内容引用 | The persistable `Kind + ResourceId` pair held by a Dock Item; it identifies how content is resolved and which application resource/session the view represents, but does not contain runtime bindings |
+| Kind | 内容种类 | The ordinal string in ContentReference that selects one Content Registration/Renderer in the effective Content Catalog |
+| ResourceId | 资源标识 | The application-defined string in ContentReference that identifies a business resource or session within one Kind |
+| Runtime Binding | 运行时绑定 | A non-persisted strongly typed component value, callback, delegate, or fragment supplied by the application and applied through the Blazor Renderer lifecycle |
 | Template Panel | 模板面板 | A lifecycle type of Dock Panel; when the panel's content is cleared, it is kept as an empty panel |
 | Dynamic Panel | 动态面板 | A lifecycle type of Dock Panel; when the panel's content is cleared, it is automatically removed from the layout |
 | Template View | 模板视图 | A lifecycle type of Editor View; when the last Tab is removed, the view is kept as an empty view |
@@ -673,20 +677,27 @@ And the Empty State should include the Dock Panel container and the Empty State 
 REQ-F-006 🔴 [Actor: Application Developer]
 
 Title
-Content Identifier declaration
+Unified Content Registration and Resolution
 
 Description
-The system should support the developer in specifying the content component to render for a Dock Panel and an Editor Tab.
-The developer associates the Content Identifier with a specific component declaratively, and the system resolves
-the identifier when rendering a Panel or Tab and renders the corresponding component.
+The system should support the developer in associating a stable ContentReference.Kind with one content renderer for a Dock Panel or Editor Tab. Startup DI registrations, Host-local declarative routes, and Host-local functional mappings contribute to one effective Content Catalog rather than separate fallback rendering pipelines.
 
 Acceptance Criteria
 
-AC1: Declaring the association between a Content Identifier and a component
+AC1: Registering content from supported sources
 
-Given the developer declares the association between a Content Identifier and a component
-When the system renders a Dock Panel or Editor Tab holding that Content Identifier
-Then the system should render the developer-specified component as the content
+Given the developer associates a Kind with a renderer through startup DI, a Host-local declarative route, or a Host-local functional mapping
+When the system renders a Dock Panel or Editor Tab whose ContentReference holds that Kind
+Then the system should resolve the Kind through one effective Content Catalog
+And the system should render the associated content lazily through the owning outlet
+
+AC2: Stable content and view identities
+
+Given two Dock Items hold the same ContentReference.Kind and ContentReference.ResourceId
+When the system renders both Dock Items
+Then both Items may resolve through the same catalog registration
+And each Item keeps its own DockItemId as the concrete view identity
+And the catalog does not store either component instance or business resource state
 ```
 
 ```
@@ -696,34 +707,50 @@ Title
 Editor Tab content rendering
 
 Description
-The system should render the component corresponding to a valid Content Identifier as the Tab content when the Tab holds that identifier.
+The system should render the component selected by a valid ContentReference.Kind as the Tab content when the Tab holds that reference. Content Identifier is retained only as the historical name for Kind.
 
 Acceptance Criteria
 
-AC1: Valid Content Identifier
+AC1: Valid ContentReference.Kind
 
-Given the Tab holds a valid Content Identifier
-And the developer has declared the association between that Content Identifier and the component
+Given the Tab holds a ContentReference with a valid Kind
+And the developer has declared the association between that Kind and the component
 When the system renders the Tab
-Then the system should render the component corresponding to that Content Identifier as the Tab content
+Then the system should render the component selected by that Kind as the Tab content
 ```
 
 ```
 REQ-F-008 🔴 [Actor: Application Developer]
 
 Title
-Editor Tab parameter passing
+Content Component Runtime Binding
 
 Description
-The system should support the developer in passing parameters when opening a Tab and forward the parameters to the Tab's content component.
+The system should support the developer in supplying strongly typed runtime values and interaction callbacks to content components. Runtime bindings are application-owned and are separate from the persistable ContentReference and DockItemId identities.
 
 Acceptance Criteria
 
-AC1: Passing parameters
+AC1: Applying runtime values and callbacks
 
-Given the developer prepares a set of parameters
-When the developer passes that set of parameters when opening the Tab
-Then the Tab's content component should receive parameters identical to the passed values
+Given the developer binds ordinary values, EventCallback values, delegates, or RenderFragments to a content component
+When the system mounts or updates that content component
+Then Blazor should apply the current values through the normal component parameter lifecycle
+And the content component should be able to invoke callbacks owned by the containing application
+
+AC2: Applying state changed while content is unmounted
+
+Given a content component is not currently mounted
+And another Panel changes application-owned shared state
+When the content component is mounted later
+Then it should receive or read the latest shared state
+And the system should not create a temporary component instance merely to deliver that state change
+
+AC3: Runtime bindings are not persisted
+
+Given a content registration captures callbacks, delegates, RenderFragments, or application-owned state
+When the system exports a Snapshot or records Undo/Redo history
+Then the system should persist only the layout identities and ContentReference values
+And it should not serialize the captured runtime objects
 ```
 
 ```
@@ -4223,36 +4250,44 @@ Title
 Error Handling for Unregistered Content Identifiers
 
 Description
-When the content identifier of an Editor Tab is not registered, the system should display an error message in the tab content area and not throw an exception.
+When the Kind of a Dock Panel or Editor Tab cannot be resolved from the effective Content Catalog, the system should preserve the Item and its ContentReference and display a safe unavailable placeholder in that Item's content area without throwing an exception.
 
 Acceptance Criteria
 
-AC1: Content Identifier Not Registered
+AC1: ContentReference.Kind Not Registered
 
-Given the content identifier held by the tab is not registered
-When the system renders the tab content
-Then the system should display an error message in the tab content area
+Given the ContentReference.Kind held by a Dock Item is not registered
+When the system renders the Item content
+Then the system should display a safe unavailable placeholder in the Item content area
 And the system does not throw an exception
+And the DockItemId, layout position, and ContentReference remain available for a later resolution attempt
 ```
 
 ```
 REQ-F-120 🔴 [Actor: System]
 
 Title
-Errors Isolated to a Single Editor Tab
+Content Resolution Errors Isolated by Failure Scope
 
 Description
-The system should guarantee that when the Content Identifier of one tab is not registered, the content and functionality of other tabs are not affected.
+After an AtlasWorkspaceHost has been created, the system should isolate failures according to their owning scope. A missing or Host-local-conflicting Kind makes every Item using that Kind unavailable while unrelated Kinds remain operational. A Trust/Sandbox resolver, renderer, parameter-factory, or rendering-callback failure remains isolated to the corresponding Item outlet. Duplicate startup DI registration is a composition-root failure governed by REQ-F-122 and occurs before either Host isolation boundary exists.
 
 Acceptance Criteria
 
-AC1: Error Isolation
+AC1: Per-Outlet Execution Failure
 
-Given an Editor View contains multiple tabs
-And the content identifier of one of the tabs is not registered
-When the system renders the view content
-Then the content and functionality of other tabs should not be affected
-And the error is isolated to a single tab
+Given a Workspace contains multiple Dock Items
+And one Item has a faulting Trust/Sandbox resolver, renderer, parameter factory, or rendering callback
+When the system renders the Workspace content
+Then the content and functionality of other Items should not be affected
+And the error should be isolated to the affected Item outlet
+
+AC2: Missing or Conflicting Kind
+
+Given one or more Dock Items reference the same missing or Host-local-conflicting Kind
+When the Host resolves that Kind
+Then every Item using that Kind should preserve its DockItemId, layout position, and ContentReference and display a safe unavailable state
+And Items using unrelated Kinds should continue to resolve and operate normally
 ```
 
 ```
@@ -4278,19 +4313,27 @@ And the system does not throw an exception
 REQ-F-122 🔴 [Actor: Application Developer]
 
 Title
-Error Handling for Duplicate Content Identifier Registration
+Error Handling for Conflicting Content Registration
 
 Description
-When the developer registers the same content identifier again, the system should return an error and not overwrite the existing registration.
+When more than one registration owns the same Kind, the system should report a deterministic conflict and must not choose an owner based on registration order. Duplicate startup DI registration is a composition-root error; a conflict involving a Host-local declarative Route or functional Map is isolated to that Kind after Host creation.
 
 Acceptance Criteria
 
-AC1: Duplicate Declaration
+AC1: Duplicate Startup DI Registration
 
-Given the developer has declared an association between a content identifier and a component
-When the developer declares the association again with the same content identifier
-Then the system should return an error indicating that the content identifier already exists
-And the system does not overwrite the existing declaration
+Given startup DI contains more than one content registration for the same Kind
+When the composition root constructs the content registry
+Then construction should fail with a deterministic conflict identifying that Kind
+And the system should not select a registration by registration order
+
+AC2: Host-local Catalog Conflict
+
+Given an AtlasWorkspaceHost combines startup DI, declarative Route, and functional Map sources
+When a Route or Map contribution conflicts with another registration for the same Kind
+Then the Host should mark that Kind unavailable without overwriting either registration
+And Items using the conflicting Kind should retain their DockItemId, layout position, and ContentReference
+And Items with unrelated Kinds should continue to resolve normally
 ```
 
 ```
@@ -4422,21 +4465,30 @@ And the system should fall back to the initial Dock hierarchy layout state
 REQ-F-128 🔴 [Actor: System]
 
 Title
-Exception Isolation of Editor Tab Content Components
+Exception Isolation of Content Components
 
 Description
-When a tab content component throws an exception during rendering, the system should display an Error Boundary in the tab content area; other tabs, Editor Views, and Dock Panels are not affected.
+When a Dock Panel or Editor Tab Trust/Sandbox resolver, content renderer, parameter factory, or rendering callback throws during one content projection, the system should display a safe Error Boundary in that Item's content area; other Items and Workspace chrome are not affected.
 
 Acceptance Criteria
 
 AC1: Component Rendering Exception
 
-Given a tab content component has a rendering defect
-When the component throws an exception during rendering
-Then the system should display an error boundary in the tab content area
-And display a summary of the exception
-And other tabs, views, and panels are not affected
-And the system should log an error
+Given a Trust/Sandbox resolver, content renderer, parameter factory, or rendering callback has a defect
+When it throws while projecting one Dock Item
+Then the system should display a generic error summary and a DiagnosticId in that Item's content area
+And the UI should not display the exception message, type, or stack trace
+And other Items and Workspace chrome are not affected
+And the system should log diagnostic details correlated by DiagnosticId
+
+AC2: Safe Diagnostic Correlation
+
+Given one content projection fails
+When the system creates its error UI and internal diagnostic log
+Then the system should generate a new opaque DiagnosticId for that failure occurrence
+And the same DiagnosticId should correlate that displayed failure with its log record
+And the DiagnosticId should not encode WorkspaceId, ResourceId, DockItemId, exception type, or other sensitive values
+And a later failed Retry should receive a new DiagnosticId
 ```
 
 ```
@@ -4705,9 +4757,9 @@ Then the system should apply the new animation setting at the next interaction
 | REQ-F-003 | 🔴 | Application Developer | Partial Declaration of the Dock Hierarchy Layout |
 | REQ-F-004 | 🔴 | Application Developer | Dock Panel Region Name Mapping |
 | REQ-F-005 | 🔴 | System | Dock Panel Empty State Display |
-| REQ-F-006 | 🔴 | Application Developer | Content Identifier Registration |
-| REQ-F-007 | 🔴 | System | Editor Tab Content Rendering |
-| REQ-F-008 | 🔴 | Application Developer | Editor Tab Parameter Passing |
+| REQ-F-006 | 🔴 | Application Developer | Unified Content Registration and Resolution |
+| REQ-F-007 | 🔴 | Application Developer | Editor Tab Content Rendering |
+| REQ-F-008 | 🔴 | Application Developer | Content Component Runtime Binding |
 | REQ-F-009 | 🟡 | Application Developer / End User | Editor Tab Pinned |
 | REQ-F-010 | 🟡 | Application Developer | Custom Empty State Template |
 | REQ-F-011 | 🔴 | End User | Drag an Editor Tab into an Empty Editor View |
@@ -4860,15 +4912,15 @@ Then the system should apply the new animation setting at the next interaction
 | ID          | Priority | Actor                 | Title                                        |
 | ----------- |:--------:| --------------------- | ------------------------------------------- |
 | REQ-F-119 | 🔴 | System | Error Handling for Unregistered Content Identifiers |
-| REQ-F-120 | 🔴 | System | Errors Isolated to a Single Editor Tab |
+| REQ-F-120 | 🔴 | System | Content Resolution Errors Isolated by Failure Scope |
 | REQ-F-121 | 🔴 | Application Developer | Error Handling for Activating a Nonexistent Editor Tab |
-| REQ-F-122 | 🔴 | Application Developer | Error Handling for Duplicate Content Identifier Registration |
+| REQ-F-122 | 🔴 | Application Developer | Error Handling for Conflicting Content Registration |
 | REQ-F-123 | 🔴 | System | Error Handling for Invalid Layout Data |
 | REQ-F-124 | 🔴 | Application Developer | Error Handling for Editor Tab Identifier Conflicts |
 | REQ-F-125 | 🟡 | System | Self-repair of Internal Data Inconsistencies |
 | REQ-F-126 | 🟡 | System | Degraded Handling of Non-fatal Issues |
 | REQ-F-127 | 🔴 | System | Fall Back to the Initial Layout on Severe Errors |
-| REQ-F-128 | 🔴 | System | Exception Isolation of Editor Tab Content Components |
+| REQ-F-128 | 🔴 | System | Exception Isolation of Content Components |
 
 ### §3.10 Boundary Conditions and Exception Scenarios
 
@@ -4968,3 +5020,4 @@ The following requirements have been evaluated and decided to be deferred to lat
 | REQ-F-002                                     | Spatial Structure of the Dock Hierarchy Layout | Errata     | AC3 fills in the missing Then step and fixes the incomplete Given sentence                                                                                                      |
 | REQ-NF-002                                    | Browser Compatibility                         | Errata     | AC1 removes the hardcoded requirement identifier range (REQ-F-001 through REQ-F-139) and changes it to "all REQ-F requirements in §3" to avoid becoming stale as requirements are added or removed |
 | —                                             | Whole-Document Consistency                    | Errata     | Per ADR-0014 on 2026-07-31, fixed the formal requirement count at 150 (F:142 + NF:8); Appendix A corresponds one-to-one with the formal requirement blocks; the 5 historically deleted identifiers and 9 non-normative boundary identifiers are not counted in coverage |
+| REQ-F-006~008, REQ-F-119~120, REQ-F-122, REQ-F-128 | Content Catalog and Runtime Binding | Modified | On 2026-08-03, ADR-0018 unified DI, declarative Route, and functional Map as one effective Content Catalog; froze strongly typed runtime binding, application-owned shared-state coordination, deterministic Kind conflicts, retained missing Items, and safe scoped diagnostics |
