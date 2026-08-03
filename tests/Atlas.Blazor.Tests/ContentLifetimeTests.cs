@@ -145,15 +145,7 @@ public sealed class ContentLifetimeTests : TestContext
         return RenderComponent<AtlasWorkspaceHost>(parameters =>
         {
             parameters
-                .Add(component => component.Workspace, workspace)
-                .Add(
-                    component => component.ContentTemplate,
-                    context => builder =>
-                    {
-                        builder.OpenComponent<TrackedContent>(0);
-                        builder.AddAttribute(1, "Content", context);
-                        builder.CloseComponent();
-                    });
+                .Add(component => component.Workspace, workspace);
             if (options is not null)
             {
                 parameters.Add(component => component.ContentLifetimeOptions, options);

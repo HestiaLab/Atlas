@@ -99,13 +99,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     public RenderFragment? StatusBarContent { get; set; }
 
     /// <summary>
-    /// Gets or sets the application content dispatcher. Template parameter; runtime changes only
-    /// invalidate projection. The default is <see langword="null"/>.
-    /// </summary>
-    [Parameter]
-    public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
-
-    /// <summary>
     /// Gets or sets Host-local declarative content routes. Template parameter; runtime changes
     /// stage a new Host-local source generation that commits atomically after route collection
     /// completes. The default is <see langword="null"/>.
@@ -804,14 +797,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 groupBuilder.AddAttribute(4, "Items", items);
                 groupBuilder.AddAttribute(5, "Catalog", effectiveCatalog ?? AtlasContentCatalog.Empty);
                 groupBuilder.AddAttribute(6, "FocusCoordinator", focusCoordinator);
-                groupBuilder.AddAttribute(7, "ContentTemplate", ContentTemplate);
-                groupBuilder.AddAttribute(8, "EmptyTemplate", emptyTemplate);
-                groupBuilder.AddAttribute(9, "HeaderTemplate", headerTemplate);
-                groupBuilder.AddAttribute(10, "OnError", OnError);
-                groupBuilder.AddAttribute(11, "ContentLifetimeOptions", ContentLifetimeOptions);
-                groupBuilder.AddAttribute(12, "SandboxedFrameResolver", SandboxedFrameResolver);
-                groupBuilder.AddAttribute(13, "Generation", interactionGeneration);
-                groupBuilder.AddAttribute(14, "HostId", hostId);
+                groupBuilder.AddAttribute(7, "EmptyTemplate", emptyTemplate);
+                groupBuilder.AddAttribute(8, "HeaderTemplate", headerTemplate);
+                groupBuilder.AddAttribute(9, "OnError", OnError);
+                groupBuilder.AddAttribute(10, "ContentLifetimeOptions", ContentLifetimeOptions);
+                groupBuilder.AddAttribute(11, "SandboxedFrameResolver", SandboxedFrameResolver);
+                groupBuilder.AddAttribute(12, "Generation", interactionGeneration);
+                groupBuilder.AddAttribute(13, "HostId", hostId);
                 groupBuilder.CloseComponent();
             }));
         builder.CloseComponent();

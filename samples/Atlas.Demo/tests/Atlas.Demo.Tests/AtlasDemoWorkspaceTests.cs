@@ -23,6 +23,8 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     public AtlasDemoWorkspaceTests()
     {
         Services.AddAtlasWorkspace();
+        Services.AddAtlasContent<AtlasDemoContent>("atlas-demo-tool");
+        Services.AddAtlasContent<AtlasDemoContent>("atlas-demo-editor");
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 

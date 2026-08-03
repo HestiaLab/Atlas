@@ -144,8 +144,6 @@ Atlas.Blazor.Components.AtlasWorkspaceHost
 Atlas.Blazor.Components.AtlasWorkspaceHost.AtlasWorkspaceHost() -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment?
 Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.set -> void
-Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasContentContext!>?
-Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentRoutes.get -> Microsoft.AspNetCore.Components.RenderFragment?
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentRoutes.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.get -> Atlas.Blazor.Components.WorkspaceContentLifetimeOptions!

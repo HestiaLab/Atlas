@@ -13,7 +13,6 @@
     {
         <AtlasWorkspaceHost Workspace="@workspace"
                             WorkspaceOwnership="WorkspaceOwnership.External"
-                            ContentTemplate="@contentTemplate"
                             TopToolbarContent="@topToolbar"
                             StatusBarContent="@statusBar"
                             EnableInteractions="true" />
@@ -21,7 +20,6 @@
 </section>
 
 @code {
-    private readonly RenderFragment<AtlasContentContext> contentTemplate;
     private readonly RenderFragment topToolbar;
     private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
@@ -35,13 +33,6 @@
 
     public AtlasDemoWorkspace()
     {
-        contentTemplate = content => builder =>
-        {
-            builder.OpenComponent<AtlasDemoContent>(0);
-            builder.SetKey(content.ItemId);
-            builder.AddAttribute(1, nameof(AtlasDemoContent.Content), content);
-            builder.CloseComponent();
-        };
         topToolbar = builder =>
         {
             builder.OpenComponent<AtlasDemoTopToolbar>(0);

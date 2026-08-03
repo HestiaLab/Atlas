@@ -1,3 +1,4 @@
+@inherits AtlasContentComponent
 @using Atlas.Blazor.Content
 
 @switch (Content.Reference.ResourceId)
@@ -96,10 +97,4 @@ builder.Services.AddAtlasWorkspace();
 <span class="keyword">await</span> builder.Build().RunAsync();</code></pre></div>
         </section>
         break;
-}
-
-@code {
-    [Parameter]
-    [EditorRequired]
-    public AtlasContentContext Content { get; set; } = null!;
 }

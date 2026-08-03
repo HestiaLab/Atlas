@@ -44,9 +44,6 @@ internal sealed class AtlasContentOutlet : ComponentBase
     public Func<AtlasContentContext, AtlasSandboxedFrameOptions?>? SandboxedFrameResolver { get; set; }
 
     [Parameter]
-    public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
-
-    [Parameter]
     public long Generation { get; set; }
 
     internal ValueTask FocusAsync()
@@ -105,23 +102,13 @@ internal sealed class AtlasContentOutlet : ComponentBase
 
     private void RenderProjectedContent(RenderTreeBuilder builder)
     {
-        // 1. Trust policy precedes Catalog resolution. The Sandbox resolver is
-        //    evaluated exactly once inside this guarded fragment; an exception
-        //    fails closed here and never reaches the Catalog or Binding factories.
+        // Trust policy precedes Catalog resolution. The Sandbox resolver is
+        // evaluated exactly once inside this guarded fragment; an exception
+        // fails closed here and never reaches the Catalog or Binding factories.
         var sandbox = SandboxedFrameResolver?.Invoke(Content);
         if (sandbox is not null)
         {
             RenderSandboxedFrame(builder, sandbox);
-            return;
-        }
-
-        // 2. Temporary compatibility path. The legacy ContentTemplate branch is
-        //    retained only until Phase 4 migrates all repository consumers; it is
-        //    not part of the final architecture.
-        // TODO(phase-4): remove ContentTemplate after the Demo and tests migrate.
-        if (ContentTemplate is not null)
-        {
-            builder.AddContent(0, ContentTemplate(Content));
             return;
         }
 

@@ -37,9 +37,6 @@ internal sealed class AtlasGroupView : ComponentBase
     public AtlasFocusCoordinator FocusCoordinator { get; set; } = null!;
 
     [Parameter]
-    public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
-
-    [Parameter]
     public RenderFragment<AtlasEmptyStateContext>? EmptyTemplate { get; set; }
 
     [Parameter]
@@ -70,7 +67,6 @@ internal sealed class AtlasGroupView : ComponentBase
             hash.Add(RuntimeHelpers.GetHashCode(item));
         }
 
-        hash.Add(ContentTemplate);
         hash.Add(EmptyTemplate);
         hash.Add(HeaderTemplate);
         hash.Add(FocusCoordinator.Version);
@@ -194,7 +190,7 @@ internal sealed class AtlasGroupView : ComponentBase
 
     private async Task ReportMissingContentAsync()
     {
-        if (ContentTemplate is not null || Group.SelectedItemId is null)
+        if (Group.SelectedItemId is null)
         {
             reportedMissingContent = null;
             return;
@@ -414,13 +410,12 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(
             sequence++,
             "RecoveryKey",
-            (ContentTemplate, SandboxedFrameResolver, descriptor?.Revision ?? 0));
+            (SandboxedFrameResolver, descriptor?.Revision ?? 0));
         builder.AddAttribute(sequence++, "OnError", OnError);
         builder.AddAttribute(
             sequence++,
             "SandboxedFrameResolver",
             SandboxedFrameResolver);
-        builder.AddAttribute(sequence++, "ContentTemplate", ContentTemplate);
         builder.AddAttribute(sequence++, "Generation", Generation);
         builder.AddComponentReferenceCapture(
             sequence++,
