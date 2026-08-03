@@ -1,4 +1,3 @@
-using Atlas.Core;
 using Microsoft.AspNetCore.Components;
 
 namespace Atlas.Blazor.Content;
@@ -66,13 +65,16 @@ internal sealed record AtlasContentRegistrationDescriptor(
 /// <summary>
 /// A Host-local renderer contribution from one committed source generation.
 /// The Host owns the revision used to key outlets so structural changes remount
-/// while value-only updates preserve component identity.
+/// while value-only updates preserve component identity. The structural signature
+/// contains only stable Kind/source metadata and never renderer delegates or
+/// current values.
 /// </summary>
 internal sealed record AtlasContentHostLocalRegistration(
     string Kind,
     AtlasContentRegistrationSource Source,
     RenderFragment<AtlasContentContext> Renderer,
-    int Revision);
+    int Revision,
+    string StructuralSignature);
 
 /// <summary>
 /// The effective per-Host Content Catalog. Startup DI registrations own the

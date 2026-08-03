@@ -166,9 +166,9 @@ internal sealed class AtlasContentOutlet : ComponentBase
                 builder.CloseComponent();
                 break;
             default:
-                // Route (and Map in Phase 3) descriptors carry a Host-local
-                // renderer recipe; the owning Blazor Renderer applies its
-                // parameters through the normal SetParametersAsync lifecycle.
+                // Route and Map descriptors carry a Host-local renderer recipe;
+                // the owning Blazor Renderer applies its parameters through the
+                // normal SetParametersAsync lifecycle.
                 builder.AddContent(0, descriptor.Renderer!(Content));
                 break;
         }

@@ -114,6 +114,14 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     public RenderFragment? ContentRoutes { get; set; }
 
     /// <summary>
+    /// Gets or sets the immutable Host-local functional content map. Configuration parameter;
+    /// replacing the map stages a new Host-local source generation committed atomically with
+    /// <see cref="ContentRoutes"/>. The default is <see langword="null"/>.
+    /// </summary>
+    [Parameter]
+    public AtlasContentMap? ContentMap { get; set; }
+
+    /// <summary>
     /// Gets or sets the explicit untrusted-content resolver. A non-null result renders a fixed
     /// sandboxed iframe instead of the trusted component path.
     /// </summary>
@@ -364,7 +372,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         await ProcessDeclarationAsync();
-        await ProcessContentRoutesAsync();
+        await ProcessContentSourcesAsync();
         var interactionConfiguration = InteractionConfigurationFingerprint();
         if (!string.Equals(
             failedInteractionConfiguration,
@@ -487,7 +495,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task ProcessContentRoutesAsync()
+    private async Task ProcessContentSourcesAsync()
     {
         if (disposed)
         {
@@ -505,7 +513,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
         parentContentGenerationSeen = false;
 
-        if (!routeCollector.TryBuild(out var collected))
+        if (!routeCollector.TryBuild(out var collectedRoutes))
         {
             // A faulting/incomplete collection keeps the previously committed
             // Route/Map generation active and reports a safe definition error.
@@ -527,34 +535,39 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         routeFaultReported = false;
+
+        // Each parent render cycle stages one candidate Host-local source
+        // generation. The candidate commits atomically after route collection
+        // completes: the rebuilt Catalog reference invalidates the group render
+        // stamp so outlets re-evaluate value factories and current route
+        // delegates. Value-only updates therefore preserve component identity
+        // while delivering the complete bound Parameter set on the follow-up
+        // projection. Internal Host rerenders never reach this path.
         var previous = committedContentGeneration;
-        var generation = BuildContentGeneration(previous, collected);
-        var rendererChanged = !SameContentGeneration(previous, collected);
+        var stagedMap = ContentMap?.Entries ?? Array.Empty<AtlasContentMapEntry>();
+        var generation = BuildContentGeneration(previous, collectedRoutes, stagedMap);
         committedContentGeneration = generation;
         effectiveCatalog = (Registry ?? AtlasContentCatalog.Empty).WithHostLocal(generation);
-        if (rendererChanged)
-        {
-            await InvokeAsync(StateHasChanged);
-        }
+        await InvokeAsync(StateHasChanged);
     }
 
     private IReadOnlyList<AtlasContentHostLocalRegistration> BuildContentGeneration(
         IReadOnlyList<AtlasContentHostLocalRegistration> previous,
-        IReadOnlyList<AtlasContentRouteDescriptor> collected)
+        IReadOnlyList<AtlasContentRouteDescriptor> collectedRoutes,
+        IReadOnlyList<AtlasContentMapEntry> stagedMap)
     {
-        var previousRouteByKind = previous
-            .Where(
-                registration => registration.Source
-                    == AtlasContentRegistrationSource.Route)
+        var previousByKind = previous
             .GroupBy(registration => registration.Kind, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
-        var generation = new List<AtlasContentHostLocalRegistration>(collected.Count);
-        foreach (var route in collected)
+        var generation = new List<AtlasContentHostLocalRegistration>(
+            collectedRoutes.Count + stagedMap.Count);
+        foreach (var route in collectedRoutes)
         {
             // Same Kind and source owner carries the structural revision forward so
             // value-only updates preserve component identity; structural changes
             // (new Kind, removed Kind, or owner switch) remount the outlet.
-            var revision = previousRouteByKind.TryGetValue(route.Kind, out var previousRoute)
+            var revision = previousByKind.TryGetValue(route.Kind, out var previousRoute)
+                && previousRoute.Source == AtlasContentRegistrationSource.Route
                 ? previousRoute.Revision
                 : nextContentRevision++;
             generation.Add(
@@ -562,37 +575,33 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                     route.Kind,
                     AtlasContentRegistrationSource.Route,
                     route.ChildContent!,
-                    revision));
+                    revision,
+                    StructuralSignature: "Route"));
+        }
+
+        foreach (var entry in stagedMap)
+        {
+            // The map structural signature (owner, component type, ordered bound
+            // parameter names) drives revision carry-forward; value factories and
+            // their results are never structural.
+            var revision = previousByKind.TryGetValue(entry.Kind, out var previousEntry)
+                && previousEntry.Source == AtlasContentRegistrationSource.Map
+                && string.Equals(
+                    previousEntry.StructuralSignature,
+                    entry.StructuralSignature,
+                    StringComparison.Ordinal)
+                ? previousEntry.Revision
+                : nextContentRevision++;
+            generation.Add(
+                new AtlasContentHostLocalRegistration(
+                    entry.Kind,
+                    AtlasContentRegistrationSource.Map,
+                    entry.CreateRenderer(),
+                    revision,
+                    entry.StructuralSignature));
         }
 
         return generation;
-    }
-
-    private static bool SameContentGeneration(
-        IReadOnlyList<AtlasContentHostLocalRegistration> committed,
-        IReadOnlyList<AtlasContentRouteDescriptor> collected)
-    {
-        if (committed.Count != collected.Count)
-        {
-            return false;
-        }
-
-        foreach (var route in collected)
-        {
-            var previous = committed.FirstOrDefault(
-                registration => registration.Source
-                        == AtlasContentRegistrationSource.Route
-                    && string.Equals(
-                        registration.Kind,
-                        route.Kind,
-                        StringComparison.Ordinal));
-            if (previous is null || !ReferenceEquals(previous.Renderer, route.ChildContent))
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /// <inheritdoc />

@@ -77,6 +77,7 @@ internal sealed class AtlasGroupView : ComponentBase
         hash.Add(ContentLifetimeOptions.Mode);
         hash.Add(ContentLifetimeOptions.MaxCachedItems);
         hash.Add(SandboxedFrameResolver);
+        hash.Add(Catalog);
         hash.Add(Generation);
         foreach (var itemId in keptAliveItemIds)
         {
