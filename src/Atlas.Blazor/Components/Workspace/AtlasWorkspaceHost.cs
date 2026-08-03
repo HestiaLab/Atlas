@@ -387,9 +387,33 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                     SplitterOptions ?? new AtlasSplitterOptions(),
                     KeyboardCommands ?? AtlasKeyboardCommandMap.Default);
                 failedInteractionConfiguration = null;
+                if (hostError is not null
+                    && string.Equals(
+                        hostError.DiagnosticId,
+                        "ATLAS-INTERACTION-ATTACH-FAILED",
+                        StringComparison.Ordinal))
+                {
+                    // A retried attach succeeded after a transient root
+                    // resolution failure; drop the earlier diagnostic.
+                    hostError = null;
+                    await InvokeAsync(StateHasChanged);
+                }
             }
-            catch (JSException)
+            catch (JSException ex)
             {
+                if (ex.Message.Contains(
+                    "ATLAS-INTERACTION-ATTACH-RETRY",
+                    StringComparison.Ordinal))
+                {
+                    // The ElementReference reviver could not resolve the Host
+                    // root yet because the render batch's DOM application races
+                    // with OnAfterRenderAsync in WebAssembly. Keep
+                    // failedInteractionConfiguration unset so the next render
+                    // retries instead of surfacing a spurious diagnostic.
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
                 failedInteractionConfiguration = interactionConfiguration;
                 await ReportErrorAsync(
                     new AtlasHostError(
