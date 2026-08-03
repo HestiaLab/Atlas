@@ -23,9 +23,14 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private readonly string hostId = $"atlas-{Guid.NewGuid():N}";
     private AtlasDefinitionCollector collector = new();
     private readonly AtlasFocusCoordinator focusCoordinator = new();
-    private readonly AtlasContentRegistry emptyRegistry =
-        new(Array.Empty<AtlasContentRegistration>());
     private readonly HashSet<string> consumedDragSessions = new(StringComparer.Ordinal);
+    private AtlasContentRouteCollector routeCollector = new();
+    private IReadOnlyList<AtlasContentHostLocalRegistration> committedContentGeneration =
+        Array.Empty<AtlasContentHostLocalRegistration>();
+    private AtlasContentCatalog? effectiveCatalog;
+    private bool parentContentGenerationSeen;
+    private bool routeFaultReported;
+    private int nextContentRevision = 1;
     private IReadOnlyDictionary<LayoutNodeId, AtlasSplitterPresentation>
         declarativeSplitterPresentations =
             new Dictionary<LayoutNodeId, AtlasSplitterPresentation>();
@@ -99,6 +104,14 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasContentContext>? ContentTemplate { get; set; }
+
+    /// <summary>
+    /// Gets or sets Host-local declarative content routes. Template parameter; runtime changes
+    /// stage a new Host-local source generation that commits atomically after route collection
+    /// completes. The default is <see langword="null"/>.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ContentRoutes { get; set; }
 
     /// <summary>
     /// Gets or sets the explicit untrusted-content resolver. A non-null result renders a fixed
@@ -188,7 +201,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private IAtlasWorkspaceFactory? Factory { get; set; }
 
     [Inject]
-    private AtlasContentRegistry? Registry { get; set; }
+    private AtlasContentCatalog? Registry { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
@@ -197,6 +210,8 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     protected override async Task OnParametersSetAsync()
     {
         ThrowIfDisposed();
+        parentContentGenerationSeen = true;
+        effectiveCatalog ??= Registry ?? AtlasContentCatalog.Empty;
         ValidateOwnership();
         var hasDeclarativeInput = WorkspaceId is not null || ChildContent is not null;
         if (Workspace is not null && hasDeclarativeInput)
@@ -245,6 +260,16 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         var sequence = 0;
+        routeCollector = new AtlasContentRouteCollector();
+        if (ContentRoutes is not null)
+        {
+            builder.OpenComponent<CascadingValue<AtlasContentRouteCollector>>(sequence++);
+            builder.SetKey(routeCollector);
+            builder.AddAttribute(sequence++, "Value", routeCollector);
+            builder.AddAttribute(sequence++, "ChildContent", ContentRoutes);
+            builder.CloseComponent();
+        }
+
         if (declarativeMode && WorkspaceId is not null)
         {
             collector = new AtlasDefinitionCollector();
@@ -339,6 +364,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         await ProcessDeclarationAsync();
+        await ProcessContentRoutesAsync();
         var interactionConfiguration = InteractionConfigurationFingerprint();
         if (!string.Equals(
             failedInteractionConfiguration,
@@ -459,6 +485,114 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ProcessContentRoutesAsync()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        // Route/Map source generations are staged only when the parent actually
+        // re-rendered this Host (OnParametersSet ran). Internal Host rerenders
+        // re-execute the parent's ContentRoutes fragment without new parameter
+        // values; processing them again would create a perpetual render loop.
+        if (!parentContentGenerationSeen)
+        {
+            return;
+        }
+
+        parentContentGenerationSeen = false;
+
+        if (!routeCollector.TryBuild(out var collected))
+        {
+            // A faulting/incomplete collection keeps the previously committed
+            // Route/Map generation active and reports a safe definition error.
+            if (!routeFaultReported)
+            {
+                routeFaultReported = true;
+                if (OnError.HasDelegate)
+                {
+                    await OnError.InvokeAsync(
+                        new AtlasHostError(
+                            AtlasHostErrorCode.DefinitionInvalid,
+                            "ATLAS-CONTENT-ROUTE-INVALID",
+                            "Atlas.Content.RouteInvalid",
+                            activeWorkspace?.Id));
+                }
+            }
+
+            return;
+        }
+
+        routeFaultReported = false;
+        var previous = committedContentGeneration;
+        var generation = BuildContentGeneration(previous, collected);
+        var rendererChanged = !SameContentGeneration(previous, collected);
+        committedContentGeneration = generation;
+        effectiveCatalog = (Registry ?? AtlasContentCatalog.Empty).WithHostLocal(generation);
+        if (rendererChanged)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private IReadOnlyList<AtlasContentHostLocalRegistration> BuildContentGeneration(
+        IReadOnlyList<AtlasContentHostLocalRegistration> previous,
+        IReadOnlyList<AtlasContentRouteDescriptor> collected)
+    {
+        var previousRouteByKind = previous
+            .Where(
+                registration => registration.Source
+                    == AtlasContentRegistrationSource.Route)
+            .GroupBy(registration => registration.Kind, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var generation = new List<AtlasContentHostLocalRegistration>(collected.Count);
+        foreach (var route in collected)
+        {
+            // Same Kind and source owner carries the structural revision forward so
+            // value-only updates preserve component identity; structural changes
+            // (new Kind, removed Kind, or owner switch) remount the outlet.
+            var revision = previousRouteByKind.TryGetValue(route.Kind, out var previousRoute)
+                ? previousRoute.Revision
+                : nextContentRevision++;
+            generation.Add(
+                new AtlasContentHostLocalRegistration(
+                    route.Kind,
+                    AtlasContentRegistrationSource.Route,
+                    route.ChildContent!,
+                    revision));
+        }
+
+        return generation;
+    }
+
+    private static bool SameContentGeneration(
+        IReadOnlyList<AtlasContentHostLocalRegistration> committed,
+        IReadOnlyList<AtlasContentRouteDescriptor> collected)
+    {
+        if (committed.Count != collected.Count)
+        {
+            return false;
+        }
+
+        foreach (var route in collected)
+        {
+            var previous = committed.FirstOrDefault(
+                registration => registration.Source
+                        == AtlasContentRegistrationSource.Route
+                    && string.Equals(
+                        registration.Kind,
+                        route.Kind,
+                        StringComparison.Ordinal));
+            if (previous is null || !ReferenceEquals(previous.Renderer, route.ChildContent))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <inheritdoc />
@@ -659,7 +793,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 groupBuilder.AddAttribute(2, "Snapshot", snapshot);
                 groupBuilder.AddAttribute(3, "Group", group);
                 groupBuilder.AddAttribute(4, "Items", items);
-                groupBuilder.AddAttribute(5, "Registry", Registry ?? emptyRegistry);
+                groupBuilder.AddAttribute(5, "Catalog", effectiveCatalog ?? AtlasContentCatalog.Empty);
                 groupBuilder.AddAttribute(6, "FocusCoordinator", focusCoordinator);
                 groupBuilder.AddAttribute(7, "ContentTemplate", ContentTemplate);
                 groupBuilder.AddAttribute(8, "EmptyTemplate", emptyTemplate);

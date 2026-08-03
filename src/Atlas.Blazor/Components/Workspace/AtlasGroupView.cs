@@ -31,7 +31,7 @@ internal sealed class AtlasGroupView : ComponentBase
     public IReadOnlyList<DockItem> Items { get; set; } = Array.Empty<DockItem>();
 
     [Parameter]
-    public AtlasContentRegistry Registry { get; set; } = null!;
+    public AtlasContentCatalog Catalog { get; set; } = null!;
 
     [Parameter]
     public AtlasFocusCoordinator FocusCoordinator { get; set; } = null!;
@@ -200,29 +200,20 @@ internal sealed class AtlasGroupView : ComponentBase
         }
 
         var item = SelectedItem();
-        if (SandboxedFrameResolver is not null)
+        var resolution = selectedContentOutlet?.Resolution;
+        AtlasHostErrorCode? code = resolution switch
         {
-            try
-            {
-                if (SandboxedFrameResolver(new AtlasContentContext(Workspace, item)) is not null)
-                {
-                    reportedMissingContent = null;
-                    return;
-                }
-            }
-            catch (Exception)
-            {
-                return;
-            }
-        }
-
-        if (Registry.TryResolve(item.Content.Kind, out _))
+            AtlasContentResolution.Missing => AtlasHostErrorCode.ContentNotRegistered,
+            AtlasContentResolution.Conflict => AtlasHostErrorCode.ContentRegistrationConflict,
+            _ => null,
+        };
+        if (code is null)
         {
             reportedMissingContent = null;
             return;
         }
 
-        var identity = $"{item.Id.Value}\0{item.Content.Kind}";
+        var identity = $"{item.Id.Value}\0{item.Content.Kind}\0{code}";
         if (string.Equals(reportedMissingContent, identity, StringComparison.Ordinal))
         {
             return;
@@ -231,11 +222,16 @@ internal sealed class AtlasGroupView : ComponentBase
         reportedMissingContent = identity;
         if (OnError.HasDelegate)
         {
+            var isMissing = code.Value == AtlasHostErrorCode.ContentNotRegistered;
             await OnError.InvokeAsync(
                 new AtlasHostError(
-                    AtlasHostErrorCode.ContentNotRegistered,
-                    "ATLAS-CONTENT-NOT-REGISTERED",
-                    "Atlas.Content.NotRegistered",
+                    code.Value,
+                    isMissing
+                        ? "ATLAS-CONTENT-NOT-REGISTERED"
+                        : "ATLAS-CONTENT-REGISTRATION-CONFLICT",
+                    isMissing
+                        ? "Atlas.Content.NotRegistered"
+                        : "Atlas.Content.RegistrationConflict",
                     Workspace.Id,
                     item.Id));
         }
@@ -399,10 +395,12 @@ internal sealed class AtlasGroupView : ComponentBase
     {
         var sequence = 0;
         var context = new AtlasContentContext(Workspace, item);
+        var resolution = Catalog.TryResolve(item.Content.Kind, out var descriptor);
         builder.OpenComponent<AtlasContentOutlet>(sequence++);
-        builder.SetKey(item.Id);
-        builder.AddAttribute(sequence++, "WorkspaceId", Workspace.Id);
-        builder.AddAttribute(sequence++, "Item", item);
+        builder.SetKey((item.Id, descriptor?.Revision ?? 0));
+        builder.AddAttribute(sequence++, "Content", context);
+        builder.AddAttribute(sequence++, "Resolution", resolution);
+        builder.AddAttribute(sequence++, "Descriptor", descriptor);
         builder.AddAttribute(sequence++, "IsSelected", isSelected);
         builder.AddAttribute(sequence++, "PanelId", AtlasDomIdentity.PanelId(HostId, item.Id));
         builder.AddAttribute(
@@ -415,12 +413,14 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(
             sequence++,
             "RecoveryKey",
-            (ContentTemplate, SandboxedFrameResolver));
+            (ContentTemplate, SandboxedFrameResolver, descriptor?.Revision ?? 0));
         builder.AddAttribute(sequence++, "OnError", OnError);
         builder.AddAttribute(
             sequence++,
-            "ChildContent",
-            (RenderFragment)(contentBuilder => RenderContent(contentBuilder, context)));
+            "SandboxedFrameResolver",
+            SandboxedFrameResolver);
+        builder.AddAttribute(sequence++, "ContentTemplate", ContentTemplate);
+        builder.AddAttribute(sequence++, "Generation", Generation);
         builder.AddComponentReferenceCapture(
             sequence++,
             value =>
@@ -452,70 +452,6 @@ internal sealed class AtlasGroupView : ComponentBase
         {
             keptAliveItemIds.RemoveAt(0);
         }
-    }
-
-    private void RenderContent(RenderTreeBuilder builder, AtlasContentContext context)
-    {
-        var sandbox = SandboxedFrameResolver?.Invoke(context);
-        if (sandbox is not null)
-        {
-            RenderSandboxedFrame(builder, context, sandbox);
-            return;
-        }
-
-        if (ContentTemplate is not null)
-        {
-            builder.AddContent(0, ContentTemplate(context));
-            return;
-        }
-
-        if (Registry.TryResolve(context.Reference.Kind, out var componentType))
-        {
-            builder.OpenComponent<DynamicComponent>(0);
-            builder.AddAttribute(1, "Type", componentType);
-            builder.AddAttribute(
-                2,
-                "Parameters",
-                new Dictionary<string, object?>
-                {
-                    [nameof(AtlasContentComponent.Content)] = context,
-                });
-            builder.CloseComponent();
-            return;
-        }
-
-        builder.OpenElement(0, "div");
-        builder.AddAttribute(1, "class", "atlas-v2-content-missing");
-        builder.AddAttribute(2, "data-atlas-content-kind", context.Reference.Kind);
-        builder.AddContent(3, "Content is not registered.");
-        builder.CloseElement();
-    }
-
-    private void RenderSandboxedFrame(
-        RenderTreeBuilder builder,
-        AtlasContentContext context,
-        AtlasSandboxedFrameOptions options)
-    {
-        builder.OpenElement(0, "iframe");
-        builder.AddAttribute(1, "class", "atlas-v2-sandbox-frame");
-        builder.AddAttribute(2, "data-atlas-sandbox-frame", "true");
-        builder.AddAttribute(3, "data-atlas-protocol-version", "1");
-        builder.AddAttribute(4, "data-atlas-workspace-id", Workspace.Id.Value);
-        builder.AddAttribute(5, "data-atlas-item-id", context.ItemId.Value);
-        builder.AddAttribute(
-            6,
-            "data-atlas-generation",
-            Generation.ToString(CultureInfo.InvariantCulture));
-        builder.AddAttribute(
-            7,
-            "data-atlas-max-message-bytes",
-            options.MaxMessageBytes.ToString(CultureInfo.InvariantCulture));
-        builder.AddAttribute(8, "sandbox", "allow-scripts");
-        builder.AddAttribute(9, "referrerpolicy", "no-referrer");
-        builder.AddAttribute(10, "loading", "lazy");
-        builder.AddAttribute(11, "title", options.Title);
-        builder.AddAttribute(12, "src", options.Source);
-        builder.CloseElement();
     }
 
     private async Task SelectAsync(DockItemId itemId)

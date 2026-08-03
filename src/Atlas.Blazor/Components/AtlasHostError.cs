@@ -22,6 +22,9 @@ public enum AtlasHostErrorCode
 
     /// <summary>An unexpected host failure was isolated.</summary>
     Unexpected = 6,
+
+    /// <summary>A Host-local Route/Map ownership collision invalidated one Kind.</summary>
+    ContentRegistrationConflict = 7,
 }
 
 /// <summary>Provides safe diagnostic data without exposing exception details.</summary>
@@ -37,7 +40,7 @@ public sealed class AtlasHostError
         LayoutNodeId? nodeId = null)
     {
         if (code is < AtlasHostErrorCode.InitializationModeConflict
-            or > AtlasHostErrorCode.Unexpected)
+            or > AtlasHostErrorCode.ContentRegistrationConflict)
         {
             throw new ArgumentOutOfRangeException(nameof(code), code, "Unknown host error code.");
         }

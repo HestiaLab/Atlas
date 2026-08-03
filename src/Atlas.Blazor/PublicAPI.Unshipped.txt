@@ -3,6 +3,12 @@ Atlas.Blazor.Components.AtlasDocumentGroupDefinition
 Atlas.Blazor.Components.AtlasContentLifetimeMode
 Atlas.Blazor.Components.AtlasContentLifetimeMode.Default = 0 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
 Atlas.Blazor.Components.AtlasContentLifetimeMode.KeepAliveWithinGroup = 1 -> Atlas.Blazor.Components.AtlasContentLifetimeMode
+Atlas.Blazor.Components.AtlasContentRoute
+Atlas.Blazor.Components.AtlasContentRoute.AtlasContentRoute() -> void
+Atlas.Blazor.Components.AtlasContentRoute.ChildContent.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasContentContext!>?
+Atlas.Blazor.Components.AtlasContentRoute.ChildContent.set -> void
+Atlas.Blazor.Components.AtlasContentRoute.Kind.get -> string!
+Atlas.Blazor.Components.AtlasContentRoute.Kind.set -> void
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.get -> Atlas.Core.Layout.EditorActivationPolicy
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.ActivationPolicy.set -> void
 Atlas.Blazor.Components.AtlasDocumentGroupDefinition.AtlasDocumentGroupDefinition() -> void
@@ -42,6 +48,7 @@ Atlas.Blazor.Components.AtlasHostError.NodeId.get -> Atlas.Core.LayoutNodeId?
 Atlas.Blazor.Components.AtlasHostError.WorkspaceId.get -> Atlas.Core.WorkspaceId?
 Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.ContentNotRegistered = 3 -> Atlas.Blazor.Components.AtlasHostErrorCode
+Atlas.Blazor.Components.AtlasHostErrorCode.ContentRegistrationConflict = 7 -> Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.ContentRenderFailed = 4 -> Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.DefinitionInvalid = 2 -> Atlas.Blazor.Components.AtlasHostErrorCode
 Atlas.Blazor.Components.AtlasHostErrorCode.FocusFailed = 5 -> Atlas.Blazor.Components.AtlasHostErrorCode
@@ -139,6 +146,8 @@ Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.get -> Microsoft.AspNetC
 Atlas.Blazor.Components.AtlasWorkspaceHost.ChildContent.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.get -> Microsoft.AspNetCore.Components.RenderFragment<Atlas.Blazor.Content.AtlasContentContext!>?
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentTemplate.set -> void
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentRoutes.get -> Microsoft.AspNetCore.Components.RenderFragment?
+Atlas.Blazor.Components.AtlasWorkspaceHost.ContentRoutes.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.get -> Atlas.Blazor.Components.WorkspaceContentLifetimeOptions!
 Atlas.Blazor.Components.AtlasWorkspaceHost.ContentLifetimeOptions.set -> void
 Atlas.Blazor.Components.AtlasWorkspaceHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
@@ -197,6 +206,7 @@ Atlas.Blazor.Content.AtlasContentContext.Commands.get -> Atlas.Blazor.Content.At
 Atlas.Blazor.Content.AtlasContentContext.Item.get -> Atlas.Core.Items.DockItem!
 Atlas.Blazor.Content.AtlasContentContext.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Blazor.Content.AtlasContentContext.Reference.get -> Atlas.Core.Items.ContentReference
+Atlas.Blazor.Content.AtlasContentContext.WorkspaceId.get -> Atlas.Core.WorkspaceId
 Atlas.Blazor.Content.AtlasEmptyStateContext
 Atlas.Blazor.Content.AtlasEmptyStateContext.GroupId.get -> Atlas.Core.LayoutNodeId
 Atlas.Blazor.Content.AtlasEmptyStateContext.GroupKind.get -> Atlas.Core.Items.DockItemKind

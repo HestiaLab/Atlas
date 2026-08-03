@@ -15,7 +15,7 @@ public static class AtlasServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IAtlasWorkspaceFactory, AtlasWorkspaceFactory>();
         services.TryAddScoped(
-            provider => new AtlasContentRegistry(
+            provider => new AtlasContentCatalog(
                 provider.GetServices<AtlasContentRegistration>()));
         return services;
     }
@@ -27,7 +27,7 @@ public static class AtlasServiceCollectionExtensions
         where TComponent : AtlasContentComponent
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.AddSingleton(AtlasContentRegistry.Create<TComponent>(kind));
+        services.AddSingleton(AtlasContentCatalog.Create<TComponent>(kind));
         return services;
     }
 }
