@@ -42,8 +42,14 @@ await builder.Build().RunAsync();
 
 ## 2. Register Your Content
 
-Atlas hosts your components inside tool panels and editor tabs. Register one
-provider component per content kind:
+Atlas hosts your components inside tool panels and editor tabs. Every valid
+`kind` has exactly one owner in an effective per-Host Content Catalog with
+three registration sources: startup DI, host-local declarative Routes, and a
+host-local functional Map. This section shows the DI source; Routes and the
+Map are covered in §5.
+
+Startup DI is the right choice when your content only needs
+`AtlasContentContext` and its injected services:
 
 ```csharp
 // Program.cs
@@ -54,6 +60,11 @@ builder.Services.AddAtlasContent<MyEditorContent>("my-editor");
 The `kind` string is the `ContentReference.Kind` you will use when declaring
 items. Later, the `AtlasContentContext` tells your provider which item is
 being rendered.
+
+Duplicate startup DI kinds fail the composition root deterministically. A
+duplicate host-local Route or Map kind produces a per-Kind
+`ContentRegistrationConflict` host diagnostic instead; unrelated Kinds keep
+rendering.
 
 ## 3. Declare A Workspace Definition (Programmatic)
 
@@ -134,32 +145,99 @@ public async ValueTask DisposeAsync()
 `WorkspaceResult<T>` tells you whether the factory call succeeded, and if not,
 the `DiagnosticId` for safe error display.
 
-## 5. Render The Host
+## 5. Render The Host And Register Content
 
 `AtlasWorkspaceHost` projects the workspace into the DOM. Give it the
-workspace, a content template, and optional chrome:
+workspace and optional chrome:
 
 ```razor
 <AtlasWorkspaceHost Workspace="@workspace"
                     WorkspaceOwnership="WorkspaceOwnership.External"
-                    ContentTemplate="@contentTemplate"
                     TopToolbarContent="@topToolbar"
                     StatusBarContent="@statusBar"
                     EnableInteractions="true" />
 ```
 
-The content template receives an `AtlasContentContext` and renders your
-provider component:
+The content template API was removed. Each item's `ContentReference.Kind` is
+resolved through one effective per-Host Content Catalog, and the three
+registration sources from §2 compose for distinct Kinds in the same Host.
+
+### 5.1 Declarative Route
+
+Declarative Routes render ordinary Razor content with normal parameters,
+callbacks, and fragments. The route's `ChildContent` is rendered only after a
+matching `ContentReference.Kind` is resolved by the Host:
+
+```razor
+<AtlasWorkspaceHost Workspace="@workspace"
+                    WorkspaceOwnership="WorkspaceOwnership.External"
+                    TopToolbarContent="@topToolbar"
+                    StatusBarContent="@statusBar"
+                    EnableInteractions="true">
+    <ContentRoutes>
+        <AtlasContentRoute Kind="product-actions">
+            <ChildContent Context="content">
+                <ProductTableActionsPanel
+                    ProductCount="@products.Count"
+                    OnClear="ClearProducts" />
+            </ChildContent>
+        </AtlasContentRoute>
+    </ContentRoutes>
+</AtlasWorkspaceHost>
+```
+
+Because the route renders a normal Razor component, every ordinary Blazor
+parameter shape works: values, `EventCallback` / `EventCallback<T>`,
+delegates, and `RenderFragment`.
+
+### 5.2 Functional Map
+
+The immutable `AtlasContentMap` binds typed parameters and callbacks in C#
+without exposing a component instance or a parameter dictionary:
 
 ```csharp
-contentTemplate = content => builder =>
-{
-    builder.OpenComponent<AtlasDemoContent>(0);
-    builder.SetKey(content.ItemId);
-    builder.AddAttribute(1, nameof(AtlasDemoContent.Content), content);
-    builder.CloseComponent();
-};
+contentMap = AtlasContentMap.Create(
+    map => map.MapComponent<BootstrapTablePanel>(
+        "bootstrap-table",
+        component => component.Bind(x => x.Items, _ => products)));
 ```
+
+```razor
+<AtlasWorkspaceHost Workspace="@workspace"
+                    WorkspaceOwnership="WorkspaceOwnership.External"
+                    ContentMap="@contentMap"
+                    EnableInteractions="true" />
+```
+
+Selectors must be direct public writable `[Parameter]` properties; methods,
+fields, nested members, indexers, `[CascadingParameter]`, and non-parameter
+properties are rejected. The Map is host configuration and stays immutable
+after `Create`.
+
+### 5.3 Cross-Panel Coordination
+
+Atlas does not route business messages between panels. Coordination works
+because content stays in the normal application scope: a callback mutates
+application-owned state, and Atlas delivers the current values on mount,
+remount, and the next render.
+
+The Demo shows Panel A clearing Panel B. The parent owns the product
+collection; Panel A (a Route) receives the count and a clear callback, Panel B
+(a Map) receives the collection:
+
+```csharp
+private void ClearProducts()
+{
+    // The collection is owned by this parent component. Clearing it mutates
+    // application state; unmounted Panel B reads the cleared value on remount.
+    products.Clear();
+    _ = InvokeAsync(StateHasChanged);
+}
+```
+
+Clicking **Clear** while Panel B is unmounted is safe: the cleared collection
+is delivered when Panel B next mounts. KeepAlive content receives the updated
+value on the next render without a remount.
 
 `WorkspaceOwnership` matters:
 

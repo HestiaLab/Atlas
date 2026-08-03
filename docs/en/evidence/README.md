@@ -11,6 +11,7 @@ holds on the current branch.
 
 | Document | Scope |
 |----------|-------|
+| [Content Catalog and Runtime Binding](./content-catalog-runtime-binding.md) | unified Content Catalog (DI + Route + Map), typed bindings, cross-Panel coordination, interaction-attach retry |
 | [P5 Drag and Dock](./p5-drag-and-dock.md) | drag, drop, interaction protocol, and related verification |
 | [P6 Persistence](./p6-persistence.md) | XML, restore, presets, and persistence verification |
 | [P7 Content Lifetime and Security](./p7-content-lifetime-security.md) | content lifetime, SandboxedFrame, and security boundaries |
