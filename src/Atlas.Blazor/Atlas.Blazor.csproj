@@ -21,4 +21,39 @@
     <Content Update="package-lock.json" Pack="false" />
     <Content Update="tsconfig.json" Pack="false" />
   </ItemGroup>
+
+  <!--
+    Inputs for the incremental atlas.js rebuild. MSBuild only compares
+    timestamped file lists, so these must be real ItemGroups (a raw glob
+    string in Inputs is never expanded and the target would run every build).
+  -->
+  <ItemGroup>
+    <AtlasClientScript Include="ClientScripts\**\*.ts" />
+    <AtlasClientScript Include="ClientScripts\**\*.json" />
+    <AtlasClientScript Include="package.json" />
+    <AtlasClientScript Include="package-lock.json" />
+    <AtlasClientScript Include="tsconfig.json" />
+  </ItemGroup>
+
+  <!--
+    Rebuild the bundled atlas.js whenever the TypeScript sources (or the npm
+    manifest) are newer than the generated bundle. The bundle is gitignored,
+    so a plain clone plus `dotnet build` would otherwise silently consume a
+    stale or missing atlas.js (drag sessions, attach retry, etc. regress).
+
+    Incremental: MSBuild compares the inputs above against the bundle output
+    and skips this target when the bundle is up to date. When npm is not
+    available (pure .NET build machine), we warn instead of failing so the
+    C# build still proceeds; the caller must run `npm run build:js` before
+    packing or serving.
+  -->
+  <Target Name="EnsureAtlasJsBundle"
+          BeforeTargets="BeforeBuild"
+          Inputs="@(AtlasClientScript)"
+          Outputs="$(MSBuildProjectDirectory)\wwwroot\atlas-v2\atlas.js">
+    <Exec Condition="'$(AtlasSkipJsBuild)' != 'true'"
+          Command="npm run build:js"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="WarnAndContinue" />
+  </Target>
 </Project>

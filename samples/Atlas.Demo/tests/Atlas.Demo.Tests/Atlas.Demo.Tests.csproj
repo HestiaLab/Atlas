@@ -20,4 +20,9 @@
       <Private>true</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\docs\en\design\samples\bmw_e9x_e8x.dbc"
+          Link="Samples\bmw_e9x_e8x.dbc"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

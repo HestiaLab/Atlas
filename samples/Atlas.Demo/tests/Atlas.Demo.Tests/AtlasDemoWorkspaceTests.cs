@@ -52,32 +52,41 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     }
 
     [Fact]
-    public void Editor_exposes_three_tabs_and_switches_content()
+    public void Editor_hosts_dbc_document_as_active_tab()
     {
         var cut = RenderComponent<AtlasDemoWorkspace>();
 
         cut.WaitForAssertion(
+            () => Assert.Single(
+                cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")));
+
+        cut.WaitForAssertion(
             () => Assert.Equal(
-                3,
-                cut.FindAll("[data-atlas-group-kind='document'] [role='tab']").Count));
+                "DBC Editor",
+                cut.Find("[data-atlas-group-kind='document'] [role='tab']")
+                    .GetAttribute("aria-label")));
 
-        Assert.Contains("Atlas.Demo ready", cut.Markup, StringComparison.Ordinal);
-
-        cut.InvokeAsync(
-            () => cut.Find("[role='tab'][aria-label='Workspace.razor']").Click());
         cut.WaitForAssertion(
             () => Assert.Contains(
-                "AtlasWorkspaceHost",
+                "Select a .dbc file in the explorer to edit it.",
                 cut.Markup,
                 StringComparison.Ordinal));
+    }
 
-        cut.InvokeAsync(
-            () => cut.Find("[role='tab'][aria-label='README.md']").Click());
+    [Fact]
+    public void Empty_slots_keep_toolbar_regions_without_panels()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
         cut.WaitForAssertion(
-            () => Assert.Contains(
-                "NuGet consumer sample",
-                cut.Markup,
-                StringComparison.Ordinal));
+            () =>
+            {
+                // The four empty tool groups still own their LogicalRegion slot.
+                Assert.Equal(4, cut.FindAll("[data-atlas-region-empty='true']").Count);
+                // Their panels are collapsed: hidden with no content extent.
+                Assert.Equal(4, cut.FindAll(".atlas-v2-group-collapsed").Count);
+                Assert.Equal(4, cut.FindAll(".atlas-v2-group-collapsed .atlas-v2-empty-state").Count);
+            });
     }
 
     [Fact]
@@ -92,13 +101,20 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                     .Where(element => element.GetAttribute("role") == "region")
                     .ToArray();
                 Assert.Equal(7, groups.Length);
-                Assert.All(groups, group => Assert.False(string.IsNullOrWhiteSpace(group.GetAttribute("aria-labelledby"))));
+
+                // Content-bearing groups (explorer, editor, properties) expose
+                // a named header; empty groups intentionally render no header.
+                var contentGroups = groups
+                    .Where(group => !string.IsNullOrWhiteSpace(group.GetAttribute("aria-labelledby")))
+                    .ToArray();
+                Assert.Equal(3, contentGroups.Length);
+                Assert.Equal(4, groups.Length - contentGroups.Length);
 
                 var documentTabList = cut.Find("[data-atlas-group-kind='document'] [role='tablist']");
                 Assert.False(string.IsNullOrWhiteSpace(documentTabList.GetAttribute("aria-label")));
 
                 var tabs = cut.FindAll("[data-atlas-group-kind='document'] [role='tab']");
-                Assert.Equal(3, tabs.Count);
+                Assert.Single(tabs);
                 Assert.All(tabs, tab => Assert.False(string.IsNullOrWhiteSpace(tab.GetAttribute("aria-controls"))));
 
                 var selectedTab = cut.Find(
@@ -140,8 +156,8 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                Assert.Equal(6, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
-                Assert.Equal(7, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
+                Assert.Equal(2, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
+                Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
                 Assert.Equal(6, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
                 Assert.All(
                     cut.FindAll("[role='separator'][data-atlas-split-id]"),
@@ -151,81 +167,6 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                         Assert.False(string.IsNullOrWhiteSpace(splitter.GetAttribute("aria-label")));
                     });
             });
-    }
-
-    [Fact]
-    public void Clear_products_while_panel_b_is_unmounted_updates_panel_a_count()
-    {
-        var cut = RenderComponent<AtlasDemoWorkspace>();
-
-        // Panel A (product actions) is active and shows the parent-owned count;
-        // Panel B (Products) is unmounted under the Default lifetime.
-        cut.WaitForAssertion(
-            () => Assert.Contains("3 products", cut.Markup, StringComparison.Ordinal));
-        Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
-
-        // Clear mutates the parent-owned collection; Panel A reflects it immediately
-        // even though Panel B is not mounted.
-        cut.InvokeAsync(() => cut.Find("[aria-label='Clear products']").Click());
-        cut.WaitForAssertion(
-            () => Assert.Contains("0 products", cut.Markup, StringComparison.Ordinal));
-        Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Products_panel_remounts_with_cleared_items_after_unmount()
-    {
-        var cut = RenderComponent<AtlasDemoWorkspace>();
-        cut.WaitForAssertion(
-            () => Assert.Contains("3 products", cut.Markup, StringComparison.Ordinal));
-
-        cut.InvokeAsync(() => cut.Find("[aria-label='Clear products']").Click());
-        cut.WaitForAssertion(
-            () => Assert.Contains("0 products", cut.Markup, StringComparison.Ordinal));
-
-        // Activating Products mounts it under Default lifetime; the fresh instance
-        // reads the current (cleared) collection and renders zero data rows.
-        cut.InvokeAsync(() => cut.Find("[role='tab'][aria-label='Products']").Click());
-        cut.WaitForAssertion(
-            () =>
-            {
-                Assert.Empty(cut.FindAll("[data-testid='products-table'] tbody tr"));
-                Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
-            });
-    }
-
-    [Fact]
-    public void Clearing_host_a_does_not_affect_host_b()
-    {
-        var first = RenderComponent<AtlasDemoWorkspace>();
-        var second = RenderComponent<AtlasDemoWorkspace>();
-        first.WaitForAssertion(
-            () => Assert.Contains("3 products", first.Markup, StringComparison.Ordinal));
-        second.WaitForAssertion(
-            () => Assert.Contains("3 products", second.Markup, StringComparison.Ordinal));
-
-        first.InvokeAsync(() => first.Find("[aria-label='Clear products']").Click());
-        first.WaitForAssertion(
-            () => Assert.Contains("0 products", first.Markup, StringComparison.Ordinal));
-        second.WaitForAssertion(
-            () => Assert.Contains("3 products", second.Markup, StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void Undo_restores_the_previous_editor_selection()
-    {
-        var cut = RenderComponent<AtlasDemoWorkspace>();
-        cut.WaitForElement("[role='tab'][aria-label='README.md']");
-
-        cut.InvokeAsync(
-            () => cut.Find("[role='tab'][aria-label='README.md']").Click());
-        cut.WaitForAssertion(
-            () => Assert.Contains("NuGet consumer sample", cut.Markup, StringComparison.Ordinal));
-
-        cut.InvokeAsync(
-            () => cut.Find("[aria-label='Undo layout change']").Click());
-        cut.WaitForAssertion(
-            () => Assert.Contains("Atlas.Demo ready", cut.Markup, StringComparison.Ordinal));
     }
 
     [Fact]

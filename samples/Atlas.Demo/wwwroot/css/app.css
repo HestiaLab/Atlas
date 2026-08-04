@@ -273,3 +273,69 @@ button { font: inherit; }
     .atlas-demo-markdown .markdown-body { padding-inline: 1rem; }
     .atlas-demo-verification { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
 }
+
+/* DBC Explorer / editor / properties panels */
+.dbc-tree, .dbc-editor, .dbc-property {
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #202124;
+    color: #cfd2d9;
+    font-size: 0.85rem;
+}
+
+.dbc-tree { padding: 0.5rem 0; }
+.dbc-tree-actions { display: flex; gap: 0.4rem; padding: 0 0.6rem 0.5rem; align-items: center; }
+.dbc-action {
+    background: #2f3136;
+    border: 1px solid #3a3c42;
+    border-radius: 0.3rem;
+    color: #d6d9df;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.dbc-action:hover { background: #3a3d43; }
+.dbc-action.primary { background: #2d5f5a; border-color: #3d7a72; }
+.dbc-action.active { background: #3d7a72; border-color: #4d948a; }
+.dbc-upload { display: inline-flex; align-items: center; color: #9aa0ab; cursor: pointer; }
+.dbc-upload input[type="file"] { display: none; }
+.dbc-empty { padding: 0.75rem 0.9rem; color: #8a909b; margin: 0; }
+.dbc-folder { margin-top: 0.15rem; }
+.dbc-folder-name { padding: 0.3rem 0.6rem; font-weight: 600; color: #b8bdc6; }
+.dbc-file { padding: 0.25rem 0.6rem 0.25rem 1.4rem; cursor: pointer; border-left: 2px solid transparent; }
+.dbc-file:hover { background: #2b2d31; }
+.dbc-file.selected { background: #2d5f5a; color: #eef2f4; border-left-color: #73c991; }
+
+.dbc-editor-toolbar { display: flex; gap: 0.4rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid #35373d; align-items: center; }
+.dbc-editor-file { flex: 1; color: #b8bdc6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dbc-editor-text { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.dbc-textarea {
+    flex: 1;
+    min-height: 0;
+    resize: none;
+    border: 0;
+    border-radius: 0;
+    background: #191a1d;
+    color: #c7cad0;
+    font: 0.8rem/1.6 "Cascadia Code", Consolas, monospace;
+    padding: 0.6rem 0.8rem;
+}
+.dbc-editor-actions { padding: 0.45rem 0.6rem; border-top: 1px solid #35373d; }
+.dbc-editor-table { flex: 1; overflow: auto; min-height: 0; }
+.dbc-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.dbc-table th, .dbc-table td { padding: 0.3rem 0.6rem; text-align: left; border-bottom: 1px solid #2e3035; white-space: nowrap; }
+.dbc-table th { position: sticky; top: 0; background: #25262a; color: #9aa0ab; font-weight: 600; }
+.dbc-signal-row td { color: #9aa0ab; }
+.dbc-link { background: none; border: 0; color: #73c991; cursor: pointer; padding: 0; font: inherit; text-align: left; }
+.dbc-link:hover { text-decoration: underline; }
+
+.dbc-property { padding: 0.6rem 0.8rem; gap: 0.6rem; }
+.dbc-property-header { display: flex; gap: 0.5rem; align-items: baseline; border-bottom: 1px solid #35373d; padding-bottom: 0.5rem; }
+.dbc-property-type { color: #73c991; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.dbc-property-name { font-weight: 600; color: #eef2f4; }
+.dbc-property-list { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.8rem; }
+.dbc-property-list dt { color: #8a909b; }
+.dbc-property-list dd { margin: 0; color: #d6d9df; }

@@ -15,34 +15,27 @@ internal static class AtlasDemoWorkspaceDefinition
             throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
         }
 
-        var project = Tool("project", "Project");
-        var structure = Tool("structure", "Structure");
-        var services = Tool("services", "Services");
-        var database = Tool("database", "Database", contentKind: "product-actions");
-        var products = Tool("products", "Products", contentKind: "bootstrap-table");
-        var terminal = Tool("terminal", "Terminal");
-        var problems = Tool("problems", "Problems");
-        var program = Document("program", "Program.cs", isPinned: true);
-        var workspace = Document("workspace", "Workspace.razor");
-        var readme = Document("readme", "README.md");
+        var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: "dbc-tree");
+        var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
+        var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: "dbc-editor");
 
-        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, project.Id);
-        var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, structure.Id);
+        // The six LogicalRegion slots are preserved as tool groups. Only the
+        // explorer and properties carry content; the remaining four groups are
+        // intentionally empty (no DockItems), keeping the Atlas six-region
+        // toolbar demonstration intact while the DBC demo fills three panels.
+        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, dbcTree.Id);
+        var leftLower = EmptyToolGroup("left-lower", LogicalRegion.InlineStartLower);
         var editor = new GroupNode(
             Id("editor"),
             DockItemKind.Document,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            new[] { program.Id, workspace.Id, readme.Id },
-            program.Id);
-        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, services.Id);
-        var rightLower = ToolGroup(
-            "right-lower",
-            LogicalRegion.InlineEndLower,
-            database.Id,
-            products.Id);
-        var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, terminal.Id);
-        var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, problems.Id);
+            new[] { dbcEditor.Id },
+            dbcEditor.Id);
+        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, dbcProperty.Id);
+        var rightLower = EmptyToolGroup("right-lower", LogicalRegion.InlineEndLower);
+        var bottomLeft = EmptyToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart);
+        var bottomRight = EmptyToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd);
 
         var leftDock = Split(
             "left-dock",
@@ -105,16 +98,9 @@ internal static class AtlasDemoWorkspaceDefinition
         };
         DockItem[] items =
         {
-            project,
-            structure,
-            services,
-            database,
-            products,
-            terminal,
-            problems,
-            program,
-            workspace,
-            readme,
+            dbcTree,
+            dbcProperty,
+            dbcEditor,
         };
         var toolBars = new[]
         {
@@ -123,14 +109,8 @@ internal static class AtlasDemoWorkspaceDefinition
         };
         var toolBarOrders = new[]
         {
-            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { project.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { structure.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { services.Id }),
-            new ToolBarOrderState(
-                LogicalRegion.InlineEndLower,
-                new[] { database.Id, products.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineStart, new[] { terminal.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineEnd, new[] { problems.Id }),
+            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { dbcTree.Id }),
+            new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { dbcProperty.Id }),
         };
 
         return new AtlasWorkspaceDefinition(
@@ -154,6 +134,22 @@ internal static class AtlasDemoWorkspaceDefinition
             GroupVisibility.Expanded,
             itemIds,
             itemIds[0],
+            logicalRegion: logicalRegion);
+    }
+
+    private static GroupNode EmptyToolGroup(string id, LogicalRegion logicalRegion)
+    {
+        // A persistent tool group with no items still owns its LogicalRegion,
+        // so the toolbar slot renders while the panel is collapsed: the group
+        // keeps its slot but contributes no content extent (atlas-v2-group-
+        // collapsed collapses the split track to 0).
+        return new GroupNode(
+            Id(id),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Collapsed,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
             logicalRegion: logicalRegion);
     }
 
@@ -185,12 +181,16 @@ internal static class AtlasDemoWorkspaceDefinition
             id);
     }
 
-    private static DockItem Document(string id, string title, bool isPinned = false)
+    private static DockItem Document(
+        string id,
+        string title,
+        bool isPinned = false,
+        string contentKind = "atlas-demo-editor")
     {
         return new DockItem(
             new DockItemId(id),
             DockItemKind.Document,
-            new ContentReference("atlas-demo-editor", id),
+            new ContentReference(contentKind, id),
             DockItemCapabilityPresets.Document,
             title,
             id,

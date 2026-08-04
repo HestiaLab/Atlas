@@ -1,0 +1,85 @@
+@namespace Atlas.Demo.Components
+@using Atlas.Demo.ViewModels
+@using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
+
+<div class="dbc-tree" data-testid="dbc-tree" aria-label="DBC Explorer">
+    <div class="dbc-tree-actions">
+        <button class="dbc-action" type="button"
+                @onclick="OnNewFolder">New folder</button>
+        <label class="dbc-upload">
+            Upload .dbc
+            <InputFile accept=".dbc" OnChange="OnUpload" />
+        </label>
+    </div>
+
+    @if (Model.Folders.Count == 0)
+    {
+        <p class="dbc-empty" data-testid="dbc-tree-empty">No DBC folders yet.</p>
+    }
+    else
+    {
+        @foreach (var folder in Model.Folders)
+        {
+            <div class="dbc-folder" data-testid="dbc-folder">
+                <div class="dbc-folder-name">📁 @folder.Name</div>
+                @foreach (var file in Model.FilesFor(folder.Name))
+                {
+                    <div class="dbc-file @(IsSelected(folder.Name, file.Name) ? "selected" : "")"
+                         data-testid="dbc-file"
+                         data-file-name="@file.Name"
+                         @onclick="() => Model.Select(folder.Name, file.Name)">
+                        📄 @file.Name
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DbcTreeModel Model { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        Model.StateChanged += OnModelChanged;
+    }
+
+    private void OnModelChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsSelected(string folder, string file)
+    {
+        return Model.SelectedFolder == folder && Model.SelectedFile == file;
+    }
+
+    private void OnNewFolder()
+    {
+        Model.NewFolder($"folder-{DateTime.Now.Ticks}");
+    }
+
+    private async Task OnUpload(InputFileChangeEventArgs e)
+    {
+        var folder = Model.Folders.Count > 0 ? Model.Folders[0].Name : "DBC";
+        if (Model.Folders.All(f => f.Name != folder))
+        {
+            Model.NewFolder(folder);
+        }
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 4 * 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
+            Model.Upload(folder, file.Name, content);
+        }
+    }
+
+    public void Dispose()
+    {
+        Model.StateChanged -= OnModelChanged;
+    }
+}

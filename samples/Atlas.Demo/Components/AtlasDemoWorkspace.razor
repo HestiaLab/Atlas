@@ -3,7 +3,9 @@
 @using Atlas.Blazor.Content
 @using Atlas.Core
 @using Atlas.Core.Changes
-@using Atlas.Demo.Models
+@using Atlas.Demo.Models.Dbc
+@using Atlas.Demo.Services
+@using Atlas.Demo.ViewModels
 
 <section class="atlas-demo-shell" aria-label="Atlas IDE consumer sample">
     @if (workspace is null)
@@ -18,25 +20,21 @@
                             StatusBarContent="@statusBar"
                             EnableInteractions="true">
             <ContentRoutes>
-                <AtlasContentRoute Kind="product-actions">
+                <AtlasContentRoute Kind="dbc-tree">
                     <ChildContent Context="content">
-                        <ProductTableActionsPanel ProductCount="@products.Count"
-                                                  OnClear="ClearProducts" />
+                        <DbcTreePanel Model="dbcTree" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="bootstrap-table">
+                <AtlasContentRoute Kind="dbc-editor">
                     <ChildContent Context="content">
-                        <BootstrapTablePanel Items="products" />
+                        <DbcEditorPanel Model="dbcEditor"
+                                        OnMessageSelectedCallback="ShowMessageProperties"
+                                        OnSignalSelectedCallback="ShowSignalProperties" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="atlas-demo-tool">
+                <AtlasContentRoute Kind="dbc-property">
                     <ChildContent Context="content">
-                        <AtlasDemoContent Content="content" />
-                    </ChildContent>
-                </AtlasContentRoute>
-                <AtlasContentRoute Kind="atlas-demo-editor">
-                    <ChildContent Context="content">
-                        <AtlasDemoContent Content="content" />
+                        <DbcPropertyPanel Model="dbcProperty" />
                     </ChildContent>
                 </AtlasContentRoute>
             </ContentRoutes>
@@ -49,12 +47,10 @@
 </section>
 
 @code {
-    private readonly List<ProductItem> products = new()
-    {
-        new("prod-1", "Alpha", 12.50m),
-        new("prod-2", "Beta", 7.25m),
-        new("prod-3", "Gamma", 99.00m),
-    };
+    private readonly DbcFileStore dbcStore = new();
+    private DbcTreeModel dbcTree = null!;
+    private DbcEditorModel dbcEditor = null!;
+    private DbcPropertyModel dbcProperty = null!;
     private readonly RenderFragment topToolbar;
     private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
@@ -95,6 +91,38 @@
 
         workspace = result.Value;
         workspace.Changed += OnWorkspaceChanged;
+
+        dbcTree = new DbcTreeModel(dbcStore);
+        dbcEditor = new DbcEditorModel(dbcStore);
+        dbcProperty = new DbcPropertyModel();
+        dbcTree.StateChanged += OnDbcSelectionChanged;
+    }
+
+    private void OnDbcSelectionChanged()
+    {
+        if (dbcTree.SelectedFolder is null || dbcTree.SelectedFile is null)
+        {
+            return;
+        }
+
+        var file = dbcStore.Find(dbcTree.SelectedFolder, dbcTree.SelectedFile);
+        if (file is null)
+        {
+            return;
+        }
+
+        dbcEditor.Open(dbcTree.SelectedFolder, file.Name, file.Content, file.Parsed);
+        dbcProperty.ShowFile(file);
+    }
+
+    private void ShowMessageProperties(DbcMessage message)
+    {
+        dbcProperty.ShowMessage(message);
+    }
+
+    private void ShowSignalProperties(DbcSignal signal)
+    {
+        dbcProperty.ShowSignal(signal);
     }
 
     private async Task UndoAsync()
@@ -119,16 +147,6 @@
         var result = await workspace.RedoAsync();
         operationStatus = result.Succeeded ? "Move redone" : "Nothing to redo";
         await InvokeAsync(StateHasChanged);
-    }
-
-    private void ClearProducts()
-    {
-        // The product collection is owned by this parent component. Clearing it
-        // mutates application state; mounted content re-reads it on the next
-        // render and unmounted content reads the cleared value when remounting.
-        products.Clear();
-        operationStatus = "Products cleared";
-        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
