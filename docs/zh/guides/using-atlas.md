@@ -8,7 +8,7 @@
 
 ## 1. 引用包
 
-Atlas 提供两个 NuGet 包。把它们加入你的 Blazor 项目：
+Atlas 提供一个 NuGet 包：`Atlas.Blazor`。把它加入你的 Blazor 项目：
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
@@ -16,13 +16,12 @@ Atlas 提供两个 NuGet 包。把它们加入你的 Blazor 项目：
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Atlas.Core" Version="0.0.0-dev" />
     <PackageReference Include="Atlas.Blazor" Version="0.0.0-dev" />
   </ItemGroup>
 </Project>
 ```
 
-`Atlas.Core` 与 UI 无关；`Atlas.Blazor` 依赖它并提供 Razor 组件。消费者从不引用 Atlas 源码项目。
+`Atlas.Blazor` 提供 Razor 组件并嵌入 `Atlas.Core.dll`（与 UI 无关的领域与操作引擎），因此一个包就够了。如果你在不依赖 `Atlas.Blazor` 的项目中直接使用 `Atlas.Core` 类型，才需要显式引用该包；大多数消费者无需如此。消费者从不引用 Atlas 源码项目。
 
 在 `Program.cs` 中注册一次服务：
 

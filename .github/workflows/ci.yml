@@ -77,5 +77,6 @@ jobs:
         working-directory: src/Atlas.Blazor
       - run: npm run build:js
         working-directory: src/Atlas.Blazor
-      - run: dotnet pack src/Atlas.Core/Atlas.Core.csproj --no-restore --configuration Release --output artifacts/packages
+      # Single-package distribution (ADR-0019): only Atlas.Blazor is packed;
+      # it embeds Atlas.Core.dll.
       - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages

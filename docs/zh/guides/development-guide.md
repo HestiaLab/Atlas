@@ -161,7 +161,7 @@ cd ../..
 2. 更新 Core/Blazor 对应 `PublicAPI.Unshipped.txt`。
 3. 添加编译时或行为 contract test。
 4. 更新 SRS/HLD/ADR/traceability 中真正受影响的部分。
-5. Pack 两个 NuGet 包并用独立 Demo 验证。
+5. Pack 单个 NuGet 包（Atlas.Blazor，嵌入 Atlas.Core）并用独立 Demo 验证。
 
 不要通过删除 baseline、降低 analyzer 或隐藏 warning 让 API 检查通过。
 
@@ -198,19 +198,15 @@ npm ci
 npm run build:js
 cd ../..
 
+# 单包发布（ADR-0019）：只发布 Atlas.Blazor，其内嵌 Atlas.Core.dll。
 # 0.0.0-dev 会重复使用同一包版本；先移除旧 artifact 和 Demo 的对应 NuGet 缓存。
-rm -f artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.core/0.0.0-dev \
-  samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
+rm -f artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
+rm -rf samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
 
-dotnet pack src/Atlas.Core/Atlas.Core.csproj \
-  --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
+sha256sum artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
 
 cd samples/Atlas.Demo
 dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
