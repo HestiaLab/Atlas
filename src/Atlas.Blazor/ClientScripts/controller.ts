@@ -14,6 +14,12 @@ import domMetadata from "./dom-metadata-manifest.json";
 import { AtlasSandboxController } from "./sandbox";
 
 const controllers = new Map<string, AtlasInteractionController>();
+// Monotonic drag-session counter shared across controller instances. Blazor
+// replaces the Host root element after a committed change, which disposes and
+// re-attaches the controller; a per-instance sequence would restart at 1 and
+// reuse session ids the host already consumed, so the second drag would be
+// rejected as a duplicate (consumedDragSessions).
+let globalDragSequence = 0;
 const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("Tab", "next-tab", true),
   binding("Tab", "previous-tab", true, true),
@@ -201,7 +207,8 @@ export class AtlasInteractionController {
       if (itemId && isDragSourceKind(sourceKind)) {
         const sourceGroupId = this.groupIdFrom(dragSource);
         this.cancelResize();
-        this.dragSequence += 1;
+        globalDragSequence += 1;
+        this.dragSequence = globalDragSequence;
         this.activeDrag = {
           source: dragSource,
           pointerId: event.pointerId,

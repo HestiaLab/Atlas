@@ -776,7 +776,7 @@ test("toolbar drag preview appears after the threshold, follows the pointer, and
   assert.equal(fixture.document.body.children.length, 0);
   const overlay = dragOverlay(fixture)!;
   assert.equal(overlay.dataset.atlasHostId, "drag-host");
-  assert.equal(overlay.dataset.atlasDragSessionId, "drag-host:1");
+  assert.match(overlay.dataset.atlasDragSessionId ?? "", /^drag-host:\d+$/);
   const preview = dragPreview(fixture)!;
   assert.equal(preview.className, "atlas-v2-drag-preview");
   assert.equal(preview.dataset.atlasDragPreview, "toolbar-entry");
@@ -929,21 +929,20 @@ test("toolbar tail scaffold wins over its parent region and commits the tail ind
   await flushCallbacks();
 
   assert.equal(fixture.messages.length, 1);
-  assert.deepEqual(fixture.messages[0], {
-    type: "dock-item",
-    protocolVersion: 1,
-    sessionId: "drag-host:1",
-    hostId: "drag-host",
-    workspaceId: "drag-workspace",
-    generation: 5,
-    itemId: "tool",
-    sourceKind: "toolbar-entry",
-    baseRevision: 12,
-    targetKind: "drop-scaffold",
-    targetGroupId: "right-upper",
-    logicalRegion: "InlineEndUpper",
-    insertionIndex: 1
-  });
+  const scaffoldMessage = fixture.messages[0]!;
+  assert.equal(scaffoldMessage.type, "dock-item");
+  assert.equal(scaffoldMessage.protocolVersion, 1);
+  assert.match(scaffoldMessage.sessionId, /^drag-host:\d+$/);
+  assert.equal(scaffoldMessage.hostId, "drag-host");
+  assert.equal(scaffoldMessage.workspaceId, "drag-workspace");
+  assert.equal(scaffoldMessage.generation, 5);
+  assert.equal(scaffoldMessage.itemId, "tool");
+  assert.equal(scaffoldMessage.sourceKind, "toolbar-entry");
+  assert.equal(scaffoldMessage.baseRevision, 12);
+  assert.equal(scaffoldMessage.targetKind, "drop-scaffold");
+  assert.equal(scaffoldMessage.targetGroupId, "right-upper");
+  assert.equal(scaffoldMessage.logicalRegion, "InlineEndUpper");
+  assert.equal(scaffoldMessage.insertionIndex, 1);
   fixture.controller.dispose();
 });
 
@@ -971,6 +970,48 @@ test("toolbar entry bottom half commits the after index matching the tail scaffo
   assert.equal(dock.targetKind, "toolbar-insertion");
   assert.equal(dock.insertionIndex, 2);
   fixture.controller.dispose();
+});
+
+test("re-attached controller does not reuse a consumed drag session id", async () => {
+  // The Host root element is replaced after a committed workspace change, so
+  // the controller is disposed and a fresh instance is attached. Drag session
+  // ids must stay monotonic across instances; otherwise the host rejects the
+  // second drag as a duplicate session (consumedDragSessions).
+  const first = dragFixture("toolbar-entry");
+  first.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 40, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  first.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 40, clientX: 5, clientY: 0
+  }));
+  first.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 40, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(first.messages.length, 1);
+  const firstMessage = first.messages[0] as { sessionId: string };
+  assert.match(firstMessage.sessionId, /^drag-host:\d+$/);
+  first.controller.dispose();
+
+  const second = dragFixture("toolbar-entry");
+  second.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 41, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  second.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 41, clientX: 5, clientY: 0
+  }));
+  second.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 41, clientX: 5, clientY: 0
+  }));
+  await flushCallbacks();
+  assert.equal(second.messages.length, 1);
+  const secondMessage = second.messages[0] as { sessionId: string };
+  assert.match(secondMessage.sessionId, /^drag-host:\d+$/);
+  assert.notEqual(secondMessage.sessionId, firstMessage.sessionId);
+  const firstSequence = Number(firstMessage.sessionId.split(":").pop());
+  const secondSequence = Number(secondMessage.sessionId.split(":").pop());
+  assert.equal(secondSequence, firstSequence + 1);
+  second.controller.dispose();
 });
 
 test("toolbar entry top half commits the before index", async () => {
@@ -1019,20 +1060,19 @@ test("document drag crosses threshold previews and commits one host-scoped inten
   await flushCallbacks();
 
   assert.equal(fixture.messages.length, 1);
-  assert.deepEqual(fixture.messages[0], {
-    type: "dock-item",
-    protocolVersion: 1,
-    sessionId: "drag-host:1",
-    hostId: "drag-host",
-    workspaceId: "drag-workspace",
-    generation: 5,
-    itemId: "document",
-    sourceKind: "document-tab",
-    baseRevision: 12,
-    targetKind: "document-center",
-    targetGroupId: "documents",
-    insertionIndex: 1
-  });
+  const documentMessage = fixture.messages[0]!;
+  assert.equal(documentMessage.type, "dock-item");
+  assert.equal(documentMessage.protocolVersion, 1);
+  assert.match(documentMessage.sessionId, /^drag-host:\d+$/);
+  assert.equal(documentMessage.hostId, "drag-host");
+  assert.equal(documentMessage.workspaceId, "drag-workspace");
+  assert.equal(documentMessage.generation, 5);
+  assert.equal(documentMessage.itemId, "document");
+  assert.equal(documentMessage.sourceKind, "document-tab");
+  assert.equal(documentMessage.baseRevision, 12);
+  assert.equal(documentMessage.targetKind, "document-center");
+  assert.equal(documentMessage.targetGroupId, "documents");
+  assert.equal(documentMessage.insertionIndex, 1);
   assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
   assert.equal(dragPreview(fixture), undefined);
   fixture.controller.dispose();
