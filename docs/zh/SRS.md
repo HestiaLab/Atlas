@@ -106,9 +106,13 @@ Application Window
 | Dock Region                  | Dock 区域                                | 可容纳 Dock Panel 的区域槽位，包括 Left Dock Upper / Left Dock Lower、Right Dock Upper / Right Dock Lower、Bottom Left Dock / Bottom Right Dock                           |
 | Dock Panel                   | Dock 面板                                | 位于 Dock Region中的工具窗口容器，可移动、折叠、自动隐藏，并通过 LT/RT 的 ToolBar Entry 切换                                                                                              |
 | Editor View（编辑器视图）           | 视图 / 编辑器视图                             | Editor Area 内部的编辑器子容器，承载一组 Editor Tab，并显示其中一个激活 Tab 的内容；分屏操作会创建多个 Editor View                                                                                |
-| Editor Tab                   | 标签页 / 编辑器标签页                           | Editor View 内的内容切换单元，包含内容标识、标题、参数及状态标记                                                                                                                       |
+| Editor Tab                   | 标签页 / 编辑器标签页                           | Editor View 内的内容切换单元，包含 DockItemId 视图身份、ContentReference、标题及展示状态                                                                                                  |
 | Splitter（分割条）                | 分割条                                    | 相邻区域、面板或视图之间的可拖拽分隔线，用于调整尺寸                                                                                                                                   |
-| Content Identifier（内容标识）     | 内容标识                                   | 开发者声明的、用于关联到具体组件的唯一字符串标识                                                                                                                                     |
+| Content Identifier（内容标识）     | 内容标识                                   | `ContentReference.Kind` 的历史别名；新合同直接使用 Kind 选择一个 Content Registration/Renderer                                                                                     |
+| ContentReference             | 内容引用                                   | Dock Item 持有的可持久化 `Kind + ResourceId` 对；它标识内容解析方式以及视图所代表的应用资源/会话，但不包含运行时绑定                                                                                         |
+| Kind                         | 内容种类                                   | ContentReference 中按 ordinal 比较的字符串，用于在 Effective Content Catalog 中选择一个 Content Registration/Renderer                                                                    |
+| ResourceId                   | 资源标识                                   | ContentReference 中由应用定义的字符串，用于标识某个 Kind 内的业务资源或会话                                                                                                              |
+| Runtime Binding              | 运行时绑定                                  | 应用提供且不持久化的强类型组件值、Callback、Delegate 或 Fragment，由 Blazor Renderer 生命周期应用                                                                                           |
 | Template Panel（模板面板）         | 模板面板                                   | Dock Panel 的生命周期类型；当面板内容被清空时保留为空面板                                                                                                                           |
 | Dynamic Panel（动态面板）          | 动态面板                                   | Dock Panel 的生命周期类型；当面板内容被清空时自动从布局中移除                                                                                                                         |
 | Template View（模板视图）          | 模板视图                                   | Editor View 的生命周期类型；最后一个 Tab 被移除时保留为空视图                                                                                                                      |
@@ -677,19 +681,27 @@ And Empty State包含 Dock Panel 容器和Empty State提示文本。
 REQ-F-006 🔴 [Actor: Application Developer]
 
 Title
-Content Identifier（内容标识）声明
+统一内容注册与解析
 
 Description
-系统应支持开发者为 Dock Panel（Dock 面板） 和 Editor Tab（编辑器标签页） 指定要渲染的内容组件。
-开发者通过声明方式将内容标识与具体组件关联，系统在渲染 Panel 或 Tab 时解析标识并渲染对应组件。
+系统应支持开发者将稳定的 ContentReference.Kind 与 Dock Panel（Dock 面板）或 Editor Tab（编辑器标签页）的唯一内容渲染器关联。启动期 DI 注册、Host-local 声明式 Route 和 Host-local 函数式 Map 应共同组成一个 Effective Content Catalog（有效内容目录），而不是形成相互 fallback 的多条渲染管线。
 
 Acceptance Criteria
 
-AC1：声明内容标识与组件的关联
+AC1：从支持的来源注册内容
 
-Given 开发者声明了内容标识与组件的关联
-When 系统渲染持有该内容标识的 Dock Panel 或 Editor Tab
-Then 系统应渲染开发者指定的组件作为内容
+Given 开发者通过启动期 DI、Host-local 声明式 Route 或 Host-local 函数式 Map 将 Kind 与渲染器关联
+When 系统渲染 ContentReference 持有该 Kind 的 Dock Panel 或 Editor Tab
+Then 系统应通过一个 Effective Content Catalog 解析该 Kind
+And 系统应由所属 Outlet 惰性渲染关联内容
+
+AC2：稳定的内容身份和视图身份
+
+Given 两个 Dock Item 持有相同的 ContentReference.Kind 和 ContentReference.ResourceId
+When 系统渲染这两个 Dock Item
+Then 两个 Item 可以通过同一个 Catalog Registration 解析
+And 每个 Item 应保留自己的 DockItemId 作为具体视图身份
+And Catalog 不应保存组件实例或业务资源状态
 ```
 
 ```
@@ -699,34 +711,50 @@ Title
 Editor Tab（编辑器标签页）内容渲染
 
 Description
-系统应在标签页持有有效Content Identifier（内容标识）时渲染该标识对应的组件作为标签页内容。
+系统应在标签页持有有效 ContentReference.Kind 时渲染该 Kind 选择的组件作为标签页内容。Content Identifier 仅保留为 Kind 的历史名称。
 
 Acceptance Criteria
 
-AC1：有效内容标识
+AC1：有效 ContentReference.Kind
 
-Given 标签页持有有效内容标识
-And 开发者已声明该内容标识与组件的关联
+Given 标签页持有包含有效 Kind 的 ContentReference
+And 开发者已声明该 Kind 与组件的关联
 When 系统渲染该标签页
-Then 系统应渲染该内容标识对应的组件作为标签页内容
+Then 系统应渲染该 Kind 选择的组件作为标签页内容
 ```
 
 ```
 REQ-F-008 🔴 [Actor: Application Developer]
 
 Title
-Editor Tab（编辑器标签页）参数传递
+内容组件运行时绑定
 
 Description
-系统应支持开发者在打开标签页时传入参数，并将参数传递至标签页内容组件。
+系统应支持开发者向内容组件提供强类型运行时值和交互回调。运行时绑定由应用拥有，并与可持久化的 ContentReference 和 DockItemId 身份分离。
 
 Acceptance Criteria
 
-AC1：传入参数
+AC1：应用运行时值和回调
 
-Given 开发者准备了参数集合
-When 开发者在打开标签页时传入该参数集合
-Then 标签页内容组件应收到与传入值一致的参数
+Given 开发者为内容组件绑定普通值、EventCallback、Delegate 或 RenderFragment
+When 系统挂载或更新该内容组件
+Then Blazor 应通过正常组件参数生命周期应用当前值
+And 内容组件应能调用包含它的应用所拥有的回调
+
+AC2：应用内容未挂载期间发生的状态变化
+
+Given 某内容组件当前未挂载
+And 另一个 Panel 修改了应用拥有的共享状态
+When 该内容组件稍后挂载
+Then 该组件应接收或读取最新共享状态
+And 系统不应为了传递该状态变化而临时创建组件实例
+
+AC3：运行时绑定不持久化
+
+Given 内容注册捕获了 Callback、Delegate、RenderFragment 或应用拥有的状态
+When 系统导出 Snapshot 或记录 Undo/Redo 历史
+Then 系统应只持久化布局身份和 ContentReference 值
+And 系统不应序列化捕获的运行时对象
 ```
 
 ```
@@ -4233,36 +4261,44 @@ Title
 Content Identifier（内容标识）未注册的错误处理
 
 Description
-系统应在Editor Tab（编辑器标签页）的内容标识未注册时在标签页内容区域显示错误提示，不抛出异常。
+当 Dock Panel（Dock 面板）或 Editor Tab（编辑器标签页）的 Kind 无法从 Effective Content Catalog 解析时，系统应保留该 Item 及其 ContentReference，在该 Item 内容区域显示安全的 unavailable placeholder，并且不抛出异常。
 
 Acceptance Criteria
 
-AC1：内容标识未注册
+AC1：ContentReference.Kind 未注册
 
-Given 标签页持有的内容标识未注册
-When 系统渲染该标签页内容
-Then 系统应在标签页内容区域显示错误提示
+Given Dock Item 持有的 ContentReference.Kind 未注册
+When 系统渲染该 Item 内容
+Then 系统应在该 Item 内容区域显示安全的 unavailable placeholder
 And 系统不抛出异常
+And DockItemId、布局位置和 ContentReference 应保留，供以后重新尝试解析
 ```
 
 ```
 REQ-F-120 🔴 [Actor: System]
 
 Title
-错误隔离在单个Editor Tab（编辑器标签页）范围内
+内容解析错误按失败范围隔离
 
 Description
-系统应保证某一标签页的Content Identifier（内容标识）未注册时其他标签页的内容和功能不受影响。
+AtlasWorkspaceHost 创建后，系统应按照失败所属范围进行隔离。Kind 缺失或发生 Host-local 冲突时，使用该 Kind 的每个 Item 都 unavailable，无关 Kind 保持正常；Trust/Sandbox Resolver、Renderer、Parameter Factory 或 rendering Callback 故障只隔离在对应 Item Outlet。启动期 DI 重复注册属于 REQ-F-122 管理的 composition-root failure，发生在两类 Host 隔离边界建立之前。
 
 Acceptance Criteria
 
-AC1：错误隔离
+AC1：per-Outlet 执行故障
 
-Given Editor View（编辑器视图）中存在多个标签页
-And 其中一个标签页的内容标识未注册
-When 系统渲染视图内容
-Then 其他标签页的内容和功能不应受到影响
-And 错误隔离在单个标签页范围内
+Given Workspace 中存在多个 Dock Item
+And 其中一个 Item 的 Trust/Sandbox Resolver、Renderer、Parameter Factory 或 rendering Callback 发生故障
+When 系统渲染 Workspace 内容
+Then 其他 Item 的内容和功能不应受到影响
+And 错误应隔离在受影响 Item 的 Outlet 内
+
+AC2：Kind 缺失或冲突
+
+Given 一个或多个 Dock Item 引用同一个缺失或发生 Host-local 冲突的 Kind
+When Host 解析该 Kind
+Then 使用该 Kind 的每个 Item 都应保留 DockItemId、布局位置和 ContentReference，并显示安全的 unavailable state
+And 使用无关 Kind 的 Item 应继续正常解析和工作
 ```
 
 ```
@@ -4288,19 +4324,27 @@ And 系统不抛出异常
 REQ-F-122 🔴 [Actor: Application Developer]
 
 Title
-重复注册Content Identifier（内容标识）的错误处理
+冲突内容注册的错误处理
 
 Description
-系统应在开发者重复注册相同的内容标识时返回错误，不覆盖已有注册。
+当多个 Registration 拥有同一个 Kind 时，系统应报告确定性冲突，不得根据注册顺序选择所有者。启动期 DI 重复注册属于 composition-root error；涉及 Host-local 声明式 Route 或函数式 Map 的冲突在 Host 创建后按 Kind 隔离。
 
 Acceptance Criteria
 
-AC1：重复声明
+AC1：启动期 DI 重复注册
 
-Given 开发者已声明了某个内容标识与组件的关联
-When 开发者以相同的内容标识重复声明关联
-Then 系统应返回错误指示内容标识已存在
-And 系统不覆盖已有声明
+Given 启动期 DI 对同一个 Kind 包含多个 Content Registration
+When composition root 构造 Content Registry
+Then 构造应以标明该 Kind 的确定性冲突失败
+And 系统不应根据注册顺序选择 Registration
+
+AC2：Host-local Catalog 冲突
+
+Given AtlasWorkspaceHost 合并启动期 DI、声明式 Route 和函数式 Map 来源
+When Route 或 Map Contribution 与另一个相同 Kind 的 Registration 冲突
+Then Host 应把该 Kind 标记为 unavailable，且不覆盖任一 Registration
+And 使用冲突 Kind 的 Item 应保留 DockItemId、布局位置和 ContentReference
+And 使用无关 Kind 的 Item 应继续正常解析
 ```
 
 ```
@@ -4436,22 +4480,30 @@ And 系统应回退至 Dock 层级布局初始状态
 REQ-F-128 🔴 [Actor: System]
 
 Title
-Editor Tab（编辑器标签页）内容组件异常隔离
+内容组件异常隔离
 
 Description
-系统应在标签页内容组件渲染过程中抛出异常时在该标签页内容区域显示Error Boundary（错误边界），
-其他标签页、Editor View（编辑器视图）和 Dock Panel（Dock 面板）不受影响。
+系统应在 Dock Panel（Dock 面板）或 Editor Tab（编辑器标签页）的 Trust/Sandbox Resolver、内容渲染器、Parameter Factory 或 rendering Callback 执行一次内容投影时抛出异常时，在该 Item 内容区域显示安全的 Error Boundary（错误边界）；其他 Item 和 Workspace chrome 不受影响。
 
 Acceptance Criteria
 
 AC1：组件渲染异常
 
-Given 标签页内容组件存在渲染缺陷
-When 该组件在渲染过程中抛出异常
-Then 系统应在该标签页内容区域显示错误边界
-And 显示异常摘要信息
-And 其他标签页、视图和 面板不受影响
-And 系统应记录错误日志
+Given Trust/Sandbox Resolver、内容渲染器、Parameter Factory 或 rendering Callback 存在缺陷
+When 它在投影某一个 Dock Item 时抛出异常
+Then 系统应在该 Item 内容区域显示通用错误摘要和 DiagnosticId
+And UI 不应显示 exception message、type 或 stack trace
+And 其他 Item 和 Workspace chrome 不受影响
+And 系统应记录通过 DiagnosticId 关联的诊断详情
+
+AC2：安全诊断关联
+
+Given 一次内容投影失败
+When 系统创建错误 UI 和内部诊断日志
+Then 系统应为该次失败生成新的不透明 DiagnosticId
+And 显示的该次失败与对应日志记录应使用同一个 DiagnosticId 关联
+And DiagnosticId 不应编码 WorkspaceId、ResourceId、DockItemId、异常类型或其他敏感值
+And 后续 Retry 再次失败时应获得新的 DiagnosticId
 ```
 
 ```
@@ -4722,9 +4774,9 @@ Then 系统应在下一次交互时应用新的动画设置
 | REQ-F-003 | 🔴  | Application Developer            | Dock 层级布局部分声明                                      |
 | REQ-F-004 | 🔴  | Application Developer            | Dock Panel（Dock 面板）区域名称映射                          |
 | REQ-F-005 | 🔴  | System                           | Dock Panel（Dock 面板）Empty State（空状态）显示              |
-| REQ-F-006 | 🔴  | Application Developer            | Content Identifier（内容标识）注册                         |
-| REQ-F-007 | 🔴  | System                           | Editor Tab（编辑器标签页）内容渲染                             |
-| REQ-F-008 | 🔴  | Application Developer            | Editor Tab（编辑器标签页）参数传递                             |
+| REQ-F-006 | 🔴  | Application Developer            | 统一内容注册与解析                                     |
+| REQ-F-007 | 🔴  | Application Developer            | Editor Tab（编辑器标签页）内容渲染                             |
+| REQ-F-008 | 🔴  | Application Developer            | 内容组件运行时绑定                                     |
 | REQ-F-009 | 🟡  | Application Developer / End User | Editor Tab（编辑器标签页）Pinned（固定标记）                     |
 | REQ-F-010 | 🟡  | Application Developer            | 自定义Empty State（空状态）模板                              |
 | REQ-F-011 | 🔴  | End User                         | 拖入Editor Tab（编辑器标签页）至空Editor View（编辑器视图）           |
@@ -4877,15 +4929,15 @@ Then 系统应在下一次交互时应用新的动画设置
 | 编号        | 优先级 | Actor                 | 标题                                |
 | --------- |:---:| --------------------- | --------------------------------- |
 | REQ-F-119 | 🔴  | System                | Content Identifier（内容标识）未注册的错误处理  |
-| REQ-F-120 | 🔴  | System                | 错误隔离在单个Editor Tab（编辑器标签页）范围内      |
+| REQ-F-120 | 🔴 | System | 内容解析错误按失败范围隔离 |
 | REQ-F-121 | 🔴  | Application Developer | 激活不存在Editor Tab（编辑器标签页）的错误处理      |
-| REQ-F-122 | 🔴  | Application Developer | 重复注册Content Identifier（内容标识）的错误处理 |
+| REQ-F-122 | 🔴  | Application Developer | 冲突内容注册的错误处理                  |
 | REQ-F-123 | 🔴  | System                | 非法布局数据的错误处理                       |
 | REQ-F-124 | 🔴  | Application Developer | Editor Tab（编辑器标签页）标识冲突的错误处理       |
 | REQ-F-125 | 🟡  | System                | 内部数据不一致的自修复                       |
 | REQ-F-126 | 🟡  | System                | 非致命问题降级处理                         |
 | REQ-F-127 | 🔴  | System                | 严重错误回退初始布局                        |
-| REQ-F-128 | 🔴  | System                | Editor Tab（编辑器标签页）内容组件异常隔离        |
+| REQ-F-128 | 🔴  | System                | 内容组件异常隔离                      |
 
 ### §3.10 边界条件与异常场景
 
@@ -4987,3 +5039,4 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | REQ-F-002     | Dock 层级布局空间结构                              | 勘误     | AC3 补齐缺失的 Then 步骤，修正 Given 残句                                                                              |
 | REQ-NF-002    | 浏览器兼容性                                     | 勘误     | AC1 移除硬编码需求编号范围（REQ-F-001 至 REQ-F-139），改为"§3 全部 REQ-F 需求"，避免随需求增删失效                                        |
 | —             | 全文一致性                                      | 勘误     | 2026-07-31 依据 ADR-0014 固定正式需求数为 150（F:142 + NF:8）；附录 A 与正式需求块一一对应；5 个历史删除编号与 9 个非规范性边界编号不计入覆盖率 |
+| REQ-F-006~008、REQ-F-119~120、REQ-F-122、REQ-F-128 | Content Catalog 与运行时绑定 | 修改 | 2026-08-03 依据 ADR-0018 将 DI、声明式 Route 和函数式 Map 统一为一个 Effective Content Catalog；冻结强类型运行时绑定、应用拥有的共享状态协作、确定性 Kind 冲突、缺失 Item 保留和安全的 scoped 诊断合同 |

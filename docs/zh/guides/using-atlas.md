@@ -39,7 +39,9 @@ await builder.Build().RunAsync();
 
 ## 2. 注册你的内容
 
-Atlas 在你的组件内部承载工具面板和编辑器标签页。为每种内容 kind 注册一个 provider 组件：
+Atlas 在你的组件内部承载工具面板和编辑器标签页。每个有效 `kind` 在一个 per-Host 的 Effective Content Catalog 中恰有一个所有者，注册来源有三种：启动期 DI、Host-local 声明式 Route、Host-local 函数式 Map。本节展示 DI 来源；Route 与 Map 见 §5。
+
+当你的内容只需要 `AtlasContentContext` 和注入的服务时，启动期 DI 是合适的选择：
 
 ```csharp
 // Program.cs
@@ -48,6 +50,8 @@ builder.Services.AddAtlasContent<MyEditorContent>("my-editor");
 ```
 
 `kind` 字符串就是声明条目时使用的 `ContentReference.Kind`。之后 `AtlasContentContext` 会告诉你的 provider 正在渲染哪个条目。
+
+重复的启动期 DI kind 会在 composition root 确定性失败。重复的 Host-local Route 或 Map kind 产生 per-Kind 的 `ContentRegistrationConflict` host 诊断；不相关的 Kind 继续渲染。
 
 ## 3. 声明工作区定义（编程式）
 
@@ -122,30 +126,81 @@ public async ValueTask DisposeAsync()
 
 `WorkspaceResult<T>` 告诉你工厂调用是否成功；失败时用 `DiagnosticId` 做安全错误显示。
 
-## 5. 渲染 Host
+## 5. 渲染 Host 并注册内容
 
-`AtlasWorkspaceHost` 把工作区投影到 DOM。给它工作区、内容模板和可选 chrome：
+`AtlasWorkspaceHost` 把工作区投影到 DOM。给它工作区和可选 chrome：
 
 ```razor
 <AtlasWorkspaceHost Workspace="@workspace"
                     WorkspaceOwnership="WorkspaceOwnership.External"
-                    ContentTemplate="@contentTemplate"
                     TopToolbarContent="@topToolbar"
                     StatusBarContent="@statusBar"
                     EnableInteractions="true" />
 ```
 
-内容模板接收 `AtlasContentContext` 并渲染你的 provider 组件：
+内容模板 API 已移除。每个条目的 `ContentReference.Kind` 通过一个 effective per-Host Content Catalog 解析，§2 的三种注册来源可以在同一个 Host 中为不同 Kind 共存。
+
+### 5.1 声明式 Route
+
+声明式 Route 用普通参数、回调和片段渲染标准 Razor 内容。Route 的 `ChildContent` 只在 Host 解析到匹配的 `ContentReference.Kind` 后才渲染：
+
+```razor
+<AtlasWorkspaceHost Workspace="@workspace"
+                    WorkspaceOwnership="WorkspaceOwnership.External"
+                    TopToolbarContent="@topToolbar"
+                    StatusBarContent="@statusBar"
+                    EnableInteractions="true">
+    <ContentRoutes>
+        <AtlasContentRoute Kind="product-actions">
+            <ChildContent Context="content">
+                <ProductTableActionsPanel
+                    ProductCount="@products.Count"
+                    OnClear="ClearProducts" />
+            </ChildContent>
+        </AtlasContentRoute>
+    </ContentRoutes>
+</AtlasWorkspaceHost>
+```
+
+因为 Route 渲染的是普通 Razor 组件，所有常规 Blazor 参数形态都可用：值、`EventCallback` / `EventCallback<T>`、委托和 `RenderFragment`。
+
+### 5.2 函数式 Map
+
+不可变的 `AtlasContentMap` 在 C# 中绑定类型化参数和回调，不暴露组件实例或参数字典：
 
 ```csharp
-contentTemplate = content => builder =>
-{
-    builder.OpenComponent<AtlasDemoContent>(0);
-    builder.SetKey(content.ItemId);
-    builder.AddAttribute(1, nameof(AtlasDemoContent.Content), content);
-    builder.CloseComponent();
-};
+contentMap = AtlasContentMap.Create(
+    map => map.MapComponent<BootstrapTablePanel>(
+        "bootstrap-table",
+        component => component.Bind(x => x.Items, _ => products)));
 ```
+
+```razor
+<AtlasWorkspaceHost Workspace="@workspace"
+                    WorkspaceOwnership="WorkspaceOwnership.External"
+                    ContentMap="@contentMap"
+                    EnableInteractions="true" />
+```
+
+选择器必须是直接公开可写的 `[Parameter]` 属性；方法、字段、嵌套成员、索引器、`[CascadingParameter]` 和非参数属性会被拒绝。Map 是 Host 配置，`Create` 之后保持不可变。
+
+### 5.3 跨 Panel 协调
+
+Atlas 不在 Panel 之间路由业务消息。协调之所以可行，是因为内容保持在普通应用作用域内：回调修改应用拥有的状态，Atlas 在挂载、重新挂载和下一次渲染时传递当前值。
+
+Demo 展示 Panel A 清空 Panel B。父组件拥有产品集合；Panel A（Route）接收数量和清空回调，Panel B（Map）接收集合：
+
+```csharp
+private void ClearProducts()
+{
+    // 集合由该父组件拥有。清空它修改应用状态；
+    // 未挂载的 Panel B 在重新挂载时读到清空后的值。
+    products.Clear();
+    _ = InvokeAsync(StateHasChanged);
+}
+```
+
+在 Panel B 未挂载时点击 **Clear** 是安全的：清空后的集合会在 Panel B 下次挂载时送达。KeepAlive 内容在下一次渲染收到更新值，不需要重新挂载。
 
 `WorkspaceOwnership` 很重要：
 

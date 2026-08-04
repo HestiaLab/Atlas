@@ -18,7 +18,8 @@ internal static class AtlasDemoWorkspaceDefinition
         var project = Tool("project", "Project");
         var structure = Tool("structure", "Structure");
         var services = Tool("services", "Services");
-        var database = Tool("database", "Database");
+        var database = Tool("database", "Database", contentKind: "product-actions");
+        var products = Tool("products", "Products", contentKind: "bootstrap-table");
         var terminal = Tool("terminal", "Terminal");
         var problems = Tool("problems", "Problems");
         var program = Document("program", "Program.cs", isPinned: true);
@@ -35,7 +36,11 @@ internal static class AtlasDemoWorkspaceDefinition
             new[] { program.Id, workspace.Id, readme.Id },
             program.Id);
         var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, services.Id);
-        var rightLower = ToolGroup("right-lower", LogicalRegion.InlineEndLower, database.Id);
+        var rightLower = ToolGroup(
+            "right-lower",
+            LogicalRegion.InlineEndLower,
+            database.Id,
+            products.Id);
         var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, terminal.Id);
         var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, problems.Id);
 
@@ -104,6 +109,7 @@ internal static class AtlasDemoWorkspaceDefinition
             structure,
             services,
             database,
+            products,
             terminal,
             problems,
             program,
@@ -120,7 +126,9 @@ internal static class AtlasDemoWorkspaceDefinition
             new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { project.Id }),
             new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { structure.Id }),
             new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { services.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineEndLower, new[] { database.Id }),
+            new ToolBarOrderState(
+                LogicalRegion.InlineEndLower,
+                new[] { database.Id, products.Id }),
             new ToolBarOrderState(LogicalRegion.BlockEndInlineStart, new[] { terminal.Id }),
             new ToolBarOrderState(LogicalRegion.BlockEndInlineEnd, new[] { problems.Id }),
         };
@@ -137,15 +145,15 @@ internal static class AtlasDemoWorkspaceDefinition
     private static GroupNode ToolGroup(
         string id,
         LogicalRegion logicalRegion,
-        DockItemId itemId)
+        params DockItemId[] itemIds)
     {
         return new GroupNode(
             Id(id),
             DockItemKind.Tool,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            new[] { itemId },
-            itemId,
+            itemIds,
+            itemIds[0],
             logicalRegion: logicalRegion);
     }
 
@@ -166,12 +174,12 @@ internal static class AtlasDemoWorkspaceDefinition
             secondId);
     }
 
-    private static DockItem Tool(string id, string title)
+    private static DockItem Tool(string id, string title, string contentKind = "atlas-demo-tool")
     {
         return new DockItem(
             new DockItemId(id),
             DockItemKind.Tool,
-            new ContentReference("atlas-demo-tool", id),
+            new ContentReference(contentKind, id),
             DockItemCapabilityPresets.Tool,
             title,
             id);

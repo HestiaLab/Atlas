@@ -15,6 +15,7 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
     private IJSObjectReference? module;
     private IJSObjectReference? controller;
     private WorkspaceId? controllerWorkspaceId;
+    private string? controllerRootId;
     private bool disposed;
 
     internal AtlasRootInteractionController(
@@ -54,13 +55,19 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
             return;
         }
 
-        if (root.Context is null)
-        {
-            return;
-        }
-
         if (controller is not null && controllerWorkspaceId != workspaceId)
         {
+            await DisposeControllerAsync();
+        }
+
+        if (controller is not null
+            && controllerRootId is not null
+            && !string.Equals(controllerRootId, root.Id, StringComparison.Ordinal))
+        {
+            // Blazor replaced the Host root element during a re-render (for
+            // example after a workspace revision change). The controller's
+            // event listeners are still bound to the detached old element, so
+            // dispose and re-attach against the live element.
             await DisposeControllerAsync();
         }
 
@@ -93,13 +100,23 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
             module ??= await jsRuntime.InvokeAsync<IJSObjectReference>(
                 "import",
                 ModulePath);
+
+            // Blazor's ElementReference reviver may not have resolved the
+            // Host root yet when the render batch's DOM application races
+            // OnAfterRenderAsync in WebAssembly (the VS debug proxy makes
+            // this window wider). When root.Context is null, pass null so
+            // resolveHostElement falls back to the stable data-atlas-host-id
+            // attribute; if the element is not in the DOM yet it throws
+            // ATLAS-INTERACTION-ATTACH-RETRY and the host retries on the
+            // next render instead of silently leaving the controller detached.
             controller = await module.InvokeAsync<IJSObjectReference>(
                 "attachAtlasController",
-                root,
+                root.Context is null ? null : root,
                 identity,
                 receiverReference,
                 options);
             controllerWorkspaceId = workspaceId;
+            controllerRootId = root.Id;
             return;
         }
 
@@ -140,6 +157,7 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
         var current = controller;
         controller = null;
         controllerWorkspaceId = null;
+        controllerRootId = null;
         if (current is null)
         {
             return;

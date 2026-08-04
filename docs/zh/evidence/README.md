@@ -11,6 +11,7 @@
 
 | 文档 | 范围 |
 |------|------|
+| [Content Catalog and Runtime Binding](./content-catalog-runtime-binding.md) | 统一 Content Catalog（DI + Route + Map）、类型化绑定、跨 Panel 协作、interaction attach 重试 |
 | [P5 Drag and Dock](./p5-drag-and-dock.md) | 拖拽、投放、交互协议和相关验证 |
 | [P6 Persistence](./p6-persistence.md) | XML、restore、preset 和持久化验证 |
 | [P7 Content Lifetime and Security](./p7-content-lifetime-security.md) | 内容生命周期、SandboxedFrame 和安全边界 |

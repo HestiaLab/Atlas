@@ -1,5 +1,4 @@
 #nullable enable
-using Atlas.Blazor.DependencyInjection;
 using Atlas.Demo.Components;
 using Atlas.Demo.Pages;
 using Bunit;
@@ -22,7 +21,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
 
     public AtlasDemoWorkspaceTests()
     {
-        Services.AddAtlasWorkspace();
+        Services.AddAtlasDemoServices();
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
@@ -142,7 +141,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
             () =>
             {
                 Assert.Equal(6, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
-                Assert.Equal(6, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
+                Assert.Equal(7, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
                 Assert.Equal(6, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
                 Assert.All(
                     cut.FindAll("[role='separator'][data-atlas-split-id]"),
@@ -152,6 +151,64 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                         Assert.False(string.IsNullOrWhiteSpace(splitter.GetAttribute("aria-label")));
                     });
             });
+    }
+
+    [Fact]
+    public void Clear_products_while_panel_b_is_unmounted_updates_panel_a_count()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        // Panel A (product actions) is active and shows the parent-owned count;
+        // Panel B (Products) is unmounted under the Default lifetime.
+        cut.WaitForAssertion(
+            () => Assert.Contains("3 products", cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
+
+        // Clear mutates the parent-owned collection; Panel A reflects it immediately
+        // even though Panel B is not mounted.
+        cut.InvokeAsync(() => cut.Find("[aria-label='Clear products']").Click());
+        cut.WaitForAssertion(
+            () => Assert.Contains("0 products", cut.Markup, StringComparison.Ordinal));
+        Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Products_panel_remounts_with_cleared_items_after_unmount()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+        cut.WaitForAssertion(
+            () => Assert.Contains("3 products", cut.Markup, StringComparison.Ordinal));
+
+        cut.InvokeAsync(() => cut.Find("[aria-label='Clear products']").Click());
+        cut.WaitForAssertion(
+            () => Assert.Contains("0 products", cut.Markup, StringComparison.Ordinal));
+
+        // Activating Products mounts it under Default lifetime; the fresh instance
+        // reads the current (cleared) collection and renders zero data rows.
+        cut.InvokeAsync(() => cut.Find("[role='tab'][aria-label='Products']").Click());
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Empty(cut.FindAll("[data-testid='products-table'] tbody tr"));
+                Assert.DoesNotContain("Alpha", cut.Markup, StringComparison.Ordinal);
+            });
+    }
+
+    [Fact]
+    public void Clearing_host_a_does_not_affect_host_b()
+    {
+        var first = RenderComponent<AtlasDemoWorkspace>();
+        var second = RenderComponent<AtlasDemoWorkspace>();
+        first.WaitForAssertion(
+            () => Assert.Contains("3 products", first.Markup, StringComparison.Ordinal));
+        second.WaitForAssertion(
+            () => Assert.Contains("3 products", second.Markup, StringComparison.Ordinal));
+
+        first.InvokeAsync(() => first.Find("[aria-label='Clear products']").Click());
+        first.WaitForAssertion(
+            () => Assert.Contains("0 products", first.Markup, StringComparison.Ordinal));
+        second.WaitForAssertion(
+            () => Assert.Contains("3 products", second.Markup, StringComparison.Ordinal));
     }
 
     [Fact]

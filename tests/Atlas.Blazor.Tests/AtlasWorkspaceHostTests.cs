@@ -13,6 +13,7 @@ using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Bunit;
+using Bunit.Web.AngleSharp;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.RenderTree;
@@ -32,6 +33,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         Services.AddAtlasWorkspace();
         trackingFactory = new TrackingWorkspaceFactory(new AtlasWorkspaceFactory());
         Services.AddSingleton<IAtlasWorkspaceFactory>(trackingFactory);
+        Services.AddSingleton(new ProjectionProbe());
+        Services.AddAtlasContent<ResourceTextContent>("document");
+        Services.AddAtlasContent<ResourceTextContent>("tool");
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
@@ -50,25 +54,18 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     [Fact]
     public void Declarative_definition_creates_group_tab_and_content()
     {
-        var projected = false;
+        var probe = Services.GetRequiredService<ProjectionProbe>();
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("declarative"))
-                .Add(component => component.ChildContent, DocumentDeclaration("Initial title"))
-                .Add(
-                    component => component.ContentTemplate,
-                    context => builder =>
-                    {
-                        projected = context.Commands is not null;
-                        builder.AddContent(0, context.Reference.ResourceId);
-                    }));
+                .Add(component => component.ChildContent, DocumentDeclaration("Initial title")));
 
         cut.WaitForAssertion(
             () =>
             {
-                Assert.True(projected);
+                Assert.True(probe.CommandsAvailable);
                 Assert.Equal("Initial title", cut.Find(".atlas-v2-item-title").TextContent);
-                Assert.Equal("resource", cut.Find(".atlas-v2-content-outlet").TextContent);
+                Assert.Equal("Initial title content", cut.Find(".atlas-v2-content-outlet").TextContent);
                 Assert.Single(cut.FindAll(".atlas-v2-group-document"));
                 Assert.Single(cut.FindAll(".atlas-v2-tab-strip"));
             });
@@ -80,8 +77,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("reconcile"))
-                .Add(component => component.ChildContent, DocumentDeclaration("Before"))
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DocumentDeclaration("Before")));
+
         cut.WaitForAssertion(() => Assert.NotNull(trackingFactory.LastWorkspace));
         var workspace = trackingFactory.LastWorkspace!;
         Assert.Equal(0, workspace.ExecuteCount);
@@ -90,8 +87,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         cut.SetParametersAndRender(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("reconcile"))
-                .Add(component => component.ChildContent, DocumentDeclaration("After"))
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DocumentDeclaration("After")));
+
 
         cut.WaitForAssertion(
             () =>
@@ -109,16 +106,16 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("invalid"))
-                .Add(component => component.ChildContent, DocumentDeclaration("Committed"))
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DocumentDeclaration("Committed")));
+
         cut.WaitForAssertion(() => Assert.NotNull(trackingFactory.LastWorkspace));
         var workspace = trackingFactory.LastWorkspace!;
 
         cut.SetParametersAndRender(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("invalid"))
-                .Add(component => component.ChildContent, DuplicateDocumentDeclaration())
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DuplicateDocumentDeclaration()));
+
 
         cut.WaitForAssertion(
             () =>
@@ -136,8 +133,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("runtime"))
-                .Add(component => component.ChildContent, DocumentDeclaration("Declared"))
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DocumentDeclaration("Declared")));
+
         cut.WaitForAssertion(() => Assert.NotNull(trackingFactory.LastWorkspace));
         var workspace = trackingFactory.LastWorkspace!;
         var runtime = Document(
@@ -153,8 +150,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         cut.SetParametersAndRender(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("runtime"))
-                .Add(component => component.ChildContent, DocumentDeclaration("Updated"))
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, DocumentDeclaration("Updated")));
+
 
         cut.WaitForAssertion(
             () =>
@@ -195,8 +192,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, workspace)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, workspace));
+
 
         Assert.Equal(2, cut.FindAll(".atlas-v2-split").Count);
         Assert.Single(cut.FindAll(".atlas-v2-group-tool"));
@@ -213,8 +210,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("twenty-panels"))
                 .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ChildContent, TwentyToolDeclaration())
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.ChildContent, TwentyToolDeclaration()));
+
 
         cut.WaitForAssertion(
             () => Assert.Equal(20, cut.FindAll("[data-atlas-toolbar-entry]").Count));
@@ -227,8 +224,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".atlas-v2-toolbar")));
         var start = cut.Find("[data-atlas-toolbar-side='inline-start']");
@@ -252,8 +249,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".atlas-v2-toolbar")));
         var start = cut.Find("[data-atlas-toolbar-side='inline-start']");
@@ -271,8 +268,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         var region = cut.Find("[data-atlas-toolbar-region='InlineStartUpper']");
         var scaffold = region.QuerySelector(":scope > [data-atlas-drop-scaffold]");
@@ -292,8 +289,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
         var expectedSplitIds = new[]
         {
             "bottom-dock",
@@ -385,8 +382,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         var result = await workspace.ExecuteAsync(
             new MoveToolOperation(
@@ -419,8 +416,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         var root = cut.Find(".atlas-v2-workspace");
         Assert.Equal("region", root.GetAttribute("role"));
@@ -461,8 +458,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         var icon = cut.Find(
             "[data-atlas-toolbar-entry] > .atlas-v2-item-icon[data-atlas-icon='tool-icon']");
@@ -476,8 +473,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
         var withoutStatusBar = ProjectedAttributeSequence(
             cut.Instance,
             "data-atlas-overlay-root",
@@ -511,8 +508,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var workspace = CreateWorkspace(ProjectionDefinition());
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, workspace)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, workspace));
+
         Assert.Single(cut.FindAll(".atlas-v2-toolbar"));
 
         await workspace.ExecuteAsync(
@@ -592,7 +589,6 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.ContentTemplate, ContentText)
                 .Add(
                     component => component.DocumentEmptyTemplate,
                     _ => _ => throw new InvalidOperationException(
@@ -651,7 +647,6 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.ContentTemplate, ContentText)
                 .Add(
                     component => component.OnError,
                     EventCallback.Factory.Create<AtlasHostError>(
@@ -679,12 +674,12 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var second = CreateWorkspace(DocumentDefinition("second", "Second"));
         var firstCut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, first)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, first));
+
         var secondCut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, second)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, second));
+
 
         await first.ExecuteAsync(
             new UpdateItemPresentationOperation(
@@ -711,8 +706,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 .Add(component => component.Workspace, tracked)
                 .Add(
                     component => component.WorkspaceOwnership,
-                    WorkspaceOwnership.Host)
-                .Add(component => component.ContentTemplate, ContentText));
+                    WorkspaceOwnership.Host));
+
         Assert.Equal(1, tracked.ChangedSubscriptions);
         Assert.Equal(1, tracked.DomainEventSubscriptions);
 
@@ -734,14 +729,14 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, first)
-                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.Host)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.Host));
+
 
         cut.SetParametersAndRender(
             parameters => parameters
                 .Add(component => component.Workspace, second)
-                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.Host)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.Host));
+
 
         cut.WaitForAssertion(
             () =>
@@ -762,8 +757,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, tracked)
-                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.External)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.External));
+
 
         await cut.Instance.DisposeAsync();
 
@@ -788,8 +783,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                             isLocked: true,
                             cssClass: "custom-splitter",
                             canCollapseFirst: true)
-                        : null)
-                .Add(component => component.ContentTemplate, ContentText));
+                        : null));
+
 
         var root = cut.Find("[data-atlas-node-id='root']");
         var splitter = root.QuerySelector("[data-atlas-split-id='root']");
@@ -885,8 +880,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 .Add(component => component.EnableInteractions, false)
                 .Add(
                     component => component.ChildContent,
-                    SplitDeclaration(isLocked: false, "initial-splitter"))
-                .Add(component => component.ContentTemplate, ContentText));
+                    SplitDeclaration(isLocked: false, "initial-splitter")));
+
         cut.WaitForAssertion(
             () => Assert.Contains(
                 "initial-splitter",
@@ -901,8 +896,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 .Add(component => component.EnableInteractions, false)
                 .Add(
                     component => component.ChildContent,
-                    SplitDeclaration(isLocked: true, "updated-splitter"))
-                .Add(component => component.ContentTemplate, ContentText));
+                    SplitDeclaration(isLocked: true, "updated-splitter")));
+
 
         cut.WaitForAssertion(
             () =>
@@ -926,12 +921,12 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             CreateWorkspace(DocumentDefinition("interaction-second", "Second"));
         var first = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, firstWorkspace)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, firstWorkspace));
+
         var second = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, secondWorkspace)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, secondWorkspace));
+
 
         first.WaitForAssertion(
             () => Assert.Equal(
@@ -959,8 +954,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             CreateWorkspace(ProjectionDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(
                 module.Invocations["attachAtlasController"]));
@@ -1042,8 +1037,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             CreateWorkspace(TwoTabsDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(
                 module.Invocations["attachAtlasController"]));
@@ -1121,8 +1116,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(TwoTabsDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1207,8 +1202,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(ProjectionDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1345,8 +1340,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(TwoTabsDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1393,8 +1388,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1455,8 +1450,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(CrossSideToolMoveDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1513,8 +1508,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(CrossSideToolMoveDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1566,8 +1561,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1633,8 +1628,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var tracked = new TrackingWorkspace(CreateWorkspace(ThreeToolEntriesDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1698,8 +1693,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     selectSecond: true)));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1768,8 +1763,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     selectSecond: true)));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1839,8 +1834,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     selectSecond: true)));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1897,8 +1892,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     selectSecond: true)));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(module.Invocations["attachAtlasController"]));
         var receiverReference = module.Invocations["attachAtlasController"]
@@ -1942,6 +1937,116 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Interaction_controller_stays_attached_when_host_root_is_preserved()
+    {
+        // The Host wraps its content-route collector in a keyed CascadingValue.
+        // Keys must be stable identities; a per-render new object as key makes
+        // Blazor destroy and recreate the whole subtree — including the
+        // workspace root element — on every re-render. That replaced root
+        // severs the controller's pointer listeners and forced the defensive
+        // dispose/re-attach path (and, after a re-attach, drag session ids
+        // restarted at 1, colliding with consumed sessions). With a stable key
+        // the root element is preserved across revision changes and the
+        // controller stays attached for the life of the host.
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut.WaitForAssertion(
+            () => Assert.True(
+                module.Invocations["attachAtlasController"].Count >= 1));
+        var attachesBefore = module.Invocations["attachAtlasController"].Count;
+        var disposesBefore = module.Invocations["disposeAtlasController"].Count;
+        var rootBefore = cut.Find(".atlas-v2-workspace");
+        var revBefore = rootBefore.GetAttribute("data-atlas-revision");
+
+        // Commit a real interaction → workspace revision change → Host
+        // re-render. The root element must be preserved, not replaced.
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Last().Arguments[2]!;
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1);
+
+        cut.WaitForAssertion(() =>
+            Assert.NotEqual(
+                revBefore,
+                cut.Find(".atlas-v2-workspace").GetAttribute("data-atlas-revision")));
+
+        // The same DOM node must still be in the tree, and the controller must
+        // NOT have been disposed and re-attached. Compare the underlying
+        // AngleSharp node (Find returns a per-call wrapper).
+        Assert.Same(
+            rootBefore.Unwrap(),
+            cut.Find(".atlas-v2-workspace").Unwrap());
+        Assert.Equal(attachesBefore, module.Invocations["attachAtlasController"].Count);
+        Assert.Equal(disposesBefore, module.Invocations["disposeAtlasController"].Count);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Interaction_controller_reattaches_when_host_root_element_is_replaced()
+    {
+        // Defensive path: even though the normal render path now preserves the
+        // root element, the controller must still detect an externally replaced
+        // root and re-attach instead of leaving listeners bound to a detached
+        // node. Simulate the replacement by disposing the host and rendering a
+        // fresh instance under the same JS module.
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut.WaitForAssertion(
+            () => Assert.True(
+                module.Invocations["attachAtlasController"].Count >= 1));
+        var firstRootId = ((ElementReference)module
+            .Invocations["attachAtlasController"].First().Arguments[0]!).Id;
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+
+        var tracked2 = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut2 = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked2)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut2.WaitForAssertion(() =>
+            Assert.True(
+                module.Invocations["attachAtlasController"].Count > 1));
+        var lastRootId = ((ElementReference)module
+            .Invocations["attachAtlasController"].Last().Arguments[0]!).Id;
+        Assert.NotEqual(firstRootId, lastRootId);
+
+        await cut2.Instance.DisposeAsync();
+        await tracked2.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Dom_metadata_manifest_matches_rendered_projection()
     {
         var path = Path.Combine(
@@ -1953,8 +2058,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.EnableInteractions, false));
+
 
         foreach (var contractName in new[]
         {
@@ -1993,8 +2098,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             CreateWorkspace(ProjectionDefinition()));
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, tracked)
-                .Add(component => component.ContentTemplate, ContentText));
+                .Add(component => component.Workspace, tracked));
+
         cut.WaitForAssertion(
             () => Assert.Single(
                 module.Invocations["attachAtlasController"]));
@@ -2026,6 +2131,17 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
     private static RenderFragment<AtlasContentContext> ContentText =>
         context => builder => builder.AddContent(0, $"{context.Item.Title} content");
+
+    private static RenderFragment RouteFragment(string kind)
+    {
+        return builder =>
+        {
+            builder.OpenComponent<AtlasContentRoute>(0);
+            builder.AddAttribute(1, "Kind", kind);
+            builder.AddAttribute(2, "ChildContent", ContentText);
+            builder.CloseComponent();
+        };
+    }
 
     private static void AssertRelationship(
         IRenderedFragment cut,
@@ -2829,6 +2945,27 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
             throw new InvalidOperationException("test exception must remain private");
+        }
+    }
+
+    private sealed class ProjectionProbe
+    {
+        internal bool CommandsAvailable { get; set; }
+    }
+
+    private sealed class ResourceTextContent : AtlasContentComponent
+    {
+        [Microsoft.AspNetCore.Components.Inject]
+        private ProjectionProbe? Probe { get; set; }
+
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            if (Probe is not null)
+            {
+                Probe.CommandsAvailable = Content.Commands is not null;
+            }
+
+            builder.AddContent(0, $"{Content.Item.Title} content");
         }
     }
 

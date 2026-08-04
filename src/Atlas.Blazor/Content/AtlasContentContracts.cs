@@ -51,11 +51,15 @@ public sealed class AtlasContentContext
 {
     internal AtlasContentContext(IAtlasWorkspace workspace, DockItem item)
     {
+        WorkspaceId = workspace.Id;
         ItemId = item.Id;
         Reference = item.Content;
         Item = item;
         Commands = new AtlasContentCommands(workspace, item.Id);
     }
+
+    /// <summary>Gets the hosting Workspace scope used to partition shared state.</summary>
+    public WorkspaceId WorkspaceId { get; }
 
     /// <summary>Gets the current UI occurrence identity.</summary>
     public DockItemId ItemId { get; }

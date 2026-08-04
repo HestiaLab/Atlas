@@ -32,15 +32,7 @@ public sealed class ContentLifetimeSpikeTests : TestContext
         await using var workspace = CreateWorkspace();
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
-                .Add(component => component.Workspace, workspace)
-                .Add(
-                    component => component.ContentTemplate,
-                    context => builder =>
-                    {
-                        builder.OpenComponent<StatefulToolContent>(0);
-                        builder.AddAttribute(1, "Content", context);
-                        builder.CloseComponent();
-                    }));
+                .Add(component => component.Workspace, workspace));
         Assert.True(StatefulToolContent.Created == 1, cut.Markup);
         StatefulToolContent.BusinessState["resource"] = 42;
 

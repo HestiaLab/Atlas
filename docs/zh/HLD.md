@@ -59,7 +59,8 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
 | OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
-| OI-006 | NF-006、DES-RND-001 | 同 DOM 中的 Blazor RenderFragment 无法阻止内容访问其他 DOM，ErrorBoundary 也不是安全沙箱 | **Closed**：ADR-0013 保留 TrustedComponent 默认并明确非安全沙箱；不受信任内容使用 SandboxedFrame |
+| OI-006 | NF-006、DES-RND-001 | Blazor RenderFragment 在同一 DOM 内无法阻止内容访问其他 DOM；ErrorBoundary 也不是 security sandbox | **Closed**：ADR-0013 保持 TrustedComponent 默认路径并明确它不是安全沙箱；不可信内容使用 SandboxedFrame |
+| OI-007 | F-006~008、F-122、DES-RND-001~003 | Host ContentTemplate 与 DI Registration 当前形成互斥渲染管线，无法表达一个确定性 Catalog 或强类型函数式绑定 | **Closed**：ADR-0018 采用一个 Effective Content Catalog，来源包括启动期 DI、Host-local Route 和 immutable Host-local Map；重复 startup DI 导致 Registry 构造失败，Host-local 冲突仅隔离受影响 Kind |
 
 ---
 
@@ -81,8 +82,8 @@ DES-ARCH-001
 ├──────────────────────────────────────────────────────────┤
 │  Core 层（纯 C#，无 Blazor 依赖）                           │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────┐ │
-│  │ 布局状态  │ │ 操作引擎  │ │ 持久化   │ │ 内容注册表    │ │
-│  │(Snapshot) │ │(Operation)│ │(Serializer)│ │(ContentReg) │ │
+│  │ 布局状态  │ │ 操作引擎  │ │ 持久化   │ │ 内容身份      │ │
+│  │(Snapshot) │ │(Operation)│ │(Serializer)│ │Kind/ResourceId│ │
 │  └──────────┘ └──────────┘ └──────────┘ └──────────────┘ │
 └──────────────────────────────────────────────────────────┘
 
@@ -90,7 +91,7 @@ Core 层不引用 Blazor、JSRuntime、DOM——所有布局逻辑可脱离浏�
 JS 层只处理高频交互几何，不直接修改 committed state。Blazor 组件是状态的只读投影。
 
 Core 项目引用限制为 BCL，不依赖任何 UI 框架；状态变更只通过 Core 层的 Operation pipeline；
-Blazor 组件通过 ChangeSet 获知需要更新的部分，不自行决定是否重渲染。
+Changed 事件触发一次重渲染 pass；组件用 projection dependency stamp（不可变 Snapshot 值的引用身份）门控实际重渲染，更新范围限定在受影响子树。
 
 来源：F-001~004, NF-004, F-109
 ```
@@ -108,8 +109,9 @@ UI 是该聚合根的只读投影。
 一次 Panel 移动、一次 Splitter 拖拽结束——操作要么完整生效，要么完全不生效。"只读投影" =
 Blazor 组件不修改状态，只是把当前快照渲染成 DOM + 把用户交互转发给操作引擎。
 
-此设计消除了"先改 A 再改 B"的中间状态窗口——任何失败不产生部分修改的残留状态。渲染组件只通过
-ChangeSet 获知需要更新的部分，避免全树无效重渲染。
+此设计消除了"先改 A 再改 B"的中间状态窗口——任何失败不产生部分修改的残留状态。渲染组件保持为已提交
+Snapshot 的只读投影；Changed 事件触发一次重渲染 pass，组级组件用 projection dependency stamp（不可变 Snapshot
+值的引用身份）门控实际重渲染，避免全树无效重渲染。
 
 Snapshot 对 consumer 只读，内部使用 immutable collection 或 copy-on-write。
 不存在"直接修改 Model 属性"的 mutation 旁路。渲染组件基于明确 projection dependency stamp
@@ -204,7 +206,8 @@ Capabilities 和 DockingPolicy 表达，不维护两套独立的 model hierarchy
 ToolBar 为所有 Tool Item 提供统一入口，不等同于 AutoHideStrip。Expanded、Collapsed 与
 AutoHidden Panel 均生成恰好一个 ToolBar Entry；AutoHideStrip 只保存 AutoHidden Item 的 placement
 与 dock-back bookmark。ToolBar Entry 是渲染层派生数据——WorkspaceSnapshot 中不存储 ToolBar
-条目表。派生投影的更新由 ChangeSet 中的 Node/Item/ToolBar 更新触发重算。固定命名的 Region 不再
+条目表。派生投影（ToolBar Entry、Tab header 等渲染层数据）在每次渲染 pass 中由已提交的 Snapshot 重算；
+Changed 事件触发该 pass，projection dependency stamp 限制实际重渲染。固定命名的 Region 不再
 作为 domain type——IDE preset 通过 Layout Tree builder 生成对应 SplitNode/GroupNode 结构。
 
 来源：§1.7 空间概念, §1.3 系统架构, F-020~024, F-149
@@ -804,10 +807,14 @@ IAtlasWorkspace 公共接口与 LayoutChangeSet
           CancellationToken cancellationToken = default);
   }
 
-LayoutChangeSet 是渲染器的精确定向失效输入（F-110），包含 AddedNodes / RemovedNodes /
-UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、UpdatedToolBars / UpdatedToolBarOrders /
-UpdatedAutoHideStrips、BeforeRevision / AfterRevision、ChangeKind。集合只携带稳定 ID/side，
-不携带 RenderFragment 或 DOM reference。
+LayoutChangeSet 是通用 Changed 事件的 F-110 契约载荷，也是强类型领域事件（ItemOpened /
+ItemClosed / ToolCreated / ToolRemoved / WorkspaceRestored）的派生来源。它包含 AddedNodes /
+RemovedNodes / UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、UpdatedToolBars /
+UpdatedToolBarOrders / UpdatedAutoHideStrips、BeforeRevision / AfterRevision、ChangeKind。
+集合只携带稳定 ID/side，不携带 RenderFragment 或 DOM reference。
+
+实现备注：Blazor 投影层不直接消费 ChangeSet 的 ID 集合；定向更新通过不可变 Snapshot 参数传递加组级
+projection dependency stamp（ShouldRender）实现，由框架的参数相等性 diff 将重渲染限定到受影响子树。
 
 Typed result（WorkspaceResult<T>）：Succeeded 为 true 时 Value 必有，为 false 时 Error 必有。
 合法但没有语义变化的 operation 返回 NoChange result（空 ChangeSet，不进入 History，不递增
@@ -910,7 +917,7 @@ InitialDefinition 被 Workspace 保存为 reset blueprint。ResetWorkspaceOperat
 恢复 F-144 InitialRatio、默认 selection 和 ToolBar order；不从当前 Snapshot 反推“初始状态”。
 声明 identity 重复、非法尺寸和不兼容 Group kind 返回 typed failure，原 Workspace 不变。
 
-来源：F-001~005, F-010, F-047, F-099~100, F-122, F-144
+来源：F-001~005, F-010, F-047, F-099~100, F-144
 ```
 
 ---
@@ -972,7 +979,7 @@ JS / .NET 边界划分
     - 构造 Operation → 提交（F-133）
     ↓
   Blazor 层（只读渲染）
-    - 根据新 Snapshot + ChangeSet 更新 DOM
+    - 根据新 Snapshot 更新 DOM（Changed 事件携带 ChangeSet，触发重渲染 pass）
 
 JS 负责：pointer capture、drag threshold、root-scoped source/target DOM lookup、geometry
 snapshot、target intent resolution、preview/indicator/overlay、scroll/resize/visibility
@@ -1285,44 +1292,78 @@ Tab/ToolBar/ContextMenu 还必须支持标准 Tab/Shift+Tab、Enter、Space、Es
 
 ```
 DES-RND-001
-ContentTemplate（默认路径）
-Application Developer 通过 ContentTemplate 定义内容渲染，这是默认的、推荐的路径：
+统一 Effective Content Catalog
+每个 AtlasWorkspaceHost 都通过一个 Effective Content Catalog 解析 TrustedComponent 内容。
+Catalog 合并三种注册来源：
 
-  <AtlasWorkspaceHost Workspace="@_workspace">
-      <ContentTemplate Context="content">
-          <WorkspaceContent Content="@content" />
-      </ContentTemplate>
-  </AtlasWorkspaceHost>
+  启动期 DI Registration       services.AddAtlasContent<TComponent>(kind)
+  Host-local 声明式 Route      <AtlasContentRoute Kind="...">...</AtlasContentRoute>
+  Host-local 函数式 Map        AtlasContentMap.Create(...)
 
-应用路由组件根据 Content.Reference.Kind 分发到具体业务组件：
+Host 将同一个 parameter/render cycle 的 `ContentRoutes` 和 `ContentMap` 暂存为一个候选 Host-local
+Source generation。声明收集完成前继续使用上一份已提交 Route/Map generation；收集完成后以同一个
+generation ID 原子提交两份候选 Source。收集不完整或抛错时，上一 generation 保持 active。因此
+Catalog 不会把新 Map 与旧 Route 混用，Route→Map 或 Map→Route 切换也不会暴露瞬时 missing/conflict。
 
-  @switch (Content.Reference.Kind)
-  {
-      case "explorer":
-          <SolutionExplorer State="@ExplorerStore.Get(Content.Reference.ResourceId)" />
-          break;
-      case "document-editor":
-          <DocumentEditor State="@DocumentStore.Get(Content.Reference.ResourceId)" />
-          break;
-  }
+每个来源贡献一个包含 Kind 和唯一 Renderer 的 Descriptor。Catalog 只保存 Descriptor；不保存组件
+实例或资源模型，也不把 Callback、Delegate、Fragment 或 per-view state 作为可独立查询的 Catalog
+数据公开。Host-local Descriptor 可以在 Renderer closure 中捕获这些运行时值；该捕获是由 Host
+拥有且不持久化的 Binding state，不是 Catalog 中的业务资源。ContentReference.Kind 选择
+Descriptor，ContentReference.ResourceId 标识应用资源/会话，DockItemId 标识一个具体视图。
+同一 Kind 和 ResourceId 可以对应多个视图。
 
-该路径提供编译期参数检查、编译期 EventCallback 检查、Razor language tooling、无字符串
-parameter name、无反射 parameter map——相比 V1 的 DynamicComponent + Dictionary<string, object?>
-路径，消除了所有运行时绑定风险。
+解析顺序先执行 Trust Policy，再进入 Effective Catalog。SandboxedFrame 内容不进入
+TrustedComponent Catalog 路径。对 trusted content，一次投影只解析 Kind 一次，并由渲染、
+unavailable state 选择和诊断共享同一解析结果。未注册 Kind 保留 Item 和 ContentReference，
+显示安全的 unavailable placeholder。`SandboxedFrameResolver` 每次投影最多求值一次；若其抛错，
+该 Item 报告 `AtlasHostErrorCode.ContentRenderFailed`，Catalog 和 Binding Factory 不再求值，
+其他 Item 继续正常工作。
 
-ContentTemplate 是 Blazor RenderFragment<AtlasContentContext> 模板。应用在模板内通过 switch
-或字典按 Kind 分发，不强制使用 DynamicComponent。Content resolution 顺序：Host ContentTemplate
-明确处理 Kind 时优先 → provider registry → placeholder 或 typed failure。
+一个 Effective Catalog 中一个 Kind 只能有一个 owner。启动期 DI 重复注册在 Host 或 per-Item
+Outlet 尚不存在时，于 composition-root 构造阶段失败。涉及 Host-local Route 或 Map 的冲突只使
+冲突 Kind 无效，并生成 `AtlasHostErrorCode.ContentRegistrationConflict`；无关 Kind 保持可用，
+且不得依赖注册顺序隐式选择 winner。本决策不包含 runtime Register/Unregister/Replace 或
+plugin unload。
 
-来源：F-006~008, F-105
+来源：F-006~008, F-119~120, F-122, NF-006
 ```
 
 ---
 
 ```
 DES-RND-002
-ContentProvider（插件路径）
-运行时模块或第三方插件使用 ContentProvider 注册：
+强类型运行时绑定
+Host-local 声明式内容使用普通 Razor component syntax：
+
+  <ContentRoutes>
+      <AtlasContentRoute Kind="orders.table" Context="content">
+          <OrderTable Rows="@_state.Rows" OnSaved="@HandleSaved" />
+      </AtlasContentRoute>
+  </ContentRoutes>
+
+Host-local 函数式配置通过 immutable AtlasContentMap 构建同一种 Renderer Descriptor：
+
+  AtlasContentMap.Create(map =>
+      map.MapComponent<OrderTable>("orders.table", component => component
+          .Bind(x => x.Rows, _ => _state.Rows)
+          .Bind(x => x.OnSaved, _ => _onSaved)));
+
+AtlasContentRoute 由普通 Razor rendering 应用参数。AtlasContentMap 使用直接 parameter-member
+expression 和 value factory；它验证所选 member 是可写 Blazor Parameter，并在投影时求值。
+普通对象、EventCallback、EventCallback<T>、Action<T>、Func<T, Task>、RenderFragment 和
+RenderFragment<T> 都保持强类型。内部 DynamicComponent 可以接收生成的 parameter map，但公共
+API 不接受 Dictionary<string, object?>、字符串 parameter name 或裸组件实例。拥有组件的 Blazor
+Renderer 负责实例化或复用组件，并通过 `SetParametersAsync` 应用生成的 `ParameterView`；Atlas 不得
+直接赋值这些组件 Property，也不得调用所捕获组件的 `StateHasChanged`。
+
+每个已提交 Renderer Descriptor 都具有 structural revision。其 structural signature 包含 Source owner、
+Kind、Renderer category/component type 及有序 bound Parameter member set；当前 value 与 value-factory
+result 不属于 structural。相同 signature 的 value-only update 保留 Outlet 组件 identity，并在每次渲染
+提供完整 bound Parameter set。更改组件类型、增加/删除 Binding、替换 Route 声明或在 Route/Map 间
+切换 owner 时，revision 递增并进入 Outlet key，使内容 remount。这避免 replacement descriptor 省略
+Parameter 时，在 .NET 6 `SetParametersAsync` 下残留旧 Callback 或捕获值。
+
+启动期 DI 内容保留窄协议：
 
   services.AddAtlasContent<ExplorerContent>("explorer");
 
@@ -1334,27 +1375,25 @@ ContentProvider（插件路径）
       public AtlasContentContext Content { get; set; } = null!;
   }
 
-内部可使用 DynamicComponent，但只传递固定参数 Content。禁止重新暴露
-Dictionary<string, object?> Parameters 或 SetParameter(string, object?)。
+DI Registration 是 composition-root Descriptor，不是当前已挂载组件实例。Host-local Route/Map
+可能捕获父组件、callback receiver、delegate、fragment 和局部状态，因此不得提升为 Singleton
+service。替换 Host parameter 会为下一 atomic Host-local generation 暂存 replacement immutable Map。
+retired generation 不再被 Outlet 引用后，Atlas 释放其持有的 Route/Map Descriptor 引用；实际回收还
+要求应用/父组件释放其持有的旧 Map 或 Fragment 引用。这不是 runtime plugin registry。精确公共
+Symbol、validation failure、默认值与替换规则由 10.2 节冻结。
 
-Provider 路径为插件/模块化场景提供运行时注册能力，但通过单参数协议约束确保不退化到 V1 的任意
-parameter dictionary。重复注册同一 Kind 默认 composition-root failure，不采用 last-write-wins。
-
-Content resolution 顺序唯一：Host ContentTemplate 明确处理 Kind 时优先；未处理时查找 provider
-registry；仍缺失时按 open/restore 各自 policy 生成 placeholder 或 typed failure。Provider 的
-late registration 只触发 rendering resolution invalidation，不修改 Workspace Snapshot 或 History。
-
-来源：F-006, F-119
+来源：F-006~008, F-122, F-128
 ```
 
 ---
 
 ```
 DES-RND-003
-AtlasContentContext
+AtlasContentContext 与跨 Panel 协作
 每个内容 outlet 接收稳定的 AtlasContentContext：
 
   AtlasContentContext = {
+      WorkspaceId,  // Workspace/Host 状态分区键
       ItemId,       // 当前 DockItem 标识
       Reference,    // ContentReference（Kind + ResourceId）
       Item,         // 当前 Revision 的只读投影
@@ -1370,9 +1409,19 @@ Commands 不直接暴露 IAtlasWorkspace.ExecuteAsync——它只暴露当前 It
 
 Item 是 Reference 所属 Revision 的只读 projection。Commands 在每次调用时重新验证 current
 Revision——若 Item 已被移除或状态变更，返回 typed failure。Context 对象由 Renderer 在渲染时
-创建，不在组件间共享引用。
+创建，不在组件间共享引用。WorkspaceId 允许应用 State/Coordinator 在一个 Blazor DI scope
+包含多个 Atlas Host 时分区状态；ResourceId 分区业务资源/会话，DockItemId 分区 per-view state。
 
-来源：F-007~008, F-035
+跨 Panel 协作按语义 ownership 选择机制，而不是查找组件实例：
+
+1. 明确 parent/child 交互使用 Parameter 和 EventCallback<T>；
+2. 业务数据变化使用按 WorkspaceId 和/或 ResourceId 分区的应用自有 State/Coordinator，使未挂载
+   或被 LRU 淘汰的视图在以后挂载时读取最新状态；
+3. mounted-only UI capability 将来可以使用按 DockItemId 寻址的受限强类型 command port，但 Atlas
+   不公开 Get<TComponent>()、可变 Parameter property 或 StateHasChanged；
+4. 应用确需多订阅者业务通知时保持 Host-local 和 typed；Atlas 不引入全局 string/object event bus。
+
+来源：F-007~008, F-035, F-070, F-109
 ```
 
 ---
@@ -1388,10 +1437,13 @@ ErrorBoundary
   Workspace 和其他 Group 继续工作
 
 每个 outlet 使用 @key=(ItemId, ContentReference, ErrorGeneration) 作为 ErrorBoundary identity。
-Content Identifier 未注册（F-119）时显示错误提示而非崩溃。组件渲染异常（F-128）时显示
-ErrorBoundary，不影响其他 Panel/Tab。Error UI 不显示 exception message、stack trace 或类型名；
-诊断信息进入日志。Retry 通过 bound command 递增 transient error generation，不复用 faulted
-boundary。切换 identity 时重建 boundary。
+Kind 未注册（F-119）时显示安全 unavailable 提示而非崩溃。Host-local Route/Map 冲突
+（F-122）只使该 Kind 无效；启动期 DI 重复注册则在 Host 创建前失败。Parameter factory 或
+component rendering 异常（F-128）时显示 ErrorBoundary，不影响其他 Panel/Tab。Error UI 只显示
+通用摘要和不透明 DiagnosticId。每次独立失败生成新值，对应 UI 与内部日志共享该值，后续 Retry
+再次失败生成另一个值，且该值不编码 Workspace、Resource、Item、异常或其他敏感身份。Exception
+message、stack trace 和类型名只进入日志。Retry 通过 bound command 递增 transient error
+Generation，不复用 faulted boundary。切换 identity 时重建 boundary。
 
 V1 中 content 异常可能导致整个 Layout 崩溃。V2 通过 per-outlet ErrorBoundary + @key 机制确保
 错误隔离在一项内、Retry 重建组件实例而非复用崩溃状态、切换 Tab 时重建 boundary 避免跨内容状态
@@ -1401,7 +1453,7 @@ ErrorBoundary 是 Blazor 标准 ErrorBoundary 组件的包装。ErrorGeneration 
 由 bound command 在 Retry 时递增。日志记录包含 ItemId、ContentReference、Exception type 和
 message。
 
-来源：F-119~120, F-128
+来源：F-119~120, F-122, F-128
 ```
 
 ---
@@ -1429,7 +1481,15 @@ ADR-0012 已通过 Tool content move spike 关闭 OI-002：跨 Group move 会 re
 但 ResourceId/DockItemId 外置状态可恢复。F-070 的合同因此是用户可观察业务状态而非任意组件实例
 identity；WorkspaceWideKeepAlive 不进入首版。
 
-来源：F-027~029, F-031~032, F-069~070
+Catalog Descriptor 的生命周期长于单个 Outlet，但不超过其所属 Registration scope。启动期 DI
+Descriptor 跟随 application service provider lifetime。active Host-local Route/Map Descriptor 跟随
+AtlasWorkspaceHost。替换任一 Source 会淘汰上一 atomic generation；其不再被 Outlet 引用后，Atlas
+释放所有由 Atlas 持有的 Descriptor 与捕获引用。Host dispose 时释放剩余的全部 Atlas-owned Host-local
+引用。实际回收还要求应用/父组件释放其拥有的 Map、RenderFragment 或其他输入引用；Atlas 不承诺
+caller-owned object 必然 GC。Outlet remount 会重建组件并重新应用当前 runtime binding；不复用已保存
+的组件引用。Snapshot restore 只恢复 ItemId、布局和 ContentReference。
+
+来源：F-008, F-027~029, F-031~032, F-069~070, F-147, NF-001
 ```
 
 ---
@@ -1847,9 +1907,11 @@ violation，用户错误 UI 不显示 exception/stack。降级、repair 和 rese
 
 ```
 DES-ERR-001
-Typed Failure、Content Registry 与诊断边界
-Expected failure 不使用 exception 控制流程。WorkspaceError 至少包含稳定 Code、OperationKind、
-WorkspaceId、可选 ItemId/NodeId、可本地化 MessageKey 和非公开 DiagnosticId：
+Typed Failure、Content Catalog 与诊断边界
+Expected failure 不使用 exception 控制流程。`WorkspaceError` 至少包含稳定 Code、OperationKind、
+可选 ItemId/NodeId、可本地化 MessageKey 和可安全向用户展示以支持关联的不透明 DiagnosticId。
+`AtlasHostError` 单独携带 Host error Code、DiagnosticId、MessageKey，以及可选 WorkspaceId、ItemId
+和 NodeId：
 
   ITEM_NOT_FOUND
   CONTENT_ALREADY_REGISTERED
@@ -1862,16 +1924,26 @@ WorkspaceId、可选 ItemId/NodeId、可本地化 MessageKey 和非公开 Diagno
   WORKSPACE_FAULTED
 
 Close/Activate/Get 不存在 Item 分别返回 typed failure 或 null（按 public interface 合同），不抛出。
-Content Registry 的 Register 使用 ordinal Kind identity 和 compare-and-add；重复 Kind 返回
-CONTENT_ALREADY_REGISTERED，原 provider 保持不变，不执行 dispose/replace。显式 ReplaceProvider
-若未来需要必须是独立接口并定义已有 outlet 的迁移语义，不能复用 Register。
+启动期 DI Descriptor 使用 ordinal Kind identity，重复注册在 composition-root 构造时确定性失败。
+Host-local Route/Map 冲突生成安全的 per-Kind 诊断，不覆盖任一 Descriptor；无关 Kind 保持可用。
+首版不公开 runtime Register、Unregister 或 ReplaceProvider API。
+
+内容解析使用明确的 Host error code：无效声明式 Route 报告 `DefinitionInvalid`，未注册 Kind
+报告 `ContentNotRegistered`，Host-local ownership 冲突报告 `ContentRegistrationConflict`。
+Trust/Sandbox Resolver、Renderer、Callback 或 Parameter Factory 执行失败报告 `ContentRenderFailed`。`AtlasHostErrorCode` 追加
+`ContentRegistrationConflict = 7`；现有数值 1~6 保持不变。
 
 Programming error（null internal dependency、impossible enum、disposed object misuse）和 unexpected
 failure 可以抛出并记录，但 Atlas Host 的 user-triggered command adapter 必须转换为安全 UI state，
-不得向 DOM 输出 exception message、type 或 stack。日志通过 DiagnosticId 关联 WorkspaceError，
-敏感 ContentReference.ResourceId 按 logging policy 脱敏。
+不得向 DOM 输出 exception message、type 或 stack。`WorkspaceError.DiagnosticId` 与
+`AtlasHostError.DiagnosticId` 是公共、非敏感的诊断值，不得编码 WorkspaceId、ResourceId、DockItemId、
+异常类型或其他敏感数据。现有 Core operation diagnostic 可以继续使用稳定的非本地化标识。仅针对
+content projection、Callback 或 Parameter Factory failure，Host 必须为每次 failure occurrence 创建新的
+opaque `AtlasHostError.DiagnosticId`；安全 UI 与对应内部日志记录使用同一个 ID，Retry 后再次失败则获得
+新 ID。消费者必须把所有 DiagnosticId 当作 opaque diagnostic/correlation value，不得解析或用于控制流程。
+日志按 policy 对敏感 ContentReference.ResourceId 脱敏。
 
-来源：F-030, F-119, F-121~124, F-128
+来源：F-030, F-119~124, F-128
 ```
 
 ---
@@ -2145,6 +2217,7 @@ preservation 与 component instance preservation，不能合并为一个模糊�
 | DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；150 = F142 + NF8 | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 150 个正式需求块维护矩阵 |
+| DEV-GATE-007 Unified Content Catalog | **Closed**：ADR-0018；启动期 DI、Host-local Route 与 immutable Host-local Map 进入一个 strict Catalog | 删除旧的 Host-wide Template API、公开 Route/Map API 与跨 Panel 协作示例 | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | 在冻结合同下执行 TDD 实施和 package/browser 验证 |
 
 闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、
 geometry snapshot 和参数化 target resolver，但不得选择默认 Panel drop policy，也不得把相关 E2E
@@ -2178,6 +2251,28 @@ public/internal 边界不得改变：
 | Blazor | content contracts | `AtlasContentContext`、`AtlasContentComponent`、content/empty/header templates | 任意字符串 parameter dictionary |
 | Blazor | `AddAtlasWorkspace` | 注册 stateless factory、registry、options、serializer adapter；说明 service lifetime | 把 Workspace 或 JS controller 注册为 Singleton |
 | Interop | C# facade | root controller initialize/update/dispose、单次 semantic commit callback | public 暴露 `IJSObjectReference`、DOM handle 或坐标 DTO |
+
+统一内容托管 API 的 namespace 和形状冻结如下。这些是在实现阶段加入 API compatibility baseline 的
+公共合同，不是示意性名称：
+
+| Owner | 精确公共 Symbol | 参数类别/默认值 | Validation 与运行时合同 |
+|-------|----------------|--------------|----------------------|
+| `Atlas.Blazor.Components` | `AtlasWorkspaceHost.ContentRoutes : RenderFragment?` | Template/Callback；默认 `null`；运行时可替换 | 只在内部 Route Collector 下渲染；暂存 Route Source 在声明收集完成后与暂存 Map 原子提交；收集不完整/抛错时保留上一 generation；Outlet 释放 retired generation 后 Atlas 释放其引用 |
+| `Atlas.Blazor.Components` | `AtlasWorkspaceHost.ContentMap : AtlasContentMap?` | Immutable configuration object；默认 `null`；运行时可替换 | 新 Map 或 `null` 与 ContentRoutes 一同暂存，在 generation commit 时原子替换/删除旧 Map Source；不可观察到 new-Map/old-Route 混用；Outlet 释放后 Atlas 释放 retired 引用，但 caller-owned Map 引用可延长 capture lifetime |
+| `Atlas.Blazor.Components` | `AtlasContentRoute` | Renderless 声明组件 | 具有 `[Parameter, EditorRequired] string Kind` 和 `[Parameter, EditorRequired] RenderFragment<AtlasContentContext>? ChildContent`；空白 Kind 或 null ChildContent 报告 `AtlasHostErrorCode.DefinitionInvalid`，且不贡献 Renderer |
+| `Atlas.Blazor.Content` | `AtlasContentMap` | Immutable Host-local 配置 | public sealed type，无 public constructor；`static AtlasContentMap Create(Action<AtlasContentMapBuilder> configure)` 是唯一创建入口，同步执行一次非 null configure Delegate 并返回 immutable copy；null 抛出 `ArgumentNullException`；configure exception 向外传播且不返回 partial Map |
+| `Atlas.Blazor.Content` | `AtlasContentMapBuilder` | 仅用于 Create 阶段的 Builder | public sealed type，无 public constructor；实例只由 `AtlasContentMap.Create` 提供；`MapComponent<TComponent>(string kind, Action<AtlasComponentBinding<TComponent>> configure)` 返回同一 Builder，并要求 `where TComponent : IComponent`；空白 Kind 或 null configure 抛出 `ArgumentException`/`ArgumentNullException`；重复 Kind Contribution 保留给 Catalog 做确定性冲突检测，不覆盖；`Create` 的 configure Delegate 返回后，捕获的 Builder/Binding 再调用会抛出 `InvalidOperationException`，且不能修改已返回 Map |
+| `Atlas.Blazor.Content` | `AtlasComponentBinding<TComponent>` | Create 阶段的强类型 Binding Builder | public sealed type，无 public constructor；实例只由 `MapComponent` 提供；要求 `where TComponent : IComponent`；`Bind<TValue>(Expression<Func<TComponent, TValue>> parameter, Func<AtlasContentContext, TValue> valueFactory)` 返回同一 Binding Builder |
+| `Atlas.Blazor.Content` | `AtlasComponentBinding<TComponent>.Bind<TValue>` | Runtime Binding；不持久化 | Selector 必须是类型与 `TValue` 精确一致的直接 public writable `[Parameter]` Property；Field、Method、nested member、Indexer、`[CascadingParameter]`、非 Parameter、保留的 `AtlasContentComponent.Content`、重复 Property、null Selector 或 null Factory 在 `Create` 期间以 `ArgumentException`/`ArgumentNullException` 失败；value-factory exception 属于 per-outlet F-128 failure |
+| `Atlas.Blazor.Content` | `AtlasContentComponent.Content : AtlasContentContext` | Renderer 提供的 required Parameter | 当 `TComponent : AtlasContentComponent` 时，Atlas 自动把当前 Context 放入每次完整生成的 Parameter set；consumer 不得覆盖或绑定该保留 member |
+| `Atlas.Blazor.Content` | `AtlasContentContext.WorkspaceId : WorkspaceId` | Immutable runtime identity | 创建 Context 时与 ItemId/Reference/Item/Commands 一同设置；它不是组件 Parameter，也不进入持久化 |
+| `Atlas.Blazor.DependencyInjection` | `AddAtlasContent<TComponent>(this IServiceCollection services, string kind)` | 启动期 DI Source；无运行时替换 | 要求 `where TComponent : AtlasContentComponent`；null services 或 Kind 抛出 `ArgumentNullException`，空白 Kind 抛出 `ArgumentException`，重复 ordinal Kind ownership 在构造 scoped Content Registry 时失败 |
+| `Atlas.Blazor.Components` | `AtlasHostErrorCode.ContentRegistrationConflict = 7` | Additive Host error code | 报告 Host-local Route/Map ownership 冲突；现有数值 1~6 保持不变 |
+
+`AtlasContentRoute` 的 Razor `Context="..."` syntax 用于命名
+`RenderFragment<AtlasContentContext>` receiver，不是独立组件 Parameter。Route/Map 迁移后从
+`AtlasWorkspaceHost` 和 unshipped API baseline 删除 `ContentTemplate`；不提供 fallback 或兼容替换
+语义。Host-local Route/Map 冲突遵循 DES-RND-001，与上述 composition-fatal duplicate-DI 规则不同。
 
 API freeze 必须回答并通过编译时 contract test 固定：
 
@@ -2559,12 +2654,12 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | 错误码 | 触发条件 | 依据 |
 |--------|---------|:--:|
 | `LAYOUT_VERSION_INCOMPATIBLE` | 导入的布局数据主版本号与当前系统不兼容 | F-088 |
-| `CONTENT_ALREADY_REGISTERED` | 重复注册已存在的 Content Identifier，原 provider 不变 | F-122 |
+| `CONTENT_ALREADY_REGISTERED` | 保留的旧 `WorkspaceErrorCode`；Phase 1 Catalog 无运行路径。启动期 DI 重复使 Registry 构造失败；Host-local ownership 冲突使用 `AtlasHostErrorCode.ContentRegistrationConflict` | F-122 |
 | `INVALID_LAYOUT_DATA` | 导入的布局数据结构不符合要求 | F-123 |
 | `DUPLICATE_TAB_ID` | 打开 Editor Tab 时指定的标识已存在 | F-124 |
 | `ITEM_NOT_FOUND` | Close/Activate command 指定的 Item 不存在 | F-030, F-121 |
 | `STALE_OPERATION` | 操作持有的 BaseRevision 与 current Revision 不一致 | DES-OP-003 |
-| `CONTENT_NOT_REGISTERED` | ContentReference.Kind 在 provider registry 中未找到 | F-119 |
+| `CONTENT_NOT_REGISTERED` | ContentReference.Kind 在 Effective Content Catalog 中未找到 | F-119 |
 | `TARGET_REJECTED_BY_POLICY` | Docking Policy 拒绝目标 placement | F-069 |
 | `CAPABILITY_REJECTED` | Item capability 禁止 close/move/pin/auto-hide 等操作 | F-036~037 |
 | `CLOSE_CANCELLED_BY_GUARD` | 关闭前回调返回拒绝 | F-041 |
@@ -2606,7 +2701,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-OP-005 | Undo / Redo | F-156, F-047 |
 | DES-OP-006 | IAtlasWorkspace 公共接口 | F-110~115, F-101~103 |
 | DES-OP-007 | Tool Panel 移动、排序与 ToolBar 操作合同 | F-022, F-069~071, F-140, F-142, F-151, F-156 |
-| DES-OP-008 | 声明式布局定义与原子 Reconciliation | F-001~005, F-010, F-047, F-099~100, F-122, F-144 |
+| DES-OP-008 | 声明式布局定义与原子 Reconciliation | F-001~005, F-010, F-047, F-099~100, F-144 |
 | DES-OP-009 | Command、Query 与领域事件接口 | F-030, F-101~104, F-106~115, F-121, F-141, F-146 |
 | DES-INT-001 | JS / .NET 边界划分 | NF-004, F-050~068, F-073~078 |
 | DES-INT-002 | 根级 Interaction Controller | NF-004, F-109 |
@@ -2616,11 +2711,11 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-INT-006 | Panel Target Resolver、投放骨架与预览 | F-069, F-071, F-148, F-150~155, NF-004~005 |
 | DES-INT-007 | Splitter 高级交互与控制 | F-073~078, F-080~082, F-104, F-148, NF-003~004, NF-007 |
 | DES-INT-008 | Keyboard Command、焦点导航与快捷键配置 | F-035, F-041, F-116~118, NF-003, NF-007 |
-| DES-RND-001 | ContentTemplate | F-006~008, F-105 |
-| DES-RND-002 | ContentProvider | F-006, F-119 |
-| DES-RND-003 | AtlasContentContext | F-007~008, F-035 |
-| DES-RND-004 | ErrorBoundary | F-119~120, F-128 |
-| DES-RND-005 | Content Lifetime | F-027~029, F-031~032, F-069~070 |
+| DES-RND-001 | 统一 Effective Content Catalog | F-006~008, F-119~120, F-122, NF-006 |
+| DES-RND-002 | 强类型运行时绑定 | F-006~008, F-122, F-128 |
+| DES-RND-003 | AtlasContentContext 与跨 Panel 协作 | F-007~008, F-035, F-070, F-109 |
+| DES-RND-004 | ErrorBoundary | F-119~120, F-122, F-128 |
+| DES-RND-005 | Content Lifetime | F-008, F-027~029, F-031~032, F-069~070, F-147, NF-001 |
 | DES-RND-006 | ToolBar 渲染与交互投影 | F-020~024, F-022, F-140, F-149~153, NF-003, NF-007 |
 | DES-RND-007 | Panel 移动时的内容身份与状态保持 | F-069~070, F-120, F-128 |
 | DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
@@ -2633,7 +2728,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-PER-006 | Layout Preset 生命周期 | F-096~098 |
 | DES-PER-007 | Restore Identity Remap 与报告 | F-086, F-089~090, F-123~124 |
 | DES-PER-008 | 存储降级、Allowlisted Repair 与严重错误回退 | F-093~095, F-123, F-125~127 |
-| DES-ERR-001 | Typed Failure、Content Registry 与诊断边界 | F-030, F-119, F-121~124, F-128 |
+| DES-ERR-001 | Typed Failure、Content Catalog 与诊断边界 | F-030, F-119~124, F-128 |
 | DES-NFR-001 | 所有权、释放与内存上限 | F-029, F-114, F-147, NF-001 |
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA 语义与焦点合同 | F-022, F-035, F-116~118, NF-003, NF-007 |
@@ -2698,8 +2793,8 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-003 | DES-ARCH-001、DES-DOM-002、DES-DOM-003、DES-OP-008、DES-RND-008 | Designed |
 | REQ-F-005、REQ-F-010 | DES-OP-008、DES-RND-008 | Designed |
 | REQ-F-006 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002 | Designed |
-| REQ-F-007 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-003 | Designed |
-| REQ-F-008 | DES-DOM-004、DES-RND-001、DES-RND-003 | Designed |
+| REQ-F-007 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002、DES-RND-003 | Designed |
+| REQ-F-008 | DES-DOM-004、DES-RND-001、DES-RND-002、DES-RND-003、DES-RND-005 | Designed |
 | REQ-F-009 | DES-DOM-004、DES-RND-009 | Designed |
 | REQ-F-011 | DES-RND-008 | Designed |
 | REQ-F-012 | DES-DOM-006、DES-OP-001 | Designed |
@@ -2729,7 +2824,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
 | REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
+| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007 | Designed |
 | REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010、DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
@@ -2748,24 +2843,24 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-100 | DES-ARCH-004、DES-OP-008 | Designed |
 | REQ-F-101~103 | DES-OP-006、DES-OP-009 | Designed |
 | REQ-F-104 | DES-DOM-010、DES-INT-007、DES-OP-009 | Designed |
-| REQ-F-105 | DES-RND-001、DES-RND-009 | Designed |
+| REQ-F-105 | DES-RND-009 | Designed |
 | REQ-F-106~108、REQ-F-146 | DES-OP-009 | Designed |
-| REQ-F-109 | DES-ARCH-001、DES-ARCH-003、DES-ARCH-004、DES-DOM-002、DES-DOM-007、DES-INT-002、DES-OP-009、DES-PRJ-001 | Designed |
+| REQ-F-109 | DES-ARCH-001、DES-ARCH-003、DES-ARCH-004、DES-DOM-002、DES-DOM-007、DES-INT-002、DES-OP-009、DES-PRJ-001、DES-RND-003 | Designed |
 | REQ-F-110~113、REQ-F-115 | DES-ARCH-002、DES-ARCH-004、DES-OP-002、DES-OP-006、DES-OP-009 | Designed |
 | REQ-F-114 | DES-ARCH-002、DES-ARCH-004、DES-NFR-001、DES-OP-002、DES-OP-006、DES-OP-009 | Designed |
 | REQ-F-116~118 | DES-INT-008、DES-NFR-003 | Designed |
-| REQ-F-119 | DES-ERR-001、DES-RND-002、DES-RND-004 | Designed |
-| REQ-F-120 | DES-NFR-004、DES-RND-004、DES-RND-007 | Designed |
-| REQ-F-122 | DES-ERR-001、DES-OP-008 | Designed |
+| REQ-F-119 | DES-ERR-001、DES-RND-001、DES-RND-004 | Designed |
+| REQ-F-120 | DES-ERR-001、DES-NFR-004、DES-RND-001、DES-RND-004、DES-RND-007 | Designed |
+| REQ-F-122 | DES-ERR-001、DES-RND-001、DES-RND-002、DES-RND-004 | Designed |
 | REQ-F-123 | DES-ERR-001、DES-PER-003、DES-PER-005、DES-PER-007、DES-PER-008 | Designed |
 | REQ-F-124 | DES-DOM-007、DES-ERR-001、DES-PER-007 | Designed |
-| REQ-F-128 | DES-ERR-001、DES-NFR-004、DES-RND-004、DES-RND-007 | Designed |
+| REQ-F-128 | DES-ERR-001、DES-NFR-004、DES-RND-002、DES-RND-004、DES-RND-007 | Designed |
 | REQ-F-133 | DES-ARCH-002、DES-ARCH-003、DES-ARCH-004、DES-DOM-008、DES-INT-005、DES-OP-002、DES-OP-004 | Designed |
 | REQ-F-140 | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-141 | DES-DOM-010、DES-OP-009 | Designed |
 | REQ-F-142 | DES-INT-005、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-144 | DES-DOM-010、DES-OP-008 | Designed |
-| REQ-F-147 | DES-INT-005、DES-NFR-001、DES-PRJ-003 | Designed |
+| REQ-F-147 | DES-INT-005、DES-NFR-001、DES-PRJ-003、DES-RND-005 | Designed |
 | REQ-F-148 | DES-DOM-010、DES-INT-006、DES-INT-007 | Designed |
 | REQ-F-149 | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-RND-006 | Designed |
 | REQ-F-150 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
@@ -2775,11 +2870,11 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | Designed |
 | REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Designed |
 | REQ-F-156 | DES-OP-004、DES-OP-005、DES-OP-007、DES-PRJ-003 | Designed |
-| REQ-NF-001 | DES-NFR-001 | Designed |
+| REQ-NF-001 | DES-NFR-001、DES-RND-005 | Designed |
 | REQ-NF-002 | DES-PRJ-001 | Designed |
 | REQ-NF-003 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-004 | DES-ARCH-001、DES-ARCH-004、DES-INT-001、DES-INT-002、DES-INT-004、DES-INT-005、DES-INT-006、DES-INT-007、DES-PRJ-002、DES-PRJ-003 | Designed |
 | REQ-NF-005 | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | Designed |
-| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Designed |
+| REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | Designed |
 | REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |

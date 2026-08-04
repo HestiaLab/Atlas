@@ -1,3 +1,4 @@
+@inherits AtlasContentComponent
 @using Atlas.Blazor.Content
 
 @switch (Content.Reference.ResourceId)
@@ -33,16 +34,6 @@
             <div class="atlas-demo-service"><span class="running"></span><div><strong>Atlas.Demo</strong><small>Running on localhost</small></div></div>
             <div class="atlas-demo-service"><span></span><div><strong>Docker</strong><small>Not connected</small></div></div>
             <div class="atlas-demo-service"><span class="running"></span><div><strong>NuGet feed</strong><small>0.0.0-dev</small></div></div>
-        </section>
-        break;
-    case "database":
-        <section class="atlas-demo-tool" aria-label="Database">
-            <ul class="atlas-demo-list">
-                <li><span class="atlas-demo-muted">□</span> Data Sources</li>
-                <li class="level-1"><span class="atlas-demo-ok">●</span> atlas-local</li>
-                <li class="level-2">Tables</li>
-                <li class="level-2">Views</li>
-            </ul>
         </section>
         break;
     case "terminal":
@@ -96,10 +87,4 @@ builder.Services.AddAtlasWorkspace();
 <span class="keyword">await</span> builder.Build().RunAsync();</code></pre></div>
         </section>
         break;
-}
-
-@code {
-    [Parameter]
-    [EditorRequired]
-    public AtlasContentContext Content { get; set; } = null!;
 }

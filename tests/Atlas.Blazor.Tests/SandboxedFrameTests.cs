@@ -1,6 +1,7 @@
 #nullable enable
 using System.Text.Json;
 using Atlas.Blazor.Components;
+using Atlas.Blazor.Content;
 using Atlas.Blazor.DependencyInjection;
 using Atlas.Core;
 using Atlas.Core.Definitions;
@@ -8,6 +9,7 @@ using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations.Engine;
 using Bunit;
+using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -22,14 +24,12 @@ public sealed class SandboxedFrameTests : TestContext
     }
 
     [Fact]
-    public async Task Resolver_renders_fixed_deny_by_default_frame_and_bypasses_trusted_template()
+    public async Task Resolver_renders_fixed_deny_by_default_frame_and_bypasses_registered_content()
     {
+        Services.AddAtlasContent<TrustedFallbackContent>("sandbox");
         await using var workspace = CreateWorkspace();
         var cut = RenderComponent<AtlasWorkspaceHost>(parameters => parameters
             .Add(component => component.Workspace, workspace)
-            .Add(
-                component => component.ContentTemplate,
-                _ => builder => builder.AddContent(0, "trusted-content"))
             .Add(
                 component => component.SandboxedFrameResolver,
                 _ => new AtlasSandboxedFrameOptions(
@@ -102,5 +102,13 @@ public sealed class SandboxedFrameTests : TestContext
                 new[] { item }));
         Assert.True(result.Succeeded);
         return result.Value!;
+    }
+
+    private sealed class TrustedFallbackContent : AtlasContentComponent
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.AddContent(0, "trusted-content");
+        }
     }
 }

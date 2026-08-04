@@ -5,7 +5,7 @@
 > 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
 
 
-- 日期：2026-07-31
+- 日期：2026-08-03
 - 基线：ADR-0014；150 = REQ-F 142 + REQ-NF 8
 - 规则：每个正式需求恰好一行；状态是实现状态，不继承 HLD 的 Designed。
 
@@ -29,8 +29,8 @@
 | REQ-F-004 | In Progress | DES-ARCH-001、DES-DOM-002~003、DES-OP-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-005 | In Progress | DES-OP-008、DES-RND-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-006 | In Progress | DES-DOM-004~005、DES-RND-001~002 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-007 | In Progress | DES-DOM-004~005、DES-RND-001、DES-RND-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-008 | In Progress | DES-DOM-004、DES-RND-001、DES-RND-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-007 | In Progress | DES-DOM-004~005、DES-RND-001~003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-008 | In Progress | DES-DOM-004、DES-RND-001~003、DES-RND-005 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-009 | In Progress | DES-DOM-004、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-010 | In Progress | DES-OP-008、DES-RND-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-011 | In Progress | DES-RND-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
@@ -91,7 +91,7 @@
 | REQ-F-067 | Verified | DES-INT-001、DES-INT-003 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-068 | Verified | DES-INT-001、DES-INT-003、DES-INT-005 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-069 | Verified | DES-DOM-008、DES-INT-003、DES-INT-005~006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
-| REQ-F-070 | Verified | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
+| REQ-F-070 | Verified | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
 | REQ-F-071 | Verified | DES-INT-003、DES-INT-005~006、DES-OP-007、DES-PRJ-003 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-073 | Implemented | DES-INT-001、DES-INT-007、DES-OP-001 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
 | REQ-F-074 | Implemented | DES-INT-001、DES-INT-007、DES-OP-001 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
@@ -122,11 +122,11 @@
 | REQ-F-102 | In Progress | DES-OP-006、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-103 | In Progress | DES-OP-006、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-104 | Implemented | DES-DOM-010、DES-INT-007、DES-OP-009 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
-| REQ-F-105 | In Progress | DES-RND-001、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-105 | In Progress | DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-106 | In Progress | DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-107 | In Progress | DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-108 | In Progress | DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-109 | In Progress | DES-ARCH-001、DES-ARCH-003~004、DES-DOM-002、DES-DOM-007、DES-INT-002、DES-OP-009、DES-PRJ-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-109 | In Progress | DES-ARCH-001、DES-ARCH-003~004、DES-DOM-002、DES-DOM-007、DES-INT-002、DES-OP-009、DES-PRJ-001、DES-RND-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-110 | In Progress | DES-ARCH-002、DES-ARCH-004、DES-OP-002、DES-OP-006、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-111 | In Progress | DES-ARCH-002、DES-ARCH-004、DES-OP-002、DES-OP-006、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-112 | In Progress | DES-ARCH-002、DES-ARCH-004、DES-OP-002、DES-OP-006、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
@@ -136,16 +136,16 @@
 | REQ-F-116 | Implemented | DES-INT-008、DES-NFR-003 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
 | REQ-F-117 | Implemented | DES-INT-008、DES-NFR-003 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
 | REQ-F-118 | Implemented | DES-INT-008、DES-NFR-003 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
-| REQ-F-119 | In Progress | DES-ERR-001、DES-RND-002、DES-RND-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-120 | Verified | DES-NFR-004、DES-RND-004、DES-RND-007 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
+| REQ-F-119 | In Progress | DES-ERR-001、DES-RND-001、DES-RND-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-120 | In Progress | DES-ERR-001、DES-NFR-004、DES-RND-001、DES-RND-004、DES-RND-007 | 历史 P7 隔离证据仍有效，但扩展后的 Host-local Catalog 冲突和 Parameter Factory AC 尚未实现。 |
 | REQ-F-121 | In Progress | DES-ERR-001、DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-122 | In Progress | DES-ERR-001、DES-OP-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-F-122 | In Progress | DES-ERR-001、DES-RND-001~002、DES-RND-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-123 | In Progress | DES-ERR-001、DES-PER-003、DES-PER-005、DES-PER-007~008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-124 | In Progress | DES-DOM-007、DES-ERR-001、DES-PER-007 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-125 | Not Started | DES-PER-008 | 仅有设计/枚举或场景描述；无承担全部 AC 的 operation/render/E2E。 |
 | REQ-F-126 | Not Started | DES-PER-008 | 仅有设计/枚举或场景描述；无承担全部 AC 的 operation/render/E2E。 |
 | REQ-F-127 | Not Started | DES-PER-008 | 仅有设计/枚举或场景描述；无承担全部 AC 的 operation/render/E2E。 |
-| REQ-F-128 | Verified | DES-ERR-001、DES-NFR-004、DES-RND-004、DES-RND-007 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
+| REQ-F-128 | In Progress | DES-ERR-001、DES-NFR-004、DES-RND-002、DES-RND-004、DES-RND-007 | 历史 P7 渲染隔离证据仍有效，但 Parameter Evaluation 和 per-occurrence DiagnosticId 关联 AC 尚未实现。 |
 | REQ-F-133 | In Progress | DES-ARCH-002~004、DES-DOM-008、DES-INT-005、DES-OP-002、DES-OP-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-138 | Not Started | DES-DOM-011、DES-RND-009 | 仅有设计/枚举或场景描述；无承担全部 AC 的 operation/render/E2E。 |
 | REQ-F-140 | Verified | DES-DOM-009、DES-INT-005、DES-OP-007、DES-PER-002、DES-PRJ-003、DES-RND-006 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
@@ -155,7 +155,7 @@
 | REQ-F-144 | In Progress | DES-DOM-010、DES-OP-008 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-145 | In Progress | DES-DOM-004 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-146 | In Progress | DES-OP-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
-| REQ-F-147 | Implemented | DES-INT-005、DES-NFR-001、DES-PRJ-003 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
+| REQ-F-147 | Implemented | DES-INT-005、DES-NFR-001、DES-PRJ-003、DES-RND-005 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
 | REQ-F-148 | Implemented | DES-DOM-010、DES-INT-006~007 | P4 Core/Node/bUnit/browser 证据已实现；P8 逐 AC/兼容性复核前保持 Implemented。 |
 | REQ-F-149 | In Progress | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-RND-006 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-150 | Verified | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
@@ -165,12 +165,12 @@
 | REQ-F-154 | In Progress | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-155 | Verified | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-156 | Verified | DES-OP-004~005、DES-OP-007、DES-PRJ-003 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
-| REQ-NF-001 | In Progress | DES-NFR-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
+| REQ-NF-001 | In Progress | DES-NFR-001、DES-RND-005 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-002 | In Progress | DES-PRJ-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-003 | In Progress | DES-INT-007~008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-004 | Verified | DES-ARCH-001、DES-ARCH-004、DES-INT-001~007、DES-PRJ-002~003 | [P8 evidence](./p8-system-hardening.md)：drag 75.543 FPS、Splitter 121.427 FPS，两个 AC 均通过真实浏览器。 |
 | REQ-NF-005 | Verified | DES-ARCH-004、DES-INT-004、DES-INT-006、DES-PRJ-003 | [P8 evidence](./p8-system-hardening.md)：20 Panel Blazor 首次投影 192.700ms/169.900ms，≤500ms。 |
-| REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
+| REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
 | REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/真实 accessibility tree 验证现有 chrome；未实现控件与全焦点矩阵缺口仍保留。 |
 | REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md)：Node + 真实浏览器动态 change、dispose 和 CSS fallback。 |
 
