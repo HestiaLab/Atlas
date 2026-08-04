@@ -133,7 +133,7 @@ public static class DbcParser
 }
 ```
 
-解析规则（验收样本：`bmw_e9x_e8x.dbc` 325 BO_ / 33 CM_ / 3 VAL_）：
+解析规则（验收样本：`bmw_e9x_e8x.dbc` 325 BO_ / 38 CM_ / 3 VAL_，其中前 5 行 CM_ 为来源与 MIT 许可声明）：
 - `BU_:` 后整行节点名拆分（空格分隔）
 - `BO_ <id> <name>: <length> <transmitter>` → message
 - 后续两个空格缩进、`SG_` 开头 → 挂到当前 message
