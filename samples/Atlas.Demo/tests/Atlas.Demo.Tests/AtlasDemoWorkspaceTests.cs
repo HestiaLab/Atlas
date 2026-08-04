@@ -9,6 +9,16 @@ namespace Atlas.Demo.Tests;
 
 public sealed class AtlasDemoWorkspaceTests : TestContext
 {
+    private static readonly string[] LogicalRegions =
+    {
+        "InlineStartUpper",
+        "InlineStartLower",
+        "InlineEndUpper",
+        "InlineEndLower",
+        "BlockEndInlineStart",
+        "BlockEndInlineEnd",
+    };
+
     public AtlasDemoWorkspaceTests()
     {
         Services.AddAtlasDemoServices();
@@ -23,9 +33,9 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                Assert.Equal(2, cut.FindAll("[data-atlas-group-kind='tool']").Count);
+                Assert.Equal(6, cut.FindAll("[data-atlas-group-kind='tool']").Count);
                 Assert.Single(cut.FindAll("[data-atlas-group-kind='document']"));
-                Assert.Equal(2, cut.FindAll(".atlas-v2-splitter").Count);
+                Assert.Equal(6, cut.FindAll(".atlas-v2-splitter").Count);
                 Assert.Single(cut.FindAll("[data-atlas-fixed-slot='top-toolbar']"));
                 Assert.Single(cut.FindAll("[data-atlas-fixed-slot='status-bar']"));
                 Assert.Single(cut.FindAll("[data-atlas-toolbar-side='inline-start']"));
@@ -33,8 +43,11 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                 Assert.Single(cut.FindAll("[data-testid='atlas-demo-top-toolbar']"));
                 Assert.Single(cut.FindAll("[data-testid='atlas-demo-status-bar']"));
 
-                Assert.Single(cut.FindAll("[data-atlas-logical-region='InlineStartUpper']"));
-                Assert.Single(cut.FindAll("[data-atlas-logical-region='InlineEndUpper']"));
+                foreach (var logicalRegion in LogicalRegions)
+                {
+                    Assert.Single(
+                        cut.FindAll($"[data-atlas-logical-region='{logicalRegion}']"));
+                }
             });
     }
 
@@ -61,6 +74,17 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     }
 
     [Fact]
+    public void Empty_slots_render_placeholder_panels()
+    {
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        cut.WaitForAssertion(
+            () => Assert.Equal(
+                4,
+                cut.FindAll("[data-testid='empty-panel']").Count));
+    }
+
+    [Fact]
     public void Workspace_exposes_named_aria_relationships()
     {
         var cut = RenderComponent<AtlasDemoWorkspace>();
@@ -71,7 +95,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                 var groups = cut.FindAll("[data-atlas-group-id]")
                     .Where(element => element.GetAttribute("role") == "region")
                     .ToArray();
-                Assert.Equal(3, groups.Length);
+                Assert.Equal(7, groups.Length);
                 Assert.All(groups, group => Assert.False(string.IsNullOrWhiteSpace(group.GetAttribute("aria-labelledby"))));
 
                 var documentTabList = cut.Find("[data-atlas-group-kind='document'] [role='tablist']");
@@ -97,10 +121,18 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-group-id='left-upper']"));
-                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-node-id='editor-right']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-node-id='main-area']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='root'] > [data-atlas-node-id='bottom-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='main-area'] > [data-atlas-node-id='left-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='main-area'] > [data-atlas-node-id='editor-right']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='left-dock'] > [data-atlas-group-id='left-upper']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='left-dock'] > [data-atlas-group-id='left-lower']"));
                 Assert.Single(cut.FindAll("[data-atlas-node-id='editor-right'] > [data-atlas-group-id='editor']"));
-                Assert.Single(cut.FindAll("[data-atlas-node-id='editor-right'] > [data-atlas-group-id='right-upper']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='editor-right'] > [data-atlas-node-id='right-dock']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='right-dock'] > [data-atlas-group-id='right-upper']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='right-dock'] > [data-atlas-group-id='right-lower']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='bottom-dock'] > [data-atlas-group-id='bottom-left']"));
+                Assert.Single(cut.FindAll("[data-atlas-node-id='bottom-dock'] > [data-atlas-group-id='bottom-right']"));
             });
     }
 
@@ -112,9 +144,9 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                Assert.Equal(2, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
-                Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
-                Assert.Equal(2, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
+                Assert.Equal(6, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
+                Assert.Equal(7, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
+                Assert.Equal(6, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
                 Assert.All(
                     cut.FindAll("[role='separator'][data-atlas-split-id]"),
                     splitter =>
