@@ -1,0 +1,145 @@
+@namespace Atlas.Demo.Components
+@using Atlas.Demo.Models.Dbc
+@using Atlas.Demo.ViewModels
+@implements IDisposable
+
+<div class="dbc-editor" data-testid="dbc-editor" aria-label="DBC editor">
+    @if (Model.FileName is null)
+    {
+        <p class="dbc-empty">Select a .dbc file in the explorer to edit it.</p>
+    }
+    else
+    {
+        <div class="dbc-editor-toolbar">
+            <span class="dbc-editor-file">@Model.Folder / @Model.FileName</span>
+            <button type="button"
+                    class="dbc-action @(Model.Mode == DbcEditorModel.ViewMode.Text ? "active" : "")"
+                    @onclick="() => Model.SetMode(DbcEditorModel.ViewMode.Text)">Text</button>
+            <button type="button"
+                    class="dbc-action @(Model.Mode == DbcEditorModel.ViewMode.Table ? "active" : "")"
+                    @onclick="() => Model.SetMode(DbcEditorModel.ViewMode.Table)">Table</button>
+        </div>
+
+        @if (Model.Mode == DbcEditorModel.ViewMode.Text)
+        {
+            <div class="dbc-editor-text">
+                <textarea @bind="editedContent"
+                          class="dbc-textarea"
+                          spellcheck="false"
+                          aria-label="DBC raw text"></textarea>
+                <div class="dbc-editor-actions">
+                    <button type="button" class="dbc-action primary"
+                            @onclick="OnSaveText">Save</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="dbc-editor-table">
+                @if (Model.Document is null)
+                {
+                    <p class="dbc-empty">This file could not be parsed as DBC.</p>
+                }
+                else if (Model.Document.Messages.Count == 0)
+                {
+                    <p class="dbc-empty">No messages in this DBC file.</p>
+                }
+                else
+                {
+                    <table class="dbc-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Id</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Len</th>
+                                <th scope="col">Transmitter</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var message in Model.Document.Messages)
+                            {
+                                <tr class="dbc-message-row" data-message-id="@message.Id">
+                                    <td>@message.Id</td>
+                                    <td>
+                                        <button type="button"
+                                                class="dbc-link"
+                                                data-testid="dbc-message"
+                                                @onclick="() => OnMessageSelected(message)">
+                                            @message.Name
+                                        </button>
+                                    </td>
+                                    <td>@message.Length</td>
+                                    <td>@message.Transmitter</td>
+                                </tr>
+                                @foreach (var signal in message.Signals)
+                                {
+                                    <tr class="dbc-signal-row" data-signal-id="@signal.Name">
+                                        <td></td>
+                                        <td>
+                                            <button type="button"
+                                                    class="dbc-link"
+                                                    data-testid="dbc-signal"
+                                                    @onclick="() => OnSignalSelected(message, signal)">
+                                                ⤷ @signal.Name
+                                            </button>
+                                        </td>
+                                        <td>@signal.Length</td>
+                                        <td>@signal.Receiver</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string? editedContent;
+
+    [Parameter, EditorRequired]
+    public DbcEditorModel Model { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<DbcMessage> OnMessageSelectedCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<DbcSignal> OnSignalSelectedCallback { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Model.StateChanged += OnModelChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        editedContent = Model.RawContent;
+    }
+
+    private void OnModelChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSaveText()
+    {
+        Model.Save(editedContent ?? string.Empty);
+    }
+
+    private Task OnMessageSelected(DbcMessage message)
+    {
+        return OnMessageSelectedCallback.InvokeAsync(message);
+    }
+
+    private Task OnSignalSelected(DbcMessage message, DbcSignal signal)
+    {
+        return OnSignalSelectedCallback.InvokeAsync(signal);
+    }
+
+    public void Dispose()
+    {
+        Model.StateChanged -= OnModelChanged;
+    }
+}

@@ -52,16 +52,21 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     }
 
     [Fact]
-    public void Editor_exposes_three_tabs_and_switches_content()
+    public void Editor_exposes_four_tabs_and_switches_content()
     {
         var cut = RenderComponent<AtlasDemoWorkspace>();
 
         cut.WaitForAssertion(
             () => Assert.Equal(
-                3,
+                4,
                 cut.FindAll("[data-atlas-group-kind='document'] [role='tab']").Count));
 
-        Assert.Contains("Atlas.Demo ready", cut.Markup, StringComparison.Ordinal);
+        // The DBC editor document is the initially active tab.
+        cut.WaitForAssertion(
+            () => Assert.Contains(
+                "Select a .dbc file in the explorer to edit it.",
+                cut.Markup,
+                StringComparison.Ordinal));
 
         cut.InvokeAsync(
             () => cut.Find("[role='tab'][aria-label='Workspace.razor']").Click());
@@ -76,6 +81,14 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () => Assert.Contains(
                 "NuGet consumer sample",
+                cut.Markup,
+                StringComparison.Ordinal));
+
+        cut.InvokeAsync(
+            () => cut.Find("[role='tab'][aria-label='Program.cs']").Click());
+        cut.WaitForAssertion(
+            () => Assert.Contains(
+                "Atlas.Demo ready",
                 cut.Markup,
                 StringComparison.Ordinal));
     }
@@ -98,7 +111,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                 Assert.False(string.IsNullOrWhiteSpace(documentTabList.GetAttribute("aria-label")));
 
                 var tabs = cut.FindAll("[data-atlas-group-kind='document'] [role='tab']");
-                Assert.Equal(3, tabs.Count);
+                Assert.Equal(4, tabs.Count);
                 Assert.All(tabs, tab => Assert.False(string.IsNullOrWhiteSpace(tab.GetAttribute("aria-controls"))));
 
                 var selectedTab = cut.Find(

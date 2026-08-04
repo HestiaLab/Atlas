@@ -15,9 +15,9 @@ internal static class AtlasDemoWorkspaceDefinition
             throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
         }
 
-        var project = Tool("project", "Project");
+        var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: "dbc-tree");
         var structure = Tool("structure", "Structure");
-        var services = Tool("services", "Services");
+        var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
         var database = Tool("database", "Database", contentKind: "product-actions");
         var products = Tool("products", "Products", contentKind: "bootstrap-table");
         var terminal = Tool("terminal", "Terminal");
@@ -25,17 +25,18 @@ internal static class AtlasDemoWorkspaceDefinition
         var program = Document("program", "Program.cs", isPinned: true);
         var workspace = Document("workspace", "Workspace.razor");
         var readme = Document("readme", "README.md");
+        var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: "dbc-editor");
 
-        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, project.Id);
+        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, dbcTree.Id);
         var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, structure.Id);
         var editor = new GroupNode(
             Id("editor"),
             DockItemKind.Document,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            new[] { program.Id, workspace.Id, readme.Id },
-            program.Id);
-        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, services.Id);
+            new[] { dbcEditor.Id, program.Id, workspace.Id, readme.Id },
+            dbcEditor.Id);
+        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, dbcProperty.Id);
         var rightLower = ToolGroup(
             "right-lower",
             LogicalRegion.InlineEndLower,
@@ -105,9 +106,9 @@ internal static class AtlasDemoWorkspaceDefinition
         };
         DockItem[] items =
         {
-            project,
+            dbcTree,
             structure,
-            services,
+            dbcProperty,
             database,
             products,
             terminal,
@@ -115,6 +116,7 @@ internal static class AtlasDemoWorkspaceDefinition
             program,
             workspace,
             readme,
+            dbcEditor,
         };
         var toolBars = new[]
         {
@@ -123,9 +125,9 @@ internal static class AtlasDemoWorkspaceDefinition
         };
         var toolBarOrders = new[]
         {
-            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { project.Id }),
+            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { dbcTree.Id }),
             new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { structure.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { services.Id }),
+            new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { dbcProperty.Id }),
             new ToolBarOrderState(
                 LogicalRegion.InlineEndLower,
                 new[] { database.Id, products.Id }),
@@ -185,12 +187,16 @@ internal static class AtlasDemoWorkspaceDefinition
             id);
     }
 
-    private static DockItem Document(string id, string title, bool isPinned = false)
+    private static DockItem Document(
+        string id,
+        string title,
+        bool isPinned = false,
+        string contentKind = "atlas-demo-editor")
     {
         return new DockItem(
             new DockItemId(id),
             DockItemKind.Document,
-            new ContentReference("atlas-demo-editor", id),
+            new ContentReference(contentKind, id),
             DockItemCapabilityPresets.Document,
             title,
             id,

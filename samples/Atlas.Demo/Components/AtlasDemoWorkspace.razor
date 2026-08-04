@@ -4,6 +4,9 @@
 @using Atlas.Core
 @using Atlas.Core.Changes
 @using Atlas.Demo.Models
+@using Atlas.Demo.Models.Dbc
+@using Atlas.Demo.Services
+@using Atlas.Demo.ViewModels
 
 <section class="atlas-demo-shell" aria-label="Atlas IDE consumer sample">
     @if (workspace is null)
@@ -39,6 +42,23 @@
                         <AtlasDemoContent Content="content" />
                     </ChildContent>
                 </AtlasContentRoute>
+                <AtlasContentRoute Kind="dbc-tree">
+                    <ChildContent Context="content">
+                        <DbcTreePanel Model="dbcTree" />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="dbc-editor">
+                    <ChildContent Context="content">
+                        <DbcEditorPanel Model="dbcEditor"
+                                        OnMessageSelectedCallback="ShowMessageProperties"
+                                        OnSignalSelectedCallback="ShowSignalProperties" />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="dbc-property">
+                    <ChildContent Context="content">
+                        <DbcPropertyPanel Model="dbcProperty" />
+                    </ChildContent>
+                </AtlasContentRoute>
             </ContentRoutes>
 
             <ErrorTemplate Context="content">
@@ -55,6 +75,10 @@
         new("prod-2", "Beta", 7.25m),
         new("prod-3", "Gamma", 99.00m),
     };
+    private readonly DbcFileStore dbcStore = new();
+    private DbcTreeModel dbcTree = null!;
+    private DbcEditorModel dbcEditor = null!;
+    private DbcPropertyModel dbcProperty = null!;
     private readonly RenderFragment topToolbar;
     private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
@@ -95,6 +119,38 @@
 
         workspace = result.Value;
         workspace.Changed += OnWorkspaceChanged;
+
+        dbcTree = new DbcTreeModel(dbcStore);
+        dbcEditor = new DbcEditorModel(dbcStore);
+        dbcProperty = new DbcPropertyModel();
+        dbcTree.StateChanged += OnDbcSelectionChanged;
+    }
+
+    private void OnDbcSelectionChanged()
+    {
+        if (dbcTree.SelectedFolder is null || dbcTree.SelectedFile is null)
+        {
+            return;
+        }
+
+        var file = dbcStore.Find(dbcTree.SelectedFolder, dbcTree.SelectedFile);
+        if (file is null)
+        {
+            return;
+        }
+
+        dbcEditor.Open(file.Name, file.Name, file.Content, file.Parsed);
+        dbcProperty.ShowFile(file);
+    }
+
+    private void ShowMessageProperties(DbcMessage message)
+    {
+        dbcProperty.ShowMessage(message);
+    }
+
+    private void ShowSignalProperties(DbcSignal signal)
+    {
+        dbcProperty.ShowSignal(signal);
     }
 
     private async Task UndoAsync()
