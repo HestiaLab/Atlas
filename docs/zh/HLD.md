@@ -91,7 +91,7 @@ Core 层不引用 Blazor、JSRuntime、DOM——所有布局逻辑可脱离浏�
 JS 层只处理高频交互几何，不直接修改 committed state。Blazor 组件是状态的只读投影。
 
 Core 项目引用限制为 BCL，不依赖任何 UI 框架；状态变更只通过 Core 层的 Operation pipeline；
-Blazor 组件通过 ChangeSet 获知需要更新的部分，不自行决定是否重渲染。
+Changed 事件触发一次重渲染 pass；组件用 projection dependency stamp（不可变 Snapshot 值的引用身份）门控实际重渲染，更新范围限定在受影响子树。
 
 来源：F-001~004, NF-004, F-109
 ```
@@ -109,8 +109,9 @@ UI 是该聚合根的只读投影。
 一次 Panel 移动、一次 Splitter 拖拽结束——操作要么完整生效，要么完全不生效。"只读投影" =
 Blazor 组件不修改状态，只是把当前快照渲染成 DOM + 把用户交互转发给操作引擎。
 
-此设计消除了"先改 A 再改 B"的中间状态窗口——任何失败不产生部分修改的残留状态。渲染组件只通过
-ChangeSet 获知需要更新的部分，避免全树无效重渲染。
+此设计消除了"先改 A 再改 B"的中间状态窗口——任何失败不产生部分修改的残留状态。渲染组件保持为已提交
+Snapshot 的只读投影；Changed 事件触发一次重渲染 pass，组级组件用 projection dependency stamp（不可变 Snapshot
+值的引用身份）门控实际重渲染，避免全树无效重渲染。
 
 Snapshot 对 consumer 只读，内部使用 immutable collection 或 copy-on-write。
 不存在"直接修改 Model 属性"的 mutation 旁路。渲染组件基于明确 projection dependency stamp
@@ -205,7 +206,8 @@ Capabilities 和 DockingPolicy 表达，不维护两套独立的 model hierarchy
 ToolBar 为所有 Tool Item 提供统一入口，不等同于 AutoHideStrip。Expanded、Collapsed 与
 AutoHidden Panel 均生成恰好一个 ToolBar Entry；AutoHideStrip 只保存 AutoHidden Item 的 placement
 与 dock-back bookmark。ToolBar Entry 是渲染层派生数据——WorkspaceSnapshot 中不存储 ToolBar
-条目表。派生投影的更新由 ChangeSet 中的 Node/Item/ToolBar 更新触发重算。固定命名的 Region 不再
+条目表。派生投影（ToolBar Entry、Tab header 等渲染层数据）在每次渲染 pass 中由已提交的 Snapshot 重算；
+Changed 事件触发该 pass，projection dependency stamp 限制实际重渲染。固定命名的 Region 不再
 作为 domain type——IDE preset 通过 Layout Tree builder 生成对应 SplitNode/GroupNode 结构。
 
 来源：§1.7 空间概念, §1.3 系统架构, F-020~024, F-149
@@ -805,10 +807,14 @@ IAtlasWorkspace 公共接口与 LayoutChangeSet
           CancellationToken cancellationToken = default);
   }
 
-LayoutChangeSet 是渲染器的精确定向失效输入（F-110），包含 AddedNodes / RemovedNodes /
-UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、UpdatedToolBars / UpdatedToolBarOrders /
-UpdatedAutoHideStrips、BeforeRevision / AfterRevision、ChangeKind。集合只携带稳定 ID/side，
-不携带 RenderFragment 或 DOM reference。
+LayoutChangeSet 是通用 Changed 事件的 F-110 契约载荷，也是强类型领域事件（ItemOpened /
+ItemClosed / ToolCreated / ToolRemoved / WorkspaceRestored）的派生来源。它包含 AddedNodes /
+RemovedNodes / UpdatedNodes、AddedItems / RemovedItems / UpdatedItems、UpdatedToolBars /
+UpdatedToolBarOrders / UpdatedAutoHideStrips、BeforeRevision / AfterRevision、ChangeKind。
+集合只携带稳定 ID/side，不携带 RenderFragment 或 DOM reference。
+
+实现备注：Blazor 投影层不直接消费 ChangeSet 的 ID 集合；定向更新通过不可变 Snapshot 参数传递加组级
+projection dependency stamp（ShouldRender）实现，由框架的参数相等性 diff 将重渲染限定到受影响子树。
 
 Typed result（WorkspaceResult<T>）：Succeeded 为 true 时 Value 必有，为 false 时 Error 必有。
 合法但没有语义变化的 operation 返回 NoChange result（空 ChangeSet，不进入 History，不递增
@@ -973,7 +979,7 @@ JS / .NET 边界划分
     - 构造 Operation → 提交（F-133）
     ↓
   Blazor 层（只读渲染）
-    - 根据新 Snapshot + ChangeSet 更新 DOM
+    - 根据新 Snapshot 更新 DOM（Changed 事件携带 ChangeSet，触发重渲染 pass）
 
 JS 负责：pointer capture、drag threshold、root-scoped source/target DOM lookup、geometry
 snapshot、target intent resolution、preview/indicator/overlay、scroll/resize/visibility

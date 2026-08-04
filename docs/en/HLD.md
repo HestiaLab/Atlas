@@ -90,7 +90,8 @@ The JS layer only handles high-frequency interaction geometry and does not direc
 read-only projections of the state.
 
 Core project references are limited to the BCL and depend on no UI framework; state changes flow only through the Core-layer
-Operation pipeline; Blazor components learn which parts need updating via ChangeSet and do not decide re-rendering on their own.
+Operation pipeline; the Changed event triggers one re-render pass; components gate actual re-rendering with projection
+dependency stamps (reference identity of immutable Snapshot values), keeping updates scoped to affected subtrees.
 
 Source: F-001~004, NF-004, F-109
 ```
@@ -110,7 +111,8 @@ components do not modify state; they only render the current snapshot into the D
 engine.
 
 This design eliminates the intermediate-state window of "change A first, then B" — no failure leaves residual partially-modified
-state. Rendering components learn which parts need updating only via ChangeSet, avoiding invalid full-tree re-renders.
+state. Rendering components stay read-only projections of the committed Snapshot; the Changed event triggers one re-render
+pass and group-level components gate re-rendering with projection dependency stamps, avoiding invalid full-tree re-renders.
 
 The Snapshot is read-only to consumers; internally it uses immutable collections or copy-on-write. There is no mutation bypass
 that "directly modifies Model properties". Rendering components implement ShouldRender based on an explicit projection
@@ -204,7 +206,9 @@ not "panel containers" but navigation entry points — they do not participate i
 The ToolBar provides a unified entry point for all Tool Items; it is not the same as the AutoHideStrip. Every Expanded, Collapsed,
 and AutoHidden Panel produces exactly one ToolBar Entry; the AutoHideStrip stores only the placement and dock-back bookmark of
 AutoHidden Items. ToolBar Entry is render-layer derived data — the WorkspaceSnapshot does not store a ToolBar entry table.
-Derived-projection updates are recomputed when triggered by Node/Item/ToolBar updates in the ChangeSet. Fixed named Regions are no
+Derived-projection updates (ToolBar Entry, tab headers, and other render-layer data) are recomputed from the committed
+Snapshot during each render pass; the Changed event triggers the pass and projection dependency stamps limit actual
+re-renders. Fixed named Regions are no
 longer a domain type — IDE presets generate the corresponding SplitNode/GroupNode structure through the Layout Tree builder.
 
 Source: §1.7 Spatial Concepts, §1.3 System Architecture, F-020~024, F-149
@@ -818,10 +822,15 @@ Public interface:
           CancellationToken cancellationToken = default);
   }
 
-LayoutChangeSet is the renderer's precise, targeted invalidation input (F-110), containing AddedNodes / RemovedNodes /
+LayoutChangeSet is the F-110 contract payload of the generic Changed event and the derivation source for the typed domain
+events (ItemOpened / ItemClosed / ToolCreated / ToolRemoved / WorkspaceRestored). It contains AddedNodes / RemovedNodes /
 UpdatedNodes, AddedItems / RemovedItems / UpdatedItems, UpdatedToolBars / UpdatedToolBarOrders / UpdatedAutoHideStrips,
 BeforeRevision / AfterRevision, and ChangeKind. The collections carry only stable IDs/sides — never RenderFragment or DOM
 references.
+
+Implementation note: the Blazor projection layer does not directly consume the ChangeSet ID collections; targeted updates
+are achieved through immutable Snapshot parameter passing plus per-group projection dependency stamps (ShouldRender), with
+the framework's parameter-equality diff limiting re-renders to affected subtrees.
 
 Typed result (WorkspaceResult<T>): when Succeeded is true, Value is always present; when false, Error is always present. A
 valid operation with no semantic change returns a NoChange result (empty ChangeSet, not entering History, not incrementing
@@ -991,7 +1000,7 @@ Interaction processing flow:
     - Construct Operation → commit (F-133)
     ↓
   Blazor layer (read-only rendering)
-    - Update the DOM from the new Snapshot + ChangeSet
+    - Update the DOM from the new Snapshot (the Changed event, carrying the ChangeSet, triggers the re-render pass)
 
 JS is responsible for: pointer capture, drag threshold, root-scoped source/target DOM lookup,
 geometry snapshot, target intent resolution, preview/indicator/overlay, scroll/resize/visibility

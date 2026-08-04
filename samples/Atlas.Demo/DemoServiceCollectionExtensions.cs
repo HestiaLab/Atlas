@@ -1,14 +1,13 @@
 using Atlas.Blazor.DependencyInjection;
-using Atlas.Demo.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Atlas.Demo;
 
 /// <summary>
-/// Registers the Atlas services the Demo needs at startup: the workspace
-/// factory and the two startup-DI content kinds. The coordination panels
-/// (product actions and products table) are Host-local Route/Map contributions,
-/// so they are not registered here.
+/// Registers the Atlas services the Demo needs at startup. Only the workspace
+/// factory is registered here; every content panel (product actions, products
+/// table, and the AtlasDemoContent tool/editor views) is a Host-local
+/// AtlasContentRoute contribution declared by AtlasDemoWorkspace.
 /// </summary>
 public static class DemoServiceCollectionExtensions
 {
@@ -16,8 +15,6 @@ public static class DemoServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddAtlasWorkspace();
-        services.AddAtlasContent<AtlasDemoContent>("atlas-demo-tool");
-        services.AddAtlasContent<AtlasDemoContent>("atlas-demo-editor");
         return services;
     }
 }
