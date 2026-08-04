@@ -4,10 +4,19 @@
     <RootNamespace>Atlas.Blazor</RootNamespace>
     <AssemblyName>Atlas.Blazor</AssemblyName>
     <PackageId>Atlas.Blazor</PackageId>
-    <Description>Blazor rendering and browser interaction package for Atlas.</Description>
+    <Description>Dockable workspace component library for Blazor: tool panels, editor tabs, split views, drag-and-drop, and layout persistence.</Description>
+    <PackageTags>blazor;dock;layout;workspace;ide;splitter;drag-drop</PackageTags>
+    <Authors>wubing7755</Authors>
+    <RepositoryUrl>https://github.com/wubing7755/Atlas</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>package-readme.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="package-readme.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
