@@ -91,3 +91,6 @@ CI 固定安装 .NET 6 SDK 与 Node.js 24，并在 Windows/Linux 执行同一基
 
 Decision 3（`Atlas.Demo`）由 [ADR-0016](./0016-remove-application-projects.md) 取代；其余运行时、
 双包、工具链、测试与 CI 决策继续有效。
+决策 2（两个 NuGet 包）对新版本由
+[ADR-0019](./0019-single-package-atlas-blazor.md) 取代：只发布一个
+`Atlas.Blazor` 包并嵌入 `Atlas.Core.dll`，同时保留 Core/Blazor 项目边界。

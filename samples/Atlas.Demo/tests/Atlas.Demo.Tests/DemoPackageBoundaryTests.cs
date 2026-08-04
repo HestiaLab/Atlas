@@ -16,8 +16,10 @@ public sealed class DemoPackageBoundaryTests
             .Where(value => value is not null)
             .ToArray();
 
-        Assert.Contains("Atlas.Core", references);
+        // Single-package distribution (ADR-0019): the demo references only
+        // Atlas.Blazor; Atlas.Core.dll is embedded in that package.
         Assert.Contains("Atlas.Blazor", references);
+        Assert.DoesNotContain("Atlas.Core", references);
         var forbiddenReferenceElement = "Project" + "Reference";
         Assert.Empty(project.Descendants(forbiddenReferenceElement));
         var consumerProjects = Directory.EnumerateFiles(root, "*.csproj", SearchOption.AllDirectories)

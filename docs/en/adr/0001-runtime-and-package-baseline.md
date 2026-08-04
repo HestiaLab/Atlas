@@ -116,3 +116,7 @@ for the first code commit/PR, but does not block local DEV-GATE-001 closure.
 Decision 3 (`Atlas.Demo`) is superseded by
 [ADR-0016](./0016-remove-application-projects.md); the remaining runtime,
 two-package, toolchain, test, and CI decisions continue to apply.
+Decision 2 (two NuGet packages) is superseded for new releases by
+[ADR-0019](./0019-single-package-atlas-blazor.md), which publishes a single
+`Atlas.Blazor` package embedding `Atlas.Core.dll` while keeping the
+Core/Blazor project boundary.

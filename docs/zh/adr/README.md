@@ -38,6 +38,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0016](./0016-remove-application-projects.md) | Accepted | 删除 Atlas.Demo 与 Atlas.Examples.Rider，只保留双包、测试和静态 fixtures |
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | 新增独立 NuGet consumer sample；取代 ADR-0016 的长期应用项目禁令 |
 | [ADR-0018](./0018-unified-content-catalog-and-runtime-binding.md) | Accepted | 统一启动期 DI、Host-local Route 与强类型 Map 内容注册；跨 Panel 状态由应用拥有 |
+| [ADR-0019](./0019-single-package-atlas-blazor.md) | Accepted | 只发布一个包（Atlas.Blazor）并嵌入 Atlas.Core.dll；保留独立 Core 项目；取代 ADR-0001 双包决策 |
 
 ## 编写约定
 

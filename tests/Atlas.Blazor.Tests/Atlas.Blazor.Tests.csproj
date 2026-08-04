@@ -12,6 +12,11 @@
     <PackageReference Include="coverlet.collector" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Source-level references: tests exercise both projects directly. The
+         single-package distribution (ADR-0019) only affects NuGet packaging;
+         PrivateAssets=all on Atlas.Blazor's Core reference would otherwise
+         hide Atlas.Core from this test project, so reference it explicitly. -->
+    <ProjectReference Include="..\..\src\Atlas.Core\Atlas.Core.csproj" />
     <ProjectReference Include="..\..\src\Atlas.Blazor\Atlas.Blazor.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -76,8 +76,7 @@ dotnet test Atlas.sln --no-build --no-restore
 # Format check
 dotnet format Atlas.sln --verify-no-changes --no-restore
 
-# Validate NuGet packaging
-dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
+# Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 
 # Verify the independent NuGet consumer sample after packing

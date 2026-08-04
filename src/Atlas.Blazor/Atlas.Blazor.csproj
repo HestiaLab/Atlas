@@ -12,9 +12,21 @@
     <SupportedPlatform Include="browser" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" />
+    <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--
+      Single-package distribution: embed Atlas.Core.dll into the Atlas.Blazor
+      nupkg so consumers install one package and get both assemblies. The
+      PrivateAssets="all" project reference keeps Atlas.Core out of the nuspec
+      dependency list (no external package required), and the build-output
+      hook below adds the Core assembly to the package's lib/<tfm> folder.
+    -->
+    <None Include="$(OutputPath)Atlas.Core.dll"
+          Pack="true"
+          PackagePath="lib\$(TargetFramework)" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="package.json" Pack="false" />

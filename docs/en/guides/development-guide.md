@@ -240,20 +240,16 @@ npm ci
 npm run build:js
 cd ../..
 
-# 0.0.0-dev reuses the same package version; remove old artifacts and the
-# Demo's matching NuGet cache first.
-rm -f artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.core/0.0.0-dev \
-  samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
+# Single-package distribution (ADR-0019): only Atlas.Blazor is published;
+# it embeds Atlas.Core.dll. 0.0.0-dev reuses the same package version;
+# remove old artifacts and the Demo's matching NuGet cache first.
+rm -f artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
+rm -rf samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
 
-dotnet pack src/Atlas.Core/Atlas.Core.csproj \
-  --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
+sha256sum artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
 
 cd samples/Atlas.Demo
 dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache

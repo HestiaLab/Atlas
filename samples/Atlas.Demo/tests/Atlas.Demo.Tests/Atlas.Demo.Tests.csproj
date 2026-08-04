@@ -5,7 +5,6 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Atlas.Core" />
     <PackageReference Include="Atlas.Blazor" />
     <PackageReference Include="bunit" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" />

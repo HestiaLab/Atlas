@@ -8,9 +8,9 @@ and the [development guide](./development-guide.md): where those explain how
 Atlas works, this guide shows what a consumer writes. The example is the
 `samples/Atlas.Demo` consumer; every snippet below comes from code that runs.
 
-## 1. Reference The Packages
+## 1. Reference The Package
 
-Atlas ships two NuGet packages. Add them to your Blazor project:
+Atlas ships one NuGet package: `Atlas.Blazor`. Add it to your Blazor project:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
@@ -18,14 +18,16 @@ Atlas ships two NuGet packages. Add them to your Blazor project:
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Atlas.Core" Version="0.0.0-dev" />
     <PackageReference Include="Atlas.Blazor" Version="0.0.0-dev" />
   </ItemGroup>
 </Project>
 ```
 
-`Atlas.Core` is UI-independent; `Atlas.Blazor` depends on it and provides the
-Razor components. A consumer never references Atlas source projects.
+`Atlas.Blazor` provides the Razor components and embeds `Atlas.Core.dll` (the
+UI-independent domain and operation engine), so one package is enough. If you
+directly use `Atlas.Core` types from a project that does not otherwise depend
+on `Atlas.Blazor`, add an explicit reference to that package; most consumers
+never need to. A consumer never references Atlas source projects.
 
 Register the services once in `Program.cs`:
 
