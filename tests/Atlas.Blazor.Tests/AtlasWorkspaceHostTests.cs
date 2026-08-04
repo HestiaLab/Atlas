@@ -13,6 +13,7 @@ using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Bunit;
+using Bunit.Web.AngleSharp;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.RenderTree;
@@ -1936,6 +1937,116 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Interaction_controller_stays_attached_when_host_root_is_preserved()
+    {
+        // The Host wraps its content-route collector in a keyed CascadingValue.
+        // Keys must be stable identities; a per-render new object as key makes
+        // Blazor destroy and recreate the whole subtree — including the
+        // workspace root element — on every re-render. That replaced root
+        // severs the controller's pointer listeners and forced the defensive
+        // dispose/re-attach path (and, after a re-attach, drag session ids
+        // restarted at 1, colliding with consumed sessions). With a stable key
+        // the root element is preserved across revision changes and the
+        // controller stays attached for the life of the host.
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut.WaitForAssertion(
+            () => Assert.True(
+                module.Invocations["attachAtlasController"].Count >= 1));
+        var attachesBefore = module.Invocations["attachAtlasController"].Count;
+        var disposesBefore = module.Invocations["disposeAtlasController"].Count;
+        var rootBefore = cut.Find(".atlas-v2-workspace");
+        var revBefore = rootBefore.GetAttribute("data-atlas-revision");
+
+        // Commit a real interaction → workspace revision change → Host
+        // re-render. The root element must be preserved, not replaced.
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Last().Arguments[2]!;
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1);
+
+        cut.WaitForAssertion(() =>
+            Assert.NotEqual(
+                revBefore,
+                cut.Find(".atlas-v2-workspace").GetAttribute("data-atlas-revision")));
+
+        // The same DOM node must still be in the tree, and the controller must
+        // NOT have been disposed and re-attached. Compare the underlying
+        // AngleSharp node (Find returns a per-call wrapper).
+        Assert.Same(
+            rootBefore.Unwrap(),
+            cut.Find(".atlas-v2-workspace").Unwrap());
+        Assert.Equal(attachesBefore, module.Invocations["attachAtlasController"].Count);
+        Assert.Equal(disposesBefore, module.Invocations["disposeAtlasController"].Count);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Interaction_controller_reattaches_when_host_root_element_is_replaced()
+    {
+        // Defensive path: even though the normal render path now preserves the
+        // root element, the controller must still detect an externally replaced
+        // root and re-attach instead of leaving listeners bound to a detached
+        // node. Simulate the replacement by disposing the host and rendering a
+        // fresh instance under the same JS module.
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut.WaitForAssertion(
+            () => Assert.True(
+                module.Invocations["attachAtlasController"].Count >= 1));
+        var firstRootId = ((ElementReference)module
+            .Invocations["attachAtlasController"].First().Arguments[0]!).Id;
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+
+        var tracked2 = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut2 = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked2)
+                .Add(component => component.EnableInteractions, true)
+                .Add(component => component.ContentRoutes, RouteFragment("tool")));
+
+        cut2.WaitForAssertion(() =>
+            Assert.True(
+                module.Invocations["attachAtlasController"].Count > 1));
+        var lastRootId = ((ElementReference)module
+            .Invocations["attachAtlasController"].Last().Arguments[0]!).Id;
+        Assert.NotEqual(firstRootId, lastRootId);
+
+        await cut2.Instance.DisposeAsync();
+        await tracked2.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Dom_metadata_manifest_matches_rendered_projection()
     {
         var path = Path.Combine(
@@ -2020,6 +2131,17 @@ public sealed class AtlasWorkspaceHostTests : TestContext
 
     private static RenderFragment<AtlasContentContext> ContentText =>
         context => builder => builder.AddContent(0, $"{context.Item.Title} content");
+
+    private static RenderFragment RouteFragment(string kind)
+    {
+        return builder =>
+        {
+            builder.OpenComponent<AtlasContentRoute>(0);
+            builder.AddAttribute(1, "Kind", kind);
+            builder.AddAttribute(2, "ChildContent", ContentText);
+            builder.CloseComponent();
+        };
+    }
 
     private static void AssertRelationship(
         IRenderedFragment cut,

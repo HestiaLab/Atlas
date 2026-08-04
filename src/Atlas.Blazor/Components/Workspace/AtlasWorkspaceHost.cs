@@ -265,6 +265,12 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         if (ContentRoutes is not null)
         {
             builder.OpenComponent<CascadingValue<AtlasContentRouteCollector>>(sequence++);
+            // The collector is a per-render registration vehicle: descendant
+            // AtlasContentRoute components must re-register on every parent
+            // render, so the CascadingValue key changes with the collector
+            // instance. The workspace root div below carries a STABLE key
+            // instead, so Blazor reuses that DOM node across re-renders and the
+            // interaction controller's listeners stay bound to a live element.
             builder.SetKey(routeCollector);
             builder.AddAttribute(sequence++, "Value", routeCollector);
             builder.AddAttribute(sequence++, "ChildContent", ContentRoutes);
@@ -288,7 +294,11 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         var snapshot = activeWorkspace.Current;
+        // Stable anchor for the interaction controller: Blazor reuses this DOM
+        // node across re-renders (only attributes change), so the controller's
+        // pointer listeners stay bound to a live element.
         builder.OpenElement(sequence++, "div");
+        builder.SetKey("atlas-workspace-root");
         builder.AddAttribute(sequence++, "class", "atlas-v2-workspace");
         builder.AddAttribute(sequence++, "role", "region");
         builder.AddAttribute(sequence++, "aria-label", $"Atlas workspace {activeWorkspace.Id.Value}");
