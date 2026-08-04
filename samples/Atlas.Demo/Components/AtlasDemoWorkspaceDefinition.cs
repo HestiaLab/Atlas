@@ -16,107 +16,47 @@ internal static class AtlasDemoWorkspaceDefinition
         }
 
         var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: "dbc-tree");
-        var structure = Tool("structure", "Structure");
-        var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
-        var database = Tool("database", "Database", contentKind: "product-actions");
-        var products = Tool("products", "Products", contentKind: "bootstrap-table");
-        var terminal = Tool("terminal", "Terminal");
-        var problems = Tool("problems", "Problems");
-        var program = Document("program", "Program.cs", isPinned: true);
-        var workspace = Document("workspace", "Workspace.razor");
-        var readme = Document("readme", "README.md");
         var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: "dbc-editor");
+        var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
 
-        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, dbcTree.Id);
-        var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, structure.Id);
+        var left = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, dbcTree.Id);
         var editor = new GroupNode(
             Id("editor"),
             DockItemKind.Document,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            new[] { dbcEditor.Id, program.Id, workspace.Id, readme.Id },
+            new[] { dbcEditor.Id },
             dbcEditor.Id);
-        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, dbcProperty.Id);
-        var rightLower = ToolGroup(
-            "right-lower",
-            LogicalRegion.InlineEndLower,
-            database.Id,
-            products.Id);
-        var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, terminal.Id);
-        var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, problems.Id);
+        var right = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, dbcProperty.Id);
 
-        var leftDock = Split(
-            "left-dock",
-            SplitAxis.BlockChildren,
-            0.56d,
-            leftUpper.Id,
-            leftLower.Id,
-            new SplitConstraints(100d, null, 100d, null));
-        var rightDock = Split(
-            "right-dock",
-            SplitAxis.BlockChildren,
-            0.54d,
-            rightUpper.Id,
-            rightLower.Id,
-            new SplitConstraints(100d, null, 100d, null));
         var editorAndRight = Split(
             "editor-right",
             SplitAxis.InlineChildren,
             0.74d,
             editor.Id,
-            rightDock.Id,
+            right.Id,
             new SplitConstraints(280d, null, 160d, 420d));
-        var mainArea = Split(
-            "main-area",
-            SplitAxis.InlineChildren,
-            0.21d,
-            leftDock.Id,
-            editorAndRight.Id,
-            new SplitConstraints(150d, 380d, 360d, null));
-        var bottomDock = Split(
-            "bottom-dock",
-            SplitAxis.InlineChildren,
-            0.62d,
-            bottomLeft.Id,
-            bottomRight.Id,
-            new SplitConstraints(180d, null, 160d, null));
         var root = Split(
             "root",
-            SplitAxis.BlockChildren,
-            0.72d,
-            mainArea.Id,
-            bottomDock.Id,
-            new SplitConstraints(300d, null, 120d, 360d));
+            SplitAxis.InlineChildren,
+            0.21d,
+            left.Id,
+            editorAndRight.Id,
+            new SplitConstraints(150d, 380d, 360d, null));
 
         LayoutNode[] nodes =
         {
             root,
-            mainArea,
-            leftDock,
             editorAndRight,
-            rightDock,
-            bottomDock,
-            leftUpper,
-            leftLower,
+            left,
             editor,
-            rightUpper,
-            rightLower,
-            bottomLeft,
-            bottomRight,
+            right,
         };
         DockItem[] items =
         {
             dbcTree,
-            structure,
-            dbcProperty,
-            database,
-            products,
-            terminal,
-            problems,
-            program,
-            workspace,
-            readme,
             dbcEditor,
+            dbcProperty,
         };
         var toolBars = new[]
         {
@@ -126,13 +66,7 @@ internal static class AtlasDemoWorkspaceDefinition
         var toolBarOrders = new[]
         {
             new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { dbcTree.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { structure.Id }),
             new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { dbcProperty.Id }),
-            new ToolBarOrderState(
-                LogicalRegion.InlineEndLower,
-                new[] { database.Id, products.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineStart, new[] { terminal.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineEnd, new[] { problems.Id }),
         };
 
         return new AtlasWorkspaceDefinition(

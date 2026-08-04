@@ -3,7 +3,6 @@
 @using Atlas.Blazor.Content
 @using Atlas.Core
 @using Atlas.Core.Changes
-@using Atlas.Demo.Models
 @using Atlas.Demo.Models.Dbc
 @using Atlas.Demo.Services
 @using Atlas.Demo.ViewModels
@@ -21,27 +20,6 @@
                             StatusBarContent="@statusBar"
                             EnableInteractions="true">
             <ContentRoutes>
-                <AtlasContentRoute Kind="product-actions">
-                    <ChildContent Context="content">
-                        <ProductTableActionsPanel ProductCount="@products.Count"
-                                                  OnClear="ClearProducts" />
-                    </ChildContent>
-                </AtlasContentRoute>
-                <AtlasContentRoute Kind="bootstrap-table">
-                    <ChildContent Context="content">
-                        <BootstrapTablePanel Items="products" />
-                    </ChildContent>
-                </AtlasContentRoute>
-                <AtlasContentRoute Kind="atlas-demo-tool">
-                    <ChildContent Context="content">
-                        <AtlasDemoContent Content="content" />
-                    </ChildContent>
-                </AtlasContentRoute>
-                <AtlasContentRoute Kind="atlas-demo-editor">
-                    <ChildContent Context="content">
-                        <AtlasDemoContent Content="content" />
-                    </ChildContent>
-                </AtlasContentRoute>
                 <AtlasContentRoute Kind="dbc-tree">
                     <ChildContent Context="content">
                         <DbcTreePanel Model="dbcTree" />
@@ -69,12 +47,6 @@
 </section>
 
 @code {
-    private readonly List<ProductItem> products = new()
-    {
-        new("prod-1", "Alpha", 12.50m),
-        new("prod-2", "Beta", 7.25m),
-        new("prod-3", "Gamma", 99.00m),
-    };
     private readonly DbcFileStore dbcStore = new();
     private DbcTreeModel dbcTree = null!;
     private DbcEditorModel dbcEditor = null!;
@@ -139,7 +111,7 @@
             return;
         }
 
-        dbcEditor.Open(file.Name, file.Name, file.Content, file.Parsed);
+        dbcEditor.Open(dbcTree.SelectedFolder, file.Name, file.Content, file.Parsed);
         dbcProperty.ShowFile(file);
     }
 
@@ -175,16 +147,6 @@
         var result = await workspace.RedoAsync();
         operationStatus = result.Succeeded ? "Move redone" : "Nothing to redo";
         await InvokeAsync(StateHasChanged);
-    }
-
-    private void ClearProducts()
-    {
-        // The product collection is owned by this parent component. Clearing it
-        // mutates application state; mounted content re-reads it on the next
-        // render and unmounted content reads the cleared value when remounting.
-        products.Clear();
-        operationStatus = "Products cleared";
-        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
