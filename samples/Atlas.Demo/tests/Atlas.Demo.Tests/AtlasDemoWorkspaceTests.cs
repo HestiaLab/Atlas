@@ -74,14 +74,18 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     }
 
     [Fact]
-    public void Empty_slots_render_placeholder_panels()
+    public void Empty_slots_keep_toolbar_regions_without_panels()
     {
         var cut = RenderComponent<AtlasDemoWorkspace>();
 
         cut.WaitForAssertion(
-            () => Assert.Equal(
-                4,
-                cut.FindAll("[data-testid='empty-panel']").Count));
+            () =>
+            {
+                // The four empty tool groups still own their LogicalRegion slot.
+                Assert.Equal(4, cut.FindAll("[data-atlas-region-empty='true']").Count);
+                // Their panels render the built-in empty state.
+                Assert.Equal(4, cut.FindAll(".atlas-v2-empty-state").Count);
+            });
     }
 
     [Fact]
@@ -96,7 +100,14 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
                     .Where(element => element.GetAttribute("role") == "region")
                     .ToArray();
                 Assert.Equal(7, groups.Length);
-                Assert.All(groups, group => Assert.False(string.IsNullOrWhiteSpace(group.GetAttribute("aria-labelledby"))));
+
+                // Content-bearing groups (explorer, editor, properties) expose
+                // a named header; empty groups intentionally render no header.
+                var contentGroups = groups
+                    .Where(group => !string.IsNullOrWhiteSpace(group.GetAttribute("aria-labelledby")))
+                    .ToArray();
+                Assert.Equal(3, contentGroups.Length);
+                Assert.Equal(4, groups.Length - contentGroups.Length);
 
                 var documentTabList = cut.Find("[data-atlas-group-kind='document'] [role='tablist']");
                 Assert.False(string.IsNullOrWhiteSpace(documentTabList.GetAttribute("aria-label")));
@@ -144,8 +155,8 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                Assert.Equal(6, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
-                Assert.Equal(7, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
+                Assert.Equal(2, cut.FindAll("[data-atlas-panel-header='true'][data-atlas-drag-kind='panel-header']").Count);
+                Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry='true'][data-atlas-drag-kind='toolbar-entry']").Count);
                 Assert.Equal(6, cut.FindAll("[role='separator'][data-atlas-split-id]").Count);
                 Assert.All(
                     cut.FindAll("[role='separator'][data-atlas-split-id]"),

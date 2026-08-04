@@ -16,16 +16,15 @@ internal static class AtlasDemoWorkspaceDefinition
         }
 
         var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: "dbc-tree");
-        var structure = Tool("structure", "Structure", contentKind: "empty-tool");
         var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
-        var database = Tool("database", "Database", contentKind: "empty-tool");
-        var products = Tool("products", "Products", contentKind: "empty-tool");
-        var terminal = Tool("terminal", "Terminal", contentKind: "empty-tool");
-        var problems = Tool("problems", "Problems", contentKind: "empty-tool");
         var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: "dbc-editor");
 
+        // The six LogicalRegion slots are preserved as tool groups. Only the
+        // explorer and properties carry content; the remaining four groups are
+        // intentionally empty (no DockItems), keeping the Atlas six-region
+        // toolbar demonstration intact while the DBC demo fills three panels.
         var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, dbcTree.Id);
-        var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, structure.Id);
+        var leftLower = EmptyToolGroup("left-lower", LogicalRegion.InlineStartLower);
         var editor = new GroupNode(
             Id("editor"),
             DockItemKind.Document,
@@ -34,13 +33,9 @@ internal static class AtlasDemoWorkspaceDefinition
             new[] { dbcEditor.Id },
             dbcEditor.Id);
         var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, dbcProperty.Id);
-        var rightLower = ToolGroup(
-            "right-lower",
-            LogicalRegion.InlineEndLower,
-            database.Id,
-            products.Id);
-        var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, terminal.Id);
-        var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, problems.Id);
+        var rightLower = EmptyToolGroup("right-lower", LogicalRegion.InlineEndLower);
+        var bottomLeft = EmptyToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart);
+        var bottomRight = EmptyToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd);
 
         var leftDock = Split(
             "left-dock",
@@ -104,12 +99,7 @@ internal static class AtlasDemoWorkspaceDefinition
         DockItem[] items =
         {
             dbcTree,
-            structure,
             dbcProperty,
-            database,
-            products,
-            terminal,
-            problems,
             dbcEditor,
         };
         var toolBars = new[]
@@ -120,13 +110,7 @@ internal static class AtlasDemoWorkspaceDefinition
         var toolBarOrders = new[]
         {
             new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { dbcTree.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { structure.Id }),
             new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { dbcProperty.Id }),
-            new ToolBarOrderState(
-                LogicalRegion.InlineEndLower,
-                new[] { database.Id, products.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineStart, new[] { terminal.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineEnd, new[] { problems.Id }),
         };
 
         return new AtlasWorkspaceDefinition(
@@ -150,6 +134,21 @@ internal static class AtlasDemoWorkspaceDefinition
             GroupVisibility.Expanded,
             itemIds,
             itemIds[0],
+            logicalRegion: logicalRegion);
+    }
+
+    private static GroupNode EmptyToolGroup(string id, LogicalRegion logicalRegion)
+    {
+        // A persistent tool group with no items still owns its LogicalRegion,
+        // so the toolbar slot renders while the panel shows the built-in
+        // empty state (atlas-v2-empty-state).
+        return new GroupNode(
+            Id(id),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
             logicalRegion: logicalRegion);
     }
 
