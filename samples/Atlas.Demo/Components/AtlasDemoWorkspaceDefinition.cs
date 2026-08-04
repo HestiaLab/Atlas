@@ -140,13 +140,14 @@ internal static class AtlasDemoWorkspaceDefinition
     private static GroupNode EmptyToolGroup(string id, LogicalRegion logicalRegion)
     {
         // A persistent tool group with no items still owns its LogicalRegion,
-        // so the toolbar slot renders while the panel shows the built-in
-        // empty state (atlas-v2-empty-state).
+        // so the toolbar slot renders while the panel is collapsed: the group
+        // keeps its slot but contributes no content extent (atlas-v2-group-
+        // collapsed collapses the split track to 0).
         return new GroupNode(
             Id(id),
             DockItemKind.Tool,
             GroupRetentionPolicy.Persistent,
-            GroupVisibility.Expanded,
+            GroupVisibility.Collapsed,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
             logicalRegion: logicalRegion);

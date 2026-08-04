@@ -83,8 +83,9 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
             {
                 // The four empty tool groups still own their LogicalRegion slot.
                 Assert.Equal(4, cut.FindAll("[data-atlas-region-empty='true']").Count);
-                // Their panels render the built-in empty state.
-                Assert.Equal(4, cut.FindAll(".atlas-v2-empty-state").Count);
+                // Their panels are collapsed: hidden with no content extent.
+                Assert.Equal(4, cut.FindAll(".atlas-v2-group-collapsed").Count);
+                Assert.Equal(4, cut.FindAll(".atlas-v2-group-collapsed .atlas-v2-empty-state").Count);
             });
     }
 
