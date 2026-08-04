@@ -38,6 +38,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0016](./0016-remove-application-projects.md) | Accepted | delete Atlas.Demo and Atlas.Examples.Rider; keep only two packages, tests, and static fixtures |
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | add independent NuGet consumer sample; supersedes ADR-0016's long-term application-project ban |
 | [ADR-0018](./0018-unified-content-catalog-and-runtime-binding.md) | Accepted | unify startup DI, Host-local Route, and typed Map content registration; application-owned cross-Panel state |
+| [ADR-0019](./0019-single-package-atlas-blazor.md) | Accepted | single published package (Atlas.Blazor) embedding Atlas.Core.dll; keep independent Core project; supersedes ADR-0001 two-package decision |
 
 ## Writing Conventions
 
