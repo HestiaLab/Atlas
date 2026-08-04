@@ -79,7 +79,7 @@ public sealed class DbcParserTests
         var serialized = DbcParser.Serialize(doc);
 
         Assert.Equal(325, doc.Messages.Count);
-        Assert.Equal(33, CountLines(original, "CM_"));
+        Assert.Equal(38, CountLines(original, "CM_"));
         Assert.Equal(3, CountLines(original, "VAL_"));
         Assert.Contains("Vector__XXX", doc.Nodes);
         Assert.Equal(NormalizeLines(original), NormalizeLines(serialized));

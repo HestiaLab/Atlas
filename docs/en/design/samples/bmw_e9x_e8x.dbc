@@ -1,4 +1,9 @@
 VERSION ""
+CM_ "Source <https://github.com/dzid26/opendbc-BMW-E8x-E9x>";
+CM_ "Some data copied from https://github.com/HeinrichG-V12/E65_ReverseEngineering/ and MSD81 document"
+CM_ "Tool32 reference https://www.bimmerforums.com/forum/showthread.php?2298830-E90-Can-bus-project-(E60-E65-E87-)&p=29628499#post29628499"
+CM_ "Some data copied from great MK60e5_Development_DBC.dbc: https://www.m5board.com/posts/7693749/"
+CM_ "License MIT";
 
 
 NS_ :
