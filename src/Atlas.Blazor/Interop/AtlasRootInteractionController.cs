@@ -258,6 +258,10 @@ internal sealed class AtlasInteractionMessage
 
     public string? Mode { get; set; }
 
+    public string? BasisKind { get; set; }
+
+    public double? PixelExtent { get; set; }
+
     public string? Command { get; set; }
 
     public string? SourceGroupId { get; set; }

@@ -1447,12 +1447,14 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 return;
             }
 
+            var splitId = new LayoutNodeId(message.SplitId);
             LayoutOperation operation;
             if (string.Equals(message.Mode, "equalize", StringComparison.Ordinal))
             {
-                operation = new EqualizeSplitOperation(
-                    new LayoutNodeId(message.SplitId),
-                    message.BaseRevision);
+                // Equalize keeps the split's basis kind: a FixedPixels split
+                // equalizes to half the current extent (reported by the
+                // controller), otherwise it equalizes to a 50/50 proportion.
+                operation = ResolveEqualizeOperation(splitId, message);
             }
             else
             {
@@ -1463,17 +1465,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                     return;
                 }
 
+                var basis = ResolveCommittedBasis(splitId, message);
                 operation = string.Equals(
                     message.Mode,
                     "keyboard",
                     StringComparison.Ordinal)
-                    ? ResizeSplitOperation.CreateKeyboard(
-                        new LayoutNodeId(message.SplitId),
-                        SplitBasis.Proportional(message.FirstRatio))
-                    : new ResizeSplitOperation(
-                        new LayoutNodeId(message.SplitId),
-                        SplitBasis.Proportional(message.FirstRatio),
-                        message.BaseRevision);
+                    ? ResizeSplitOperation.CreateKeyboard(splitId, basis)
+                    : new ResizeSplitOperation(splitId, basis, message.BaseRevision);
             }
 
             // Queue the confirmation before executing: the Changed event fired
@@ -1517,6 +1515,57 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         {
             await interactionController.NotifySplitPreviewClearedAsync(splitId);
         }
+    }
+
+    private SplitBasis ResolveCommittedBasis(
+        LayoutNodeId splitId,
+        AtlasInteractionMessage message)
+    {
+        if (string.Equals(
+                message.BasisKind,
+                "fixed-pixels",
+                StringComparison.Ordinal)
+            && message.PixelExtent is double pixelExtent)
+        {
+            return SplitBasis.FixedPixels(
+                pixelExtent,
+                CurrentAnchor(splitId) ?? SplitAnchor.First);
+        }
+
+        return SplitBasis.Proportional(message.FirstRatio);
+    }
+
+    private LayoutOperation ResolveEqualizeOperation(
+        LayoutNodeId splitId,
+        AtlasInteractionMessage message)
+    {
+        if (string.Equals(
+                message.BasisKind,
+                "fixed-pixels",
+                StringComparison.Ordinal)
+            && message.PixelExtent is double pixelExtent)
+        {
+            return new ResizeSplitOperation(
+                splitId,
+                SplitBasis.FixedPixels(
+                    pixelExtent,
+                    CurrentAnchor(splitId) ?? SplitAnchor.First),
+                message.BaseRevision);
+        }
+
+        return new EqualizeSplitOperation(splitId, message.BaseRevision);
+    }
+
+    private SplitAnchor? CurrentAnchor(LayoutNodeId splitId)
+    {
+        if (activeWorkspace is null
+            || !activeWorkspace.Current.Nodes.TryGetValue(splitId, out var node)
+            || node is not SplitNode split)
+        {
+            return null;
+        }
+
+        return split.Basis.Anchor;
     }
 
     private async Task ExecuteDockItemAsync(AtlasInteractionMessage message)

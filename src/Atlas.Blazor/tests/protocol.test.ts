@@ -729,6 +729,140 @@ test("fixed-pixel basis resolves against current extent", async () => {
   fixture.controller.dispose();
 });
 
+test("fixed-pixel drag commits pixelExtent with basis kind (anchor First)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 21, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 21, clientX: 40, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 21, clientX: 40, clientY: 0 }));
+  await flushCallbacks();
+
+  const message = fixture.messages[0];
+  assert.equal(message?.type, "resize-split");
+  assert.equal(
+    message?.type === "resize-split" ? message.basisKind : undefined,
+    "fixed-pixels");
+  assert.equal(
+    message?.type === "resize-split" ? message.pixelExtent : undefined,
+    55);
+  assert.equal(
+    message?.type === "resize-split" ? message.firstRatio : undefined,
+    0.55);
+  fixture.controller.dispose();
+});
+
+test("fixed-pixel drag commits pixelExtent for the anchored child (anchor Second)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "Second";
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 22, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 22, clientX: 30, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 22, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+
+  const message = fixture.messages[0];
+  assert.equal(message?.type, "resize-split");
+  assert.equal(
+    message?.type === "resize-split" ? message.basisKind : undefined,
+    "fixed-pixels");
+  assert.equal(
+    message?.type === "resize-split" ? message.pixelExtent : undefined,
+    5);
+  assert.equal(
+    message?.type === "resize-split" ? message.firstRatio : undefined,
+    0.95);
+  fixture.controller.dispose();
+});
+
+test("proportional drag keeps the v1 commit shape without basis fields", async () => {
+  const fixture = controllerFixture();
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 23, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 23, clientX: 30, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 23, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.7,
+    mode: "resize",
+    generation: 4,
+    baseRevision: 0
+  });
+  fixture.controller.dispose();
+});
+
+test("equalize on a fixed-pixel split commits extent / 2 with basis kind", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.5,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0,
+    basisKind: "fixed-pixels",
+    pixelExtent: 50
+  });
+  fixture.controller.dispose();
+});
+
+test("keyboard step on a fixed-pixel split commits pixelExtent", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent("keydown", {
+    code: "ArrowRight",
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false
+  }));
+  fixture.splitter.dispatchEvent(interactionEvent("keyup", {
+    code: "ArrowRight"
+  }));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.35,
+    mode: "keyboard",
+    generation: 4,
+    baseRevision: null,
+    basisKind: "fixed-pixels",
+    pixelExtent: 35
+  });
+  fixture.controller.dispose();
+});
+
 test("root keyboard map respects editable guard and global override", async () => {
   const root = new FakeElement();
   const messages: AtlasInteractionMessage[] = [];

@@ -60,12 +60,14 @@ behavior):
 
 - `basisKind: "proportional" | "fixed-pixels"`, optional, default
   `"proportional"`;
-- `firstPixel: number`, optional, present when `basisKind` is
-  `"fixed-pixels"`.
+- `pixelExtent: number`, optional, present when `basisKind` is
+  `"fixed-pixels"`. It holds the anchored child's extent in CSS pixels
+  (the anchor is read from the split's current basis), so for a
+  `Second` anchor the value describes the second child, not the first.
 
 The controller sends the current kind on every terminal commit:
 
-- `FixedPixels` split: `firstPixel = currentRatio × extent` when the
+- `FixedPixels` split: `pixelExtent = currentRatio × extent` when the
   anchor is `First`, or `(1 − currentRatio) × extent` when the anchor is
   `Second`; `firstRatio` is still sent (the v1 field) so an older host
   degrades to proportional behavior, and the preview stays ratio-based so
@@ -73,11 +75,11 @@ The controller sends the current kind on every terminal commit:
 - `Proportional` split: unchanged `firstRatio`, no `basisKind` field (the
   v1 message shape is preserved exactly).
 
-The Host rebuilds the basis from the message: `FixedPixels(firstPixel,
+The Host rebuilds the basis from the message: `FixedPixels(pixelExtent,
 currentAnchor)` or `Proportional(firstRatio)`, where `currentAnchor` is
 read from the split's current basis. Keyboard steps and double-click
 equalize follow the same rule: a `FixedPixels` split equalizes to
-`firstPixel = extent / 2` (reported by the controller) and keeps its kind.
+`pixelExtent = extent / 2` (reported by the controller) and keeps its kind.
 
 ### Window resize and persistence
 
@@ -119,7 +121,7 @@ round-trips `FixedPixels` (`AtlasXmlLayoutSerializer`); no schema change.
 ## Verification
 
 - Node tests: `FixedPixels` split drag commits `basisKind` +
-  `firstPixel` (anchor First and Second); proportional commits keep
+  `pixelExtent` (anchor First and Second); proportional commits keep
   `firstRatio`; equalize on a pixel split sends `extent / 2`.
 - bUnit: terminal commit on a `FixedPixels` split leaves the basis kind and
   anchor intact; proportional commits are unchanged.

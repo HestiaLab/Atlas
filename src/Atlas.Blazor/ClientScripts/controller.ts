@@ -41,6 +41,8 @@ interface ActiveResize {
   readonly minimumRatio: number;
   readonly maximumRatio: number;
   readonly baseRevision: number;
+  readonly basisKind: "proportional" | "fixed-pixels";
+  readonly anchor: string | undefined;
   currentRatio: number;
 }
 
@@ -258,6 +260,7 @@ export class AtlasInteractionController {
       minimumRatio: limits.minimum,
       maximumRatio: limits.maximum,
       baseRevision: this.readRevision(split),
+      ...this.basisFor(split),
       currentRatio: startRatio
     };
     splitter.setPointerCapture?.(event.pointerId);
@@ -368,7 +371,8 @@ export class AtlasInteractionController {
         active.split,
         active.currentRatio,
         "resize",
-        active.baseRevision);
+        active.baseRevision,
+        { basisKind: active.basisKind, anchor: active.anchor });
     } else {
       this.clearPreview(active.split);
     }
@@ -397,7 +401,7 @@ export class AtlasInteractionController {
     this.cancelResize();
     const baseRevision = this.readRevision(split);
     this.preview(split, 0.5);
-    this.commitResize(split, 0.5, "equalize", baseRevision);
+    this.commitResize(split, 0.5, "equalize", baseRevision, this.basisFor(split));
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -436,7 +440,7 @@ export class AtlasInteractionController {
       this.keyboardSplit = split;
       this.keyboardRatio = clamp(requested, limits.minimum, limits.maximum);
       this.preview(split, this.keyboardRatio);
-      this.commitResize(split, this.keyboardRatio, "keyboard", null);
+      this.commitResize(split, this.keyboardRatio, "keyboard", null, this.basisFor(split));
       this.scheduleKeyboardCommit();
       return;
     }
@@ -936,20 +940,46 @@ export class AtlasInteractionController {
     split: HTMLElement,
     firstRatio: number,
     mode: "resize" | "keyboard" | "equalize",
-    baseRevision: number | null): void {
+    baseRevision: number | null,
+    basis?: { readonly basisKind: "proportional" | "fixed-pixels"; readonly anchor: string | undefined }): void {
     const splitId = split.dataset.atlasNodeId;
     if (!splitId) {
       return;
     }
 
+    const extent = extentFor(split);
+    const rawPixelExtent = basis?.basisKind === "fixed-pixels" && extent > 0
+      ? (basis.anchor === "Second" ? (1 - firstRatio) * extent : firstRatio * extent)
+      : undefined;
+    // Round to 0.001px: the ratio-based computation above accumulates
+    // double-precision noise (e.g. 0.25 + 30/100 → 55.00000000000001), far
+    // below visual resolution but harmful to persisted pixel values.
+    const pixelExtent = rawPixelExtent === undefined
+      ? undefined
+      : Math.round(rawPixelExtent * 1000) / 1000;
     this.send({
       type: "resize-split",
       splitId,
       firstRatio,
       mode,
       generation: this.identity.generation,
-      baseRevision
+      baseRevision,
+      ...(pixelExtent === undefined
+        ? {}
+        : { basisKind: "fixed-pixels" as const, pixelExtent })
     });
+  }
+
+  private basisFor(split: HTMLElement): {
+    readonly basisKind: "proportional" | "fixed-pixels";
+    readonly anchor: string | undefined;
+  } {
+    return {
+      basisKind: split.dataset.atlasSplitBasisKind === "FixedPixels"
+        ? "fixed-pixels"
+        : "proportional",
+      anchor: split.dataset.atlasSplitAnchor
+    };
   }
 
   private send(message: AtlasInteractionMessage): void {
