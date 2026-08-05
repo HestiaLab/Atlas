@@ -2,6 +2,7 @@
 using Atlas.Demo.Components;
 using Atlas.Demo.Pages;
 using Bunit;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -9,6 +10,9 @@ namespace Atlas.Demo.Tests;
 
 public sealed class AtlasDemoWorkspaceTests : TestContext
 {
+    private const string ValidDbc =
+        "VERSION \"\"\nBU_: XXX\n\nBO_ 100 EmptyMsg: 1 XXX\n";
+
     private static readonly string[] LogicalRegions =
     {
         "InlineStartUpper",
@@ -60,15 +64,24 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
             () => Assert.Single(
                 cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")));
 
+        // Upload and open a document. FR-06: the tab title follows the opened
+        // file name instead of staying at the fixed "DBC Editor" label.
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-file']")));
+        cut.Find("[data-testid='dbc-file']").Click();
+
         cut.WaitForAssertion(
             () => Assert.Equal(
-                "DBC Editor",
+                "engine.dbc",
                 cut.Find("[data-atlas-group-kind='document'] [role='tab']")
                     .GetAttribute("aria-label")));
 
         cut.WaitForAssertion(
             () => Assert.Contains(
-                "Select a .dbc file in the explorer to edit it.",
+                "engine.dbc",
                 cut.Markup,
                 StringComparison.Ordinal));
     }
