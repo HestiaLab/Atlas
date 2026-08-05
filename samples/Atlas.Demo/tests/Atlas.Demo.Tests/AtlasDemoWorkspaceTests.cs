@@ -98,6 +98,10 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
             .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "a.dbc"));
         cut.WaitForAssertion(
             () => Assert.Single(cut.FindAll("[data-testid='dbc-file']")));
+        // Flush pending renders before interacting: a stale element whose
+        // event handler was replaced by a queued render makes bUnit throw
+        // UnknownEventHandlerIdException.
+        cut.Render();
         cut.Find("[data-testid='dbc-file']").Click();
         cut.WaitForAssertion(
             () => Assert.Equal(
@@ -110,6 +114,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
             .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "b.dbc"));
         cut.WaitForAssertion(
             () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-file']").Count));
+        cut.Render();
         cut.FindAll("[data-testid='dbc-file']")[1].Click();
 
         cut.WaitForAssertion(
@@ -123,12 +128,15 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
 
         // Switch to the first document, switch its editor to text view, and
         // type unsaved content into its buffer.
+        cut.Render();
         cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")[0].Click();
         cut.WaitForAssertion(
             () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-editor'] .dbc-action").Count));
+        cut.Render();
         cut.FindAll("[data-testid='dbc-editor'] .dbc-action")[0].Click();
         cut.WaitForAssertion(
             () => Assert.Single(cut.FindAll("[data-testid='dbc-editor'] textarea")));
+        cut.Render();
         cut.Find("[data-testid='dbc-editor'] textarea").Change("unsaved-A");
         // The editor's fire-and-forget StateHasChanged re-render must settle
         // before the next tab click, otherwise the click targets a stale DOM
@@ -141,6 +149,7 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
         // Switch to the second document and back to the first: the first
         // document keeps its unsaved buffer because each tab resolves its own
         // model through the content state scope.
+        cut.Render();
         cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")[1].Click();
         cut.WaitForAssertion(
             () => Assert.Equal(
