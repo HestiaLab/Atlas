@@ -86,6 +86,11 @@ dotnet build Atlas.Demo.sln --no-restore
 dotnet test Atlas.Demo.sln --no-build --no-restore
 dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
 cd ../..
+
+# One-shot alternative: republish Atlas.Blazor (0.1.0, pinned to the demo's
+# central package version) to artifacts/packages, clear the demo's .packages
+# cache, and run the demo restore/build/test/format verification above.
+bash scripts/republish-demo.sh
 ```
 
 ## Ownership Rules
