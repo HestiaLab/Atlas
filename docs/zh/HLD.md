@@ -1230,9 +1230,15 @@ native pointerdown listener 先检查 IsLocked；锁定时不 setPointerCapture�
 容器 extent、start basis、constraints 与 BaseRevision。pointermove 调用与 DES-DOM-010 相同的
 ResolveSplitLayout 生成 CSS preview，pointerup 只提交一个 ResizeSplitOperation。
 
-双击使用 EqualizeSplitOperation；折叠按钮使用 SetGroupVisibilityOperation，不在 Razor 中直接
-改 basis。折叠后 SplitNode 保留恢复 basis，按钮切换为展开语义。若对应 child 不可折叠或已被
-topology normalization 移除，返回 NoChange/typed stale，不作用于新的 sibling。
+终态提交保留 split 的 basis 类型（弹性吸收，ADR-0021）：FixedPixels split 提交其锚定子项的像素
+尺寸，并在指针拖拽、键盘步进或双击 equalize 后保持像素制；Proportional split 提交比例。因此
+固定像素的 dock 面板在拖拽其他分割条或容器 resize 时保持稳定宽度，弹性工作区轨道吸收变化——
+拖外层分割条时嵌套面板分割不会随之移动。
+
+双击使用 EqualizeSplitOperation（对 FixedPixels split 则用携带当前 extent 一半像素值的
+ResizeSplitOperation）并保持 split 的 basis 类型；折叠按钮使用 SetGroupVisibilityOperation，
+不在 Razor 中直接改 basis。折叠后 SplitNode 保留恢复 basis，按钮切换为展开语义。若对应 child
+不可折叠或已被 topology normalization 移除，返回 NoChange/typed stale，不作用于新的 sibling。
 
 Splitter 本体可获得键盘焦点并使用 `role="separator"`。Arrow key 按 orientation 以
 SplitterOptions.KeyboardStepPixels 调整；Home/End 移到有效 min/max；连续 key repeat 在

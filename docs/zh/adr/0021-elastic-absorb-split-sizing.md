@@ -4,7 +4,7 @@
 >
 > 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
 
-- 状态: Proposed
+- 状态: Accepted
 - 日期: 2026-08-05
 - 决策人: Maintainer
 

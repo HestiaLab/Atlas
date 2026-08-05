@@ -2,7 +2,7 @@
 
 > English (canonical) | [简体中文](../../zh/adr/0021-elastic-absorb-split-sizing.md)
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-05
 - Decision maker: Maintainer
 
