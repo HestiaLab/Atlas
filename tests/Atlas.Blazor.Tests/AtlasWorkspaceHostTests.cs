@@ -990,7 +990,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             command: null,
             generation: 1,
             baseRevision: 1);
-        Assert.IsType<EqualizeSplitOperation>(tracked.LastOperation);
+        var equalize = Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(ResizeSplitInputKind.Pointer, equalize.InputKind);
+        Assert.Equal(SplitBasis.Proportional(0.5), equalize.Basis);
         Assert.Equal(2, tracked.ExecuteCount);
         Assert.Equal(
             SplitBasis.Proportional(0.5),
@@ -1191,6 +1193,48 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         Assert.Equal(SplitBasisKind.FixedPixels, operation.Basis.Kind);
         Assert.Equal(75d, operation.Basis.Value);
         Assert.Equal(SplitAnchor.First, operation.Basis.Anchor);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Equalize_uses_the_controller_reported_clamped_target()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        // The controller clamps 0.5 to the split's valid range before
+        // sending the equalize commit; the Host must apply that exact
+        // target instead of hard-coding a 50/50 proportion.
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.6,
+            mode: "equalize",
+            command: null,
+            generation: 1);
+
+        var operation = Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(SplitBasis.Proportional(0.6), operation.Basis);
+        Assert.Equal(
+            SplitBasis.Proportional(0.6),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
 
         await cut.Instance.DisposeAsync();
         await tracked.DisposeAsync();

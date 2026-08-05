@@ -78,8 +78,9 @@ The controller sends the current kind on every terminal commit:
 The Host rebuilds the basis from the message: `FixedPixels(pixelExtent,
 currentAnchor)` or `Proportional(firstRatio)`, where `currentAnchor` is
 read from the split's current basis. Keyboard steps and double-click
-equalize follow the same rule: a `FixedPixels` split equalizes to
-`pixelExtent = extent / 2` (reported by the controller) and keeps its kind.
+equalize follow the same rule: equalize targets 0.5 clamped to the split's
+valid range (reported by the controller), and a `FixedPixels` split reports
+the clamped `pixelExtent` and keeps its kind.
 
 ### Window resize and persistence
 
@@ -122,7 +123,8 @@ round-trips `FixedPixels` (`AtlasXmlLayoutSerializer`); no schema change.
 
 - Node tests: `FixedPixels` split drag commits `basisKind` +
   `pixelExtent` (anchor First and Second); proportional commits keep
-  `firstRatio`; equalize on a pixel split sends `extent / 2`.
+  `firstRatio`; equalize clamps 0.5 to the split's valid range and a
+  pixel split sends the clamped `pixelExtent`.
 - bUnit: terminal commit on a `FixedPixels` split leaves the basis kind and
   anchor intact; proportional commits are unchanged.
 - Demo: dragging the left splitter leaves the right splitter position and

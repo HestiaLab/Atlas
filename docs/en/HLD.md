@@ -1293,12 +1293,14 @@ keep a stable width while the elastic work-area track absorbs the change when an
 dragged or the container resizes, so nested panel splits do not move when an outer splitter is
 dragged.
 
-Double-click uses EqualizeSplitOperation (or, for a FixedPixels split, a ResizeSplitOperation with
-half the current extent as its pixel value) and keeps the split's basis kind; the collapse button
-uses SetGroupVisibilityOperation and never changes basis directly in Razor. After collapsing, the
-SplitNode retains the restore basis and the button switches to expand semantics. If the
-corresponding child is not collapsible or has been removed by topology normalization, a
-NoChange/typed stale is returned and the new sibling is not affected.
+Double-click equalizes to the closest legal split position: the controller clamps 0.5 to the
+split's valid range (readLimits) and commits a ResizeSplitOperation whose basis preserves the
+split's kind — a FixedPixels split reports the clamped pixel extent, a Proportional split the
+clamped ratio; the collapse button uses SetGroupVisibilityOperation and never changes basis
+directly in Razor. After collapsing, the SplitNode retains the restore basis and the button
+switches to expand semantics. If the corresponding child is not collapsible or has been removed
+by topology normalization, a NoChange/typed stale is returned and the new sibling is not
+affected.
 
 The Splitter itself is keyboard-focusable and uses role="separator". Arrow keys adjust by
 SplitterOptions.KeyboardStepPixels according to orientation; Home/End move to the valid min/max;

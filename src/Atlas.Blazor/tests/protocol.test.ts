@@ -834,6 +834,49 @@ test("equalize on a fixed-pixel split commits extent / 2 with basis kind", async
   fixture.controller.dispose();
 });
 
+test("equalize clamps to the split's valid range (proportional)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasFirstMinimum = "60";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  // 0.5 would put the first track at 50px, below its 60px minimum; the
+  // equalize target clamps to the nearest legal ratio (0.6).
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.6,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0
+  });
+  fixture.controller.dispose();
+});
+
+test("equalize clamps a fixed-pixel split to its pixel range", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.split.dataset.atlasFirstMaximum = "40";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  // Half of the 100px extent is 50px, above the 40px maximum; the equalize
+  // target clamps to 40px.
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.4,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0,
+    basisKind: "fixed-pixels",
+    pixelExtent: 40
+  });
+  fixture.controller.dispose();
+});
+
 test("keyboard step on a fixed-pixel split commits pixelExtent", async () => {
   const fixture = controllerFixture();
   fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";

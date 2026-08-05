@@ -1235,10 +1235,11 @@ ResolveSplitLayout 生成 CSS preview，pointerup 只提交一个 ResizeSplitOpe
 固定像素的 dock 面板在拖拽其他分割条或容器 resize 时保持稳定宽度，弹性工作区轨道吸收变化——
 拖外层分割条时嵌套面板分割不会随之移动。
 
-双击使用 EqualizeSplitOperation（对 FixedPixels split 则用携带当前 extent 一半像素值的
-ResizeSplitOperation）并保持 split 的 basis 类型；折叠按钮使用 SetGroupVisibilityOperation，
-不在 Razor 中直接改 basis。折叠后 SplitNode 保留恢复 basis，按钮切换为展开语义。若对应 child
-不可折叠或已被 topology normalization 移除，返回 NoChange/typed stale，不作用于新的 sibling。
+双击平分到最近的合法分割位置：controller 把 0.5 clamp 到 split 的有效范围（readLimits）并提交
+ResizeSplitOperation，其 basis 保持 split 的类型——FixedPixels split 上报 clamp 后的像素尺寸，
+Proportional split 上报 clamp 后的比例；折叠按钮使用 SetGroupVisibilityOperation，不在 Razor 中
+直接改 basis。折叠后 SplitNode 保留恢复 basis，按钮切换为展开语义。若对应 child 不可折叠或已被
+topology normalization 移除，返回 NoChange/typed stale，不作用于新的 sibling。
 
 Splitter 本体可获得键盘焦点并使用 `role="separator"`。Arrow key 按 orientation 以
 SplitterOptions.KeyboardStepPixels 调整；Home/End 移到有效 min/max；连续 key repeat 在

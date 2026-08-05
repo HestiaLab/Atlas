@@ -39,7 +39,7 @@ controller 在每次终态提交时发送当前类型：
 - `FixedPixels` split：当 anchor 为 `First` 时 `pixelExtent = currentRatio × extent`，anchor 为 `Second` 时 `pixelExtent = (1 − currentRatio) × extent`；仍然发送 `firstRatio`（v1 字段），以便旧 Host 降级为比例行为；预览保持基于比例，视觉位置连续（`pixel = ratio × extent`）；
 - `Proportional` split：保持原有 `firstRatio`，不发送 `basisKind` 字段（v1 消息形状完全不变）。
 
-Host 根据消息重建 basis：`FixedPixels(pixelExtent, currentAnchor)` 或 `Proportional(firstRatio)`，其中 `currentAnchor` 从 split 当前 basis 读取。键盘步进与双击 equalize 遵循同一规则：`FixedPixels` split 的 equalize 为 `pixelExtent = extent / 2`（由 controller 上报）并保持其类型。
+Host 根据消息重建 basis：`FixedPixels(pixelExtent, currentAnchor)` 或 `Proportional(firstRatio)`，其中 `currentAnchor` 从 split 当前 basis 读取。键盘步进与双击 equalize 遵循同一规则：equalize 目标为 0.5 clamp 到 split 有效范围（由 controller 上报），`FixedPixels` split 上报 clamp 后的 `pixelExtent` 并保持其类型。
 
 ### 窗口缩放与持久化
 
@@ -61,7 +61,7 @@ Host 根据消息重建 basis：`FixedPixels(pixelExtent, currentAnchor)` 或 `P
 
 ## Verification
 
-- Node 测试：`FixedPixels` split 拖拽提交 `basisKind` + `pixelExtent`（anchor First 与 Second）；比例提交保持 `firstRatio`；像素 split 的 equalize 发送 `extent / 2`。
+- Node 测试：`FixedPixels` split 拖拽提交 `basisKind` + `pixelExtent`（anchor First 与 Second）；比例提交保持 `firstRatio`；equalize 将 0.5 clamp 到 split 有效范围，像素 split 发送 clamp 后的 `pixelExtent`。
 - bUnit：`FixedPixels` split 的终态提交保持 basis 类型与 anchor 不变；比例提交不变。
 - Demo：拖拽左分割条时右分割条位置与右面板宽度不变；窗口缩放时两个面板保持稳定，仅编辑器改变尺寸。
 - 拖拽/窗口缩放行为的实机浏览器验收。

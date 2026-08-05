@@ -1448,31 +1448,25 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             }
 
             var splitId = new LayoutNodeId(message.SplitId);
-            LayoutOperation operation;
-            if (string.Equals(message.Mode, "equalize", StringComparison.Ordinal))
+            if (!double.IsFinite(message.FirstRatio)
+                || message.FirstRatio <= 0d
+                || message.FirstRatio >= 1d)
             {
-                // Equalize keeps the split's basis kind: a FixedPixels split
-                // equalizes to half the current extent (reported by the
-                // controller), otherwise it equalizes to a 50/50 proportion.
-                operation = ResolveEqualizeOperation(splitId, message);
+                return;
             }
-            else
-            {
-                if (!double.IsFinite(message.FirstRatio)
-                    || message.FirstRatio <= 0d
-                    || message.FirstRatio >= 1d)
-                {
-                    return;
-                }
 
-                var basis = ResolveCommittedBasis(splitId, message);
-                operation = string.Equals(
-                    message.Mode,
-                    "keyboard",
-                    StringComparison.Ordinal)
-                    ? ResizeSplitOperation.CreateKeyboard(splitId, basis)
-                    : new ResizeSplitOperation(splitId, basis, message.BaseRevision);
-            }
+            // Equalize is a terminal commit like pointer/keyboard resize:
+            // the controller reports the clamped target (0.5 clamped to the
+            // split's valid range) and the basis kind, so the Host rebuilds
+            // the exact basis instead of hard-coding a 50/50 proportion that
+            // could violate the split's pixel constraints.
+            var basis = ResolveCommittedBasis(splitId, message);
+            var operation = string.Equals(
+                message.Mode,
+                "keyboard",
+                StringComparison.Ordinal)
+                ? ResizeSplitOperation.CreateKeyboard(splitId, basis)
+                : new ResizeSplitOperation(splitId, basis, message.BaseRevision);
 
             // Queue the confirmation before executing: the Changed event fired
             // inside ExecuteAsync schedules the commit's render, which a
@@ -1533,27 +1527,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         return SplitBasis.Proportional(message.FirstRatio);
-    }
-
-    private LayoutOperation ResolveEqualizeOperation(
-        LayoutNodeId splitId,
-        AtlasInteractionMessage message)
-    {
-        if (string.Equals(
-                message.BasisKind,
-                "fixed-pixels",
-                StringComparison.Ordinal)
-            && message.PixelExtent is double pixelExtent)
-        {
-            return new ResizeSplitOperation(
-                splitId,
-                SplitBasis.FixedPixels(
-                    pixelExtent,
-                    CurrentAnchor(splitId) ?? SplitAnchor.First),
-                message.BaseRevision);
-        }
-
-        return new EqualizeSplitOperation(splitId, message.BaseRevision);
     }
 
     private SplitAnchor? CurrentAnchor(LayoutNodeId splitId)

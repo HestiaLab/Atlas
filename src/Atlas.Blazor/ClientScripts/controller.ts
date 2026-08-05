@@ -400,8 +400,20 @@ export class AtlasInteractionController {
 
     this.cancelResize();
     const baseRevision = this.readRevision(split);
-    this.preview(split, 0.5);
-    this.commitResize(split, 0.5, "equalize", baseRevision, this.basisFor(split));
+    const rect = split.getBoundingClientRect();
+    const inline = split.dataset.atlasSplitAxis === "InlineChildren";
+    const extent = inline ? rect.width : rect.height;
+    if (!Number.isFinite(extent) || extent <= 0) {
+      return;
+    }
+
+    const limits = this.readLimits(split, extent);
+    // Equalize to the closest legal split position: the raw 0.5 may exceed
+    // the split's pixel constraints (e.g. a dock panel with a maximum
+    // width), which would commit a layout outside the valid range.
+    const ratio = clamp(0.5, limits.minimum, limits.maximum);
+    this.preview(split, ratio);
+    this.commitResize(split, ratio, "equalize", baseRevision, this.basisFor(split));
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
