@@ -5,6 +5,9 @@
 - Status: Proposed
 - Date: 2026-08-05
 - Decision maker: Atlas Maintainer (pending)
+- Maintainer decisions on 2026-08-05: track-scoped adoption accepted —
+  D1+D4 implemented first (Track B Phase B2), D2 reviewed separately after
+  D1 lands, D3 deferred, D5 rejected
 - Related: ADR-0012, ADR-0013, ADR-0017, ADR-0018,
   REQ-F-006~008, REQ-F-070,
   FR-01/FR-02/FR-04/FR-07 from
@@ -71,19 +74,31 @@ Adopt the dual-key scoping contract already stated by SRS line 3073:
   state application-owned and documents the pattern; a dedicated view-state
   API is deferred (split-view scenarios are rare; YAGNI).
 
-Recommended API shape — a Host-level state factory:
+Recommended API shape (confirmed): an injectable state scope service that
+the application registers, paired with a typed accessor on the content
+context:
 
 ```csharp
-// AtlasWorkspaceHost
-[Parameter]
-public Func<AtlasContentContext, object?>? ContentStateFactory { get; set; }
+public interface IAtlasContentStateScope
+{
+    TState GetOrCreate<TState>(ContentReference reference, Func<TState> factory)
+        where TState : class;
+}
+
+// AtlasContentContext
+public TState? GetState<TState>() where TState : class;
 ```
 
-The outlet resolves one state object per `Content.Reference`, reusing it for
-every view of the same resource, and exposes it to content through the
-extended context (see D4). Alternative shape: an injectable
-`IAtlasContentStateScope` with
-`GetOrCreate<TState>(ContentReference, Func<TState>)`.
+`AtlasWorkspaceHost` resolves and owns one `IAtlasContentStateScope` (either
+the DI-registered instance or a Host-local instance when none is registered).
+The outlet resolves one state object per `Content.Reference` through the
+scope, reusing it for every view of the same resource, and the typed accessor
+`AtlasContentContext.GetState<TState>()` exposes it to content. The
+`Func<TState>` factory runs at most once per `ContentReference` for the
+lifetime of the scope; later calls return the cached instance. A rejected
+alternative was a `ContentStateFactory` Host parameter, which couples state
+resolution to the Host declaration site and cannot be unit-tested or
+reused across Hosts as cleanly.
 
 Lifecycle: the state container is owned by the Host; it releases all state
 objects on Host disposal. Item close does not release business state. Resource
@@ -93,6 +108,9 @@ persists state objects (SRS line 729 keeps them application-owned; Atlas only
 provides the keyed resolution container).
 
 ### D2: Content-to-workspace channel (FR-02) — least privilege
+
+This decision point is **reviewed separately after D1 lands**; the shape
+below remains a candidate, not a confirmed API.
 
 Recommended shape — a constrained workspace-facing facade exposed via
 `AtlasContentContext`:
@@ -130,7 +148,10 @@ Capability boundary (least privilege, per Q3):
   workspace channel; the trust boundary cannot be bypassed through these
   capabilities.
 
-### D3: Model-bound content base class (FR-07)
+### D3: Model-bound content base class (FR-07) — deferred
+
+This decision point is **deferred**; the subscription-boilerplate problem is
+real but does not block any functional scenario.
 
 Recommended shape — a public base class that removes the subscription
 boilerplate:
@@ -152,14 +173,15 @@ set is a maintainer decision point.
 
 ### D4: DI host-state channel (FR-04) — merged with D1
 
-The state factory is the single official state channel: DI content and
+The state scope is the single official state channel: DI content and
 Host-local content both resolve their business state through it, so DI
 content no longer needs a Host closure to receive Host-owned state. The
-extended `AtlasContentContext` carries the resolved state object (for example
-a `State` member or a generic `GetState<TState>()` accessor). This removes the
-reason the Demo bypassed DI registration.
+`AtlasContentContext.GetState<TState>()` accessor carries the resolved state
+object. This removes the reason the Demo bypassed DI registration. This
+decision point is adopted together with D1 in the first implementation
+(Track B Phase B2).
 
-### D5: Typed Kind (FR-03, framework side) — do not do now
+### D5: Typed Kind (FR-03, framework side) — rejected
 
 Evaluate a typed `AtlasContentKind` (struct with implicit string conversion)
 versus documented constant conventions:
@@ -171,10 +193,27 @@ versus documented constant conventions:
   diagnostics (`ContentRegistrationConflict = 7`, "Content is not
   registered") already surface typos deterministically.
 
-Recommendation: **reject typed Kind in this ADR**; keep the ordinal string
+Decision: **reject typed Kind in this ADR**; keep the ordinal string
 contract and rely on centralized constants (the Demo's `AtlasContentKinds` is
 the documented pattern). Record the rejection so the trade-off is not
 re-litigated without new evidence.
+
+## Adoption Order (maintainer decision, 2026-08-05)
+
+The five decision points are adopted in track-scoped order rather than as one
+bundle:
+
+1. **D1 + D4** (per-Item state binding + DI state channel): first
+   implementation, Track B Phase B2. Confirmed shapes:
+   `IAtlasContentStateScope` service + `AtlasContentContext.GetState<TState>()`,
+   lifecycle as stated in D1.
+2. **D2** (content-to-workspace channel): reviewed separately after D1 lands
+   and its consumer feedback is known. The least-privilege facade remains the
+   candidate shape; the subscriber-interface layer (Core.Events vs Blazor)
+   will be decided in that review.
+3. **D3** (model-bound content base class): deferred; not blocking any
+   functional scenario.
+4. **D5** (typed Kind): rejected; ordinal string contract stays.
 
 ## Alternatives
 
@@ -223,8 +262,9 @@ consumer and will be repeated by every Atlas consumer.
 - DI content and Host-owned state are connected through one channel (FR-04),
   and the model-bound base class removes per-panel subscription boilerplate
   (FR-07).
-- Public API additions (if approved): `ContentStateFactory` on
-  `AtlasWorkspaceHost`, `AtlasContentServices` on `AtlasContentContext`, and
+- Public API additions (first implementation): `IAtlasContentStateScope`
+  service, `AtlasContentContext.GetState<TState>()`. Later decision points
+  (if approved) would add `AtlasContentServices` on `AtlasContentContext` and
   `AtlasModelContentComponent<TModel>`.
 - Security posture: content gains a bounded workspace capability; the trust
   boundary in ADR-0013 remains absolute (sandboxed content gets nothing).

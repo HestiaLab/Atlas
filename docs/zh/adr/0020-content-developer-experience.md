@@ -7,6 +7,7 @@
 - 状态: Proposed
 - 日期: 2026-08-05
 - 决策人: Atlas Maintainer（待批准）
+- 维护者 2026-08-05 决策: 接受按轨道分批采纳——D1+D4 先实施（轨道 B Phase B2）、D2 在 D1 落地后独立评审、D3 推迟、D5 拒绝
 - 相关: ADR-0012、ADR-0013、ADR-0017、ADR-0018、
   REQ-F-006~008、REQ-F-070、
   `docs/en/reviews/atlas-demo-framework-gaps.md` 中的 FR-01/FR-02/FR-04/FR-07
@@ -39,19 +40,26 @@ A3 的 Demo 改动（消费 `AtlasContentContext`、通过 `UpdatePresentationAs
 - **业务状态**以 `ContentReference`（Kind + ResourceId）为键：同一资源的多个视图共享一个状态对象；关闭一个 Item 不销毁该资源的状态（资源仍然存在）。
 - **视图状态**以 `DockItemId`（`AtlasContentContext.ItemId`）为键：每个视图保持自己的出现状态。首版将视图状态留给应用自持并文档化示范；专门的视图状态 API 推迟（split-view 场景罕见；YAGNI）。
 
-推荐的 API 形状——宿主级状态工厂：
+推荐的 API 形状（已确认）：应用注册的可注入状态作用域服务，配合内容上下文上的类型化访问器：
 
 ```csharp
-// AtlasWorkspaceHost
-[Parameter]
-public Func<AtlasContentContext, object?>? ContentStateFactory { get; set; }
+public interface IAtlasContentStateScope
+{
+    TState GetOrCreate<TState>(ContentReference reference, Func<TState> factory)
+        where TState : class;
+}
+
+// AtlasContentContext
+public TState? GetState<TState>() where TState : class;
 ```
 
-Outlet 按 `Content.Reference` 解析每个 Item 的状态对象，对同一资源的每个视图复用，并通过扩展后的 context 暴露给内容（见 D4）。备选形状：可注入的 `IAtlasContentStateScope`，带 `GetOrCreate<TState>(ContentReference, Func<TState>)`。
+`AtlasWorkspaceHost` 解析并拥有一个 `IAtlasContentStateScope`（使用 DI 注册的实例，或未注册时使用 Host-local 实例）。Outlet 通过 scope 按 `Content.Reference` 解析每个 Item 的状态对象，对同一资源的每个视图复用；类型化访问器 `AtlasContentContext.GetState<TState>()` 将其暴露给内容。`Func<TState>` 工厂在 scope 生命周期内每个 `ContentReference` 至多运行一次；后续调用返回缓存的实例。已拒绝的备选是 `ContentStateFactory` Host 参数——它把状态解析耦合到 Host 声明点，无法像服务那样独立单元测试或跨 Host 复用。
 
 生命周期：状态容器由 Host 拥有；Host 卸载时释放全部状态对象。Item 关闭不释放业务状态。资源删除是应用概念；应用通过显式 API 释放自己的状态，或接受 Host 卸载时释放。框架从不持久化状态对象（SRS line 729 保持其应用所有；Atlas 只提供键控解析容器）。
 
 ### D2: 内容到工作区通道（FR-02）——最小权限
+
+本决策点**在 D1 落地后独立评审**；以下形状仍是候选，不是已确认 API。
 
 推荐形状——经 `AtlasContentContext` 暴露的受限工作区门面：
 
@@ -80,7 +88,9 @@ public sealed class AtlasContentServices
 - 域事件订阅由框架管理：所属 Item 关闭或 outlet 卸载时释放，内容不能泄漏订阅。
 - `SandboxedFrame` 内容（ADR-0013）不获得任何内容命令或工作区通道；信任边界不能通过这些能力绕过。
 
-### D3: 模型绑定内容基类（FR-07）
+### D3: 模型绑定内容基类（FR-07）——推迟
+
+本决策点**推迟**；订阅样板问题真实存在，但不阻塞任何功能场景。
 
 推荐形状——消除订阅样板的公共基类：
 
@@ -96,16 +106,25 @@ public abstract class AtlasModelContentComponent<TModel>
 
 ### D4: DI 宿主状态通道（FR-04）——与 D1 合并
 
-状态工厂是唯一的官方状态通道：DI 内容与 Host-local 内容都通过它解析业务状态，因此 DI 内容不再需要宿主闭包来接收宿主自有状态。扩展后的 `AtlasContentContext` 携带解析出的状态对象（例如 `State` 成员或泛型 `GetState<TState>()` 访问器）。这消除了 Demo 绕过 DI 注册的原因。
+状态作用域是唯一的官方状态通道：DI 内容与 Host-local 内容都通过它解析业务状态，因此 DI 内容不再需要宿主闭包来接收宿主自有状态。`AtlasContentContext.GetState<TState>()` 访问器携带解析出的状态对象。这消除了 Demo 绕过 DI 注册的原因。本决策点与 D1 一起在首次实施中采纳（轨道 B Phase B2）。
 
-### D5: 类型化 Kind（FR-03，框架侧）——暂不做
+### D5: 类型化 Kind（FR-03，框架侧）——拒绝
 
 评估类型化 `AtlasContentKind`（带隐式 string 转换的结构体）对比文档化常量约定：
 
 - 收益：Kind 字符串的编译期拼写检查。
 - 成本：Kind 是持久化布局/持久化契约的一部分；类型化值在持久化与 catalog 互操作处增加转换边界；公共 API 面为纯粹的可用性收益而扩大；现有运行时诊断（`ContentRegistrationConflict = 7`、"Content is not registered"）已经确定性地暴露拼写错误。
 
-建议：**在本 ADR 中拒绝类型化 Kind**；保留序号字符串契约，依赖集中常量（Demo 的 `AtlasContentKinds` 是文档化模式）。记录该拒绝，使该权衡在没有新证据时不重复争论。
+决策：**在本 ADR 中拒绝类型化 Kind**；保留序号字符串契约，依赖集中常量（Demo 的 `AtlasContentKinds` 是文档化模式）。记录该拒绝，使该权衡在没有新证据时不重复争论。
+
+## 采纳顺序（维护者决策，2026-08-05）
+
+五个决策点按轨道分批采纳，而非一次打包：
+
+1. **D1 + D4**（per-Item 状态绑定 + DI 状态通道）：首次实施，轨道 B Phase B2。已确认形状：`IAtlasContentStateScope` 服务 + `AtlasContentContext.GetState<TState>()`，生命周期如 D1 所述。
+2. **D2**（内容到工作区通道）：在 D1 落地并获得消费者反馈后独立评审。最小权限门面仍是候选形状；订阅者接口的层归属（Core.Events vs Blazor）在该评审中决定。
+3. **D3**（模型绑定内容基类）：推迟；不阻塞任何功能场景。
+4. **D5**（类型化 Kind）：拒绝；保留序号字符串契约。
 
 ## Alternatives
 
@@ -138,7 +157,7 @@ public abstract class AtlasModelContentComponent<TModel>
 - Atlas 获得官方 per-Item 状态解析路径；企业多文档消费者不再重复实现 `ResourceId → PanelModel` 工厂（FR-01）。
 - 面板内容可以打开 Item 并订阅域事件；跨面板流不再需要宿主编排（为 Demo 打开 FR-10 示范路径）。
 - DI 内容与宿主自有状态通过一个通道连通（FR-04），模型绑定基类消除每面板订阅样板（FR-07）。
-- 公共 API 增加（若批准）：`AtlasWorkspaceHost` 上的 `ContentStateFactory`、`AtlasContentContext` 上的 `AtlasContentServices`、以及 `AtlasModelContentComponent<TModel>`。
+- 公共 API 增加（首次实施）：`IAtlasContentStateScope` 服务、`AtlasContentContext.GetState<TState>()`。后续决策点（若批准）将增加 `AtlasContentContext` 上的 `AtlasContentServices` 和 `AtlasModelContentComponent<TModel>`。
 - 安全姿态：内容获得有界的工作区能力；ADR-0013 中的信任边界保持绝对（沙箱内容什么也得不到）。
 - Demo 更新为示范两个同 Kind 文档的独立状态（轨道 B Phase B2）和域事件驱动的跨面板流（B3 之后的轨道 A Phase A5）。
 - 批准的形状实施时，必须更新 HLD 与 `docs/en/requirements-traceability.md`。
