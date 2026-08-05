@@ -54,14 +54,14 @@ internal static class AtlasDemoWorkspaceDefinition
         var editorAndRight = Split(
             "editor-right",
             SplitAxis.InlineChildren,
-            0.74d,
+            SplitBasis.FixedPixels(300d, SplitAnchor.Second),
             editor.Id,
             rightDock.Id,
             new SplitConstraints(280d, null, 160d, 420d));
         var mainArea = Split(
             "main-area",
             SplitAxis.InlineChildren,
-            0.21d,
+            SplitBasis.FixedPixels(280d, SplitAnchor.First),
             leftDock.Id,
             editorAndRight.Id,
             new SplitConstraints(150d, 380d, 360d, null));
@@ -75,7 +75,7 @@ internal static class AtlasDemoWorkspaceDefinition
         var root = Split(
             "root",
             SplitAxis.BlockChildren,
-            0.72d,
+            SplitBasis.FixedPixels(220d, SplitAnchor.Second),
             mainArea.Id,
             bottomDock.Id,
             new SplitConstraints(300d, null, 120d, 360d));
@@ -161,10 +161,27 @@ internal static class AtlasDemoWorkspaceDefinition
         LayoutNodeId secondId,
         SplitConstraints constraints)
     {
+        return Split(
+            id,
+            axis,
+            SplitBasis.Proportional(firstRatio),
+            firstId,
+            secondId,
+            constraints);
+    }
+
+    private static SplitNode Split(
+        string id,
+        SplitAxis axis,
+        SplitBasis basis,
+        LayoutNodeId firstId,
+        LayoutNodeId secondId,
+        SplitConstraints constraints)
+    {
         return new SplitNode(
             Id(id),
             axis,
-            SplitBasis.Proportional(firstRatio),
+            basis,
             constraints,
             firstId,
             secondId);

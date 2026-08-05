@@ -304,7 +304,52 @@ one atomic operation. Declared items stay owned by the declaration; items you
 open programmatically are preserved across declaration changes while their
 Group and Kind remain.
 
-## 8. Persistence
+## 8. Split Sizing: Elastic-Absorb
+
+Atlas uses elastic-absorb split sizing (ADR-0021): each split has at most
+one elastic track (the implicit `minmax(0,1fr)` side of a `FixedPixels`
+basis), and everything else is fixed in CSS pixels.
+
+- Tool/dock panels use `SplitBasis.FixedPixels(pixels, anchor)`. Their
+  width stays stable when you drag another splitter or resize the window.
+- Editor/work-area panels are the elastic track of their enclosing split:
+  they absorb all remaining space changes.
+- `SplitBasis.Proportional` locks a ratio (children scale with the
+  container). Use it only for non-critical partitions inside one panel —
+  never for a split that separates a panel from the work area.
+
+```csharp
+// Left panel fixed at 280px; the rest of the row (editor area) is elastic.
+var mainArea = new SplitNode(
+    new LayoutNodeId("main-area"),
+    SplitAxis.InlineChildren,
+    SplitBasis.FixedPixels(280d, SplitAnchor.First),
+    new SplitConstraints(150d, 380d, 360d, null),
+    leftDock.Id,
+    editorAndRight.Id);
+
+// Editor elastic; right panel fixed at 300px.
+var editorAndRight = new SplitNode(
+    new LayoutNodeId("editor-right"),
+    SplitAxis.InlineChildren,
+    SplitBasis.FixedPixels(300d, SplitAnchor.Second),
+    new SplitConstraints(280d, null, 160d, 420d),
+    editor.Id,
+    rightDock.Id);
+```
+
+In Razor, pass the basis to `AtlasSplitDefinition`:
+
+```razor
+<AtlasSplitDefinition Axis="SplitAxis.InlineChildren"
+                      Basis="SplitBasis.FixedPixels(280, SplitAnchor.First)">
+```
+
+Terminal resize commits preserve the split's basis kind: a `FixedPixels`
+split stays pixel-based after dragging, keyboard steps, or double-click
+equalize, so the layout does not silently degrade to proportional sizing.
+
+## 9. Persistence
 
 The serializer is synchronous and I/O-free; a store adapter is yours to
 provide:
