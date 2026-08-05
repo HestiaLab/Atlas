@@ -30,6 +30,14 @@ public sealed class DbcEditorModel
 
     public string? RawContent { get; private set; }
 
+    /// <summary>
+    /// Writable edit buffer bound by the editor panel. Initialized from the
+    /// opened file's content and only replaced when the model opens another
+    /// file or saves, so unrelated host re-renders cannot discard unsaved
+    /// input (FR-08).
+    /// </summary>
+    public string EditedContent { get; set; } = string.Empty;
+
     public DbcDocument? Document { get; private set; }
 
     public ViewMode Mode { get; private set; } = ViewMode.Table;
@@ -41,6 +49,7 @@ public sealed class DbcEditorModel
         Folder = folder;
         FileName = file;
         RawContent = content;
+        EditedContent = content;
         Document = parsed;
         Notify();
     }
@@ -56,7 +65,7 @@ public sealed class DbcEditorModel
         Notify();
     }
 
-    public void Save(string newContent)
+    public void Save()
     {
         if (_store is null || Folder is null || FileName is null)
         {
@@ -64,7 +73,7 @@ public sealed class DbcEditorModel
                 "Cannot save without a store and an open file.");
         }
 
-        _store.UpdateFileContent(Folder, FileName, newContent);
+        _store.UpdateFileContent(Folder, FileName, EditedContent);
 
         var updated = _store.Find(Folder, FileName);
         if (updated is not null)

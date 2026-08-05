@@ -23,13 +23,13 @@
         @if (Model.Mode == DbcEditorModel.ViewMode.Text)
         {
             <div class="dbc-editor-text">
-                <textarea @bind="editedContent"
+                <textarea @bind="Model.EditedContent"
                           class="dbc-textarea"
                           spellcheck="false"
                           aria-label="DBC raw text"></textarea>
                 <div class="dbc-editor-actions">
                     <button type="button" class="dbc-action primary"
-                            @onclick="OnSaveText">Save</button>
+                            @onclick="Model.Save">Save</button>
                 </div>
             </div>
         }
@@ -97,8 +97,6 @@
 </div>
 
 @code {
-    private string? editedContent;
-
     [Parameter, EditorRequired]
     public DbcEditorModel Model { get; set; } = null!;
 
@@ -113,19 +111,9 @@
         Model.StateChanged += OnModelChanged;
     }
 
-    protected override void OnParametersSet()
-    {
-        editedContent = Model.RawContent;
-    }
-
     private void OnModelChanged()
     {
         _ = InvokeAsync(StateHasChanged);
-    }
-
-    private void OnSaveText()
-    {
-        Model.Save(editedContent ?? string.Empty);
     }
 
     private Task OnMessageSelected(DbcMessage message)

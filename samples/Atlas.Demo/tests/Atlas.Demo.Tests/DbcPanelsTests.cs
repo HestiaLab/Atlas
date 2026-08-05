@@ -3,6 +3,7 @@ using Atlas.Demo.Components;
 using Atlas.Demo.Services;
 using Atlas.Demo.ViewModels;
 using Bunit;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -91,6 +92,41 @@ public sealed class DbcPanelsTests : TestContext
         cut.FindAll("button")[2].Click(); // Save
 
         Assert.Equal(2, store.Find("can-a", "a.dbc")!.Parsed!.Messages.Count);
+    }
+
+    [Fact]
+    public void EditorPanel_keeps_unsaved_text_after_host_rerender()
+    {
+        // FR-08: unrelated host re-renders must not silently discard unsaved
+        // editor input. Reproduce the full flow through the workspace: upload a
+        // file, open it in the editor, type unsaved text, then force a host
+        // re-render and assert the textarea keeps the unsaved content.
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-file']")));
+        cut.Find("[data-testid='dbc-file']").Click();
+
+        // Switch the editor to text view so the textarea renders.
+        cut.WaitForAssertion(
+            () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-editor'] .dbc-action").Count));
+        cut.FindAll("[data-testid='dbc-editor'] .dbc-action")[0].Click();
+
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-editor'] textarea")));
+        var textarea = cut.Find("[data-testid='dbc-editor'] textarea");
+        textarea.Change("unsaved-edit");
+
+        // Force the host to re-render (the workspace.Changed path does this in
+        // the running app). The edit buffer must survive.
+        cut.Render();
+
+        Assert.Equal(
+            "unsaved-edit",
+            cut.Find("[data-testid='dbc-editor'] textarea").GetAttribute("value"));
     }
 
     [Fact]
