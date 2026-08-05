@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 
 namespace Atlas.Core;
@@ -38,7 +39,10 @@ public sealed class WorkspaceSnapshot
         Id = id;
         Revision = revision;
         RootNodeId = rootNodeId;
-        Nodes = Copy(nodes, nameof(nodes));
+        // Normalize tool-group visibility so every committed snapshot
+        // satisfies REQ-F-154 (empty Persistent tool groups are collapsed,
+        // non-empty tool groups are expanded). See GroupVisibilityInvariant.
+        Nodes = GroupVisibilityInvariant.Normalize(Copy(nodes, nameof(nodes)));
         Items = Copy(items, nameof(items));
         ToolBars = Copy(toolBars, nameof(toolBars));
         ToolBarOrders = Copy(toolBarOrders, nameof(toolBarOrders));

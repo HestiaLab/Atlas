@@ -34,6 +34,22 @@ internal static class GroupVisibilityPlanner
             return WorkspacePlan.NoChange();
         }
 
+        // REQ-F-154: an empty Persistent tool group must stay collapsed so it
+        // stops occupying layout space. Expanding it has no observable content
+        // (there is nothing to show) and contradicts the auto-collapse
+        // invariant enforced by GroupVisibilityInvariant, so reject it
+        // up-front instead of silently normalizing the committed result.
+        if (operation.Visibility == GroupVisibility.Expanded
+            && group.ItemIds.Count == 0
+            && group.RetentionPolicy == GroupRetentionPolicy.Persistent)
+        {
+            return Failure(
+                WorkspaceErrorCode.TargetRejectedByPolicy,
+                operation,
+                "ATLAS-GROUP-VISIBILITY-REJECTED",
+                "Atlas.Group.VisibilityRejectedOnEmptyGroup");
+        }
+
         var replacement = new GroupNode(
             group.Id,
             group.Kind,

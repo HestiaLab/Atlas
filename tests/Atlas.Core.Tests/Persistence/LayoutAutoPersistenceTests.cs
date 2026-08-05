@@ -4,6 +4,7 @@ using Atlas.Core.Layout;
 using Atlas.Core.Operations;
 using Atlas.Core.Operations.Engine;
 using Atlas.Core.Persistence;
+using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Xunit;
 
@@ -99,20 +100,35 @@ public sealed class LayoutAutoPersistenceTests
 
     private static IAtlasWorkspace CreateWorkspace()
     {
+        // The group is non-empty so its Expanded visibility is a legal
+        // committed state: the empty-Persistent-group collapse invariant
+        // (GroupVisibilityInvariant) is exercised by the dedicated invariant
+        // tests, not by the persistence tests.
+        var tool = new DockItem(
+            new DockItemId("tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "tool"),
+            DockItemCapabilityPresets.Tool);
         var group = new GroupNode(
             new LayoutNodeId("tools"),
             DockItemKind.Tool,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            Array.Empty<DockItemId>(),
-            selectedItemId: null,
+            new[] { tool.Id },
+            selectedItemId: tool.Id,
             logicalRegion: Atlas.Core.Placement.LogicalRegion.InlineStartUpper);
         return new AtlasWorkspaceFactory().Create(
             new AtlasWorkspaceDefinition(
                 new WorkspaceId("main"),
                 group.Id,
                 new[] { group },
-                Array.Empty<DockItem>())).Value!;
+                new[] { tool },
+                toolBarOrders: new[]
+                {
+                    new ToolBarOrderState(
+                        Atlas.Core.Placement.LogicalRegion.InlineStartUpper,
+                        new[] { tool.Id })
+                })).Value!;
     }
 
     private sealed class RecordingWorkspaceStore : IWorkspaceLayoutStore
