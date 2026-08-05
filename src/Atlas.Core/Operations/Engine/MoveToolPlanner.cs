@@ -182,11 +182,18 @@ internal static class MoveToolPlanner
             var selected = source.SelectedItemId == itemId
                 ? remaining.FirstOrDefault()
                 : source.SelectedItemId;
+            // An empty Persistent tool group stays in the tree (unlike
+            // Dynamic), but it must collapse so it stops occupying layout
+            // space after its final panel moved away (REQ-F-154). The group
+            // re-expands when a panel is moved/selected into it again.
+            var visibility = remaining.Length == 0
+                ? GroupVisibility.Collapsed
+                : source.Visibility;
             nodes[source.Id] = new GroupNode(
                 source.Id,
                 source.Kind,
                 source.RetentionPolicy,
-                source.Visibility,
+                visibility,
                 remaining,
                 remaining.Length == 0 ? null : selected,
                 editorState: null,
