@@ -20,6 +20,14 @@ const controllers = new Map<string, AtlasInteractionController>();
 // reuse session ids the host already consumed, so the second drag would be
 // rejected as a duplicate (consumedDragSessions).
 let globalDragSequence = 0;
+// After a committed split resize the preview inline style is kept in place
+// until Blazor applies the new ratio: the commit's re-render replaces the
+// split's style attribute, which removes the preview styles. If the commit is
+// rejected no re-render happens, so the controller polls the split's revision
+// and clears the preview after a bounded number of frames to revert the
+// layout instead of freezing it at the preview position.
+const PREVIEW_CLEAR_MAX_FRAMES = 120;
+const PREVIEW_CLEAR_FRAME_MILLISECONDS = 16;
 const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("Tab", "next-tab", true),
   binding("Tab", "previous-tab", true, true),
@@ -85,6 +93,10 @@ export class AtlasInteractionController {
   private dragPreviewFrame: number | undefined;
   private pendingDragPreviewPosition:
     { readonly preview: HTMLElement; readonly x: number; readonly y: number } | undefined;
+  private pendingPreviewClear:
+    | { readonly split: HTMLElement; readonly baseRevision: number; frames: number }
+    | undefined;
+  private cancelPreviewClearFrame: (() => void) | undefined;
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
   private keyboardRatio: number | undefined;
@@ -145,6 +157,7 @@ export class AtlasInteractionController {
       this.cancelDrag();
       this.cancelResize();
       this.clearKeyboardCommit();
+      this.cancelPreviewClear();
     }
     this.identity = identity;
     this.sandboxController.update(identity);
@@ -165,6 +178,7 @@ export class AtlasInteractionController {
     this.cancelResize();
     this.cancelDrag();
     this.clearKeyboardCommit();
+    this.cancelPreviewClear();
     this.sandboxController.dispose();
     this.root.removeEventListener("pointerdown", this.onPointerDown);
     this.root.removeEventListener("pointermove", this.onPointerMove);
@@ -237,6 +251,13 @@ export class AtlasInteractionController {
     const split = splitter?.parentElement;
     if (this.disposed || !splitter || !split || this.isLocked(split)) {
       return;
+    }
+
+    if (this.pendingPreviewClear?.split === split) {
+      // Re-grabbing the same splitter supersedes the previous commit's
+      // pending preview clear; without this the deferred clear could remove
+      // the new drag's preview when the earlier commit's render lands.
+      this.cancelPreviewClear();
     }
 
     const rect = split.getBoundingClientRect();
@@ -357,14 +378,21 @@ export class AtlasInteractionController {
 
     this.activeResize = undefined;
     active.split.removeAttribute("data-atlas-resizing");
-    this.clearPreview(active.split);
     active.splitter.releasePointerCapture?.(event.pointerId);
     if (active.currentRatio !== active.startRatio) {
+      // Keep the preview (the drag position) in place while the commit
+      // round-trips to Blazor. Clearing it synchronously here would let the
+      // split fall back to the previous ratio until Blazor re-renders with
+      // the committed ratio — the visible bounce on release. The deferred
+      // clear only reverts the preview when no re-render confirms the commit.
       this.commitResize(
         active.split,
         active.currentRatio,
         "resize",
         active.baseRevision);
+      this.deferPreviewClear(active.split, active.baseRevision);
+    } else {
+      this.clearPreview(active.split);
     }
   };
 
@@ -389,13 +417,10 @@ export class AtlasInteractionController {
     }
 
     this.cancelResize();
+    const baseRevision = this.readRevision(split);
     this.preview(split, 0.5);
-    this.clearPreview(split);
-    this.commitResize(
-      split,
-      0.5,
-      "equalize",
-      this.readRevision(split));
+    this.commitResize(split, 0.5, "equalize", baseRevision);
+    this.deferPreviewClear(split, baseRevision);
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -606,6 +631,62 @@ export class AtlasInteractionController {
       this.clearPreview(active.split);
       active.splitter.releasePointerCapture?.(active.pointerId);
     }
+  }
+
+  private deferPreviewClear(split: HTMLElement, baseRevision: number): void {
+    this.pendingPreviewClear = { split, baseRevision, frames: 0 };
+    this.schedulePreviewClearFrame();
+  }
+
+  private schedulePreviewClearFrame(): void {
+    if (this.cancelPreviewClearFrame !== undefined) {
+      return;
+    }
+
+    const tick = (): void => {
+      this.cancelPreviewClearFrame = undefined;
+      const pending = this.pendingPreviewClear;
+      if (!pending || this.disposed) {
+        this.pendingPreviewClear = undefined;
+        return;
+      }
+
+      // Blazor advances data-atlas-revision when the commit's re-render is
+      // applied; the new style attribute has already replaced the preview
+      // inline styles at that point, so clearing here is a no-op. If the
+      // commit was rejected no re-render happens — clear after a bounded
+      // wait so the layout reverts to the committed ratio instead of
+      // freezing at the preview position.
+      if (Number(pending.split.dataset.atlasRevision) > pending.baseRevision) {
+        this.clearPreview(pending.split);
+        this.pendingPreviewClear = undefined;
+        return;
+      }
+
+      pending.frames += 1;
+      if (pending.frames >= PREVIEW_CLEAR_MAX_FRAMES) {
+        this.clearPreview(pending.split);
+        this.pendingPreviewClear = undefined;
+        return;
+      }
+
+      this.schedulePreviewClearFrame();
+    };
+
+    const ownerWindow = this.ownerWindow;
+    if (ownerWindow) {
+      const frame = ownerWindow.requestAnimationFrame(tick);
+      this.cancelPreviewClearFrame = () => ownerWindow.cancelAnimationFrame(frame);
+    } else {
+      const timer = setTimeout(tick, PREVIEW_CLEAR_FRAME_MILLISECONDS);
+      this.cancelPreviewClearFrame = () => clearTimeout(timer);
+    }
+  }
+
+  private cancelPreviewClear(): void {
+    this.cancelPreviewClearFrame?.();
+    this.cancelPreviewClearFrame = undefined;
+    this.pendingPreviewClear = undefined;
   }
 
   private cancelDrag(): void {
