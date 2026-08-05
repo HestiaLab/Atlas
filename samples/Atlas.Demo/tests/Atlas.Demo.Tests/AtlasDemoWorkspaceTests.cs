@@ -87,6 +87,79 @@ public sealed class AtlasDemoWorkspaceTests : TestContext
     }
 
     [Fact]
+    public void Editor_opens_two_same_kind_documents_with_independent_state()
+    {
+        // FR-01: two documents of the same Kind must keep independent editor
+        // state instead of sharing one singleton ViewModel.
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        // Open the first document.
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "a.dbc"));
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-file']")));
+        cut.Find("[data-testid='dbc-file']").Click();
+        cut.WaitForAssertion(
+            () => Assert.Equal(
+                "a.dbc",
+                cut.Find("[data-atlas-group-kind='document'] [role='tab']")
+                    .GetAttribute("aria-label")));
+
+        // Open the second document.
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "b.dbc"));
+        cut.WaitForAssertion(
+            () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-file']").Count));
+        cut.FindAll("[data-testid='dbc-file']")[1].Click();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var tabs = cut.FindAll("[data-atlas-group-kind='document'] [role='tab']");
+                Assert.Equal(2, tabs.Count);
+                Assert.Equal("a.dbc", tabs[0].GetAttribute("aria-label"));
+                Assert.Equal("b.dbc", tabs[1].GetAttribute("aria-label"));
+            });
+
+        // Switch to the first document, switch its editor to text view, and
+        // type unsaved content into its buffer.
+        cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")[0].Click();
+        cut.WaitForAssertion(
+            () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-editor'] .dbc-action").Count));
+        cut.FindAll("[data-testid='dbc-editor'] .dbc-action")[0].Click();
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-editor'] textarea")));
+        cut.Find("[data-testid='dbc-editor'] textarea").Change("unsaved-A");
+        // The editor's fire-and-forget StateHasChanged re-render must settle
+        // before the next tab click, otherwise the click targets a stale DOM
+        // element whose event handler was replaced.
+        cut.WaitForAssertion(
+            () => Assert.Equal(
+                "unsaved-A",
+                cut.Find("[data-testid='dbc-editor'] textarea").GetAttribute("value")));
+
+        // Switch to the second document and back to the first: the first
+        // document keeps its unsaved buffer because each tab resolves its own
+        // model through the content state scope.
+        cut.FindAll("[data-atlas-group-kind='document'] [role='tab']")[1].Click();
+        cut.WaitForAssertion(
+            () => Assert.Equal(
+                "b.dbc",
+                cut.Find("[data-atlas-group-kind='document'] [role='tab'][aria-selected]")
+                    .GetAttribute("aria-label")));
+        // Flush any pending render before re-querying the tab elements.
+        cut.Render();
+        var backTabs = cut.FindAll("[data-atlas-group-kind='document'] [role='tab']");
+        backTabs[0].Click();
+        cut.WaitForAssertion(
+            () =>
+            {
+                var textarea = cut.Find("[data-testid='dbc-editor'] textarea");
+                Assert.Equal("unsaved-A", textarea.GetAttribute("value"));
+            });
+    }
+
+    [Fact]
     public void Empty_slots_keep_toolbar_regions_without_panels()
     {
         var cut = RenderComponent<AtlasDemoWorkspace>();

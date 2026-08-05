@@ -1,6 +1,7 @@
 @namespace Atlas.Demo.Components
 @using Atlas.Blazor.Content
 @using Atlas.Demo.Models.Dbc
+@using Atlas.Demo.Services
 @using Atlas.Demo.ViewModels
 @implements IDisposable
 
@@ -100,11 +101,24 @@
 @code {
     private string? _syncedTitle;
 
-    [Parameter, EditorRequired]
+    /// <summary>
+    /// The editor model. Single-panel tests pass it directly; the workspace
+    /// path leaves it unset and the panel resolves the per-item model from the
+    /// content state scope during initialization (FR-01).
+    /// </summary>
+    [Parameter]
     public DbcEditorModel Model { get; set; } = null!;
 
     [Parameter, EditorRequired]
     public AtlasContentContext Content { get; set; } = null!;
+
+    /// <summary>Gets or sets the shared DBC file store used to resolve models from Context.</summary>
+    [Parameter]
+    public DbcFileStore? Store { get; set; }
+
+    /// <summary>Gets or sets the explorer model used to open the current selection into a fresh model.</summary>
+    [Parameter]
+    public DbcTreeModel? Tree { get; set; }
 
     [Parameter]
     public EventCallback<DbcMessage> OnMessageSelected { get; set; }
@@ -114,7 +128,49 @@
 
     protected override void OnInitialized()
     {
+        if (Model is null)
+        {
+            if (Content is null)
+            {
+                throw new InvalidOperationException(
+                    "DbcEditorPanel requires a Model or a Content context.");
+            }
+
+            Model = Content.GetOrCreateState<DbcEditorModel>(CreateModel);
+        }
+
         Model.StateChanged += OnModelChanged;
+    }
+
+    private DbcEditorModel CreateModel()
+    {
+        if (Store is null)
+        {
+            throw new InvalidOperationException(
+                "A DbcFileStore is required to resolve an editor model from Content.");
+        }
+
+        var model = new DbcEditorModel(Store);
+
+        // The factory runs once per ContentReference, when the item first
+        // renders. At that moment the explorer selection is the file this tab
+        // was opened for, so open it into the fresh model.
+        if (Tree is not null
+            && Tree.SelectedFolder is not null
+            && Tree.SelectedFile is not null
+            && string.Equals(
+                Tree.SelectedFile,
+                Content.Reference.ResourceId,
+                StringComparison.Ordinal))
+        {
+            var file = Store.Find(Tree.SelectedFolder, Tree.SelectedFile);
+            if (file is not null)
+            {
+                model.Open(Tree.SelectedFolder, file.Name, file.Content, file.Parsed);
+            }
+        }
+
+        return model;
     }
 
     private void OnModelChanged()
