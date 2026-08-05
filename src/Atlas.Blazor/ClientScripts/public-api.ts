@@ -21,6 +21,7 @@ export type {
 export {
   AtlasInteractionController,
   attachAtlasController,
+  clearAtlasSplitPreview,
   disposeAtlasController,
   updateAtlasController
 } from "./controller";

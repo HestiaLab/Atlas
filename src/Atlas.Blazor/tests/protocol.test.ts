@@ -17,6 +17,22 @@ import {
   ATLAS_SANDBOX_PROTOCOL_VERSION,
   validateSandboxMessage
 } from "../ClientScripts/sandbox";
+import {
+  attachAtlasController,
+  clearAtlasSplitPreview,
+  disposeAtlasController,
+  updateAtlasController
+} from "../ClientScripts/public-api";
+
+test("public api exposes every C#-invokable controller entry point", () => {
+  // C# invokes these by name via module.InvokeVoidAsync / InvokeAsync; a
+  // missing re-export silently passes bUnit's loose JSRuntime but fails in a
+  // real browser ("Could not find '...'").
+  assert.equal(typeof attachAtlasController, "function");
+  assert.equal(typeof updateAtlasController, "function");
+  assert.equal(typeof disposeAtlasController, "function");
+  assert.equal(typeof clearAtlasSplitPreview, "function");
+});
 
 test("protocol version is explicit and rejects unknown versions", () => {
   assert.equal(ATLAS_PROTOCOL_VERSION, 1);
