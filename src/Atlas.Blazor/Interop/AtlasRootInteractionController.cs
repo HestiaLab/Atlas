@@ -152,6 +152,33 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Confirms that a split resize commit's outcome is known so the
+    /// controller can clear the preview inline styles. For an applied commit
+    /// the re-render has already replaced the split's style attribute, so the
+    /// clear is a no-op safety net; for a rejected commit it reverts the
+    /// layout to the committed ratio.
+    /// </summary>
+    internal async ValueTask NotifySplitPreviewClearedAsync(string splitId)
+    {
+        if (disposed || controller is null || module is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await module.InvokeVoidAsync(
+                "clearAtlasSplitPreview",
+                controller,
+                splitId);
+        }
+        catch (JSException)
+        {
+            // The browser circuit has already released the controller.
+        }
+    }
+
     private async ValueTask DisposeControllerAsync()
     {
         var current = controller;

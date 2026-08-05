@@ -310,6 +310,25 @@ class FakeElement extends EventTarget {
       return (findOverlay(this) ?? null) as T | null;
     }
 
+    const nodeIdMatch = /^\[data-atlas-node-id="([^"]+)"\]$/.exec(selector);
+    if (nodeIdMatch) {
+      const find = (element: FakeElement): FakeElement | undefined => {
+        for (const child of element.children) {
+          if (child.dataset.atlasNodeId === nodeIdMatch[1]) {
+            return child;
+          }
+
+          const nested = find(child);
+          if (nested) {
+            return nested;
+          }
+        }
+
+        return undefined;
+      };
+      return (find(this) ?? null) as T | null;
+    }
+
     if (selector === ".atlas-v2-item-icon[data-atlas-icon]") {
       return (this.children.find(child =>
         child.className.split(" ").includes("atlas-v2-item-icon")
@@ -473,7 +492,7 @@ test("pointer preview stays local and pointerup commits exactly once", async () 
   fixture.controller.dispose();
 });
 
-test("pointerup keeps the preview in place until Blazor applies the committed ratio", async () => {
+test("pointerup keeps the preview in place until Blazor confirms the commit", async () => {
   const fixture = controllerFixture();
   fixture.splitter.dispatchEvent(interactionEvent(
     "pointerdown",
@@ -496,64 +515,45 @@ test("pointerup keeps the preview in place until Blazor applies the committed ra
     fixture.split.style.get("grid-template-columns"),
     "minmax(0, 0.7fr) var(--atlas-splitter-size) minmax(0, 0.30000000000000004fr)");
 
-  // Blazor applies the commit: the split revision advances and the style
-  // attribute is replaced (in a real browser that replacement already removes
-  // the preview inline styles; the controller's deferred clear is a no-op).
-  fixture.split.dataset.atlasRevision = "1";
-  fixture.window.flushAnimationFrames();
+  // Blazor confirms the commit via clearAtlasSplitPreview once the result is
+  // known; for an applied commit the re-render has already replaced the style
+  // attribute, so this clear is a no-op safety net.
+  fixture.splitter.children.push(fixture.split);
+  fixture.controller.clearSplitPreview("root");
   assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
   fixture.controller.dispose();
 });
 
-test("a rejected resize commit clears the preview after the bounded wait", async () => {
+test("clearSplitPreview skips a split being resized and clears after release", async () => {
   const fixture = controllerFixture();
+  fixture.splitter.children.push(fixture.split);
   fixture.splitter.dispatchEvent(interactionEvent(
     "pointerdown",
     { pointerId: 14, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
   fixture.splitter.dispatchEvent(interactionEvent(
     "pointermove",
     { pointerId: 14, clientX: 30, clientY: 0 }));
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
+  // A commit notification arriving while the same split is being dragged
+  // must not wipe the live preview.
+  fixture.controller.clearSplitPreview("root");
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
   fixture.splitter.dispatchEvent(interactionEvent(
     "pointerup",
     { pointerId: 14, clientX: 30, clientY: 0 }));
   await flushCallbacks();
-  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
-
-  // No re-render ever arrives (the commit was rejected), so the preview must
-  // revert to the committed ratio after a bounded wait instead of freezing.
-  for (let frame = 0; frame < 121; frame += 1) {
-    fixture.window.flushAnimationFrames();
-  }
+  fixture.controller.clearSplitPreview("root");
   assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
   fixture.controller.dispose();
 });
 
-test("re-grabbing the same splitter cancels the previous pending preview clear", async () => {
+test("clearSplitPreview ignores an unknown split id", () => {
   const fixture = controllerFixture();
-  fixture.splitter.dispatchEvent(interactionEvent(
-    "pointerdown",
-    { pointerId: 16, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
-  fixture.splitter.dispatchEvent(interactionEvent(
-    "pointermove",
-    { pointerId: 16, clientX: 30, clientY: 0 }));
-  fixture.splitter.dispatchEvent(interactionEvent(
-    "pointerup",
-    { pointerId: 16, clientX: 30, clientY: 0 }));
-  await flushCallbacks();
-  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
-
-  // A second drag starts before the first commit is applied: the pending
-  // clear is cancelled so it cannot remove the second drag's preview.
-  fixture.splitter.dispatchEvent(interactionEvent(
-    "pointerdown",
-    { pointerId: 17, clientX: 30, clientY: 0, button: 0, isPrimary: true }));
-  fixture.splitter.dispatchEvent(interactionEvent(
-    "pointermove",
-    { pointerId: 17, clientX: 70, clientY: 0 }));
-  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.9");
-
-  fixture.window.flushAnimationFrames();
-  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.9");
+  fixture.splitter.style.setProperty("--atlas-split-preview", "0.5");
+  fixture.controller.clearSplitPreview("missing");
+  assert.equal(fixture.splitter.style.get("--atlas-split-preview"), "0.5");
   fixture.controller.dispose();
 });
 

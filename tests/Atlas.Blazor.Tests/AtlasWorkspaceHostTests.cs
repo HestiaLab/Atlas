@@ -1028,6 +1028,96 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Applied_resize_commit_confirms_preview_clear_after_render()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1);
+
+        // The commit applied; the preview clear is queued and must be
+        // confirmed only after the commit's re-render lands (the render
+        // replaces the split's style attribute, which removes the preview).
+        Assert.Equal(
+            SplitBasis.Proportional(0.4),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+        cut.Render();
+        await Task.Yield();
+        Assert.Single(module.Invocations["clearAtlasSplitPreview"]);
+        Assert.Equal(
+            "root",
+            module.Invocations["clearAtlasSplitPreview"].Single().Arguments[1]);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Rejected_resize_commit_clears_preview_immediately()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        // A stale base revision rejects the commit; no re-render will come,
+        // so the preview must be cleared immediately (not after a render).
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1,
+            baseRevision: 99);
+
+        Assert.Equal(
+            SplitBasis.Proportional(0.25),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+        Assert.Single(module.Invocations["clearAtlasSplitPreview"]);
+        Assert.Equal(
+            "root",
+            module.Invocations["clearAtlasSplitPreview"].Single().Arguments[1]);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
     public async Task Keyboard_intent_selects_next_tab_through_semantic_operation()
     {
         var module = JSInterop.SetupModule(
