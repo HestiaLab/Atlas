@@ -49,13 +49,24 @@ public sealed class AtlasContentCommands
 /// <summary>Provides immutable content identity, item state, and bound commands.</summary>
 public sealed class AtlasContentContext
 {
+    private readonly IAtlasContentStateScope? stateScope;
+
     internal AtlasContentContext(IAtlasWorkspace workspace, DockItem item)
+        : this(workspace, item, stateScope: null)
+    {
+    }
+
+    internal AtlasContentContext(
+        IAtlasWorkspace workspace,
+        DockItem item,
+        IAtlasContentStateScope? stateScope)
     {
         WorkspaceId = workspace.Id;
         ItemId = item.Id;
         Reference = item.Content;
         Item = item;
         Commands = new AtlasContentCommands(workspace, item.Id);
+        this.stateScope = stateScope;
     }
 
     /// <summary>Gets the hosting Workspace scope used to partition shared state.</summary>
@@ -72,6 +83,44 @@ public sealed class AtlasContentContext
 
     /// <summary>Gets commands bound to the current item.</summary>
     public AtlasContentCommands Commands { get; }
+
+    /// <summary>
+    /// Gets the per-item business state resolved for <see cref="Reference"/>, or
+    /// <see langword="null"/> when no state was created yet or no state scope is
+    /// available. Querying never creates state.
+    /// </summary>
+    public TState? GetState<TState>()
+        where TState : class
+    {
+        if (stateScope is null)
+        {
+            return null;
+        }
+
+        return stateScope.TryGetState<TState>(Reference, out var state) ? state : null;
+    }
+
+    /// <summary>
+    /// Gets the per-item business state resolved for <see cref="Reference"/>,
+    /// creating it through <paramref name="factory"/> when needed. Without a
+    /// state scope the factory runs on every call (backward-compatible
+    /// fallback).
+    /// </summary>
+    public TState GetOrCreateState<TState>(Func<TState> factory)
+        where TState : class
+    {
+        if (factory is null)
+        {
+            throw new ArgumentNullException(nameof(factory));
+        }
+
+        if (stateScope is null)
+        {
+            return factory();
+        }
+
+        return stateScope.GetOrCreate(Reference, factory);
+    }
 }
 
 /// <summary>Base class for provider-resolved Atlas content.</summary>

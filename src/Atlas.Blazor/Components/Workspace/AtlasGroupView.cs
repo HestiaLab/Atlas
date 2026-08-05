@@ -57,6 +57,9 @@ internal sealed class AtlasGroupView : ComponentBase
     [Parameter]
     public string HostId { get; set; } = string.Empty;
 
+    [Parameter]
+    public IAtlasContentStateScope? StateScope { get; set; }
+
     protected override void OnParametersSet()
     {
         UpdateLifetimeCache();
@@ -75,6 +78,7 @@ internal sealed class AtlasGroupView : ComponentBase
         hash.Add(SandboxedFrameResolver);
         hash.Add(Catalog);
         hash.Add(Generation);
+        hash.Add(StateScope);
         foreach (var itemId in keptAliveItemIds)
         {
             hash.Add(itemId);
@@ -391,7 +395,7 @@ internal sealed class AtlasGroupView : ComponentBase
         bool isSelected)
     {
         var sequence = 0;
-        var context = new AtlasContentContext(Workspace, item);
+        var context = new AtlasContentContext(Workspace, item, StateScope);
         var resolution = Catalog.TryResolve(item.Content.Kind, out var descriptor);
         builder.OpenComponent<AtlasContentOutlet>(sequence++);
         builder.SetKey((item.Id, descriptor?.Revision ?? 0));

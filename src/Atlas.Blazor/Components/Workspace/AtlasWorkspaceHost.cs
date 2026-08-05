@@ -28,6 +28,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private IReadOnlyList<AtlasContentHostLocalRegistration> committedContentGeneration =
         Array.Empty<AtlasContentHostLocalRegistration>();
     private AtlasContentCatalog? effectiveCatalog;
+    private IAtlasContentStateScope? effectiveStateScope;
     private bool parentContentGenerationSeen;
     private bool routeFaultReported;
     private int nextContentRevision = 1;
@@ -205,6 +206,9 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private AtlasContentCatalog? Registry { get; set; }
 
     [Inject]
+    private IServiceProvider ServiceProvider { get; set; } = null!;
+
+    [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
 
     /// <inheritdoc />
@@ -213,6 +217,14 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         ThrowIfDisposed();
         parentContentGenerationSeen = true;
         effectiveCatalog ??= Registry ?? AtlasContentCatalog.Empty;
+        // The state scope is optional: use the DI-registered instance when one
+        // exists, otherwise a Host-local default that isolates this Host's
+        // per-item business state. .NET 6's ComponentFactory rejects an
+        // unregistered [Inject] property outright, so the scope is resolved
+        // through IServiceProvider instead of a direct [Inject] slot.
+        effectiveStateScope ??= ServiceProvider.GetService(
+                typeof(IAtlasContentStateScope)) as IAtlasContentStateScope
+            ?? new AtlasContentStateScope();
         ValidateOwnership();
         var hasDeclarativeInput = WorkspaceId is not null || ChildContent is not null;
         if (Workspace is not null && hasDeclarativeInput)
@@ -838,6 +850,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 groupBuilder.AddAttribute(11, "SandboxedFrameResolver", SandboxedFrameResolver);
                 groupBuilder.AddAttribute(12, "Generation", interactionGeneration);
                 groupBuilder.AddAttribute(13, "HostId", hostId);
+                groupBuilder.AddAttribute(14, "StateScope", effectiveStateScope);
                 groupBuilder.CloseComponent();
             }));
         builder.CloseComponent();
