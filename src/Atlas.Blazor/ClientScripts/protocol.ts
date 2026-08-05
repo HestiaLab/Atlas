@@ -52,6 +52,7 @@ export type AtlasDropTargetKind =
   | "document-block-start"
   | "document-block-end"
   | "panel-header-insertion"
+  | "panel-region-center"
   | "toolbar-insertion"
   | "toolbar-region"
   | "drop-scaffold";
