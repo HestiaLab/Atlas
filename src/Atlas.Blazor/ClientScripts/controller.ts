@@ -839,11 +839,37 @@ export class AtlasInteractionController {
         return undefined;
       }
 
+      const headerIndex = readNonNegativeInteger(
+        panelHeader.dataset.atlasInsertionIndex) ?? 0;
+      const rect = panelHeader.getBoundingClientRect();
+      // Split before/after by the header's vertical half, matching the
+      // toolbar-entry resolver, so the release position agrees with the
+      // highlighted insertion slot.
+      const insertionIndex = rect.height > 0
+        && y >= rect.top + (rect.height / 2)
+        ? headerIndex + 1
+        : headerIndex;
       return {
         element: panelHeader,
         kind: "panel-header-insertion",
         groupId: panelHeader.dataset.atlasGroupId,
-        insertionIndex: readNonNegativeInteger(panelHeader.dataset.atlasInsertionIndex) ?? 0
+        insertionIndex
+      };
+    }
+
+    // A visible tool group body is a valid Panel drop target (region-center):
+    // releasing there moves the dragged panel into the target group and
+    // activates it, mirroring the document-center semantic without creating a
+    // new split. ToolBar Entry drags keep the ToolBar-first enabled set.
+    const toolGroup = hit.closest<HTMLElement>(
+      "[data-atlas-group-kind=tool][data-atlas-group-id]");
+    if (drag.sourceKind === "panel-header"
+      && toolGroup?.dataset.atlasGroupId
+      && toolGroup.dataset.atlasGroupId !== drag.sourceGroupId) {
+      return {
+        element: toolGroup,
+        kind: "panel-region-center",
+        groupId: toolGroup.dataset.atlasGroupId
       };
     }
 

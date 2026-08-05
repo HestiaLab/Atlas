@@ -280,6 +280,12 @@ class FakeElement extends EventTarget {
         : null;
     }
 
+    if (selector === "[data-atlas-group-kind=tool][data-atlas-group-id]") {
+      return this.dataset.atlasGroupKind === "tool" && this.dataset.atlasGroupId
+        ? this as unknown as T
+        : null;
+    }
+
     if (selector === "[data-atlas-panel-header]") {
       return this.dataset.atlasPanelHeader ? this as unknown as T : null;
     }
@@ -1554,6 +1560,107 @@ test("cross-group panel and toolbar drags retain migration targets", async () =>
     (toolbar.messages[0] as { targetKind: string }).targetKind,
     "panel-header-insertion");
   toolbar.controller.dispose();
+});
+
+test("panel-header insertion splits before/after by the header's vertical half", async () => {
+  const before = dragFixture("panel-header");
+  before.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 70, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  // Cross-group: the source header captured "tools" on pointerdown; retarget
+  // the same element as a foreign panel header at index 1.
+  before.root.dataset.atlasGroupId = "right-upper";
+  before.root.dataset.atlasInsertionIndex = "1";
+  before.root.rect = { left: 0, top: 0, width: 120, height: 24 };
+  before.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 70, clientX: 60, clientY: 6
+  }));
+  before.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 70, clientX: 60, clientY: 6
+  }));
+  await flushCallbacks();
+  assert.equal(before.messages.length, 1);
+  assert.equal(
+    (before.messages[0] as { targetKind: string }).targetKind,
+    "panel-header-insertion");
+  assert.equal(
+    (before.messages[0] as { insertionIndex?: number }).insertionIndex,
+    1);
+  before.controller.dispose();
+
+  const after = dragFixture("panel-header");
+  after.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 71, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  after.root.dataset.atlasGroupId = "right-upper";
+  after.root.dataset.atlasInsertionIndex = "1";
+  after.root.rect = { left: 0, top: 0, width: 120, height: 24 };
+  after.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 71, clientX: 60, clientY: 20
+  }));
+  after.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 71, clientX: 60, clientY: 20
+  }));
+  await flushCallbacks();
+  assert.equal(after.messages.length, 1);
+  assert.equal(
+    (after.messages[0] as { insertionIndex?: number }).insertionIndex,
+    2);
+  after.controller.dispose();
+});
+
+test("panel-header drop on a visible tool group body commits a region-center placement", async () => {
+  const fixture = dragFixture("panel-header");
+  fixture.document.pointElement = fixture.root;
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 80, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  // Retarget the source element as a foreign tool group body: the source
+  // header captured "tools" on pointerdown; the body belongs to another
+  // logical region, so the resolver must treat it as a RegionBody drop.
+  delete fixture.root.dataset.atlasPanelHeader;
+  fixture.root.dataset.atlasGroupKind = "tool";
+  fixture.root.dataset.atlasGroupId = "right-upper";
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 80, clientX: 60, clientY: 60
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 80, clientX: 60, clientY: 60
+  }));
+  await flushCallbacks();
+  assert.equal(fixture.messages.length, 1);
+  assert.equal(
+    (fixture.messages[0] as { targetKind: string }).targetKind,
+    "panel-region-center");
+  assert.equal(
+    (fixture.messages[0] as { targetGroupId?: string }).targetGroupId,
+    "right-upper");
+  assert.equal(
+    (fixture.messages[0] as { insertionIndex?: number }).insertionIndex,
+    undefined);
+  assert.equal(
+    (fixture.messages[0] as { logicalRegion?: string }).logicalRegion,
+    undefined);
+  fixture.controller.dispose();
+});
+
+test("panel-header drop on its own tool group body is rejected", async () => {
+  const fixture = dragFixture("panel-header");
+  fixture.document.pointElement = fixture.root;
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 81, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  delete fixture.root.dataset.atlasPanelHeader;
+  fixture.root.dataset.atlasGroupKind = "tool";
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 81, clientX: 60, clientY: 60
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 81, clientX: 60, clientY: 60
+  }));
+  await flushCallbacks();
+  assert.equal(fixture.messages.length, 0);
+  fixture.controller.dispose();
 });
 
 test("pointerup re-resolves target and rejects a stale preview from another host", async () => {

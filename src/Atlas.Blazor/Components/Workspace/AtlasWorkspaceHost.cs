@@ -1697,6 +1697,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             && item.Kind == DockItemKind.Tool
             && target.Kind == DockItemKind.Tool
             && message.TargetKind is "panel-header-insertion"
+                or "panel-region-center"
                 or "toolbar-insertion"
                 or "toolbar-region"
                 or "drop-scaffold")

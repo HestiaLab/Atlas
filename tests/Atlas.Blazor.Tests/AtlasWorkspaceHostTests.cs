@@ -1708,12 +1708,14 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Theory]
-    [InlineData("panel-header", "toolbar-insertion", "InlineEndUpper")]
-    [InlineData("toolbar-entry", "panel-header-insertion", null)]
+    [InlineData("panel-header", "toolbar-insertion", "InlineEndUpper", 1)]
+    [InlineData("toolbar-entry", "panel-header-insertion", null, 1)]
+    [InlineData("panel-header", "panel-region-center", null, null)]
     public async Task Cross_group_cross_index_domain_targets_map_to_move_operation(
         string sourceKind,
         string targetKind,
-        string? logicalRegion)
+        string? logicalRegion,
+        int? insertionIndex)
     {
         var module = JSInterop.SetupModule(
             "./_content/Atlas.Blazor/atlas-v2/atlas.js");
@@ -1748,10 +1750,10 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             sourceKind: sourceKind,
             targetKind: targetKind,
             logicalRegion: logicalRegion,
-            insertionIndex: 1);
+            insertionIndex: insertionIndex);
 
         var operation = Assert.IsType<MoveToolOperation>(tracked.LastOperation);
-        Assert.Equal(1, operation.TargetIndex);
+        Assert.Equal(insertionIndex, operation.TargetIndex);
         Assert.Equal(
             new[]
             {
