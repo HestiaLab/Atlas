@@ -51,7 +51,7 @@ an ADR/Spike is required to settle the implementation contract; it does not mean
 
 | ID | SRS Basis | Issue | HLD Handling |
 |------|----------|------|----------|
-| OI-001 | F-069, F-140, F-150, F-155 | The descriptions of Panel drop eligibility across visible Dock Regions, ToolBar, and Drop Scaffold are inconsistent | **Closed**: ADR-0007 adopts ToolBar-first + hidden Scaffold; a visible RegionBody rejects by default |
+| OI-001 | F-069, F-140, F-150, F-155 | The descriptions of Panel drop eligibility across visible Dock Regions, ToolBar, and Drop Scaffold are inconsistent | **Closed**: ADR-0007 adopts ToolBar-first + hidden Scaffold; a visible RegionBody accepts Panel Header drags as a RegionCenter placement and rejects ToolBar Entry drags |
 | OI-002 | F-070, DES-RND-005 | The SRS requires component internal state to be preserved after cross-region moves, but Blazor re-mounting under a different parent cannot guarantee instance identity | **Closed**: ADR-0012 limits the contract to content identity and externalized business state; remount is allowed across Groups |
 | OI-003 | SRS §5, Appendix A | The formal requirement block count is 150, but the appendix previously stated 152 | **Closed**: ADR-0014 fixes 150 = F142 + NF8; the appendix has been synchronized with the main text |
 | OI-004 | AGENTS.md, DES-PRJ-001 | Target Framework, PackageId, and the project structure need to be unified | **Closed**: ADR-0001/0016/0017 adopt .NET 6.0, dual packages Atlas.Core/Atlas.Blazor, a standalone NuGet consumer sample, and Node 24 LTS + npm; the sample is not part of the dual-package implementation layers and is not added to the main solution |
@@ -1101,8 +1101,11 @@ Panel drop intents use PanelDropTarget and do not reuse DockingZone.
 
 ADR-0007 has closed OI-001: the Target Resolver recognizes ToolBar, Scaffold, and RegionBody; the
 default PanelTargetPolicy enables only PanelHeaderInsertion, ToolBarInsertion, ToolBarRegion, and
-hidden-Region Scaffolds; a visible RegionBody remains recognizable but is rejected by default. Hit
-priority is PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold. Fixed Regions
+hidden-Region Scaffolds for all Panel drags, and additionally enables the visible RegionBody as a
+RegionCenter placement for Panel Header drags; a visible RegionBody remains recognizable and is
+rejected for ToolBar Entry drags. Hit
+priority is PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold > RegionCenter
+(Panel Header drags only). Fixed Regions
 and other Hosts never produce valid targets.
 
 Source: F-050~068, F-069, F-150~153, F-155, F-071
@@ -1221,7 +1224,8 @@ current target as input and outputs a stable PanelDropTarget:
   }
 
 After filtering by SourceKind, hit priority is PanelHeaderInsertion > ToolBarInsertion >
-ToolBarRegion > DropScaffold > RegionBody. The DOM of the Editor Area, Top Toolbar, Status Bar, and
+ToolBarRegion > DropScaffold > RegionCenter. RegionCenter is enabled for Panel Header drags only;
+ToolBar Entry drags reject the visible RegionBody. The DOM of the Editor Area, Top Toolbar, Status Bar, and
 other Workspaces never produces a PanelDropTarget. Semantically identical targets must be
 normalized to the same key even when hit through overlapping DOM, to avoid preview jitter and
 duplicate DOM mutations.

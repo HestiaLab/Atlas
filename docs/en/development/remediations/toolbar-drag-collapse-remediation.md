@@ -96,14 +96,14 @@ counting from 0:
 | ID | Severity | Issue | Fix |
 |----|----------|-------|-----|
 | F1 | Major | Same-Group ToolBar entry forward move off-by-one: host forwards wire `InsertionIndex` verbatim, `PlanWithinGroup` interprets it as post-removal index | host toolbar branch adds the document-tab equivalent conversion: `sourceIndex>=0 && insertionIndex>sourceIndex ? insertionIndex - 1 : insertionIndex` (forward moves subtract 1 from the wire index to convert to post-removal index; cross-Group sourceIndex=-1 is not converted); added forward/backward/cross-Group wire conversion tests |
-| F2 | Major | All regions' scaffold `display:block` during drag causes a 2rem layout jump (REQ-F-150 AC3/AC4) | scaffold changed to absolute overlay + opacity gating, shown only when hit; empty regions get `min-block-size:2rem` during drag to provide a hit area (AC4 literal deviation recorded as accepted trade-off) |
+| F2 | Major | All regions' scaffold `display:block` during drag causes a 2rem layout jump (REQ-F-150 AC4/AC5) | scaffold changed to absolute overlay + opacity gating, shown only when hit; empty regions get `min-block-size:2rem` during drag to provide a hit area (AC5 literal deviation recorded as accepted trade-off) |
 | F3 | Minor | `RemoveFromSource` directly indexes `orders[sourceRegion]` | `TryGetValue` fallback (symmetric defense) |
 
 ### 2.6 Second Independent Re-review (deleg_5b9931ad) → F1/F3 PASS, F2 trade-off recorded
 
 - F1 semantics match document-tab, cross-Group does not convert
   incorrectly, tests cover real behavior;
-- F2 satisfies AC3, zero layout impact for non-empty regions; the 2rem
+- F2 satisfies AC4/AC5, zero layout impact for non-empty regions; the 2rem
   empty-region drag displacement is recorded as an accepted trade-off that
   "provides a logical slot when dragging into the region";
 - F3 is correct and "source-side unreachable" holds

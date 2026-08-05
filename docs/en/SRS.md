@@ -1344,14 +1344,23 @@ And no dockable preview area should be displayed in Dock Regions
 And the highlight style should be a semi-transparent theme-color background + theme-color border
 And the highlight should disappear after the drag leaves the valid ToolBar targets
 
-AC2: Dock Regions are not direct release targets
+AC2: Dragging a Panel Header onto a visible Dock Region body
 
-Given the user is dragging a Panel or ToolBar Entry and is currently over a Dock Region
+Given the user is dragging a Panel Header and the drag preview is over the body of a visible Dock Region
+When the user releases inside that Dock Region body
+Then the system should treat the visible Dock Region body as a valid direct release target
+And the system should move the dragged Panel into the target Dock Region and activate it
+And the highlight should cover the whole target Dock Region body
+And the highlight should disappear after the drag leaves the valid target
+
+AC3: ToolBar Entry drags keep the ToolBar-only release rule
+
+Given the user is dragging a ToolBar Entry and is currently over a Dock Region
 When the user releases inside the Dock Region
 Then the system should not treat that Dock Region as a direct release target
-And the drag operation should be canceled and the Panel/ToolBar Entry should return to its original position
+And the drag operation should be canceled and the ToolBar Entry should return to its original position
 
-AC3: Highlighting positions between entries in the ToolBar
+AC4: Highlighting positions between entries in the ToolBar
 
 Given the user is dragging a Panel or ToolBar Entry to the ToolBar region
 When the drag preview moves within the ToolBar
@@ -1363,13 +1372,13 @@ And the ToolBar's BottomArea should host the Bottom slot as an independent regio
 And when the target Dock Region currently has no Panel, the ToolBar should not keep a visible empty Icon slot for that region at rest
 And when the drag enters the corresponding ToolBar region, the system should still provide that logical slot as a valid release target, showing the insertion placeholder only on hit
 
-AC4: The flyout does not affect the layout
+AC5: The flyout does not affect the layout
 
 Given the drag highlight flyout is being displayed
 Then the sizes and positions of all regions in the layout (Dock Region, EditorView, ToolBar, StatusBar) should remain unchanged
 And hidden Dock Regions should not expand because of ToolBar previews
 
-AC5: Highlights disappear after ESC cancellation
+AC6: Highlights disappear after ESC cancellation
 
 Given the drag flyout is being displayed
 When the user presses ESC
@@ -5009,7 +5018,7 @@ The following requirements have been evaluated and decided to be deferred to lat
 | REQ-F-147                                     | Layout Instance Destruction                    | Added      | Destroy API + DOM/event cleanup + repeated destruction + operations refused after destruction                                                                                   |
 | REQ-F-148                                     | Layout Adaptation to Container Size Changes    | Added      | Container resize adapts proportionally, including handling of minimum size constraint conflicts                                                                                 |
 | REQ-F-153                                     | ToolBar Drag-and-Drop Interaction Stability    | Added      | ToolBar drag stability constraints added based on device testing feedback: the drag preview does not jump, Divider does not occupy a permanent slot, empty logical slots are reachable by drag, and the drag rendering and registration process has no Blazor crit-level errors |
-| REQ-F-069, REQ-F-140, REQ-F-150, REQ-F-155  | Panel Drop Policy                              | Modified   | Unified to ToolBar-first + hidden Scaffold per ADR-0007 on 2026-07-31; the visible RegionBody is not a direct drop target                                                        |
+| REQ-F-069, REQ-F-140, REQ-F-150, REQ-F-155  | Panel Drop Policy                              | Modified   | Unified to ToolBar-first + hidden Scaffold per ADR-0007 on 2026-07-31; the visible RegionBody is not a direct drop target for ToolBar Entry drags and is a RegionCenter placement for Panel Header drags (REQ-F-150 AC2 revision)                                                        |
 | REQ-F-085~088                                | Persistence Schema                             | Modified   | Per ADR-0010 on 2026-07-31, fixed the V2 namespace, `2.0` version, strict unknown policy, and full committed topology; arbitrary object parameters are not persisted; when no real V1 samples exist, only the frozen narrow-compatibility input is supported |
 | REQ-F-070                                     | Content Lifetime                              | Modified   | Per ADR-0012 on 2026-07-31, state retention is clarified as user-observable business/view state external to ResourceId/DockItemId; components may remount across Groups, and instance identity is not guaranteed |
 | REQ-NF-006                                    | Content Trust                                 | Modified   | Per ADR-0013 on 2026-07-31, distinguishes TrustedComponent exception isolation from the SandboxedFrame malicious-script security boundary                                          |
