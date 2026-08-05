@@ -276,7 +276,6 @@ internal sealed class AtlasGroupView : ComponentBase
             var item = Items[itemIndex];
             var selected = item.Id == Group.SelectedItemId;
             builder.OpenElement(sequence++, "button");
-            builder.SetKey(item.Id);
             builder.AddAttribute(sequence++, "type", "button");
             builder.AddAttribute(sequence++, "role", "tab");
             builder.AddAttribute(
