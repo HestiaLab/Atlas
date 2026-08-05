@@ -79,6 +79,46 @@ public sealed class GroupVisibilityOperationTests
         Assert.Equal(0, workspace.Current.Revision);
     }
 
+    [Fact]
+    public async Task Expanding_an_empty_persistent_tool_group_is_rejected()
+    {
+        // An empty Persistent tool group is always Collapsed (REQ-F-154 and
+        // GroupVisibilityInvariant); expanding it has no content to show and
+        // must be rejected up-front rather than silently normalized away.
+        var group = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Collapsed,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            group.Id,
+            new[] { new KeyValuePair<LayoutNodeId, LayoutNode>(group.Id, group) },
+            Array.Empty<KeyValuePair<DockItemId, DockItem>>(),
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            Array.Empty<KeyValuePair<LogicalRegion, ToolBarOrderState>>(),
+            Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
+        await using var workspace = new AtlasWorkspace(
+            snapshot,
+            new DefaultWorkspaceOperationPlanner());
+
+        var result = await workspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded));
+
+        Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
+        Assert.Equal(
+            WorkspaceErrorCode.TargetRejectedByPolicy,
+            result.Error!.Code);
+        Assert.Equal(
+            GroupVisibility.Collapsed,
+            CurrentGroup(workspace, group.Id).Visibility);
+        Assert.Equal(0, workspace.Current.Revision);
+    }
+
     private static (AtlasWorkspace Workspace, GroupNode Group) CreateToolWorkspace()
     {
         var item = new DockItem(
