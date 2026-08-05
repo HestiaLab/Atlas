@@ -66,7 +66,7 @@ public sealed class DbcEditorModelTests
     [Fact]
     public void Open_sets_file_state_and_raises_StateChanged()
     {
-        var model = new DbcEditorModel();
+        var model = new DbcEditorModel(new DbcFileStore());
         var changed = 0;
         model.StateChanged += () => changed++;
 
@@ -84,7 +84,7 @@ public sealed class DbcEditorModelTests
     [Fact]
     public void Open_initializes_EditedContent_to_file_content()
     {
-        var model = new DbcEditorModel();
+        var model = new DbcEditorModel(new DbcFileStore());
         var changed = 0;
         model.StateChanged += () => changed++;
 
@@ -97,7 +97,7 @@ public sealed class DbcEditorModelTests
     [Fact]
     public void SetMode_switches_and_notifies()
     {
-        var model = new DbcEditorModel();
+        var model = new DbcEditorModel(new DbcFileStore());
         model.Open("can-a", "a.dbc", ValidDbc, DbcParser.Parse(ValidDbc));
         var changed = 0;
         model.StateChanged += () => changed++;
@@ -181,17 +181,5 @@ public sealed class DbcPropertyModelTests
         Assert.Equal("0", model.Offset);
         Assert.Equal("0", model.Min);
         Assert.Equal("65535", model.Max);
-    }
-
-    [Fact]
-    public void Apply_raises_StateChanged()
-    {
-        var model = new DbcPropertyModel();
-        var changed = 0;
-        model.StateChanged += () => changed++;
-
-        model.Apply();
-
-        Assert.Equal(1, changed);
     }
 }

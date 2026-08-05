@@ -130,7 +130,7 @@ public sealed class DbcPanelsTests : TestContext
     }
 
     [Fact]
-    public void PropertyPanel_shows_file_properties_and_apply_raises()
+    public void PropertyPanel_shows_file_properties()
     {
         var store = new DbcFileStore();
         store.CreateFolder("can-a");
@@ -138,16 +138,10 @@ public sealed class DbcPanelsTests : TestContext
         var model = new DbcPropertyModel();
         var file = store.Find("can-a", "a.dbc")!;
         model.ShowFile(file);
-        var changed = 0;
-        model.StateChanged += () => changed++;
 
         var cut = RenderComponent<DbcPropertyPanel>(p => p.Add(x => x.Model, model));
 
         Assert.Contains("File", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("a.dbc", cut.Markup, StringComparison.Ordinal);
-
-        cut.Find("[data-testid='dbc-property-apply']").Click();
-
-        Assert.Equal(1, changed);
     }
 }

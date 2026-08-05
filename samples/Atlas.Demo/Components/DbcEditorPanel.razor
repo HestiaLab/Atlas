@@ -64,7 +64,7 @@
                                         <button type="button"
                                                 class="dbc-link"
                                                 data-testid="dbc-message"
-                                                @onclick="() => OnMessageSelected(message)">
+                                                @onclick="() => HandleMessageSelected(message)">
                                             @message.Name
                                         </button>
                                     </td>
@@ -79,7 +79,7 @@
                                             <button type="button"
                                                     class="dbc-link"
                                                     data-testid="dbc-signal"
-                                                    @onclick="() => OnSignalSelected(message, signal)">
+                                                    @onclick="() => HandleSignalSelected(message, signal)">
                                                 ⤷ @signal.Name
                                             </button>
                                         </td>
@@ -101,10 +101,10 @@
     public DbcEditorModel Model { get; set; } = null!;
 
     [Parameter]
-    public EventCallback<DbcMessage> OnMessageSelectedCallback { get; set; }
+    public EventCallback<DbcMessage> OnMessageSelected { get; set; }
 
     [Parameter]
-    public EventCallback<DbcSignal> OnSignalSelectedCallback { get; set; }
+    public EventCallback<DbcSignal> OnSignalSelected { get; set; }
 
     protected override void OnInitialized()
     {
@@ -116,14 +116,14 @@
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private Task OnMessageSelected(DbcMessage message)
+    private Task HandleMessageSelected(DbcMessage message)
     {
-        return OnMessageSelectedCallback.InvokeAsync(message);
+        return OnMessageSelected.InvokeAsync(message);
     }
 
-    private Task OnSignalSelected(DbcMessage message, DbcSignal signal)
+    private Task HandleSignalSelected(DbcMessage message, DbcSignal signal)
     {
-        return OnSignalSelectedCallback.InvokeAsync(signal);
+        return OnSignalSelected.InvokeAsync(signal);
     }
 
     public void Dispose()

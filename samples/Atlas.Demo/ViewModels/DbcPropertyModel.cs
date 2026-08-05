@@ -5,9 +5,8 @@ using Atlas.Demo.Services;
 namespace Atlas.Demo.ViewModels;
 
 /// <summary>
-/// PanelModel for the DBC Properties panel. Holds editable property values
-/// for the selected file, message, or signal. <see cref="Apply"/> is the
-/// save hook the panel calls after the user edits a field.
+/// PanelModel for the DBC Properties panel. Holds read-only property values
+/// for the selected file, message, or signal.
 /// </summary>
 public sealed class DbcPropertyModel
 {
@@ -73,11 +72,6 @@ public sealed class DbcPropertyModel
         Offset = FormatNumber(sig.Offset);
         Min = FormatNumber(sig.Min);
         Max = FormatNumber(sig.Max);
-        Notify();
-    }
-
-    public void Apply()
-    {
         Notify();
     }
 

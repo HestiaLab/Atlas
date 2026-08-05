@@ -17,9 +17,9 @@ public sealed class DbcEditorModel
         Table,
     }
 
-    private readonly DbcFileStore? _store;
+    private readonly DbcFileStore _store;
 
-    public DbcEditorModel(DbcFileStore? store = null)
+    public DbcEditorModel(DbcFileStore store)
     {
         _store = store;
     }
@@ -67,10 +67,10 @@ public sealed class DbcEditorModel
 
     public void Save()
     {
-        if (_store is null || Folder is null || FileName is null)
+        if (Folder is null || FileName is null)
         {
             throw new InvalidOperationException(
-                "Cannot save without a store and an open file.");
+                "Cannot save without an open file.");
         }
 
         _store.UpdateFileContent(Folder, FileName, EditedContent);
