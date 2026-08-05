@@ -78,5 +78,19 @@ jobs:
       - run: npm run build:js
         working-directory: src/Atlas.Blazor
       # Single-package distribution (ADR-0019): only Atlas.Blazor is packed;
-      # it embeds Atlas.Core.dll.
-      - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages
+      # it embeds Atlas.Core.dll. The version is pinned to match
+      # samples/Atlas.Demo/Directory.Packages.props so the consumer
+      # verification below exercises the exact package the demo resolves.
+      - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages -p:PackageVersion=0.1.0
+
+      # Consumer verification (ADR-0017/0019): the freshly packed package must
+      # be consumable by the independent NuGet consumer sample (restore from
+      # the local source, build, test, format). NuGet.Config uses forward-slash
+      # paths so the same file works on Linux and Windows.
+      - name: Verify Demo consumes the packed package
+        working-directory: samples/Atlas.Demo
+        run: |
+          dotnet restore Atlas.Demo.sln --configfile NuGet.Config
+          dotnet build Atlas.Demo.sln --no-restore
+          dotnet test Atlas.Demo.sln --no-build --no-restore
+          dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
