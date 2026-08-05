@@ -14,6 +14,13 @@ export interface ResizeSplitCommit {
   readonly mode: "resize" | "keyboard" | "equalize";
   readonly generation: number;
   readonly baseRevision: number | null;
+  /**
+   * Present only when the split's basis is FixedPixels; the anchored child's
+   * extent in CSS pixels. Older hosts ignore the field and degrade to the
+   * proportional interpretation of firstRatio.
+   */
+  readonly basisKind?: "proportional" | "fixed-pixels";
+  readonly pixelExtent?: number;
 }
 
 export type AtlasKeyboardCommand =

@@ -24,6 +24,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private AtlasDefinitionCollector collector = new();
     private readonly AtlasFocusCoordinator focusCoordinator = new();
     private readonly HashSet<string> consumedDragSessions = new(StringComparer.Ordinal);
+    private readonly HashSet<string> pendingSplitPreviewClears = new(StringComparer.Ordinal);
     private AtlasContentRouteCollector routeCollector = new();
     private IReadOnlyList<AtlasContentHostLocalRegistration> committedContentGeneration =
         Array.Empty<AtlasContentHostLocalRegistration>();
@@ -444,6 +445,16 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                         "Atlas.Interaction.AttachFailed",
                         activeWorkspace?.Id));
                 await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        if (pendingSplitPreviewClears.Count != 0)
+        {
+            var pending = pendingSplitPreviewClears.ToArray();
+            pendingSplitPreviewClears.Clear();
+            foreach (var splitId in pending)
+            {
+                await NotifySplitPreviewClearedAsync(splitId);
             }
         }
     }
@@ -1246,6 +1257,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         activeWorkspace = null;
         activeWorkspaceDeclarative = false;
         ownsActiveWorkspace = false;
+        pendingSplitPreviewClears.Clear();
     }
 
     private async Task UnbindWorkspaceAsync(bool disposeOwned)
@@ -1435,36 +1447,43 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 return;
             }
 
-            LayoutOperation operation;
-            if (string.Equals(message.Mode, "equalize", StringComparison.Ordinal))
+            var splitId = new LayoutNodeId(message.SplitId);
+            if (!double.IsFinite(message.FirstRatio)
+                || message.FirstRatio <= 0d
+                || message.FirstRatio >= 1d)
             {
-                operation = new EqualizeSplitOperation(
-                    new LayoutNodeId(message.SplitId),
-                    message.BaseRevision);
-            }
-            else
-            {
-                if (!double.IsFinite(message.FirstRatio)
-                    || message.FirstRatio <= 0d
-                    || message.FirstRatio >= 1d)
-                {
-                    return;
-                }
-
-                operation = string.Equals(
-                    message.Mode,
-                    "keyboard",
-                    StringComparison.Ordinal)
-                    ? ResizeSplitOperation.CreateKeyboard(
-                        new LayoutNodeId(message.SplitId),
-                        SplitBasis.Proportional(message.FirstRatio))
-                    : new ResizeSplitOperation(
-                        new LayoutNodeId(message.SplitId),
-                        SplitBasis.Proportional(message.FirstRatio),
-                        message.BaseRevision);
+                return;
             }
 
-            await activeWorkspace.ExecuteAsync(operation);
+            // Equalize is a terminal commit like pointer/keyboard resize:
+            // the controller reports the clamped target (0.5 clamped to the
+            // split's valid range) and the basis kind, so the Host rebuilds
+            // the exact basis instead of hard-coding a 50/50 proportion that
+            // could violate the split's pixel constraints.
+            var basis = ResolveCommittedBasis(splitId, message);
+            var operation = string.Equals(
+                message.Mode,
+                "keyboard",
+                StringComparison.Ordinal)
+                ? ResizeSplitOperation.CreateKeyboard(splitId, basis)
+                : new ResizeSplitOperation(splitId, basis, message.BaseRevision);
+
+            // Queue the confirmation before executing: the Changed event fired
+            // inside ExecuteAsync schedules the commit's render, which a
+            // dispatcher may process while the await is in flight. OnAfterRenderAsync
+            // must always see the pending split so it confirms the clear after
+            // the render replaces the split's style attribute.
+            pendingSplitPreviewClears.Add(message.SplitId);
+            var result = await activeWorkspace.ExecuteAsync(operation);
+            if (result.Status != WorkspaceResultStatus.Success)
+            {
+                // Rejected (stale, failure, or no-change): no render will
+                // come, so clear the preview immediately to revert to the
+                // committed ratio instead of freezing at the preview position.
+                pendingSplitPreviewClears.Remove(message.SplitId);
+                await NotifySplitPreviewClearedAsync(message.SplitId);
+            }
+
             return;
         }
 
@@ -1482,6 +1501,44 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         {
             await ExecuteDockItemAsync(message);
         }
+    }
+
+    private async ValueTask NotifySplitPreviewClearedAsync(string splitId)
+    {
+        if (interactionController is not null)
+        {
+            await interactionController.NotifySplitPreviewClearedAsync(splitId);
+        }
+    }
+
+    private SplitBasis ResolveCommittedBasis(
+        LayoutNodeId splitId,
+        AtlasInteractionMessage message)
+    {
+        if (string.Equals(
+                message.BasisKind,
+                "fixed-pixels",
+                StringComparison.Ordinal)
+            && message.PixelExtent is double pixelExtent)
+        {
+            return SplitBasis.FixedPixels(
+                pixelExtent,
+                CurrentAnchor(splitId) ?? SplitAnchor.First);
+        }
+
+        return SplitBasis.Proportional(message.FirstRatio);
+    }
+
+    private SplitAnchor? CurrentAnchor(LayoutNodeId splitId)
+    {
+        if (activeWorkspace is null
+            || !activeWorkspace.Current.Nodes.TryGetValue(splitId, out var node)
+            || node is not SplitNode split)
+        {
+            return null;
+        }
+
+        return split.Basis.Anchor;
     }
 
     private async Task ExecuteDockItemAsync(AtlasInteractionMessage message)

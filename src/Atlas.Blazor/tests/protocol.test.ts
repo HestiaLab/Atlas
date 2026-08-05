@@ -17,6 +17,22 @@ import {
   ATLAS_SANDBOX_PROTOCOL_VERSION,
   validateSandboxMessage
 } from "../ClientScripts/sandbox";
+import {
+  attachAtlasController,
+  clearAtlasSplitPreview,
+  disposeAtlasController,
+  updateAtlasController
+} from "../ClientScripts/public-api";
+
+test("public api exposes every C#-invokable controller entry point", () => {
+  // C# invokes these by name via module.InvokeVoidAsync / InvokeAsync; a
+  // missing re-export silently passes bUnit's loose JSRuntime but fails in a
+  // real browser ("Could not find '...'").
+  assert.equal(typeof attachAtlasController, "function");
+  assert.equal(typeof updateAtlasController, "function");
+  assert.equal(typeof disposeAtlasController, "function");
+  assert.equal(typeof clearAtlasSplitPreview, "function");
+});
 
 test("protocol version is explicit and rejects unknown versions", () => {
   assert.equal(ATLAS_PROTOCOL_VERSION, 1);
@@ -310,6 +326,25 @@ class FakeElement extends EventTarget {
       return (findOverlay(this) ?? null) as T | null;
     }
 
+    const nodeIdMatch = /^\[data-atlas-node-id="([^"]+)"\]$/.exec(selector);
+    if (nodeIdMatch) {
+      const find = (element: FakeElement): FakeElement | undefined => {
+        for (const child of element.children) {
+          if (child.dataset.atlasNodeId === nodeIdMatch[1]) {
+            return child;
+          }
+
+          const nested = find(child);
+          if (nested) {
+            return nested;
+          }
+        }
+
+        return undefined;
+      };
+      return (find(this) ?? null) as T | null;
+    }
+
     if (selector === ".atlas-v2-item-icon[data-atlas-icon]") {
       return (this.children.find(child =>
         child.className.split(" ").includes("atlas-v2-item-icon")
@@ -404,9 +439,14 @@ function controllerFixture(delay = 1000): {
   splitter: FakeElement;
   split: FakeElement;
   messages: AtlasInteractionMessage[];
+  window: FakeWindow;
 } {
   const splitter = new FakeElement();
   const split = new FakeElement();
+  const ownerWindow = new FakeWindow();
+  const ownerDocument = new FakeDocument();
+  ownerDocument.defaultView = ownerWindow as unknown as Window;
+  splitter.ownerDocument = ownerDocument;
   splitter.parentElement = split;
   splitter.dataset.atlasSplitId = "root";
   split.dataset.atlasNodeId = "root";
@@ -429,7 +469,7 @@ function controllerFixture(delay = 1000): {
     },
     receiver,
     { keyboardCommitDelayMilliseconds: delay });
-  return { controller, splitter, split, messages };
+  return { controller, splitter, split, messages, window: ownerWindow };
 }
 
 async function flushCallbacks(): Promise<void> {
@@ -465,6 +505,71 @@ test("pointer preview stays local and pointerup commits exactly once", async () 
     generation: 4,
     baseRevision: 0
   });
+  fixture.controller.dispose();
+});
+
+test("pointerup keeps the preview in place until Blazor confirms the commit", async () => {
+  const fixture = controllerFixture();
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 13, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 13, clientX: 30, clientY: 0 }));
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 13, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+
+  // The commit is in flight; the preview must stay in place so the split
+  // does not bounce back to the pre-drag ratio before Blazor re-renders.
+  assert.equal(fixture.messages.length, 1);
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+  assert.equal(
+    fixture.split.style.get("grid-template-columns"),
+    "minmax(0, 0.7fr) var(--atlas-splitter-size) minmax(0, 0.30000000000000004fr)");
+
+  // Blazor confirms the commit via clearAtlasSplitPreview once the result is
+  // known; for an applied commit the re-render has already replaced the style
+  // attribute, so this clear is a no-op safety net.
+  fixture.splitter.children.push(fixture.split);
+  fixture.controller.clearSplitPreview("root");
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
+  fixture.controller.dispose();
+});
+
+test("clearSplitPreview skips a split being resized and clears after release", async () => {
+  const fixture = controllerFixture();
+  fixture.splitter.children.push(fixture.split);
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 14, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 14, clientX: 30, clientY: 0 }));
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
+  // A commit notification arriving while the same split is being dragged
+  // must not wipe the live preview.
+  fixture.controller.clearSplitPreview("root");
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 14, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+  fixture.controller.clearSplitPreview("root");
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
+  fixture.controller.dispose();
+});
+
+test("clearSplitPreview ignores an unknown split id", () => {
+  const fixture = controllerFixture();
+  fixture.splitter.style.setProperty("--atlas-split-preview", "0.5");
+  fixture.controller.clearSplitPreview("missing");
+  assert.equal(fixture.splitter.style.get("--atlas-split-preview"), "0.5");
   fixture.controller.dispose();
 });
 
@@ -621,6 +726,183 @@ test("fixed-pixel basis resolves against current extent", async () => {
   assert.equal(
     message?.type === "resize-split" ? message.firstRatio : 0,
     0.35);
+  fixture.controller.dispose();
+});
+
+test("fixed-pixel drag commits pixelExtent with basis kind (anchor First)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 21, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 21, clientX: 40, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 21, clientX: 40, clientY: 0 }));
+  await flushCallbacks();
+
+  const message = fixture.messages[0];
+  assert.equal(message?.type, "resize-split");
+  assert.equal(
+    message?.type === "resize-split" ? message.basisKind : undefined,
+    "fixed-pixels");
+  assert.equal(
+    message?.type === "resize-split" ? message.pixelExtent : undefined,
+    55);
+  assert.equal(
+    message?.type === "resize-split" ? message.firstRatio : undefined,
+    0.55);
+  fixture.controller.dispose();
+});
+
+test("fixed-pixel drag commits pixelExtent for the anchored child (anchor Second)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "Second";
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 22, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 22, clientX: 30, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 22, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+
+  const message = fixture.messages[0];
+  assert.equal(message?.type, "resize-split");
+  assert.equal(
+    message?.type === "resize-split" ? message.basisKind : undefined,
+    "fixed-pixels");
+  assert.equal(
+    message?.type === "resize-split" ? message.pixelExtent : undefined,
+    5);
+  assert.equal(
+    message?.type === "resize-split" ? message.firstRatio : undefined,
+    0.95);
+  fixture.controller.dispose();
+});
+
+test("proportional drag keeps the v1 commit shape without basis fields", async () => {
+  const fixture = controllerFixture();
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 23, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 23, clientX: 30, clientY: 0 }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 23, clientX: 30, clientY: 0 }));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.7,
+    mode: "resize",
+    generation: 4,
+    baseRevision: 0
+  });
+  fixture.controller.dispose();
+});
+
+test("equalize on a fixed-pixel split commits extent / 2 with basis kind", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.5,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0,
+    basisKind: "fixed-pixels",
+    pixelExtent: 50
+  });
+  fixture.controller.dispose();
+});
+
+test("equalize clamps to the split's valid range (proportional)", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasFirstMinimum = "60";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  // 0.5 would put the first track at 50px, below its 60px minimum; the
+  // equalize target clamps to the nearest legal ratio (0.6).
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.6,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0
+  });
+  fixture.controller.dispose();
+});
+
+test("equalize clamps a fixed-pixel split to its pixel range", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.split.dataset.atlasFirstMaximum = "40";
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  await flushCallbacks();
+
+  // Half of the 100px extent is 50px, above the 40px maximum; the equalize
+  // target clamps to 40px.
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.4,
+    mode: "equalize",
+    generation: 4,
+    baseRevision: 0,
+    basisKind: "fixed-pixels",
+    pixelExtent: 40
+  });
+  fixture.controller.dispose();
+});
+
+test("keyboard step on a fixed-pixel split commits pixelExtent", async () => {
+  const fixture = controllerFixture();
+  fixture.split.dataset.atlasSplitBasisKind = "FixedPixels";
+  fixture.split.dataset.atlasSplitBasisValue = "25";
+  fixture.split.dataset.atlasSplitAnchor = "First";
+  fixture.splitter.dispatchEvent(interactionEvent("keydown", {
+    code: "ArrowRight",
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false
+  }));
+  fixture.splitter.dispatchEvent(interactionEvent("keyup", {
+    code: "ArrowRight"
+  }));
+  await flushCallbacks();
+
+  assert.deepEqual(fixture.messages[0], {
+    type: "resize-split",
+    splitId: "root",
+    firstRatio: 0.35,
+    mode: "keyboard",
+    generation: 4,
+    baseRevision: null,
+    basisKind: "fixed-pixels",
+    pixelExtent: 35
+  });
   fixture.controller.dispose();
 });
 

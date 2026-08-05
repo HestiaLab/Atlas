@@ -990,7 +990,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             command: null,
             generation: 1,
             baseRevision: 1);
-        Assert.IsType<EqualizeSplitOperation>(tracked.LastOperation);
+        var equalize = Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(ResizeSplitInputKind.Pointer, equalize.InputKind);
+        Assert.Equal(SplitBasis.Proportional(0.5), equalize.Basis);
         Assert.Equal(2, tracked.ExecuteCount);
         Assert.Equal(
             SplitBasis.Proportional(0.5),
@@ -1024,6 +1026,217 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         await cut.Instance.DisposeAsync();
         Assert.Single(module.Invocations["disposeAtlasController"]);
         Assert.Equal(3, tracked.ExecuteCount);
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Applied_resize_commit_confirms_preview_clear_after_render()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1);
+
+        // The commit applied; the preview clear is queued and must be
+        // confirmed only after the commit's re-render lands (the render
+        // replaces the split's style attribute, which removes the preview).
+        Assert.Equal(
+            SplitBasis.Proportional(0.4),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+        cut.Render();
+        await Task.Yield();
+        Assert.Single(module.Invocations["clearAtlasSplitPreview"]);
+        Assert.Equal(
+            "root",
+            module.Invocations["clearAtlasSplitPreview"].Single().Arguments[1]);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Rejected_resize_commit_clears_preview_immediately()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        // A stale base revision rejects the commit; no re-render will come,
+        // so the preview must be cleared immediately (not after a render).
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.4,
+            mode: "resize",
+            command: null,
+            generation: 1,
+            baseRevision: 99);
+
+        Assert.Equal(
+            SplitBasis.Proportional(0.25),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+        Assert.Single(module.Invocations["clearAtlasSplitPreview"]);
+        Assert.Equal(
+            "root",
+            module.Invocations["clearAtlasSplitPreview"].Single().Arguments[1]);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Fixed_pixel_resize_commit_preserves_basis_kind_and_anchor()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(FixedPixelDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.6,
+            mode: "resize",
+            command: null,
+            generation: 1,
+            basisKind: "fixed-pixels",
+            pixelExtent: 120);
+
+        var basis = Assert.IsType<SplitNode>(
+            tracked.Current.Nodes[new LayoutNodeId("root")]).Basis;
+        Assert.Equal(SplitBasisKind.FixedPixels, basis.Kind);
+        Assert.Equal(120d, basis.Value);
+        Assert.Equal(SplitAnchor.First, basis.Anchor);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Fixed_pixel_equalize_keeps_pixel_basis()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(FixedPixelDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.5,
+            mode: "equalize",
+            command: null,
+            generation: 1,
+            basisKind: "fixed-pixels",
+            pixelExtent: 75);
+
+        var operation = Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(SplitBasisKind.FixedPixels, operation.Basis.Kind);
+        Assert.Equal(75d, operation.Basis.Value);
+        Assert.Equal(SplitAnchor.First, operation.Basis.Anchor);
+
+        await cut.Instance.DisposeAsync();
+        await tracked.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Equalize_uses_the_controller_reported_clamped_target()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        var tracked = new TrackingWorkspace(
+            CreateWorkspace(ProjectionDefinition()));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, tracked));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasController"]));
+        var receiverReference = module.Invocations["attachAtlasController"]
+            .Single()
+            .Arguments[2]!;
+
+        // The controller clamps 0.5 to the split's valid range before
+        // sending the equalize commit; the Host must apply that exact
+        // target instead of hard-coding a 50/50 proportion.
+        await InvokeInteractionAsync(
+            receiverReference,
+            type: "resize-split",
+            splitId: "root",
+            firstRatio: 0.6,
+            mode: "equalize",
+            command: null,
+            generation: 1);
+
+        var operation = Assert.IsType<ResizeSplitOperation>(tracked.LastOperation);
+        Assert.Equal(SplitBasis.Proportional(0.6), operation.Basis);
+        Assert.Equal(
+            SplitBasis.Proportional(0.6),
+            Assert.IsType<SplitNode>(
+                tracked.Current.Nodes[new LayoutNodeId("root")]).Basis);
+
+        await cut.Instance.DisposeAsync();
         await tracked.DisposeAsync();
     }
 
@@ -2167,6 +2380,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         string? command,
         long generation,
         long? baseRevision = 0,
+        string? basisKind = null,
+        double? pixelExtent = null,
         string? sourceGroupId = null,
         string? targetGroupId = null,
         int protocolVersion = 0,
@@ -2192,6 +2407,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         messageType.GetProperty("SplitId")!.SetValue(message, splitId);
         messageType.GetProperty("FirstRatio")!.SetValue(message, firstRatio);
         messageType.GetProperty("Mode")!.SetValue(message, mode);
+        messageType.GetProperty("BasisKind")!.SetValue(message, basisKind);
+        messageType.GetProperty("PixelExtent")!.SetValue(message, pixelExtent);
         messageType.GetProperty("Command")!.SetValue(message, command);
         messageType.GetProperty("Generation")!.SetValue(message, generation);
         messageType.GetProperty("BaseRevision")!.SetValue(message, baseRevision);
@@ -2775,6 +2992,48 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id);
+    }
+
+    private static AtlasWorkspaceDefinition FixedPixelDefinition()
+    {
+        var tool = new DockItem(
+            new DockItemId("tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "tool-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Tool");
+        var document = Document("document", "document-resource", "Document");
+        var toolGroup = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { tool.Id },
+            tool.Id,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var documentGroup = DocumentGroup("documents", document);
+        var split = new SplitNode(
+            new LayoutNodeId("root"),
+            SplitAxis.InlineChildren,
+            SplitBasis.FixedPixels(100d, SplitAnchor.First),
+            new SplitConstraints(40d, null, 60d, null),
+            toolGroup.Id,
+            documentGroup.Id);
+        var toolBars = new[]
+        {
+            new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
+        };
+        var toolBarOrders = new[]
+        {
+            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { tool.Id }),
+        };
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("fixed-pixel-workspace"),
+            split.Id,
+            new LayoutNode[] { split, toolGroup, documentGroup },
+            new DockItem[] { tool, document },
+            toolBars,
+            toolBarOrders);
     }
 
     private static RenderFragment DocumentDeclaration(string title)

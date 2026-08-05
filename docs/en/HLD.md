@@ -1286,11 +1286,21 @@ unlocked, a ResizeSession saves the pointerdown anchor, container extent, start 
 and BaseRevision. pointermove calls the same ResolveSplitLayout used by DES-DOM-010 to produce a
 CSS preview, and pointerup commits exactly one ResizeSplitOperation.
 
-Double-click uses EqualizeSplitOperation; the collapse button uses SetGroupVisibilityOperation and
-never changes basis directly in Razor. After collapsing, the SplitNode retains the restore basis
-and the button switches to expand semantics. If the corresponding child is not collapsible or has
-been removed by topology normalization, a NoChange/typed stale is returned and the new sibling is
-not affected.
+Terminal commits preserve the split's basis kind (elastic-absorb sizing, ADR-0021): a FixedPixels
+split commits its anchored pixel extent and stays pixel-based after pointer drags, keyboard steps,
+or double-click equalize; a Proportional split commits a ratio. Fixed-pixel dock panels therefore
+keep a stable width while the elastic work-area track absorbs the change when another splitter is
+dragged or the container resizes, so nested panel splits do not move when an outer splitter is
+dragged.
+
+Double-click equalizes to the closest legal split position: the controller clamps 0.5 to the
+split's valid range (readLimits) and commits a ResizeSplitOperation whose basis preserves the
+split's kind — a FixedPixels split reports the clamped pixel extent, a Proportional split the
+clamped ratio; the collapse button uses SetGroupVisibilityOperation and never changes basis
+directly in Razor. After collapsing, the SplitNode retains the restore basis and the button
+switches to expand semantics. If the corresponding child is not collapsible or has been removed
+by topology normalization, a NoChange/typed stale is returned and the new sibling is not
+affected.
 
 The Splitter itself is keyboard-focusable and uses role="separator". Arrow keys adjust by
 SplitterOptions.KeyboardStepPixels according to orientation; Home/End move to the valid min/max;
