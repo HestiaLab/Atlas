@@ -53,6 +53,33 @@ public sealed class DbcPanelsTests : TestContext
     }
 
     [Fact]
+    public void TreePanel_duplicate_upload_keeps_store_and_shows_message()
+    {
+        // Uploading the same file name twice must not escape the event handler
+        // as an unhandled exception: the store keeps the first file and the
+        // panel surfaces a visible message (file-tree duplicate-name rule).
+        var store = new DbcFileStore();
+        var model = new DbcTreeModel(store);
+
+        var cut = RenderComponent<DbcTreePanel>(p => p.Add(x => x.Model, model));
+
+        var input = cut.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>();
+        input.UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+        input = cut.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>();
+        input.UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Single(store.FilesIn("DBC"));
+                Assert.Contains(
+                    "already exists",
+                    cut.Find("[data-testid='dbc-tree-message']").TextContent,
+                    StringComparison.Ordinal);
+            });
+    }
+
+    [Fact]
     public void EditorPanel_switches_between_text_and_table_views()
     {
         var store = new DbcFileStore();
