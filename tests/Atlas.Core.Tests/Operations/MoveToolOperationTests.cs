@@ -127,6 +127,44 @@ public sealed class MoveToolOperationTests
     }
 
     [Fact]
+    public async Task Cross_group_move_collapses_empty_persistent_source_group()
+    {
+        var moved = CreateTool("moved");
+        var targetItem = CreateTool("target");
+        var source = CreateToolGroup(
+            "source",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineStartUpper,
+            moved);
+        var target = CreateToolGroup(
+            "target",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineEndUpper,
+            targetItem);
+        var split = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspace(
+            split.Id,
+            new LayoutNode[] { split, source, target },
+            new[] { moved, targetItem });
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        // The Persistent source group stays in the tree (unlike Dynamic), but
+        // an empty tool group must collapse so it does not keep occupying
+        // layout space after its final panel moved away (REQ-F-154).
+        Assert.Contains(source.Id, workspace.Current.Nodes);
+        var sourceAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]);
+        Assert.Empty(sourceAfter.ItemIds);
+        Assert.Null(sourceAfter.SelectedItemId);
+        Assert.Equal(GroupVisibility.Collapsed, sourceAfter.Visibility);
+        var targetAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
+        Assert.Equal(GroupVisibility.Expanded, targetAfter.Visibility);
+        Assert.Equal(new[] { moved.Id, targetItem.Id }, targetAfter.ItemIds);
+    }
+
+    [Fact]
     public async Task Explicit_missing_or_incompatible_target_returns_typed_failure()
     {
         var tool = CreateTool("tool");
