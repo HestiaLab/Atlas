@@ -255,15 +255,15 @@ action), deferred to an ADR, or rejected with a reason.
 |---------|----------|--------------|-------|
 | FR-01 per-item state | | | |
 | FR-02 content-to-workspace channel | | | |
-| FR-03 Kind typing | | | |
+| FR-03 Kind typing | Accepted (Demo side) | Centralize Kind constants in the Demo | Commit `5f6a9ef`; framework-side typed Kind deferred to Track B (ADR) |
 | FR-04 DI vs host state | | | |
 | FR-05 mode coverage | | | |
-| FR-06 context ignored | | | |
+| FR-06 context ignored | Accepted | Make the Demo consume `AtlasContentContext` and sync the tab title | Commit `66d1c16` |
 | FR-07 subscription boilerplate | | | |
-| FR-08 editor buffer clobber | | | |
-| FR-09 toolbar slot ergonomics | | | |
+| FR-08 editor buffer clobber | Accepted | Move the edit buffer into `DbcEditorModel` | Commit `747ebb1` |
+| FR-09 toolbar slot ergonomics | Accepted | Use markup slot syntax in the Demo | Commit `5f6a9ef` |
 | FR-10 domain-event channel | | | |
-| FR-11 demo hygiene | | | |
+| FR-11 demo hygiene | Accepted | Remove no-op `Apply`; rename callbacks to `OnXxx`; require store | Commit `7cfcabf` |
 
 ## 7. Verification Note
 

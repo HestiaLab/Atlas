@@ -149,15 +149,15 @@ Demo 是可运行的、纯包消费的样例，并且通过自身测试。然而
 |------|------|------------|------|
 | FR-01 per-item state | | | |
 | FR-02 content-to-workspace channel | | | |
-| FR-03 Kind typing | | | |
+| FR-03 Kind typing | 接受（Demo 侧） | Demo 集中定义 Kind 常量 | Commit `5f6a9ef`；框架侧类型化 Kind 转入轨道 B（ADR） |
 | FR-04 DI vs host state | | | |
 | FR-05 mode coverage | | | |
-| FR-06 context ignored | | | |
+| FR-06 context ignored | 接受 | Demo 消费 `AtlasContentContext` 并同步 tab 标题 | Commit `66d1c16` |
 | FR-07 subscription boilerplate | | | |
-| FR-08 editor buffer clobber | | | |
-| FR-09 toolbar slot ergonomics | | | |
+| FR-08 editor buffer clobber | 接受 | 编辑缓冲移入 `DbcEditorModel` | Commit `747ebb1` |
+| FR-09 toolbar slot ergonomics | 接受 | Demo 改用标记写法槽位 | Commit `5f6a9ef` |
 | FR-10 domain-event channel | | | |
-| FR-11 demo hygiene | | | |
+| FR-11 demo hygiene | 接受 | 移除空操作 `Apply`；回调改为 `OnXxx`；store 必填 | Commit `7cfcabf` |
 
 ## 7. 验证说明
 
