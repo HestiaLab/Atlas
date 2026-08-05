@@ -1009,7 +1009,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             var isActive = region.Group.Visibility == GroupVisibility.Expanded
                 && region.Group.SelectedItemId == item.Id;
             builder.OpenElement(sequence++, "button");
-            builder.SetKey(item.Id);
             builder.AddAttribute(sequence++, "type", "button");
             builder.AddAttribute(sequence++, "role", "tab");
             builder.AddAttribute(
