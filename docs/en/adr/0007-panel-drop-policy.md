@@ -36,14 +36,26 @@ When dragging a Panel Header or ToolBar Entry, the defaults enable:
 4. `DropScaffold`: only for Dock Regions currently hidden because no Panel is
    expanded.
 
-`RegionBody` is disabled by default. Editor Area, Top Toolbar, Status Bar,
-Document Groups, and other Hosts' DOM are never Panel targets.
+Additionally, when dragging a **Panel Header** only, the visible body of a
+Tool Group (`RegionBody`) is a valid `RegionCenter` target: releasing there
+moves the dragged Panel into the target Group and activates it, mirroring the
+document-center semantic without creating a new split. ToolBar Entry drags do
+not enable `RegionCenter` — their enabled set stays ToolBar-first.
+
+Editor Area, Top Toolbar, Status Bar, Document Groups, and other Hosts' DOM
+are never Panel targets.
 
 ### Priority and normalization
 
 Hit priority:
 
-`PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold`.
+`PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold >
+RegionCenter` (Panel Header drags only).
+
+`RegionCenter` is a whole-Group fallback: a Panel Header hit resolves to
+`PanelHeaderInsertion`, a Group body hit resolves to `RegionCenter`, and the
+ToolBar surfaces win over the Group body because they are separate DOM
+regions outside the Group element.
 
 Dividers are not in the target set. Overlapping DOM surfaces must be
 normalized by HostId, LogicalRegion, TargetGroupId, and InsertionIndex into a
@@ -53,7 +65,8 @@ the same tail index.
 ### Default behavior
 
 - The ToolBar is the primary drop surface for visible Panels; visible Dock
-  Region Bodies do not show Panel drop highlights.
+  Region Bodies additionally accept Panel Header drags as a whole-Group
+  center placement.
 - Hidden Regions expose targets only through the Drop Scaffold in the overlay
   during an active Panel drag.
 - The Scaffold does not expand a real Group or change the Split basis; it is
@@ -93,8 +106,12 @@ transient overlays produce overlapping targets; not adopted.
   hidden-Region Scaffold, no longer requiring visible RegionBody highlights.
 - REQ-F-140's "drag to Dock Region" is interpreted as dragging to the
   Region's corresponding ToolBar logical slot or hidden Scaffold.
+- REQ-F-150 AC2 is revised: a visible Dock Region body is a valid direct
+  release target for Panel Header drags (RegionCenter), while ToolBar Entry
+  drags keep the ToolBar-only release rule (new AC3).
 - The resolver may recognize `RegionBody` for diagnostics/parameterized
-  tests, but the default policy must reject it.
+  tests; the default policy accepts it only for Panel Header drags and
+  rejects it for ToolBar Entry drags.
 - DEV-GATE-002 closes after SRS, HLD, ADR, and traceability are synchronized.
 - P5 interaction protocol and DOM metadata must build golden fixtures on this
   enabled set.

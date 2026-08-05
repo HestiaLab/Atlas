@@ -65,8 +65,8 @@ newGroupId?, newSplitId?
 
 `targetKind`: for Documents, `document-center | document-inline-start |
 document-inline-end | document-block-start | document-block-end`; for Panels,
-`panel-header-insertion | toolbar-insertion | toolbar-region |
-drop-scaffold`.
+`panel-header-insertion | panel-region-center | toolbar-insertion |
+toolbar-region | drop-scaffold`.
 
 The Host must validate ProtocolVersion, Host/Workspace, Generation, SessionId,
 IDs, and required/optional field combinations before constructing the

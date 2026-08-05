@@ -32,21 +32,30 @@ Panel Header 或 ToolBar Entry 拖拽时默认启用：
 3. `ToolBarRegion`：ToolBar 的 Upper、Lower、Bottom 逻辑区域及其空槽/尾部槽；
 4. `DropScaffold`：仅用于当前因无展开 Panel 而隐藏的 Dock Region。
 
-默认禁用 `RegionBody`。Editor Area、Top Toolbar、Status Bar、Document Group、其他 Host 的 DOM
-始终不是 Panel target。
+此外，仅当拖拽 **Panel Header** 时，可见 Tool Group 的内容区（`RegionBody`）是有效的
+`RegionCenter` 目标：在该处松开会将拖拽的 Panel 移入目标 Group 并激活，语义等同
+document-center 且不新建 split。ToolBar Entry 拖拽不启用 `RegionCenter`——其 enabled set 保持
+ToolBar-first。
+
+Editor Area、Top Toolbar、Status Bar、Document Group、其他 Host 的 DOM 始终不是 Panel target。
 
 ### Priority and normalization
 
 命中优先级为：
 
-`PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold`。
+`PanelHeaderInsertion > ToolBarInsertion > ToolBarRegion > DropScaffold > RegionCenter`（仅
+Panel Header 拖拽）。
+
+`RegionCenter` 是整组兜底：命中 Panel Header 解析为 `PanelHeaderInsertion`，命中 Group 内容区
+解析为 `RegionCenter`；ToolBar surface 因位于 Group 元素之外而优先于 Group 内容区。
 
 Divider 不进入 target 集合。重叠 DOM surface 必须按 HostId、LogicalRegion、TargetGroupId 和
 InsertionIndex 归一化为稳定 semantic key。最后 Entry 底部和虚拟尾部槽映射为同一尾部 index。
 
 ### Default behavior
 
-- ToolBar 是可见 Panel 的主投放面；可见 Dock Region Body 不显示 Panel drop highlight。
+- ToolBar 是可见 Panel 的主投放面；可见 Dock Region Body 额外接受 Panel Header 拖拽作为整组
+  center 放置。
 - 隐藏 Region 只在 active Panel drag 期间通过 overlay 中的 Drop Scaffold 暴露目标。
 - Scaffold 不展开真实 Group、不改变 Split basis；终态后立即移除。
 - 同一 Panel Header 原位置或归一化后索引不变返回 NoChange。
@@ -76,7 +85,10 @@ placement 的优先级歧义，因此不采用。
 
 - REQ-F-069 AC5 修订为通过 ToolBar 或隐藏 Region Scaffold 指示目标，不再要求可见 RegionBody 高亮。
 - REQ-F-140 的“拖至 Dock Region”解释为拖至该 Region 对应的 ToolBar 逻辑槽或隐藏 Scaffold。
-- Resolver 可以识别 `RegionBody` 供诊断/参数化测试，但默认 policy 必须拒绝。
+- REQ-F-150 AC2 修订：可见 Dock Region Body 是 Panel Header 拖拽的有效直接释放目标
+  （RegionCenter），而 ToolBar Entry 拖拽保持 ToolBar-only 释放规则（新增 AC3）。
+- Resolver 可以识别 `RegionBody` 供诊断/参数化测试；默认 policy 仅对 Panel Header 拖拽接受，
+  对 ToolBar Entry 拖拽拒绝。
 - DEV-GATE-002 在 SRS、HLD、ADR 与追踪矩阵同步后关闭。
 - P5 interaction protocol 与 DOM metadata 必须以该 enabled set 建立 golden fixture。
 
