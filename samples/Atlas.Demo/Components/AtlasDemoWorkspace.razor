@@ -16,16 +16,23 @@
     {
         <AtlasWorkspaceHost Workspace="@workspace"
                             WorkspaceOwnership="WorkspaceOwnership.External"
-                            TopToolbarContent="@topToolbar"
-                            StatusBarContent="@statusBar"
                             EnableInteractions="true">
+            <TopToolbarContent>
+                <AtlasDemoTopToolbar CanUndo="@(workspace?.CanUndo == true)"
+                                     CanRedo="@(workspace?.CanRedo == true)"
+                                     OnUndo="UndoAsync"
+                                     OnRedo="RedoAsync" />
+            </TopToolbarContent>
+            <StatusBarContent>
+                <AtlasDemoStatusBar OperationStatus="@operationStatus" />
+            </StatusBarContent>
             <ContentRoutes>
-                <AtlasContentRoute Kind="dbc-tree">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcTree">
                     <ChildContent Context="content">
                         <DbcTreePanel Model="dbcTree" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="dbc-editor">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcEditor">
                     <ChildContent Context="content">
                         <DbcEditorPanel Content="content"
                                         Model="dbcEditor"
@@ -33,7 +40,7 @@
                                         OnSignalSelected="ShowSignalProperties" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="dbc-property">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcProperty">
                     <ChildContent Context="content">
                         <DbcPropertyPanel Model="dbcProperty" />
                     </ChildContent>
@@ -52,8 +59,6 @@
     private DbcTreeModel dbcTree = null!;
     private DbcEditorModel dbcEditor = null!;
     private DbcPropertyModel dbcProperty = null!;
-    private readonly RenderFragment topToolbar;
-    private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
     private string operationStatus = "Ready";
 
@@ -62,25 +67,6 @@
 
     [Parameter]
     public string WorkspaceName { get; set; } = "atlas-demo";
-
-    public AtlasDemoWorkspace()
-    {
-        topToolbar = builder =>
-        {
-            builder.OpenComponent<AtlasDemoTopToolbar>(0);
-            builder.AddAttribute(1, nameof(AtlasDemoTopToolbar.CanUndo), workspace?.CanUndo == true);
-            builder.AddAttribute(2, nameof(AtlasDemoTopToolbar.CanRedo), workspace?.CanRedo == true);
-            builder.AddAttribute(3, nameof(AtlasDemoTopToolbar.OnUndo), EventCallback.Factory.Create(this, UndoAsync));
-            builder.AddAttribute(4, nameof(AtlasDemoTopToolbar.OnRedo), EventCallback.Factory.Create(this, RedoAsync));
-            builder.CloseComponent();
-        };
-        statusBar = builder =>
-        {
-            builder.OpenComponent<AtlasDemoStatusBar>(0);
-            builder.AddAttribute(1, nameof(AtlasDemoStatusBar.OperationStatus), operationStatus);
-            builder.CloseComponent();
-        };
-    }
 
     protected override void OnInitialized()
     {
