@@ -3,6 +3,7 @@ using Atlas.Demo.Components;
 using Atlas.Demo.Services;
 using Atlas.Demo.ViewModels;
 using Bunit;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -52,6 +53,33 @@ public sealed class DbcPanelsTests : TestContext
     }
 
     [Fact]
+    public void TreePanel_duplicate_upload_keeps_store_and_shows_message()
+    {
+        // Uploading the same file name twice must not escape the event handler
+        // as an unhandled exception: the store keeps the first file and the
+        // panel surfaces a visible message (file-tree duplicate-name rule).
+        var store = new DbcFileStore();
+        var model = new DbcTreeModel(store);
+
+        var cut = RenderComponent<DbcTreePanel>(p => p.Add(x => x.Model, model));
+
+        var input = cut.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>();
+        input.UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+        input = cut.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>();
+        input.UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Single(store.FilesIn("DBC"));
+                Assert.Contains(
+                    "already exists",
+                    cut.Find("[data-testid='dbc-tree-message']").TextContent,
+                    StringComparison.Ordinal);
+            });
+    }
+
+    [Fact]
     public void EditorPanel_switches_between_text_and_table_views()
     {
         var store = new DbcFileStore();
@@ -94,7 +122,42 @@ public sealed class DbcPanelsTests : TestContext
     }
 
     [Fact]
-    public void PropertyPanel_shows_file_properties_and_apply_raises()
+    public void EditorPanel_keeps_unsaved_text_after_host_rerender()
+    {
+        // FR-08: unrelated host re-renders must not silently discard unsaved
+        // editor input. Reproduce the full flow through the workspace: upload a
+        // file, open it in the editor, type unsaved text, then force a host
+        // re-render and assert the textarea keeps the unsaved content.
+        var cut = RenderComponent<AtlasDemoWorkspace>();
+
+        cut.FindComponent<InputFile>()
+            .UploadFiles(InputFileContent.CreateFromText(ValidDbc, "engine.dbc"));
+
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-file']")));
+        cut.Find("[data-testid='dbc-file']").Click();
+
+        // Switch the editor to text view so the textarea renders.
+        cut.WaitForAssertion(
+            () => Assert.Equal(2, cut.FindAll("[data-testid='dbc-editor'] .dbc-action").Count));
+        cut.FindAll("[data-testid='dbc-editor'] .dbc-action")[0].Click();
+
+        cut.WaitForAssertion(
+            () => Assert.Single(cut.FindAll("[data-testid='dbc-editor'] textarea")));
+        var textarea = cut.Find("[data-testid='dbc-editor'] textarea");
+        textarea.Change("unsaved-edit");
+
+        // Force the host to re-render (the workspace.Changed path does this in
+        // the running app). The edit buffer must survive.
+        cut.Render();
+
+        Assert.Equal(
+            "unsaved-edit",
+            cut.Find("[data-testid='dbc-editor'] textarea").GetAttribute("value"));
+    }
+
+    [Fact]
+    public void PropertyPanel_shows_file_properties()
     {
         var store = new DbcFileStore();
         store.CreateFolder("can-a");
@@ -102,16 +165,10 @@ public sealed class DbcPanelsTests : TestContext
         var model = new DbcPropertyModel();
         var file = store.Find("can-a", "a.dbc")!;
         model.ShowFile(file);
-        var changed = 0;
-        model.StateChanged += () => changed++;
 
         var cut = RenderComponent<DbcPropertyPanel>(p => p.Add(x => x.Model, model));
 
         Assert.Contains("File", cut.Markup, StringComparison.Ordinal);
         Assert.Contains("a.dbc", cut.Markup, StringComparison.Ordinal);
-
-        cut.Find("[data-testid='dbc-property-apply']").Click();
-
-        Assert.Equal(1, changed);
     }
 }

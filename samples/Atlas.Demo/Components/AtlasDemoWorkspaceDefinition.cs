@@ -15,9 +15,9 @@ internal static class AtlasDemoWorkspaceDefinition
             throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
         }
 
-        var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: "dbc-tree");
-        var dbcProperty = Tool("dbc-property", "Properties", contentKind: "dbc-property");
-        var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: "dbc-editor");
+        var dbcTree = Tool("dbc-tree", "DBC Explorer", contentKind: AtlasContentKinds.DbcTree);
+        var dbcProperty = Tool("dbc-property", "Properties", contentKind: AtlasContentKinds.DbcProperty);
+        var dbcEditor = Document("dbc-editor", "DBC Editor", isPinned: true, contentKind: AtlasContentKinds.DbcEditor);
 
         // The six LogicalRegion slots are preserved as tool groups. Only the
         // explorer and properties carry content; the remaining four groups are

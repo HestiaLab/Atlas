@@ -1616,6 +1616,49 @@ operation，Close 系列仍执行 guard。Escape、focusout、Item removal 和 H
 
 ---
 
+```
+DES-RND-010
+按 Item 业务状态作用域
+Atlas 提供官方的按 Item 业务状态解析路径，使消费方不再重复实现 `ResourceId → ViewModel`
+工厂，DI 注册的内容组件也能不经 Host closure 接收 Host 拥有的状态（ADR-0020 D1+D4）。
+
+双键作用域遵循 SRS 3073 行：业务状态按 ContentReference（Kind + ResourceId）作用域——同一
+资源的多个视图共享一个状态对象，关闭一个 Item 不释放资源状态；视图状态仍由应用按 DockItemId
+自管，专门的视图状态 API 推迟（split-view 场景罕见）。
+
+框架形状是一个可注入服务加 AtlasContentContext 上的类型化访问器：
+
+    public interface IAtlasContentStateScope
+    {
+        TState GetOrCreate<TState>(ContentReference reference, Func<TState> factory)
+            where TState : class;
+        bool TryGetState<TState>(ContentReference reference, out TState? state)
+            where TState : class;
+    }
+
+    // AtlasContentContext
+    public TState? GetState<TState>() where TState : class;  // 查询，绝不创建
+    public TState GetOrCreateState<TState>(Func<TState> factory) where TState : class;
+
+AtlasWorkspaceHost 每个 Host 解析一个 effective scope：存在 DI 注册的 IAtlasContentStateScope
+时使用注入实例，否则使用 Host-local 默认实例，因此多个 Host 天然隔离，除非应用刻意注册共享
+scope。由于 .NET 6 的 ComponentFactory 会拒绝未注册的 [Inject] 属性，可选 scope 通过
+IServiceProvider 解析并回退到 Host-local 实例。AtlasGroupView 把 effective scope 传入其创建的
+每个 AtlasContentContext。
+
+Host-local 容器是 (Kind, ResourceId) 键控的普通字典，在 Blazor 渲染线程上使用。GetOrCreate 对
+每个 ContentReference 在 scope 生命周期内至多执行一次 factory，后续调用返回缓存实例。
+TryGetState 查询不创建，reference 未创建或存储对象不是请求类型时返回 false。无 scope 时
+GetState 返回 null，GetOrCreateState 回退为每次调用 factory（向后兼容）。
+
+生命周期：容器由 Host 拥有，Host dispose 时释放全部状态对象；Item 关闭不释放业务状态；资源删除
+是应用概念；框架绝不持久化状态对象（SRS 729 行保持其应用自管）。
+
+来源：F-006~008, F-070, ADR-0020
+```
+
+---
+
 ## 7 持久化
 
 ```
@@ -2720,6 +2763,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-RND-007 | Panel 移动时的内容身份与状态保持 | F-069~070, F-120, F-128 |
 | DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
 | DES-RND-009 | Editor Tab Strip、溢出与上下文菜单 | F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007 |
+| DES-RND-010 | 按 Item 业务状态作用域 | F-006~008, F-070, ADR-0020 |
 | DES-PER-001 | 序列化范围 | F-085~088, F-091~092 |
 | DES-PER-002 | XML Schema | F-021, F-085~088, F-140, F-149 |
 | DES-PER-003 | Restore Pipeline | F-086, F-088, F-094~095, F-123 |
@@ -2792,9 +2836,9 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-001~002、REQ-F-004 | DES-ARCH-001、DES-DOM-002、DES-DOM-003、DES-OP-008 | Designed |
 | REQ-F-003 | DES-ARCH-001、DES-DOM-002、DES-DOM-003、DES-OP-008、DES-RND-008 | Designed |
 | REQ-F-005、REQ-F-010 | DES-OP-008、DES-RND-008 | Designed |
-| REQ-F-006 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002 | Designed |
-| REQ-F-007 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002、DES-RND-003 | Designed |
-| REQ-F-008 | DES-DOM-004、DES-RND-001、DES-RND-002、DES-RND-003、DES-RND-005 | Designed |
+| REQ-F-006 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002、DES-RND-010 | Designed |
+| REQ-F-007 | DES-DOM-004、DES-DOM-005、DES-RND-001、DES-RND-002、DES-RND-003、DES-RND-010 | Designed |
+| REQ-F-008 | DES-DOM-004、DES-RND-001、DES-RND-002、DES-RND-003、DES-RND-005、DES-RND-010 | Designed |
 | REQ-F-009 | DES-DOM-004、DES-RND-009 | Designed |
 | REQ-F-011 | DES-RND-008 | Designed |
 | REQ-F-012 | DES-DOM-006、DES-OP-001 | Designed |
@@ -2824,7 +2868,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
 | REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007 | Designed |
+| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007、DES-RND-010 | Designed |
 | REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010、DES-INT-001、DES-INT-007、DES-OP-001 | Designed |

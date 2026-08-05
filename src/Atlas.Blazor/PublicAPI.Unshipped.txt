@@ -205,6 +205,8 @@ Atlas.Blazor.Content.AtlasContentComponent.Content.get -> Atlas.Blazor.Content.A
 Atlas.Blazor.Content.AtlasContentComponent.Content.set -> void
 Atlas.Blazor.Content.AtlasContentContext
 Atlas.Blazor.Content.AtlasContentContext.Commands.get -> Atlas.Blazor.Content.AtlasContentCommands!
+Atlas.Blazor.Content.AtlasContentContext.GetOrCreateState<TState>(System.Func<TState!>! factory) -> TState!
+Atlas.Blazor.Content.AtlasContentContext.GetState<TState>() -> TState?
 Atlas.Blazor.Content.AtlasContentContext.Item.get -> Atlas.Core.Items.DockItem!
 Atlas.Blazor.Content.AtlasContentContext.ItemId.get -> Atlas.Core.DockItemId
 Atlas.Blazor.Content.AtlasContentContext.Reference.get -> Atlas.Core.Items.ContentReference
@@ -221,6 +223,9 @@ Atlas.Blazor.Content.AtlasEmptyStateContext.WorkspaceId.get -> Atlas.Core.Worksp
 Atlas.Blazor.Content.AtlasItemHeaderContext
 Atlas.Blazor.Content.AtlasItemHeaderContext.IsSelected.get -> bool
 Atlas.Blazor.Content.AtlasItemHeaderContext.Item.get -> Atlas.Core.Items.DockItem!
+Atlas.Blazor.Content.IAtlasContentStateScope
+Atlas.Blazor.Content.IAtlasContentStateScope.GetOrCreate<TState>(Atlas.Core.Items.ContentReference reference, System.Func<TState!>! factory) -> TState!
+Atlas.Blazor.Content.IAtlasContentStateScope.TryGetState<TState>(Atlas.Core.Items.ContentReference reference, out TState? state) -> bool
 Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions
 static Atlas.Blazor.Components.AtlasKeyboardCommandMap.Default.get -> Atlas.Blazor.Components.AtlasKeyboardCommandMap!
 static Atlas.Blazor.DependencyInjection.AtlasServiceCollectionExtensions.AddAtlasContent<TComponent>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! kind) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

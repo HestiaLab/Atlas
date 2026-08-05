@@ -39,6 +39,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | add independent NuGet consumer sample; supersedes ADR-0016's long-term application-project ban |
 | [ADR-0018](./0018-unified-content-catalog-and-runtime-binding.md) | Accepted | unify startup DI, Host-local Route, and typed Map content registration; application-owned cross-Panel state |
 | [ADR-0019](./0019-single-package-atlas-blazor.md) | Accepted | single published package (Atlas.Blazor) embedding Atlas.Core.dll; keep independent Core project; supersedes ADR-0001 two-package decision |
+| [ADR-0020](./0020-content-developer-experience.md) | Proposed | per-Item state binding, content-to-workspace channel, model-bound content base, DI state channel (FR-01/02/04/07) |
 
 ## Writing Conventions
 

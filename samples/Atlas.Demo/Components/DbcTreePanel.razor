@@ -4,6 +4,10 @@
 @implements IDisposable
 
 <div class="dbc-tree" data-testid="dbc-tree" aria-label="DBC Explorer">
+    @if (_uploadMessage is not null)
+    {
+        <div class="dbc-tree-message" data-testid="dbc-tree-message" role="status">@_uploadMessage</div>
+    }
     <div class="dbc-tree-actions">
         <button class="dbc-action" type="button"
                 @onclick="OnNewFolder">New folder</button>
@@ -38,6 +42,8 @@
 </div>
 
 @code {
+    private string? _uploadMessage;
+
     [Parameter, EditorRequired]
     public DbcTreeModel Model { get; set; } = null!;
 
@@ -74,8 +80,21 @@
             await using var stream = file.OpenReadStream(maxAllowedSize: 4 * 1024 * 1024);
             using var reader = new StreamReader(stream);
             var content = await reader.ReadToEndAsync();
-            Model.Upload(folder, file.Name, content);
+            try
+            {
+                Model.Upload(folder, file.Name, content);
+                _uploadMessage = null;
+            }
+            catch (InvalidOperationException)
+            {
+                // The file tree forbids duplicate names; surface a visible
+                // message instead of letting the exception escape the event
+                // handler and crash the renderer.
+                _uploadMessage = $"{file.Name} already exists in '{folder}'.";
+            }
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()

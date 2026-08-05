@@ -1733,6 +1733,56 @@ Source: F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007
 
 ---
 
+```
+DES-RND-010
+Per-Item Business State Scope
+Atlas provides an official per-Item business state resolution path so consumers stop
+re-implementing `ResourceId → ViewModel` factories and DI-registered content can receive
+Host-owned state without a Host closure (ADR-0020 D1+D4).
+
+Dual-key scoping follows SRS line 3073: business state is scoped by ContentReference
+(Kind + ResourceId) — multiple views of the same resource share one state object and closing
+one Item does not release the resource's state; view state stays application-owned per
+DockItemId, and a dedicated view-state API is deferred (split-view scenarios are rare).
+
+The framework shape is an injectable service plus typed accessors on AtlasContentContext:
+
+    public interface IAtlasContentStateScope
+    {
+        TState GetOrCreate<TState>(ContentReference reference, Func<TState> factory)
+            where TState : class;
+        bool TryGetState<TState>(ContentReference reference, out TState? state)
+            where TState : class;
+    }
+
+    // AtlasContentContext
+    public TState? GetState<TState>() where TState : class;  // query, never creates
+    public TState GetOrCreateState<TState>(Func<TState> factory) where TState : class;
+
+AtlasWorkspaceHost resolves one effective scope per Host: the DI-registered
+IAtlasContentStateScope when present, otherwise a Host-local default instance, so multiple
+Hosts stay isolated unless the application deliberately registers a shared scope. Because
+.NET 6's ComponentFactory rejects an unregistered [Inject] property, the optional scope is
+resolved through IServiceProvider with a Host-local fallback. AtlasGroupView passes the
+effective scope into every AtlasContentContext it creates.
+
+The Host-local container is a plain (Kind, ResourceId)-keyed dictionary used on the Blazor
+rendering thread. GetOrCreate runs the factory at most once per ContentReference for the
+lifetime of the scope; later calls return the cached instance. TryGetState queries without
+creating, returns false when nothing was created for the reference or the stored object is
+not the requested type. Without a scope, GetState returns null and GetOrCreateState falls
+back to running the factory per call (backward compatible).
+
+Lifecycle: the container is owned by the Host and releases all state objects on Host
+disposal; Item close does not release business state; resource deletion is an application
+concept; the framework never persists state objects (SRS line 729 keeps them
+application-owned).
+
+Source: F-006~008, F-070, ADR-0020
+```
+
+---
+
 ## 7 Persistence
 
 ```
@@ -2986,6 +3036,7 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | DES-RND-007 | Content Identity and State Preservation During Panel Movement | F-069~070, F-120, F-128 |
 | DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
 | DES-RND-009 | Editor Tab Strip, Overflow, and Context Menu | F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007 |
+| DES-RND-010 | Per-Item Business State Scope | F-006~008, F-070, ADR-0020 |
 | DES-PER-001 | Serialization Scope | F-085~088, F-091~092 |
 | DES-PER-002 | XML Schema | F-021, F-085~088, F-140, F-149 |
 | DES-PER-003 | Restore Pipeline | F-086, F-088, F-094~095, F-123 |
@@ -3065,9 +3116,9 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-001~002, REQ-F-004 | DES-ARCH-001, DES-DOM-002, DES-DOM-003, DES-OP-008 | Designed |
 | REQ-F-003 | DES-ARCH-001, DES-DOM-002, DES-DOM-003, DES-OP-008, DES-RND-008 | Designed |
 | REQ-F-005, REQ-F-010 | DES-OP-008, DES-RND-008 | Designed |
-| REQ-F-006 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002 | Designed |
-| REQ-F-007 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002, DES-RND-003 | Designed |
-| REQ-F-008 | DES-DOM-004, DES-RND-001, DES-RND-002, DES-RND-003, DES-RND-005 | Designed |
+| REQ-F-006 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002, DES-RND-010 | Designed |
+| REQ-F-007 | DES-DOM-004, DES-DOM-005, DES-RND-001, DES-RND-002, DES-RND-003, DES-RND-010 | Designed |
+| REQ-F-008 | DES-DOM-004, DES-RND-001, DES-RND-002, DES-RND-003, DES-RND-005, DES-RND-010 | Designed |
 | REQ-F-009 | DES-DOM-004, DES-RND-009 | Designed |
 | REQ-F-011 | DES-RND-008 | Designed |
 | REQ-F-012 | DES-DOM-006, DES-OP-001 | Designed |
@@ -3097,7 +3148,7 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-F-061~062 | DES-INT-001, DES-INT-003, DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001, DES-INT-003, DES-INT-005 | Designed |
 | REQ-F-069 | DES-DOM-008, DES-INT-003, DES-INT-005, DES-INT-006, DES-OP-001, DES-OP-004, DES-OP-007, DES-PRJ-003, DES-RND-005, DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005, DES-OP-007, DES-PRJ-003, DES-RND-003, DES-RND-005, DES-RND-007 | Designed |
+| REQ-F-070 | DES-INT-005, DES-OP-007, DES-PRJ-003, DES-RND-003, DES-RND-005, DES-RND-007, DES-RND-010 | Designed |
 | REQ-F-071 | DES-INT-003, DES-INT-005, DES-INT-006, DES-OP-007, DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001, DES-INT-007, DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010, DES-INT-001, DES-INT-007, DES-OP-001 | Designed |

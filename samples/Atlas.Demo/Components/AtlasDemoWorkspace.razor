@@ -3,6 +3,9 @@
 @using Atlas.Blazor.Content
 @using Atlas.Core
 @using Atlas.Core.Changes
+@using Atlas.Core.Items
+@using Atlas.Core.Layout
+@using Atlas.Core.Operations
 @using Atlas.Demo.Models.Dbc
 @using Atlas.Demo.Services
 @using Atlas.Demo.ViewModels
@@ -16,23 +19,32 @@
     {
         <AtlasWorkspaceHost Workspace="@workspace"
                             WorkspaceOwnership="WorkspaceOwnership.External"
-                            TopToolbarContent="@topToolbar"
-                            StatusBarContent="@statusBar"
                             EnableInteractions="true">
+            <TopToolbarContent>
+                <AtlasDemoTopToolbar CanUndo="@(workspace?.CanUndo == true)"
+                                     CanRedo="@(workspace?.CanRedo == true)"
+                                     OnUndo="UndoAsync"
+                                     OnRedo="RedoAsync" />
+            </TopToolbarContent>
+            <StatusBarContent>
+                <AtlasDemoStatusBar OperationStatus="@operationStatus" />
+            </StatusBarContent>
             <ContentRoutes>
-                <AtlasContentRoute Kind="dbc-tree">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcTree">
                     <ChildContent Context="content">
                         <DbcTreePanel Model="dbcTree" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="dbc-editor">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcEditor">
                     <ChildContent Context="content">
-                        <DbcEditorPanel Model="dbcEditor"
-                                        OnMessageSelectedCallback="ShowMessageProperties"
-                                        OnSignalSelectedCallback="ShowSignalProperties" />
+                        <DbcEditorPanel Content="content"
+                                        Store="dbcStore"
+                                        Tree="dbcTree"
+                                        OnMessageSelected="ShowMessageProperties"
+                                        OnSignalSelected="ShowSignalProperties" />
                     </ChildContent>
                 </AtlasContentRoute>
-                <AtlasContentRoute Kind="dbc-property">
+                <AtlasContentRoute Kind="@AtlasContentKinds.DbcProperty">
                     <ChildContent Context="content">
                         <DbcPropertyPanel Model="dbcProperty" />
                     </ChildContent>
@@ -49,37 +61,16 @@
 @code {
     private readonly DbcFileStore dbcStore = new();
     private DbcTreeModel dbcTree = null!;
-    private DbcEditorModel dbcEditor = null!;
     private DbcPropertyModel dbcProperty = null!;
-    private readonly RenderFragment topToolbar;
-    private readonly RenderFragment statusBar;
     private IAtlasWorkspace? workspace;
     private string operationStatus = "Ready";
+    private bool editorPlaceholderConsumed;
 
     [Inject]
     private IAtlasWorkspaceFactory Factory { get; set; } = null!;
 
     [Parameter]
     public string WorkspaceName { get; set; } = "atlas-demo";
-
-    public AtlasDemoWorkspace()
-    {
-        topToolbar = builder =>
-        {
-            builder.OpenComponent<AtlasDemoTopToolbar>(0);
-            builder.AddAttribute(1, nameof(AtlasDemoTopToolbar.CanUndo), workspace?.CanUndo == true);
-            builder.AddAttribute(2, nameof(AtlasDemoTopToolbar.CanRedo), workspace?.CanRedo == true);
-            builder.AddAttribute(3, nameof(AtlasDemoTopToolbar.OnUndo), EventCallback.Factory.Create(this, UndoAsync));
-            builder.AddAttribute(4, nameof(AtlasDemoTopToolbar.OnRedo), EventCallback.Factory.Create(this, RedoAsync));
-            builder.CloseComponent();
-        };
-        statusBar = builder =>
-        {
-            builder.OpenComponent<AtlasDemoStatusBar>(0);
-            builder.AddAttribute(1, nameof(AtlasDemoStatusBar.OperationStatus), operationStatus);
-            builder.CloseComponent();
-        };
-    }
 
     protected override void OnInitialized()
     {
@@ -93,14 +84,13 @@
         workspace.Changed += OnWorkspaceChanged;
 
         dbcTree = new DbcTreeModel(dbcStore);
-        dbcEditor = new DbcEditorModel(dbcStore);
         dbcProperty = new DbcPropertyModel();
         dbcTree.StateChanged += OnDbcSelectionChanged;
     }
 
-    private void OnDbcSelectionChanged()
+    private async void OnDbcSelectionChanged()
     {
-        if (dbcTree.SelectedFolder is null || dbcTree.SelectedFile is null)
+        if (workspace is null || dbcTree.SelectedFolder is null || dbcTree.SelectedFile is null)
         {
             return;
         }
@@ -111,7 +101,35 @@
             return;
         }
 
-        dbcEditor.Open(dbcTree.SelectedFolder, file.Name, file.Content, file.Parsed);
+        // The initial pinned "DBC Editor" placeholder is consumed by the first
+        // opened file. Closing it keeps every document tab keyed by its own
+        // ContentReference, so the framework state scope can resolve an
+        // independent editor model per file (FR-01).
+        if (!editorPlaceholderConsumed)
+        {
+            var placeholderId = new DockItemId("dbc-editor");
+            if (workspace.Current.Items.ContainsKey(placeholderId))
+            {
+                await workspace.ExecuteAsync(new CloseItemOperation(placeholderId));
+            }
+
+            editorPlaceholderConsumed = true;
+        }
+
+        // A fresh DockItemId per attempt lets ActivateExisting find an already
+        // open tab by ContentReference (file name) instead of failing on a
+        // duplicate id.
+        var item = new DockItem(
+            new DockItemId($"dbc-editor-{Guid.NewGuid():N}"),
+            DockItemKind.Document,
+            new ContentReference(AtlasContentKinds.DbcEditor, file.Name),
+            DockItemCapabilityPresets.Document,
+            file.Name);
+        await workspace.ExecuteAsync(new OpenItemOperation(
+            item,
+            new LayoutNodeId("editor"),
+            ContentDeduplicationMode.ActivateExisting));
+
         dbcProperty.ShowFile(file);
     }
 

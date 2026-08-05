@@ -66,7 +66,7 @@ public sealed class DbcEditorModelTests
     [Fact]
     public void Open_sets_file_state_and_raises_StateChanged()
     {
-        var model = new DbcEditorModel();
+        var model = new DbcEditorModel(new DbcFileStore());
         var changed = 0;
         model.StateChanged += () => changed++;
 
@@ -82,9 +82,22 @@ public sealed class DbcEditorModelTests
     }
 
     [Fact]
+    public void Open_initializes_EditedContent_to_file_content()
+    {
+        var model = new DbcEditorModel(new DbcFileStore());
+        var changed = 0;
+        model.StateChanged += () => changed++;
+
+        var parsed = DbcParser.Parse(ValidDbc);
+        model.Open("can-a", "a.dbc", ValidDbc, parsed);
+
+        Assert.Equal(ValidDbc, model.EditedContent);
+    }
+
+    [Fact]
     public void SetMode_switches_and_notifies()
     {
-        var model = new DbcEditorModel();
+        var model = new DbcEditorModel(new DbcFileStore());
         model.Open("can-a", "a.dbc", ValidDbc, DbcParser.Parse(ValidDbc));
         var changed = 0;
         model.StateChanged += () => changed++;
@@ -107,7 +120,8 @@ public sealed class DbcEditorModelTests
 
         var edited =
             "VERSION \"\"\nBU_: XXX\n\nBO_ 100 EmptyMsg: 1 XXX\n\nBO_ 200 SecondMsg: 2 XXX\n";
-        model.Save(edited);
+        model.EditedContent = edited;
+        model.Save();
 
         var updated = store.Find("can-a", "a.dbc")!;
         Assert.Equal(2, updated.Parsed!.Messages.Count);
@@ -167,17 +181,5 @@ public sealed class DbcPropertyModelTests
         Assert.Equal("0", model.Offset);
         Assert.Equal("0", model.Min);
         Assert.Equal("65535", model.Max);
-    }
-
-    [Fact]
-    public void Apply_raises_StateChanged()
-    {
-        var model = new DbcPropertyModel();
-        var changed = 0;
-        model.StateChanged += () => changed++;
-
-        model.Apply();
-
-        Assert.Equal(1, changed);
     }
 }
