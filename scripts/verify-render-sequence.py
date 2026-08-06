@@ -21,7 +21,11 @@ BUILDER_CALL = re.compile(
     r"builder\.(OpenElement|OpenComponent|OpenRegion|AddAttribute|"
     r"AddContent|AddMarkupContent|AddElementReferenceCapture|"
     r"CloseElement|CloseComponent|CloseRegion|SetKey|AddComponentReferenceCapture)"
-    r"(?:\s*<[^>]*>)?\s*\(")
+    r"(?:\s*<[^()]*>)?\s*\(")
+# Helper methods that take an explicit literal sequence as their second
+# argument (called with `builder` as the first argument).
+HELPER_SEQUENCE_CALL = re.compile(
+    r"AddOptionalAttribute\s*\(\s*builder\s*,\s*(\d+)\s*,")
 METHOD_HEAD = re.compile(
     r"(?:protected\s+override\s+void|private\s+void|internal\s+void|public\s+void)\s+"
     r"(BuildRenderTree|Render\w+)\s*\(")
@@ -74,17 +78,20 @@ def extract_calls(source: str, start: int, end: int):
 
 
 def sequence_args(source: str, start: int, end: int):
-    """Return the literal sequence args for consuming calls inside a method."""
-    seq = []
+    """Return (op, seq, new_segment) triples for consuming calls inside a
+    method. new_segment is True when the call immediately follows a
+    CloseElement/CloseComponent/CloseRegion (a new frame/region domain).
+    Helper calls like AddOptionalAttribute(builder, N, ...) are folded in
+    at their source position."""
+    items = []
     consuming = {
         "OpenElement", "OpenComponent", "OpenRegion", "AddAttribute",
         "AddContent", "AddMarkupContent", "AddElementReferenceCapture",
         "AddComponentReferenceCapture",
     }
+    prev_was_close = False
     for m in BUILDER_CALL.finditer(source, start, end):
         op = m.group(1)
-        if op not in consuming:
-            continue
         call_start = m.end()
         paren = source.find(")", call_start)
         args = source[call_start:paren] if paren >= 0 else ""
@@ -96,9 +103,15 @@ def sequence_args(source: str, start: int, end: int):
         else:
             first = args.split(",")[0].strip() if args else ""
         # literal int only; skip `sequence++` / `var sequence` style
-        if re.fullmatch(r"\d+", first):
-            seq.append((op, int(first)))
-    return seq
+        if op in consuming and re.fullmatch(r"\d+", first):
+            items.append((m.start(), op, int(first), prev_was_close))
+        prev_was_close = op in ("CloseElement", "CloseComponent", "CloseRegion")
+
+    for m in HELPER_SEQUENCE_CALL.finditer(source, start, end):
+        items.append((m.start(), "Helper", int(m.group(1)), False))
+
+    items.sort(key=lambda item: item[0])
+    return [(op, seq, new_segment) for _, op, seq, new_segment in items]
 
 
 def render_methods(path: Path):
@@ -121,22 +134,31 @@ def cmd_baseline(files, out_path):
     print(f"baseline: {len(snapshot)} files, {total} render methods -> {out_path}")
 
 
-def check_continuous(seq):
-    """Conditional branches may reuse the same sequence slot (e.g. two
-    mutually exclusive AddContent(8, ...)); collapse adjacent duplicates
-    first, then require each 0-start segment to be continuous."""
+def check_continuous(seq_items):
+    """Render methods may contain several sequence domains: OpenRegion
+    children restart, conditional branches reuse the same slot, frames under
+    different parents can repeat the same numbers, and a CloseRegion returns
+    to the parent domain. Collapse adjacent duplicates, then require every
+    increasing segment to be strictly +1. A segment boundary is any value
+    that does not continue the run, or a call flagged new_segment (immediately
+    after a Close*)."""
     deduped = []
-    for v in seq:
-        if not deduped or deduped[-1] != v:
-            deduped.append(v)
-    expected = 0
-    for v in deduped:
-        if v == 0:
-            expected = 1
-        elif v == expected:
-            expected += 1
-        else:
-            return False
+    for op, seq, new_segment in seq_items:
+        if not deduped or deduped[-1][1] != seq:
+            deduped.append((op, seq, new_segment))
+    if not deduped:
+        return True
+    seg_start = 0
+    for i in range(1, len(deduped) + 1):
+        is_boundary = (
+            i == len(deduped)
+            or deduped[i][2]
+            or deduped[i][1] <= deduped[i - 1][1])
+        if is_boundary:
+            for j in range(seg_start + 1, i):
+                if deduped[j][1] != deduped[j - 1][1] + 1:
+                    return False
+            seg_start = i
     return True
 
 
@@ -145,14 +167,15 @@ def cmd_check_sequence(files):
     for f in files:
         for name, methods in render_methods(Path(f)).items():
             for idx, m in enumerate(methods):
-                seq = [s for _, s in m["sequence"]]
+                seq = m["sequence"]
                 if not check_continuous(seq):
                     failed = True
-                    print(f"FAIL {f}::{name}#{idx}: sequence {seq} not continuous per 0-start segment")
+                    vals = [s for _, s, _ in seq]
+                    print(f"FAIL {f}::{name}#{idx}: sequence {vals} not continuous per domain segment")
     if failed:
         print("LAYER-A: FAILED")
         sys.exit(1)
-    print("LAYER-A: all methods have continuous 0-start sequence segments")
+    print("LAYER-A: all methods have continuous per-domain sequence segments")
 
 
 def cmd_diff(baseline_path, files):
