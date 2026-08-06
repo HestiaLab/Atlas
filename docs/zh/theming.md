@@ -113,3 +113,4 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 - 变量作用域为 `.atlas-v2-workspace`；在任意祖先上的覆盖通过 CSS 继承传播。
 - `currentColor` 文本/边框值未 token 化：它们有意跟随宿主应用的文字颜色。
 - 删除变量是破坏性变更；契约是增量的。
+- 浏览器按 `color-scheme` 属性（CSS Color Adjustment）选择的浅色或暗色调色板解析系统颜色默认值（`Canvas`、`CanvasText`、`Highlight`）——而不是由 `prefers-color-scheme` 媒体查询模拟决定。Windows/Chrome 实测：`light` 解析 `Canvas` 为 `#FFFFFF`、`CanvasText` 为 `#000000`、`Highlight` 为 `#0078D4`（系统强调色）；`dark` 解析 `Canvas` 为 `#121212`、`CanvasText` 为 `#FFFFFF`、`Highlight` 为 `#1967D2`（浏览器自定义暗色强调色）。若希望 Atlas 默认值以暗色调色板渲染而不覆盖变量，在使用者应用中声明 `:root { color-scheme: dark }`（或 `light dark`）即可。

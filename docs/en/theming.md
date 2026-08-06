@@ -130,3 +130,12 @@ Prefer variable overrides unless you need structural changes.
 - `currentColor` text/border values are not tokenized: they intentionally
   follow the host application's text color.
 - Removed variables are a breaking change; the contract is additive.
+- The browser resolves the system-color defaults (`Canvas`, `CanvasText`,
+  `Highlight`) under a light or dark palette selected by the `color-scheme`
+  property (CSS Color Adjustment) — not by `prefers-color-scheme` media-query
+  emulation. Measured on Windows/Chrome: `light` resolves `Canvas`
+  `#FFFFFF`, `CanvasText` `#000000`, `Highlight` `#0078D4` (system accent);
+  `dark` resolves `Canvas` `#121212`, `CanvasText` `#FFFFFF`, `Highlight`
+  `#1967D2` (browser-defined dark accent). To render the Atlas defaults in a
+  dark palette without overriding variables, declare
+  `:root { color-scheme: dark }` (or `light dark`) in the consumer app.
