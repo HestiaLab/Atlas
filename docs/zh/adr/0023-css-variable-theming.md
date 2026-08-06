@@ -35,6 +35,7 @@ Atlas 以单个样式表（`wwwroot/atlas-v2/atlas.css`，286 行）作为 Razor
 | `--atlas-accent` | `Highlight` | 放置区域高亮、焦点环、拖拽预览边框 |
 | `--atlas-surface` | `Canvas` | 拖拽预览背景 |
 | `--atlas-text` | `CanvasText` | 拖拽预览标题文字 |
+| `--atlas-drag-preview-shadow` | `rgb(0 0 0 / 28%)` | 拖拽预览阴影 |
 
 尺寸：
 
@@ -47,6 +48,8 @@ Atlas 以单个样式表（`wwwroot/atlas-v2/atlas.css`，286 行）作为 Razor
 | `--atlas-padding-compact` | `0.375rem 0.625rem` | 拖拽预览内边距 |
 | `--atlas-radius` | `0.25rem` | 常规圆角 |
 | `--atlas-radius-sm` | `0.125rem` | 小圆角（区域高亮） |
+| `--atlas-border-width` | `1px` | 细边框（toolbar 分隔线、拖拽预览） |
+| `--atlas-focus-ring-width` | `2px` | 焦点环与放置区域 outline 宽度 |
 | `--atlas-drag-preview-max-width` | `min(20rem, calc(100vw - 1rem))` | 拖拽预览上限 |
 
 层级（已有，保留）：
@@ -57,13 +60,17 @@ Atlas 以单个样式表（`wwwroot/atlas-v2/atlas.css`，286 行）作为 Razor
 | `--atlas-layer-chrome` | `10` |
 | `--atlas-layer-drag` | `30` |
 
-透明度（低优先级，重构时统一）：
+透明度（重构时统一）：
 
 | 变量 | 默认值 | 使用位置 |
 | --- | --- | --- |
 | `--atlas-splitter-opacity` | `0.18` | 分割条闲置 |
 | `--atlas-splitter-opacity-hover` | `0.4` | 分割条悬停 / 调整中 |
-| `--atlas-drop-highlight-opacity` | `0.22` | 区域形状放置高亮 |
+| `--atlas-splitter-opacity-focus` | `0.5` | 分割条 focus-visible |
+| `--atlas-splitter-opacity-disabled` | `0.08` | 分割条禁用 |
+| `--atlas-drop-highlight-alpha-soft` | `15%` | 通用（整块）放置高亮混色比例 |
+| `--atlas-drop-highlight-alpha-strong` | `22%` | 区域形状放置高亮混色比例 |
+| `--atlas-toolbar-divider-opacity` | `0.25` | Toolbar 分隔线 |
 | `--atlas-drag-preview-opacity` | `0.92` | 拖拽预览 |
 
 最终清单在实现时锁定；新增必须保持默认外观与改动前基线一致。

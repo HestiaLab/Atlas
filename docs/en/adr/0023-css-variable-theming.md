@@ -55,6 +55,7 @@ Colors:
 | `--atlas-accent` | `Highlight` | Drop-zone highlight, focus ring, drag-preview border |
 | `--atlas-surface` | `Canvas` | Drag-preview background |
 | `--atlas-text` | `CanvasText` | Drag-preview title text |
+| `--atlas-drag-preview-shadow` | `rgb(0 0 0 / 28%)` | Drag-preview drop shadow |
 
 Sizing:
 
@@ -67,6 +68,8 @@ Sizing:
 | `--atlas-padding-compact` | `0.375rem 0.625rem` | Drag-preview padding |
 | `--atlas-radius` | `0.25rem` | Regular border radius |
 | `--atlas-radius-sm` | `0.125rem` | Small border radius (zone highlights) |
+| `--atlas-border-width` | `1px` | Hairline borders (toolbar divider, drag preview) |
+| `--atlas-focus-ring-width` | `2px` | Focus ring and drop-zone outline width |
 | `--atlas-drag-preview-max-width` | `min(20rem, calc(100vw - 1rem))` | Drag-preview cap |
 
 Layering (existing, kept):
@@ -77,13 +80,17 @@ Layering (existing, kept):
 | `--atlas-layer-chrome` | `10` |
 | `--atlas-layer-drag` | `30` |
 
-Opacity (low priority, normalized during the refactor):
+Opacity (normalized during the refactor):
 
 | Variable | Default | Used by |
 | --- | --- | --- |
 | `--atlas-splitter-opacity` | `0.18` | Splitter idle |
 | `--atlas-splitter-opacity-hover` | `0.4` | Splitter hover / resize |
-| `--atlas-drop-highlight-opacity` | `0.22` | Zone-shaped drop highlight |
+| `--atlas-splitter-opacity-focus` | `0.5` | Splitter focus-visible |
+| `--atlas-splitter-opacity-disabled` | `0.08` | Splitter disabled |
+| `--atlas-drop-highlight-alpha-soft` | `15%` | Generic (whole-element) drop highlight mix ratio |
+| `--atlas-drop-highlight-alpha-strong` | `22%` | Zone-shaped drop highlight mix ratio |
+| `--atlas-toolbar-divider-opacity` | `0.25` | Toolbar divider |
 | `--atlas-drag-preview-opacity` | `0.92` | Drag preview |
 
 The exact final list is locked during implementation; additions must keep the
