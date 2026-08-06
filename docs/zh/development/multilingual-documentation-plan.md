@@ -38,7 +38,7 @@ Atlas 作为开源项目，应以英文作为默认文档语言，同时保留�
 审计结果：
 
 - 38 个文件中有 37 个包含中文正文。
-- `docs/evidence/atlas-demo-consumer-verification.md` 是当前唯一纯英文文档。
+- 所有跟踪的文档文件现已双语（英文为规范、中文为翻译）。
 - `docs/SRS.md` 约 4,981 行，`docs/HLD.md` 约 2,781 行，是迁移风险最高的规范性文档。
 - 当前 15 个文档包含 145 个跨文件本地 Markdown 链接；若计入 SRS 的 6 个页内 anchor，则为 16 个文档、151 个本地链接。
 - 仓库中有 7 个跟踪文件的 28 行包含 29 次显式 `docs/...` 路径引用，包括 `AGENTS.md`、`CONTRIBUTING.md`、根 README 和 GitHub 模板。
@@ -181,7 +181,6 @@ docs/
 
 - Guides、Development、ADR、Evidence、Security 在各自 cutover PR 中使用 `git mv` 移入 `docs/zh/`，同时提交经过审查的英文版本。
 - SRS、HLD 和追溯矩阵在英文审查完成前保持旧路径不动，只在 P5d 原子移动，避免提前改变权威来源。
-- `docs/evidence/atlas-demo-consumer-verification.md` 现有内容可直接作为英文版本的起点，再创建中文翻译。
 - 文件名、ADR 编号和目录层级不因翻译而变化。
 - 历史 Evidence 的事实、测量值和“当时状态”不得在翻译时改写为当前结果。
 

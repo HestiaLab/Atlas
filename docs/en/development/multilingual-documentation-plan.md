@@ -36,7 +36,7 @@ Before this plan was submitted, `docs/` contained 38 tracked Markdown files; thi
 Audit findings:
 
 - 37 of the 38 files contain Chinese prose.
-- `docs/evidence/atlas-demo-consumer-verification.md` is currently the only purely English document.
+- All tracked documentation files are now bilingual (English canonical with Chinese translations).
 - `docs/SRS.md` is about 4,981 lines and `docs/HLD.md` about 2,781 lines — the normative documents with the highest migration risk.
 - 15 documents currently contain 145 cross-file local Markdown links; counting the SRS's 6 in-page anchors, that is 16 documents and 151 local links.
 - 28 lines across 7 tracked files in the repository contain 29 explicit `docs/...` path references, including `AGENTS.md`, `CONTRIBUTING.md`, the root README, and GitHub templates.
@@ -173,7 +173,6 @@ Special handling:
 
 - Guides, Development, ADR, Evidence, and Security are moved into `docs/zh/` with `git mv` in their respective cutover PRs, together with a reviewed English version.
 - SRS, HLD, and the traceability matrix stay at the old paths until the English review is complete and are moved atomically only at P5d, to avoid changing the authority source early.
-- The existing content of `docs/evidence/atlas-demo-consumer-verification.md` can serve directly as the starting point for the English version, with a Chinese translation then created.
 - File names, ADR numbers, and directory hierarchy do not change because of translation.
 - Facts, measurements, and the "state at the time" in historical Evidence must not be rewritten into current results during translation.
 

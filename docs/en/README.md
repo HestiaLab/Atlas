@@ -62,12 +62,8 @@ changing one requires a new ADR that records the supersession.
 
 ### Development Implementation Records
 
-[`development/`](./development/) stores phase Work Packages and major fix
-retrospectives:
-
-- `work-packages/`: phase scope, preconditions, and acceptance contracts.
-- `remediations/`: cause, root cause, fix, and verification records for
-  specific failures.
+[`development/`](./development/) stores phase implementation records and
+major fix retrospectives.
 
 These files are development history and experience material, not current
 product specifications.

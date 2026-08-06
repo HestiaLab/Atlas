@@ -18,10 +18,6 @@
 | [P8 Requirement Audit](./p8-requirement-audit.md) | 正式需求实施状态审计 |
 | [P8 System Hardening](./p8-system-hardening.md) | 系统级 hardening、可访问性和边界验证 |
 
-## Consumer 证据
-
-- [Atlas Demo Consumer Verification](./atlas-demo-consumer-verification.md)：独立 NuGet consumer 的 pack、restore、build、test 和运行边界。
-
 ## 使用规则
 
 1. 先检查证据记录的日期、branch/commit、package、bundle 和环境。
