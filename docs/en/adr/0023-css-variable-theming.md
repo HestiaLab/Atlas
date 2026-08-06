@@ -56,6 +56,13 @@ Colors:
 | `--atlas-surface` | `Canvas` | Drag-preview background |
 | `--atlas-text` | `CanvasText` | Drag-preview title text |
 | `--atlas-drag-preview-shadow` | `rgb(0 0 0 / 28%)` | Drag-preview drop shadow |
+| `--atlas-group-bg` | `transparent` | Group surface background |
+| `--atlas-chrome-bg` | `transparent` | Tab strip / panel header / toolbar background |
+| `--atlas-tab-text` | `inherit` | Tab label color |
+| `--atlas-tab-text-active` | `inherit` | Active tab label color |
+| `--atlas-tab-bg-active` | `transparent` | Active tab background |
+| `--atlas-tab-bg-hover` | `transparent` | Hovered tab background |
+| `--atlas-splitter-color` | `currentColor` | Splitter bar color |
 
 Sizing:
 

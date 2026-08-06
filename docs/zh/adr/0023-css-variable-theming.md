@@ -36,6 +36,13 @@ Atlas 以单个样式表（`wwwroot/atlas-v2/atlas.css`，286 行）作为 Razor
 | `--atlas-surface` | `Canvas` | 拖拽预览背景 |
 | `--atlas-text` | `CanvasText` | 拖拽预览标题文字 |
 | `--atlas-drag-preview-shadow` | `rgb(0 0 0 / 28%)` | 拖拽预览阴影 |
+| `--atlas-group-bg` | `transparent` | 组表面背景 |
+| `--atlas-chrome-bg` | `transparent` | Tab 条 / 面板标题栏 / Toolbar 背景 |
+| `--atlas-tab-text` | `inherit` | Tab 标签文字颜色 |
+| `--atlas-tab-text-active` | `inherit` | 激活 Tab 标签文字颜色 |
+| `--atlas-tab-bg-active` | `transparent` | 激活 Tab 背景 |
+| `--atlas-tab-bg-hover` | `transparent` | 悬停 Tab 背景 |
+| `--atlas-splitter-color` | `currentColor` | 分割条颜色 |
 
 尺寸：
 

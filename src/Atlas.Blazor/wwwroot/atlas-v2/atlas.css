@@ -15,6 +15,14 @@
   --atlas-surface: Canvas;
   --atlas-text: CanvasText;
   --atlas-drag-preview-shadow: rgb(0 0 0 / 28%);
+  /* Chrome colors (ADR-0023 extension) */
+  --atlas-group-bg: transparent;
+  --atlas-chrome-bg: transparent;
+  --atlas-tab-text: inherit;
+  --atlas-tab-text-active: inherit;
+  --atlas-tab-bg-active: transparent;
+  --atlas-tab-bg-hover: transparent;
+  --atlas-splitter-color: currentColor;
   /* Opacity */
   --atlas-splitter-opacity: 0.18;
   --atlas-splitter-opacity-hover: 0.4;
@@ -67,7 +75,8 @@
 .atlas-v2-splitter {
   position: relative;
   z-index: var(--atlas-layer-chrome);
-  background: currentColor;
+  background: var(--atlas-splitter-color);
+  color: var(--atlas-splitter-color);
   opacity: var(--atlas-splitter-opacity);
   touch-action: none;
   user-select: none;
@@ -127,6 +136,7 @@
   min-inline-size: 0;
   min-block-size: 0;
   overflow: hidden;
+  background: var(--atlas-group-bg);
 }
 
 .atlas-v2-group-collapsed {
@@ -153,11 +163,27 @@
 .atlas-v2-panel-header,
 .atlas-v2-toolbar {
   z-index: var(--atlas-layer-chrome);
+  background: var(--atlas-chrome-bg);
 }
 
 .atlas-v2-tab-strip {
   display: flex;
   overflow-inline: auto;
+}
+
+.atlas-v2-tab-strip [role="tab"] {
+  color: var(--atlas-tab-text);
+  background: transparent;
+}
+
+.atlas-v2-tab-strip [role="tab"][aria-selected="true"] {
+  color: var(--atlas-tab-text-active);
+  background: var(--atlas-tab-bg-active);
+}
+
+.atlas-v2-tab-strip [role="tab"]:hover:not([aria-selected="true"]),
+.atlas-v2-tab-strip [role="tab"]:focus-visible {
+  background: var(--atlas-tab-bg-hover);
 }
 
 .atlas-v2-toolbar {
