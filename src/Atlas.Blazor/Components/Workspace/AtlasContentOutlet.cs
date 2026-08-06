@@ -54,26 +54,25 @@ internal sealed class AtlasContentOutlet : ComponentBase
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
-        var sequence = 0;
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-content-outlet");
-        builder.AddAttribute(sequence++, "id", PanelId);
-        builder.AddAttribute(sequence++, "role", "tabpanel");
-        builder.AddAttribute(sequence++, "aria-labelledby", LabelledById);
-        builder.AddAttribute(sequence++, "data-atlas-item-id", Content.ItemId.Value);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-content-outlet");
+        builder.AddAttribute(2, "id", PanelId);
+        builder.AddAttribute(3, "role", "tabpanel");
+        builder.AddAttribute(4, "aria-labelledby", LabelledById);
+        builder.AddAttribute(5, "data-atlas-item-id", Content.ItemId.Value);
         builder.AddAttribute(
-            sequence++,
+            6,
             "data-atlas-item-kind",
             Content.Item.Kind.ToString().ToLowerInvariant());
-        builder.AddAttribute(sequence++, "tabindex", "-1");
-        builder.AddAttribute(sequence++, "hidden", !IsSelected);
-        builder.AddAttribute(sequence++, "aria-hidden", IsSelected ? null : "true");
-        builder.AddAttribute(sequence++, "inert", !IsSelected);
-        builder.AddElementReferenceCapture(sequence++, value => element = value);
+        builder.AddAttribute(7, "tabindex", "-1");
+        builder.AddAttribute(8, "hidden", !IsSelected);
+        builder.AddAttribute(9, "aria-hidden", IsSelected ? null : "true");
+        builder.AddAttribute(10, "inert", !IsSelected);
+        builder.AddElementReferenceCapture(11, value => element = value);
 
-        builder.OpenComponent<AtlasContentErrorBoundary>(sequence++);
+        builder.OpenComponent<AtlasContentErrorBoundary>(12);
         builder.AddAttribute(
-            sequence++,
+            13,
             "SafeError",
             new AtlasHostError(
                 AtlasHostErrorCode.ContentRenderFailed,
@@ -82,12 +81,12 @@ internal sealed class AtlasContentOutlet : ComponentBase
                 Content.WorkspaceId,
                 Content.ItemId));
         builder.AddAttribute(
-            sequence++,
+            14,
             "OnSafeError",
             EventCallback.Factory.Create<AtlasHostError>(this, HandleSafeError));
-        builder.AddAttribute(sequence++, "RecoveryKey", (Content.ItemId, RecoveryKey));
+        builder.AddAttribute(15, "RecoveryKey", (Content.ItemId, RecoveryKey));
         builder.AddAttribute(
-            sequence++,
+            16,
             "ErrorContent",
             (RenderFragment<Exception>)(_ => errorBuilder =>
             {
@@ -108,7 +107,7 @@ internal sealed class AtlasContentOutlet : ComponentBase
                 errorBuilder.CloseElement();
             }));
         builder.AddAttribute(
-            sequence++,
+            17,
             "ChildContent",
             (RenderFragment)(contentBuilder => RenderProjectedContent(contentBuilder)));
         builder.CloseComponent();

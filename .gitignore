@@ -63,6 +63,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+## Python
+__pycache__/
+*.pyc
+
 ## Atlas generated static assets
 src/Atlas.Blazor/wwwroot/atlas-v2/*.js
 src/Atlas.Blazor/wwwroot/atlas-v2/*.js.map

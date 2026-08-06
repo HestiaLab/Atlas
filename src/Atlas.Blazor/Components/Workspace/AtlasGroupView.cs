@@ -94,19 +94,18 @@ internal sealed class AtlasGroupView : ComponentBase
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
-        var sequence = 0;
-        builder.OpenElement(sequence++, "section");
+        builder.OpenElement(0, "section");
         builder.SetKey(Group.Id);
-        builder.AddAttribute(sequence++, "class", GroupClass());
-        builder.AddAttribute(sequence++, "data-atlas-node-id", Group.Id.Value);
-        builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
-        builder.AddAttribute(sequence++, "data-atlas-group-kind", Group.Kind.ToString().ToLowerInvariant());
-        builder.AddAttribute(sequence++, "role", "region");
+        builder.AddAttribute(1, "class", GroupClass());
+        builder.AddAttribute(2, "data-atlas-node-id", Group.Id.Value);
+        builder.AddAttribute(3, "data-atlas-group-id", Group.Id.Value);
+        builder.AddAttribute(4, "data-atlas-group-kind", Group.Kind.ToString().ToLowerInvariant());
+        builder.AddAttribute(5, "role", "region");
         if (Group.SelectedItemId is not null)
         {
             var selected = Items.First(item => item.Id == Group.SelectedItemId.Value);
             builder.AddAttribute(
-                sequence++,
+                6,
                 "aria-labelledby",
                 Group.Kind == DockItemKind.Document
                     ? AtlasDomIdentity.ControlId(HostId, selected.Id, "document-tab")
@@ -115,44 +114,41 @@ internal sealed class AtlasGroupView : ComponentBase
         if (Group.LogicalRegion is not null)
         {
             builder.AddAttribute(
-                sequence++,
+                7,
                 "data-atlas-logical-region",
                 Group.LogicalRegion.Value.ToString());
         }
 
         if (Items.Count == 0)
         {
-            RenderEmpty(builder, ref sequence);
+            RenderEmpty(builder);
         }
         else
         {
             if (Group.Kind == DockItemKind.Document)
             {
                 builder.AddContent(
-                    sequence++,
+                    8,
                     (RenderFragment)(headerBuilder =>
                     {
-                        var headerSequence = 0;
-                        RenderTabStrip(headerBuilder, ref headerSequence);
+                        RenderTabStrip(headerBuilder);
                     }));
             }
             else
             {
                 builder.AddContent(
-                    sequence++,
+                    8,
                     (RenderFragment)(headerBuilder =>
                     {
-                        var headerSequence = 0;
-                        RenderToolHeader(headerBuilder, ref headerSequence);
+                        RenderToolHeader(headerBuilder);
                     }));
             }
 
             builder.AddContent(
-                sequence++,
+                9,
                 (RenderFragment)(contentBuilder =>
                 {
-                    var contentSequence = 0;
-                    RenderContentOutlets(contentBuilder, ref contentSequence);
+                    RenderContentOutlets(contentBuilder);
                 }));
         }
 
@@ -238,23 +234,23 @@ internal sealed class AtlasGroupView : ComponentBase
         }
     }
 
-    private void RenderEmpty(RenderTreeBuilder builder, ref int sequence)
+    private void RenderEmpty(RenderTreeBuilder builder)
     {
         var context = new AtlasEmptyStateContext(
             Workspace.Id,
             Group.Id,
             Group.Kind,
             Group.RetentionPolicy);
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-empty-state");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-empty-state");
         if (EmptyTemplate is not null)
         {
-            builder.AddContent(sequence++, EmptyTemplate(context));
+            builder.AddContent(2, EmptyTemplate(context));
         }
         else
         {
             builder.AddContent(
-                sequence++,
+                2,
                 Group.Kind == DockItemKind.Tool
                     ? "No tool content"
                     : "No document content");
@@ -263,118 +259,124 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.CloseElement();
     }
 
-    private void RenderTabStrip(RenderTreeBuilder builder, ref int sequence)
+    private void RenderTabStrip(RenderTreeBuilder builder)
     {
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-tab-strip");
-        builder.AddAttribute(sequence++, "role", "tablist");
-        builder.AddAttribute(sequence++, "aria-orientation", "horizontal");
-        builder.AddAttribute(sequence++, "aria-label", $"{Group.Id.Value} documents");
-        builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-tab-strip");
+        builder.AddAttribute(2, "role", "tablist");
+        builder.AddAttribute(3, "aria-orientation", "horizontal");
+        builder.AddAttribute(4, "aria-label", $"{Group.Id.Value} documents");
+        builder.AddAttribute(5, "data-atlas-group-id", Group.Id.Value);
         for (var itemIndex = 0; itemIndex < Items.Count; itemIndex++)
         {
             var item = Items[itemIndex];
             var selected = item.Id == Group.SelectedItemId;
-            builder.OpenElement(sequence++, "button");
-            builder.AddAttribute(sequence++, "type", "button");
-            builder.AddAttribute(sequence++, "role", "tab");
+            // Collection items reuse the same sequence group each iteration
+            // and are distinguished by SetKey, so inserting/removing a tab
+            // does not shift the diffing sequence of later tabs.
+            builder.OpenElement(0, "button");
+            builder.SetKey(item.Id);
+            builder.AddAttribute(1, "type", "button");
+            builder.AddAttribute(2, "role", "tab");
             builder.AddAttribute(
-                sequence++,
+                3,
                 "id",
                 AtlasDomIdentity.ControlId(HostId, item.Id, "document-tab"));
-            builder.AddAttribute(sequence++, "aria-label", item.Title);
+            builder.AddAttribute(4, "aria-label", item.Title);
             builder.AddAttribute(
-                sequence++,
+                5,
                 "aria-controls",
                 AtlasDomIdentity.PanelId(HostId, item.Id));
-            builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
-            builder.AddAttribute(sequence++, "data-atlas-item-kind", "document");
-            builder.AddAttribute(sequence++, "data-atlas-drag-kind", "document-tab");
-            builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
+            builder.AddAttribute(6, "data-atlas-item-id", item.Id.Value);
+            builder.AddAttribute(7, "data-atlas-item-kind", "document");
+            builder.AddAttribute(8, "data-atlas-drag-kind", "document-tab");
+            builder.AddAttribute(9, "data-atlas-group-id", Group.Id.Value);
             builder.AddAttribute(
-                sequence++,
+                10,
                 "data-atlas-insertion-index",
                 itemIndex.ToString(CultureInfo.InvariantCulture));
             builder.AddAttribute(
-                sequence++,
+                11,
                 "data-atlas-command-capabilities",
                 ((int)item.Capabilities).ToString(CultureInfo.InvariantCulture));
-            builder.AddAttribute(sequence++, "aria-selected", selected);
-            builder.AddAttribute(sequence++, "tabindex", selected ? "0" : "-1");
+            builder.AddAttribute(12, "aria-selected", selected);
+            builder.AddAttribute(13, "tabindex", selected ? "0" : "-1");
             builder.AddAttribute(
-                sequence++,
+                14,
                 "onclick",
                 EventCallback.Factory.Create(this, () => SelectAsync(item.Id)));
-            RenderHeader(builder, ref sequence, item, selected);
+            RenderHeader(builder, item, selected);
             builder.CloseElement();
         }
 
         builder.CloseElement();
     }
 
-    private void RenderToolHeader(RenderTreeBuilder builder, ref int sequence)
+    private void RenderToolHeader(RenderTreeBuilder builder)
     {
         var selected = SelectedItem();
-        builder.OpenElement(sequence++, "header");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-panel-header");
-        builder.AddAttribute(sequence++, "role", "heading");
-        builder.AddAttribute(sequence++, "aria-level", "2");
+        builder.OpenElement(0, "header");
+        builder.AddAttribute(1, "class", "atlas-v2-panel-header");
+        builder.AddAttribute(2, "role", "heading");
+        builder.AddAttribute(3, "aria-level", "2");
         builder.AddAttribute(
-            sequence++,
+            4,
             "id",
             AtlasDomIdentity.HeadingId(HostId, selected.Id));
-        builder.AddAttribute(sequence++, "data-atlas-panel-header", "true");
-        builder.AddAttribute(sequence++, "data-atlas-drag-kind", "panel-header");
-        builder.AddAttribute(sequence++, "data-atlas-item-id", selected.Id.Value);
-        builder.AddAttribute(sequence++, "data-atlas-item-kind", "tool");
-        builder.AddAttribute(sequence++, "data-atlas-group-id", Group.Id.Value);
+        builder.AddAttribute(5, "data-atlas-panel-header", "true");
+        builder.AddAttribute(6, "data-atlas-drag-kind", "panel-header");
+        builder.AddAttribute(7, "data-atlas-item-id", selected.Id.Value);
+        builder.AddAttribute(8, "data-atlas-item-kind", "tool");
+        builder.AddAttribute(9, "data-atlas-group-id", Group.Id.Value);
         builder.AddAttribute(
-            sequence++,
+            10,
             "data-atlas-command-capabilities",
             ((int)selected.Capabilities).ToString(CultureInfo.InvariantCulture));
         builder.AddAttribute(
-            sequence++,
+            11,
             "data-atlas-insertion-index",
             Group.ItemIds.ToList().IndexOf(selected.Id).ToString(CultureInfo.InvariantCulture));
-        RenderHeader(builder, ref sequence, selected, isSelected: true);
+        RenderHeader(builder, selected, isSelected: true);
         builder.CloseElement();
     }
 
     private void RenderHeader(
         RenderTreeBuilder builder,
-        ref int sequence,
         DockItem item,
         bool isSelected)
     {
         if (HeaderTemplate is not null)
         {
             builder.AddContent(
-                sequence++,
+                0,
                 HeaderTemplate(new AtlasItemHeaderContext(item, isSelected)));
             return;
         }
 
+        // The title span keeps a fixed sequence (3..6) regardless of whether
+        // the icon branch renders, so toggling IconKey does not renumber the
+        // title in the diffing tree.
         if (item.IconKey is not null)
         {
-            builder.OpenElement(sequence++, "span");
-            builder.AddAttribute(sequence++, "class", "atlas-v2-item-icon");
-            builder.AddAttribute(sequence++, "data-atlas-icon", item.IconKey);
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "atlas-v2-item-icon");
+            builder.AddAttribute(2, "data-atlas-icon", item.IconKey);
             builder.CloseElement();
         }
 
-        builder.OpenElement(sequence++, "span");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-item-title");
-        builder.AddAttribute(sequence++, "title", item.Title);
-        builder.AddContent(sequence++, item.Title);
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "atlas-v2-item-title");
+        builder.AddAttribute(5, "title", item.Title);
+        builder.AddContent(6, item.Title);
         builder.CloseElement();
     }
 
-    private void RenderContentOutlets(RenderTreeBuilder builder, ref int sequence)
+    private void RenderContentOutlets(RenderTreeBuilder builder)
     {
         var selectedId = Group.SelectedItemId
             ?? throw new InvalidOperationException("A non-empty group must select an item.");
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-content-stack");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-content-stack");
         foreach (var item in Items)
         {
             if (item.Id != selectedId && !keptAliveItemIds.Contains(item.Id))
@@ -393,35 +395,34 @@ internal sealed class AtlasGroupView : ComponentBase
         DockItem item,
         bool isSelected)
     {
-        var sequence = 0;
         var context = new AtlasContentContext(Workspace, item, StateScope);
         var resolution = Catalog.TryResolve(item.Content.Kind, out var descriptor);
-        builder.OpenComponent<AtlasContentOutlet>(sequence++);
+        builder.OpenComponent<AtlasContentOutlet>(0);
         builder.SetKey((item.Id, descriptor?.Revision ?? 0));
-        builder.AddAttribute(sequence++, "Content", context);
-        builder.AddAttribute(sequence++, "Resolution", resolution);
-        builder.AddAttribute(sequence++, "Descriptor", descriptor);
-        builder.AddAttribute(sequence++, "IsSelected", isSelected);
-        builder.AddAttribute(sequence++, "PanelId", AtlasDomIdentity.PanelId(HostId, item.Id));
+        builder.AddAttribute(1, "Content", context);
+        builder.AddAttribute(2, "Resolution", resolution);
+        builder.AddAttribute(3, "Descriptor", descriptor);
+        builder.AddAttribute(4, "IsSelected", isSelected);
+        builder.AddAttribute(5, "PanelId", AtlasDomIdentity.PanelId(HostId, item.Id));
         builder.AddAttribute(
-            sequence++,
+            6,
             "LabelledById",
             AtlasDomIdentity.ControlId(
                 HostId,
                 item.Id,
                 Group.Kind == DockItemKind.Document ? "document-tab" : "tool-tab"));
         builder.AddAttribute(
-            sequence++,
+            7,
             "RecoveryKey",
             (SandboxedFrameResolver, descriptor?.Revision ?? 0));
-        builder.AddAttribute(sequence++, "OnError", OnError);
+        builder.AddAttribute(8, "OnError", OnError);
         builder.AddAttribute(
-            sequence++,
+            9,
             "SandboxedFrameResolver",
             SandboxedFrameResolver);
-        builder.AddAttribute(sequence++, "Generation", Generation);
+        builder.AddAttribute(10, "Generation", Generation);
         builder.AddComponentReferenceCapture(
-            sequence++,
+            11,
             value =>
             {
                 if (isSelected)

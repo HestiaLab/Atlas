@@ -273,11 +273,10 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     /// <inheritdoc />
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
-        var sequence = 0;
         routeCollector = new AtlasContentRouteCollector();
         if (ContentRoutes is not null)
         {
-            builder.OpenComponent<CascadingValue<AtlasContentRouteCollector>>(sequence++);
+            builder.OpenComponent<CascadingValue<AtlasContentRouteCollector>>(0);
             // The collector is a per-render registration vehicle: descendant
             // AtlasContentRoute components must re-register on every parent
             // render, so the CascadingValue key changes with the collector
@@ -285,24 +284,24 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             // instead, so Blazor reuses that DOM node across re-renders and the
             // interaction controller's listeners stay bound to a live element.
             builder.SetKey(routeCollector);
-            builder.AddAttribute(sequence++, "Value", routeCollector);
-            builder.AddAttribute(sequence++, "ChildContent", ContentRoutes);
+            builder.AddAttribute(1, "Value", routeCollector);
+            builder.AddAttribute(2, "ChildContent", ContentRoutes);
             builder.CloseComponent();
         }
 
         if (declarativeMode && WorkspaceId is not null)
         {
             collector = new AtlasDefinitionCollector();
-            builder.OpenComponent<CascadingValue<AtlasDefinitionCollector>>(sequence++);
+            builder.OpenComponent<CascadingValue<AtlasDefinitionCollector>>(3);
             builder.SetKey(collector);
-            builder.AddAttribute(sequence++, "Value", collector);
-            builder.AddAttribute(sequence++, "ChildContent", ChildContent);
+            builder.AddAttribute(4, "Value", collector);
+            builder.AddAttribute(5, "ChildContent", ChildContent);
             builder.CloseComponent();
         }
 
         if (activeWorkspace is null)
         {
-            RenderHostError(builder, ref sequence);
+            RenderHostError(builder);
             return;
         }
 
@@ -310,71 +309,57 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         // Stable anchor for the interaction controller: Blazor reuses this DOM
         // node across re-renders (only attributes change), so the controller's
         // pointer listeners stay bound to a live element.
-        builder.OpenElement(sequence++, "div");
+        builder.OpenElement(6, "div");
         builder.SetKey("atlas-workspace-root");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-workspace");
-        builder.AddAttribute(sequence++, "role", "region");
-        builder.AddAttribute(sequence++, "aria-label", $"Atlas workspace {activeWorkspace.Id.Value}");
-        builder.AddAttribute(sequence++, "data-atlas-host-id", hostId);
-        builder.AddAttribute(sequence++, "data-atlas-protocol-version", "1");
-        builder.AddAttribute(sequence++, "data-atlas-workspace-id", activeWorkspace.Id.Value);
+        builder.AddAttribute(7, "class", "atlas-v2-workspace");
+        builder.AddAttribute(8, "role", "region");
+        builder.AddAttribute(9, "aria-label", $"Atlas workspace {activeWorkspace.Id.Value}");
+        builder.AddAttribute(10, "data-atlas-host-id", hostId);
+        builder.AddAttribute(11, "data-atlas-protocol-version", "1");
+        builder.AddAttribute(12, "data-atlas-workspace-id", activeWorkspace.Id.Value);
         builder.AddAttribute(
-            sequence++,
+            13,
             "data-atlas-revision",
             snapshot.Revision.ToString(CultureInfo.InvariantCulture));
-        builder.AddAttribute(sequence++, "data-atlas-direction", "inherit");
-        builder.AddAttribute(sequence++, "data-atlas-reduced-motion", "system");
-        builder.AddElementReferenceCapture(sequence++, element => rootElement = element);
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-overlay-root");
-        builder.AddAttribute(sequence++, "data-atlas-overlay-root", "true");
-        builder.AddAttribute(sequence++, "data-atlas-host-id", hostId);
-        builder.AddAttribute(sequence++, "aria-hidden", "true");
+        builder.AddAttribute(14, "data-atlas-direction", "inherit");
+        builder.AddAttribute(15, "data-atlas-reduced-motion", "system");
+        builder.AddElementReferenceCapture(16, element => rootElement = element);
+        builder.OpenElement(17, "div");
+        builder.AddAttribute(18, "class", "atlas-v2-overlay-root");
+        builder.AddAttribute(19, "data-atlas-overlay-root", "true");
+        builder.AddAttribute(20, "data-atlas-host-id", hostId);
+        builder.AddAttribute(21, "aria-hidden", "true");
         builder.CloseElement();
 
-        RenderFixedSlot(builder, ref sequence, "top-toolbar", TopToolbarContent);
-        RenderHostError(builder, ref sequence);
+        RenderFixedSlot(builder, "top-toolbar", TopToolbarContent);
+        RenderHostError(builder);
 
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-work-area");
-        builder.OpenRegion(sequence++);
-        var inlineStartToolBarSequence = 0;
-        RenderToolBar(
-            builder,
-            ref inlineStartToolBarSequence,
-            snapshot,
-            LogicalSide.InlineStart);
+        builder.OpenElement(22, "div");
+        builder.AddAttribute(23, "class", "atlas-v2-work-area");
+        builder.OpenRegion(24);
+        RenderToolBar(builder, snapshot, LogicalSide.InlineStart);
         builder.CloseRegion();
 
-        builder.OpenRegion(sequence++);
-        var layoutSequence = 0;
+        builder.OpenRegion(25);
         if (snapshot.RootNodeId is null)
         {
-            builder.OpenElement(layoutSequence++, "div");
-            builder.AddAttribute(layoutSequence++, "class", "atlas-v2-workspace-empty");
-            builder.AddContent(layoutSequence++, "No layout content");
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "atlas-v2-workspace-empty");
+            builder.AddContent(2, "No layout content");
             builder.CloseElement();
         }
         else
         {
-            RenderNode(
-                builder,
-                ref layoutSequence,
-                snapshot,
-                snapshot.RootNodeId.Value);
+            RenderNode(builder, snapshot, snapshot.RootNodeId.Value);
         }
+
         builder.CloseRegion();
 
-        builder.OpenRegion(sequence++);
-        var inlineEndToolBarSequence = 0;
-        RenderToolBar(
-            builder,
-            ref inlineEndToolBarSequence,
-            snapshot,
-            LogicalSide.InlineEnd);
+        builder.OpenRegion(26);
+        RenderToolBar(builder, snapshot, LogicalSide.InlineEnd);
         builder.CloseRegion();
         builder.CloseElement();
-        RenderFixedSlot(builder, ref sequence, "status-bar", StatusBarContent);
+        RenderFixedSlot(builder, "status-bar", StatusBarContent);
         builder.CloseElement();
     }
 
@@ -680,7 +665,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private void RenderNode(
         RenderTreeBuilder builder,
-        ref int sequence,
         WorkspaceSnapshot snapshot,
         LayoutNodeId nodeId)
     {
@@ -690,119 +674,118 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             var firstHidden = IsSubtreeEffectivelyHidden(snapshot, split.FirstId);
             var secondHidden = IsSubtreeEffectivelyHidden(snapshot, split.SecondId);
             var presentation = ResolveSplitterPresentation(split.Id);
-            builder.OpenElement(sequence++, "div");
+            builder.OpenElement(0, "div");
             builder.SetKey(split.Id);
-            builder.AddAttribute(sequence++, "class", SplitClass(split.Axis));
+            builder.AddAttribute(1, "class", SplitClass(split.Axis));
             builder.AddAttribute(
-                sequence++,
+                2,
                 "data-atlas-split-hidden",
                 firstHidden && secondHidden ? "both" : firstHidden ? "first" : secondHidden ? "second" : "none");
-            builder.AddAttribute(sequence++, "data-atlas-node-id", split.Id.Value);
-            builder.AddAttribute(sequence++, "data-atlas-node-kind", "split");
-            builder.AddAttribute(sequence++, "data-atlas-split-axis", split.Axis.ToString());
+            builder.AddAttribute(3, "data-atlas-node-id", split.Id.Value);
+            builder.AddAttribute(4, "data-atlas-node-kind", "split");
+            builder.AddAttribute(5, "data-atlas-split-axis", split.Axis.ToString());
             builder.AddAttribute(
-                sequence++,
+                6,
                 "data-atlas-split-locked",
                 presentation.IsLocked ? "true" : "false");
-            builder.AddAttribute(sequence++, "data-atlas-split-ratio", SplitRatio(split.Basis));
+            builder.AddAttribute(7, "data-atlas-split-ratio", SplitRatio(split.Basis));
             builder.AddAttribute(
-                sequence++,
+                8,
                 "data-atlas-split-basis-kind",
                 split.Basis.Kind.ToString());
             builder.AddAttribute(
-                sequence++,
+                9,
                 "data-atlas-split-basis-value",
                 Invariant(split.Basis.Value));
             if (split.Basis.Anchor is not null)
             {
                 builder.AddAttribute(
-                    sequence++,
+                    10,
                     "data-atlas-split-anchor",
                     split.Basis.Anchor.Value.ToString());
             }
+
             builder.AddAttribute(
-                sequence++,
+                11,
                 "data-atlas-revision",
                 snapshot.Revision.ToString(CultureInfo.InvariantCulture));
             builder.AddAttribute(
-                sequence++,
+                12,
                 "data-atlas-first-minimum",
                 Invariant(split.Constraints.FirstMinimum));
             builder.AddAttribute(
-                sequence++,
+                13,
                 "data-atlas-second-minimum",
                 Invariant(split.Constraints.SecondMinimum));
             AddOptionalAttribute(
                 builder,
-                ref sequence,
+                14,
                 "data-atlas-first-maximum",
                 split.Constraints.FirstMaximum);
             AddOptionalAttribute(
                 builder,
-                ref sequence,
+                15,
                 "data-atlas-second-maximum",
                 split.Constraints.SecondMaximum);
             builder.AddAttribute(
-                sequence++,
+                16,
                 "style",
                 firstHidden || secondHidden
                     ? CollapseAdjustedStyle(firstHidden, secondHidden)
                     : SplitStyle(split.Basis));
-            RenderNode(builder, ref sequence, snapshot, split.FirstId);
-            builder.OpenElement(sequence++, "div");
+            RenderNode(builder, snapshot, split.FirstId);
+            builder.OpenElement(17, "div");
             builder.AddAttribute(
-                sequence++,
+                18,
                 "class",
                 CssClasses("atlas-v2-splitter", presentation.CssClass));
             builder.AddAttribute(
-                sequence++,
+                19,
                 "data-atlas-splitter-hidden",
                 firstHidden || secondHidden ? "true" : "false");
-            builder.AddAttribute(sequence++, "data-atlas-split-id", split.Id.Value);
-            builder.AddAttribute(sequence++, "role", "separator");
-            builder.AddAttribute(sequence++, "aria-label", $"Resize split {split.Id.Value}");
-            builder.AddAttribute(sequence++, "tabindex", presentation.IsLocked ? "-1" : "0");
+            builder.AddAttribute(20, "data-atlas-split-id", split.Id.Value);
+            builder.AddAttribute(21, "role", "separator");
+            builder.AddAttribute(22, "aria-label", $"Resize split {split.Id.Value}");
+            builder.AddAttribute(23, "tabindex", presentation.IsLocked ? "-1" : "0");
             builder.AddAttribute(
-                sequence++,
+                24,
                 "aria-orientation",
                 split.Axis == SplitAxis.InlineChildren ? "vertical" : "horizontal");
             builder.AddAttribute(
-                sequence++,
+                25,
                 "aria-disabled",
                 presentation.IsLocked ? "true" : "false");
-            builder.AddAttribute(sequence++, "aria-valuemin", "0");
-            builder.AddAttribute(sequence++, "aria-valuemax", "100");
+            builder.AddAttribute(26, "aria-valuemin", "0");
+            builder.AddAttribute(27, "aria-valuemax", "100");
             builder.AddAttribute(
-                sequence++,
+                28,
                 "aria-valuenow",
                 (double.Parse(
                     SplitRatio(split.Basis),
                     CultureInfo.InvariantCulture) * 100d)
                     .ToString("R", CultureInfo.InvariantCulture));
             builder.AddAttribute(
-                sequence++,
+                29,
                 "data-atlas-can-collapse-first",
                 presentation.CanCollapseFirst ? "true" : "false");
             builder.AddAttribute(
-                sequence++,
+                30,
                 "data-atlas-can-collapse-second",
                 presentation.CanCollapseSecond ? "true" : "false");
             RenderCollapseButton(
                 builder,
-                ref sequence,
                 snapshot,
                 split.FirstId,
                 "first",
                 presentation.CanCollapseFirst);
             RenderCollapseButton(
                 builder,
-                ref sequence,
                 snapshot,
                 split.SecondId,
                 "second",
                 presentation.CanCollapseSecond);
             builder.CloseElement();
-            RenderNode(builder, ref sequence, snapshot, split.SecondId);
+            RenderNode(builder, snapshot, split.SecondId);
             builder.CloseElement();
             return;
         }
@@ -815,10 +798,10 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         var headerTemplate = group.Kind == DockItemKind.Tool
             ? ToolHeaderTemplate
             : DocumentHeaderTemplate;
-        builder.OpenComponent<AtlasContentErrorBoundary>(sequence++);
+        builder.OpenComponent<AtlasContentErrorBoundary>(0);
         builder.SetKey(group.Id);
         builder.AddAttribute(
-            sequence++,
+            1,
             "SafeError",
             new AtlasHostError(
                 AtlasHostErrorCode.Unexpected,
@@ -826,13 +809,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 "Atlas.Group.RenderFailed",
                 activeWorkspace!.Id,
                 nodeId: group.Id));
-        builder.AddAttribute(sequence++, "OnSafeError", OnError);
+        builder.AddAttribute(2, "OnSafeError", OnError);
         builder.AddAttribute(
-            sequence++,
+            3,
             "RecoveryKey",
             (group.Id, emptyTemplate, headerTemplate));
         builder.AddAttribute(
-            sequence++,
+            4,
             "ErrorContent",
             (RenderFragment<Exception>)(_ => errorBuilder =>
             {
@@ -842,7 +825,7 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 errorBuilder.CloseElement();
             }));
         builder.AddAttribute(
-            sequence++,
+            5,
             "ChildContent",
             (RenderFragment)(groupBuilder =>
             {
@@ -869,7 +852,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private void RenderToolBar(
         RenderTreeBuilder builder,
-        ref int sequence,
         WorkspaceSnapshot snapshot,
         LogicalSide side)
     {
@@ -900,16 +882,16 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             .Where(region => IsBottomRegion(region.Group.LogicalRegion!.Value))
             .ToArray();
 
-        builder.OpenElement(sequence++, "nav");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar");
-        builder.AddAttribute(sequence++, "role", "tablist");
-        builder.AddAttribute(sequence++, "aria-orientation", "vertical");
+        builder.OpenElement(0, "nav");
+        builder.AddAttribute(1, "class", "atlas-v2-toolbar");
+        builder.AddAttribute(2, "role", "tablist");
+        builder.AddAttribute(3, "aria-orientation", "vertical");
         builder.AddAttribute(
-            sequence++,
+            4,
             "aria-label",
             side == LogicalSide.InlineStart ? "Inline start tools" : "Inline end tools");
         builder.AddAttribute(
-            sequence++,
+            5,
             "data-atlas-toolbar-side",
             side == LogicalSide.InlineStart ? "inline-start" : "inline-end");
         var activeItemId = regions
@@ -927,63 +909,56 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
         if (upperRegions.Length != 0)
         {
-            builder.OpenElement(sequence++, "section");
-            builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-area");
-            builder.AddAttribute(sequence++, "data-atlas-toolbar-area", "upper");
+            builder.OpenElement(6, "section");
+            builder.AddAttribute(1, "class", "atlas-v2-toolbar-area");
+            builder.AddAttribute(2, "data-atlas-toolbar-area", "upper");
             for (var regionIndex = 0; regionIndex < upperRegions.Length; regionIndex++)
             {
                 if (regionIndex != 0)
                 {
-                    builder.OpenElement(sequence++, "div");
-                    builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-divider");
-                    builder.AddAttribute(sequence++, "role", "separator");
+                    builder.OpenElement(3, "div");
+                    builder.AddAttribute(4, "class", "atlas-v2-toolbar-divider");
+                    builder.AddAttribute(5, "role", "separator");
                     builder.CloseElement();
                 }
 
-                builder.OpenRegion(sequence++);
-                var regionSequence = 0;
-                RenderToolBarRegion(
-                    builder,
-                    ref regionSequence,
-                    upperRegions[regionIndex],
-                    rovingItemId);
+                // Collection regions reuse the same sequence slot; the
+                // region count is declaration-fixed, so sequential diffing
+                // matches them in order.
+                builder.OpenRegion(6);
+                RenderToolBarRegion(builder, upperRegions[regionIndex], rovingItemId);
                 builder.CloseRegion();
             }
 
             builder.CloseElement();
         }
 
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-divider atlas-v2-toolbar-section-divider");
-        builder.AddAttribute(sequence++, "role", "separator");
+        builder.OpenElement(7, "div");
+        builder.AddAttribute(8, "class", "atlas-v2-toolbar-divider atlas-v2-toolbar-section-divider");
+        builder.AddAttribute(9, "role", "separator");
         builder.AddAttribute(
-            sequence++,
+            10,
             "data-atlas-toolbar-section-divider",
             hasUpperContent && hasBottomContent ? "true" : "false");
         builder.CloseElement();
 
         if (bottomRegions.Length != 0)
         {
-            builder.OpenElement(sequence++, "section");
-            builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-area atlas-v2-toolbar-area-bottom");
-            builder.AddAttribute(sequence++, "data-atlas-toolbar-area", "bottom");
+            builder.OpenElement(11, "section");
+            builder.AddAttribute(1, "class", "atlas-v2-toolbar-area atlas-v2-toolbar-area-bottom");
+            builder.AddAttribute(2, "data-atlas-toolbar-area", "bottom");
             for (var regionIndex = 0; regionIndex < bottomRegions.Length; regionIndex++)
             {
                 if (regionIndex != 0)
                 {
-                    builder.OpenElement(sequence++, "div");
-                    builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-divider");
-                    builder.AddAttribute(sequence++, "role", "separator");
+                    builder.OpenElement(3, "div");
+                    builder.AddAttribute(4, "class", "atlas-v2-toolbar-divider");
+                    builder.AddAttribute(5, "role", "separator");
                     builder.CloseElement();
                 }
 
-                builder.OpenRegion(sequence++);
-                var regionSequence = 0;
-                RenderToolBarRegion(
-                    builder,
-                    ref regionSequence,
-                    bottomRegions[regionIndex],
-                    rovingItemId);
+                builder.OpenRegion(6);
+                RenderToolBarRegion(builder, bottomRegions[regionIndex], rovingItemId);
                 builder.CloseRegion();
             }
 
@@ -995,23 +970,22 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private void RenderToolBarRegion(
         RenderTreeBuilder builder,
-        ref int sequence,
         (GroupNode Group, DockItem[] Items) region,
         DockItemId rovingItemId)
     {
-        builder.OpenElement(sequence++, "section");
+        builder.OpenElement(0, "section");
         builder.SetKey(region.Group.Id);
-        builder.AddAttribute(sequence++, "class", "atlas-v2-toolbar-region");
+        builder.AddAttribute(1, "class", "atlas-v2-toolbar-region");
         builder.AddAttribute(
-            sequence++,
+            2,
             "data-atlas-toolbar-region",
             region.Group.LogicalRegion!.Value.ToString());
         builder.AddAttribute(
-            sequence++,
+            3,
             "data-atlas-group-id",
             region.Group.Id.Value);
         builder.AddAttribute(
-            sequence++,
+            4,
             "data-atlas-region-empty",
             region.Items.Length == 0 ? "true" : "false");
         for (var itemIndex = 0; itemIndex < region.Items.Length; itemIndex++)
@@ -1019,74 +993,76 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             var item = region.Items[itemIndex];
             var isActive = region.Group.Visibility == GroupVisibility.Expanded
                 && region.Group.SelectedItemId == item.Id;
-            builder.OpenElement(sequence++, "button");
-            builder.AddAttribute(sequence++, "type", "button");
-            builder.AddAttribute(sequence++, "role", "tab");
+            // Collection items reuse the same sequence group each iteration
+            // and are distinguished by SetKey.
+            builder.OpenElement(0, "button");
+            builder.SetKey(item.Id);
+            builder.AddAttribute(1, "type", "button");
+            builder.AddAttribute(2, "role", "tab");
             builder.AddAttribute(
-                sequence++,
+                3,
                 "id",
                 AtlasDomIdentity.ControlId(hostId, item.Id, "tool-tab"));
-            builder.AddAttribute(sequence++, "aria-label", item.Title);
-            builder.AddAttribute(sequence++, "aria-selected", isActive);
+            builder.AddAttribute(4, "aria-label", item.Title);
+            builder.AddAttribute(5, "aria-selected", isActive);
             builder.AddAttribute(
-                sequence++,
+                6,
                 "aria-controls",
                 AtlasDomIdentity.PanelId(hostId, item.Id));
-            builder.AddAttribute(sequence++, "tabindex", item.Id == rovingItemId ? "0" : "-1");
-            builder.AddAttribute(sequence++, "data-atlas-item-id", item.Id.Value);
-            builder.AddAttribute(sequence++, "data-atlas-item-kind", "tool");
-            builder.AddAttribute(sequence++, "data-atlas-drag-kind", "toolbar-entry");
-            builder.AddAttribute(sequence++, "data-atlas-toolbar-entry", "true");
-            builder.AddAttribute(sequence++, "data-atlas-group-id", region.Group.Id.Value);
+            builder.AddAttribute(7, "tabindex", item.Id == rovingItemId ? "0" : "-1");
+            builder.AddAttribute(8, "data-atlas-item-id", item.Id.Value);
+            builder.AddAttribute(9, "data-atlas-item-kind", "tool");
+            builder.AddAttribute(10, "data-atlas-drag-kind", "toolbar-entry");
+            builder.AddAttribute(11, "data-atlas-toolbar-entry", "true");
+            builder.AddAttribute(12, "data-atlas-group-id", region.Group.Id.Value);
             builder.AddAttribute(
-                sequence++,
+                13,
                 "data-atlas-toolbar-region",
                 region.Group.LogicalRegion.Value.ToString());
             builder.AddAttribute(
-                sequence++,
+                14,
                 "data-atlas-insertion-index",
                 itemIndex.ToString(CultureInfo.InvariantCulture));
             builder.AddAttribute(
-                sequence++,
+                15,
                 "data-atlas-command-capabilities",
                 ((int)item.Capabilities).ToString(CultureInfo.InvariantCulture));
             builder.AddAttribute(
-                sequence++,
+                16,
                 "onclick",
                 EventCallback.Factory.Create(
                     this,
                     () => ToggleToolAsync(region.Group, item.Id, isActive)));
-            builder.OpenRegion(sequence++);
-            var iconSequence = 0;
+            builder.OpenRegion(17);
             if (item.IconKey is not null)
             {
-                builder.OpenElement(iconSequence++, "span");
-                builder.AddAttribute(iconSequence++, "class", "atlas-v2-item-icon");
-                builder.AddAttribute(iconSequence++, "data-atlas-icon", item.IconKey);
-                builder.AddAttribute(iconSequence++, "aria-hidden", "true");
+                builder.OpenElement(0, "span");
+                builder.AddAttribute(1, "class", "atlas-v2-item-icon");
+                builder.AddAttribute(2, "data-atlas-icon", item.IconKey);
+                builder.AddAttribute(3, "aria-hidden", "true");
                 builder.CloseElement();
             }
 
             builder.CloseRegion();
-            builder.AddContent(sequence++, item.Title);
+            builder.AddContent(18, item.Title);
             builder.CloseElement();
         }
 
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-drop-scaffold");
-        builder.AddAttribute(sequence++, "role", "presentation");
-        builder.AddAttribute(sequence++, "aria-hidden", "true");
+        builder.OpenElement(19, "div");
+        builder.AddAttribute(20, "class", "atlas-v2-drop-scaffold");
+        builder.AddAttribute(21, "role", "presentation");
+        builder.AddAttribute(22, "aria-hidden", "true");
         builder.AddAttribute(
-            sequence++,
+            23,
             "data-atlas-drop-scaffold",
             "true");
-        builder.AddAttribute(sequence++, "data-atlas-group-id", region.Group.Id.Value);
+        builder.AddAttribute(24, "data-atlas-group-id", region.Group.Id.Value);
         builder.AddAttribute(
-            sequence++,
+            25,
             "data-atlas-toolbar-region",
             region.Group.LogicalRegion.Value.ToString());
         builder.AddAttribute(
-            sequence++,
+            26,
             "data-atlas-insertion-index",
             region.Items.Length.ToString(CultureInfo.InvariantCulture));
         builder.CloseElement();
@@ -1110,7 +1086,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private void RenderFixedSlot(
         RenderTreeBuilder builder,
-        ref int sequence,
         string slot,
         RenderFragment? content)
     {
@@ -1119,30 +1094,30 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
             return;
         }
 
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", $"atlas-v2-{slot}");
-        builder.AddAttribute(sequence++, "data-atlas-fixed-slot", slot);
-        builder.AddContent(sequence++, content);
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", $"atlas-v2-{slot}");
+        builder.AddAttribute(2, "data-atlas-fixed-slot", slot);
+        builder.AddContent(3, content);
         builder.CloseElement();
     }
 
-    private void RenderHostError(RenderTreeBuilder builder, ref int sequence)
+    private void RenderHostError(RenderTreeBuilder builder)
     {
         if (hostError is null)
         {
             return;
         }
 
-        builder.OpenElement(sequence++, "div");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-host-error");
-        builder.AddAttribute(sequence++, "data-atlas-error-code", hostError.Code.ToString());
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-host-error");
+        builder.AddAttribute(2, "data-atlas-error-code", hostError.Code.ToString());
         if (ErrorTemplate is not null)
         {
-            builder.AddContent(sequence++, ErrorTemplate(hostError));
+            builder.AddContent(3, ErrorTemplate(hostError));
         }
         else
         {
-            builder.AddContent(sequence++, "Atlas could not apply the requested layout.");
+            builder.AddContent(3, "Atlas could not apply the requested layout.");
         }
 
         builder.CloseElement();
@@ -1177,7 +1152,6 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private void RenderCollapseButton(
         RenderTreeBuilder builder,
-        ref int sequence,
         WorkspaceSnapshot snapshot,
         LayoutNodeId childId,
         string childName,
@@ -1191,22 +1165,22 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         }
 
         var collapsed = group.Visibility == GroupVisibility.Collapsed;
-        builder.OpenElement(sequence++, "button");
+        builder.OpenElement(0, "button");
         builder.SetKey((group.Id, "split-collapse"));
-        builder.AddAttribute(sequence++, "type", "button");
-        builder.AddAttribute(sequence++, "class", "atlas-v2-splitter-collapse");
-        builder.AddAttribute(sequence++, "data-atlas-collapse-child", childName);
+        builder.AddAttribute(1, "type", "button");
+        builder.AddAttribute(2, "class", "atlas-v2-splitter-collapse");
+        builder.AddAttribute(3, "data-atlas-collapse-child", childName);
         builder.AddAttribute(
-            sequence++,
+            4,
             "aria-label",
             collapsed ? "Expand region" : "Collapse region");
         builder.AddAttribute(
-            sequence++,
+            5,
             "onclick",
             EventCallback.Factory.Create(
                 this,
                 () => ToggleSplitChildAsync(group.Id, collapsed)));
-        builder.AddContent(sequence++, collapsed ? "›" : "‹");
+        builder.AddContent(6, collapsed ? "›" : "‹");
         builder.CloseElement();
     }
 
@@ -2049,13 +2023,13 @@ public sealed class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
     private static void AddOptionalAttribute(
         RenderTreeBuilder builder,
-        ref int sequence,
+        int sequence,
         string name,
         double? value)
     {
         if (value is not null)
         {
-            builder.AddAttribute(sequence++, name, Invariant(value.Value));
+            builder.AddAttribute(sequence, name, Invariant(value.Value));
         }
     }
 
