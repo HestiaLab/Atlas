@@ -102,3 +102,41 @@ maintenance requests.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in
   `docs/en/adr/0001-runtime-and-package-baseline.md`.
+
+## Releases
+
+Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
+NuGet.org and GitHub Packages, and showcases the demo on GitHub Pages. The
+demo (`samples/Atlas.Demo`) is frozen: it consumes the published package and
+only changes to bump the referenced version or fix a showcase bug.
+
+### Major-node release checklist
+
+1. Iterate on `src/Atlas.Core` / `src/Atlas.Blazor` (SRS traceability, tests,
+   format, CI green).
+2. Bump the version in **all four touchpoints** (grep the old version string
+   to be sure): `samples/Atlas.Demo/Directory.Packages.props`,
+   `scripts/republish-demo.sh`, `.github/workflows/ci.yml`,
+   `src/Atlas.Blazor/package-readme.md`.
+3. Verify locally: `bash scripts/republish-demo.sh` (packs the new version,
+   clears the demo `.packages` cache, restores/builds/tests/format the demo).
+4. Open the release-prep PR (CI pack job must pass — it re-verifies the demo
+   against the packed package).
+5. Publish the nupkg to NuGet.org and GitHub Packages (PAT with
+   `write:packages`; never commit credentials).
+6. Tag the release (`git tag -a X.Y.Z`) and create a GitHub Release with the
+   nupkg asset.
+7. Deploy the demo to GitHub Pages: run the `Deploy Demo to GitHub Pages`
+   workflow (`deploy-demo.yml`, manual trigger). It `dotnet publish`s the demo
+   with `--source https://api.nuget.org/v3/index.json` — the Pages site always
+   reflects the officially published NuGet version, never a local pack or
+   cache.
+
+### Version bump pitfalls
+
+- The four version touchpoints above must agree; a stale `ci.yml`
+  `-p:PackageVersion=` fails the pack job with `NU1102`.
+- The Pages deploy resolves the exact version pinned in the demo's
+  `Directory.Packages.props` from nuget.org — publish the package **before**
+  deploying, or the workflow fails (which doubles as a "package is
+  consumable" check).

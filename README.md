@@ -10,17 +10,21 @@ applications. The project separates the layout domain model, Blazor rendering,
 and browser interaction into layers so that the UI layer never maintains a
 second copy of layout state.
 
-> Atlas is currently validated through source builds and a local NuGet consumer.
-> The repository defines two packable projects, `Atlas.Core` and `Atlas.Blazor`,
-> but this README does not assume they have been published to NuGet.org.
+> **Live demo:** https://wubing7755.github.io/Atlas/
+>
+> **Packages:** [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
+> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/wubing7755/Atlas/releases)
 
 ## Core Capabilities
 
 - Tool Panel and Document Tab workspaces
 - Panel and tab drag-and-drop, docking, and cross-Group moves
-- Splitter mouse dragging and keyboard resizing
+- Five-zone drop preview (left/right/top/bottom/center) when docking tabs
+- Splitter mouse dragging and keyboard resizing, with elastic-absorb sizing
 - Layout history with undo and redo
 - XML layout persistence, restore, and presets
+- CSS variable theming contract (`--atlas-*` tokens, see [theming guide](docs/en/theming.md))
 - Blazor content hosting with a SandboxedFrame security boundary
 - Multi-Workspace, multi-Host state and DOM isolation
 - ARIA, focus coordination, and reduced-motion support
@@ -37,7 +41,7 @@ Atlas.Core ← Atlas.Blazor ← Application
 |---------|----------------|
 | `Atlas.Core` | UI-independent layout model, operation engine, history, invariants, and persistence |
 | `Atlas.Blazor` | Blazor RenderTree, content hosting, CSS, and browser interaction |
-| `Atlas.Demo` | Independent sample that validates the public API and static assets through local NuGet packages |
+| `Atlas.Demo` | Frozen showcase that consumes the published `Atlas.Blazor` NuGet package; deployed to GitHub Pages. It only changes when a release bumps the referenced package version (or a showcase bug is fixed) |
 
 `Atlas.Core` does not depend on Blazor or JavaScript. Browser input is converted
 by TypeScript into structured intents, committed through Core operations into a

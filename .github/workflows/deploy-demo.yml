@@ -1,0 +1,56 @@
+name: Deploy Demo to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      # Atlas.Demo is a frozen consumer of the published NuGet package:
+      # the deploy pulls the exact version pinned in
+      # samples/Atlas.Demo/Directory.Packages.props from nuget.org —
+      # no local pack, no atlas-local feed, no .packages cache.
+      - name: Publish demo from nuget.org package
+        run: |
+          dotnet publish samples/Atlas.Demo/Atlas.Demo.csproj \
+            --configuration Release \
+            --output publish/demo \
+            --source https://api.nuget.org/v3/index.json
+
+      # GitHub Pages project site serves the repo at /Atlas/; the dev
+      # index.html keeps base href="/" so local `dotnet run` keeps working.
+      - name: Rewrite base href for the /Atlas/ subpath
+        run: |
+          sed -i 's|<base href="/" />|<base href="/Atlas/" />|' publish/demo/wwwroot/index.html
+
+      - name: Stage site at /Atlas/ with root 404 fallback
+        run: |
+          mkdir -p site/Atlas
+          cp -r publish/demo/wwwroot/. site/Atlas/
+          cp site/Atlas/404.html site/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
