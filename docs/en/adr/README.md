@@ -42,6 +42,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0020](./0020-content-developer-experience.md) | Proposed | per-Item state binding, content-to-workspace channel, model-bound content base, DI state channel (FR-01/02/04/07) |
 | [ADR-0021](./0021-elastic-absorb-split-sizing.md) | Accepted | elastic-absorb split sizing: FixedPixels dock panels + implicit 1fr work area; preserve basis kind on terminal resize commits |
 | [ADR-0022](./0022-group-visibility-invariant.md) | Accepted | empty Persistent tool groups collapse via a snapshot-boundary invariant (REQ-F-154); expanding an empty group is rejected |
+| [ADR-0023](./0023-css-variable-theming.md) | Accepted | CSS variable theming contract: tokenize atlas.css `--atlas-*` variables for consumer customization |
 
 ## Writing Conventions
 
