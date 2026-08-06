@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Atlas Demo</title>
+    <script>
+        // GitHub Pages SPA fallback: unknown paths are redirected to the
+        // Blazor WASM application root so history routing keeps working.
+        (function () {
+            var base = "/Atlas/";
+            if (window.location.pathname.indexOf(base) === 0) {
+                window.location.replace(base + window.location.search + window.location.hash);
+            } else {
+                window.location.replace(base);
+            }
+        })();
+    </script>
+</head>
+<body>
+</body>
+</html>

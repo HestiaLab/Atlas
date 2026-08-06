@@ -6,15 +6,21 @@
 
 Atlas 为 IDE、设计器、管理后台和其他复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。项目将布局领域模型、Blazor 渲染和浏览器交互分层，避免 UI 层维护第二份布局状态。
 
-> Atlas 当前以源代码构建和本地 NuGet consumer 验证为准。仓库定义 `Atlas.Core` 和 `Atlas.Blazor` 两个可打包项目，但本 README 不假定它们已经发布到 NuGet.org。
+> **在线演示：** https://wubing7755.github.io/Atlas/
+>
+> **NuGet 包：** [NuGet.org 上的 Atlas.Blazor](https://www.nuget.org/packages/Atlas.Blazor)
+> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/wubing7755/Atlas/releases)
 
 ## 核心能力
 
 - Tool Panel 与 Document Tab 工作区
 - 面板和标签页拖放、Dock 与跨 Group 移动
-- Splitter 鼠标拖动和键盘调整
+- 标签页 Dock 的五区放置预览（左/右/上/下/中）
+- Splitter 鼠标拖动和键盘调整，支持弹性吸收（elastic-absorb）尺寸
 - 布局历史、撤销与重做
 - XML 布局持久化、恢复和预设
+- CSS 变量主题契约（`--atlas-*` token，见[主题指南](docs/zh/theming.md)）
 - Blazor 内容承载与 SandboxedFrame 安全边界
 - 多 Workspace、多个 Host 的状态与 DOM 隔离
 - ARIA、焦点协调和 reduced-motion 支持
@@ -31,7 +37,7 @@ Atlas.Core ← Atlas.Blazor ← Application
 |------|------|
 | `Atlas.Core` | 与 UI 无关的布局模型、操作引擎、历史、不变量和持久化 |
 | `Atlas.Blazor` | Blazor RenderTree、内容承载、CSS 和浏览器交互 |
-| `Atlas.Demo` | 通过本地 NuGet 包验证公共 API 和静态资源的独立示例 |
+| `Atlas.Demo` | 冻结的展示示例：消费已发布的 `Atlas.Blazor` NuGet 包并部署到 GitHub Pages。仅在发布版本更新引用的包版本（或修复展示 bug）时变更 |
 
 `Atlas.Core` 不依赖 Blazor 或 JavaScript。浏览器输入由 TypeScript 转换为结构化 intent，经 Core operation 提交后生成新的 immutable snapshot，再由 Blazor 投影到 DOM。
 
