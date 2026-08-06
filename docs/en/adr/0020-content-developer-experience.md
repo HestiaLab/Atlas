@@ -10,13 +10,11 @@
   D1 lands, D3 deferred, D5 rejected
 - Related: ADR-0012, ADR-0013, ADR-0017, ADR-0018,
   REQ-F-006~008, REQ-F-070,
-  FR-01/FR-02/FR-04/FR-07 from
-  `docs/en/reviews/atlas-demo-framework-gaps.md`
+  FR-01/FR-02/FR-04/FR-07 from the independent consumer sample review
 
 ## Context
 
-The independent consumer sample review
-(`docs/en/reviews/atlas-demo-framework-gaps.md`) exposed four related
+The independent consumer sample review exposed four related
 framework gaps that all funnel through the content contract:
 
 1. **Per-Item state binding (FR-01).** The content model legally allows

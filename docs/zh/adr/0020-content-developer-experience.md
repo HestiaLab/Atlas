@@ -10,11 +10,11 @@
 - 维护者 2026-08-05 决策: 接受按轨道分批采纳——D1+D4 先实施（轨道 B Phase B2）、D2 在 D1 落地后独立评审、D3 推迟、D5 拒绝
 - 相关: ADR-0012、ADR-0013、ADR-0017、ADR-0018、
   REQ-F-006~008、REQ-F-070、
-  `docs/en/reviews/atlas-demo-framework-gaps.md` 中的 FR-01/FR-02/FR-04/FR-07
+  独立消费者样例评审中的 FR-01/FR-02/FR-04/FR-07
 
 ## Context
 
-独立消费者样例评审（`docs/en/reviews/atlas-demo-framework-gaps.md`）暴露了四个相互关联的框架缺口，它们都汇聚到内容契约上：
+独立消费者样例评审暴露了四个相互关联的框架缺口，它们都汇聚到内容契约上：
 
 1. **Per-Item 状态绑定（FR-01）。** 内容模型合法地允许多个 Item 共享一个 `ContentReference.Kind` 并带有不同的 `ResourceId` 值（REQ-F-006 下 SRS AC2），但框架没有提供从 Item 的 `AtlasContentContext` 到 per-Item 应用状态对象的路径。Demo 因此为每个 Kind 保留一个单例 ViewModel，两个同 Kind 文档会静默共享它。
 2. **内容到工作区的通信（FR-02）。** `AtlasContentCommands` 只暴露 `ActivateAsync`、`CloseAsync` 和 `UpdatePresentationAsync`。面板内容无法打开 Item（Core 中存在 `OpenItemOperation`，但内容无法触达），也无法订阅 `IAtlasWorkspaceDomainEvents`。

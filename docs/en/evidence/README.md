@@ -18,12 +18,6 @@ holds on the current branch.
 | [P8 Requirement Audit](./p8-requirement-audit.md) | formal requirement implementation status audit |
 | [P8 System Hardening](./p8-system-hardening.md) | system-level hardening, accessibility, and boundary verification |
 
-## Consumer Evidence
-
-- [Atlas Demo Consumer Verification](./atlas-demo-consumer-verification.md):
-  pack, restore, build, test, and run boundaries of the independent NuGet
-  consumer.
-
 ## Usage Rules
 
 1. First check the evidence record's date, branch/commit, package, bundle, and
