@@ -17,7 +17,7 @@ public sealed class RequirementsBaselineTests
     private const string RequirementsIndexEnd = "<!-- atlas:requirements-index:end -->";
 
     [Fact]
-    public void Srs_formal_blocks_and_appendix_define_the_same_150_requirements()
+    public void Srs_formal_blocks_and_appendix_define_the_same_151_requirements()
     {
         var root = RepositoryRoot();
         var srs = File.ReadAllText(Path.Combine(root, "docs", "en", "SRS.md"));
@@ -34,9 +34,9 @@ public sealed class RequirementsBaselineTests
             .Select(match => match.Groups[1].Value)
             .ToArray();
 
-        Assert.Equal(150, formalIds.Length);
+        Assert.Equal(151, formalIds.Length);
         Assert.Equal(142, formalIds.Count(id => id.StartsWith("REQ-F-", StringComparison.Ordinal)));
-        Assert.Equal(8, formalIds.Count(id => id.StartsWith("REQ-NF-", StringComparison.Ordinal)));
+        Assert.Equal(9, formalIds.Count(id => id.StartsWith("REQ-NF-", StringComparison.Ordinal)));
         Assert.Equal(formalIds.Length, formalIds.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(indexedIds.Length, indexedIds.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(
@@ -62,7 +62,7 @@ public sealed class RequirementsBaselineTests
             .Select(match => match.Groups[1].Value)
             .ToArray();
 
-        Assert.Equal(150, auditedRows.Length);
+        Assert.Equal(151, auditedRows.Length);
         Assert.Equal(auditedRows.Length, auditedRows.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(formalIds, auditedRows.OrderBy(id => id, StringComparer.Ordinal));
         Assert.DoesNotContain("| Designed |", audit, StringComparison.Ordinal);

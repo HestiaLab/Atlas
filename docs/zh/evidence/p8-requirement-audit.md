@@ -173,6 +173,7 @@
 | REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
 | REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/真实 accessibility tree 验证现有 chrome；未实现控件与全焦点矩阵缺口仍保留。 |
 | REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md)：Node + 真实浏览器动态 change、dispose 和 CSS fallback。 |
+| REQ-NF-009 | Not Started | — | 新增 ADR-0023 主题契约；尚无实现或证据。 |
 
 ## Audit interpretation
 
