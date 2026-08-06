@@ -1262,7 +1262,7 @@ function readNonNegativeInteger(value: string | undefined): number | undefined {
   return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
-function documentTargetKind(rect: DOMRect, x: number, y: number): AtlasDropTargetKind {
+export function documentTargetKind(rect: DOMRect, x: number, y: number): AtlasDropTargetKind {
   const localX = x - rect.left;
   const localY = y - rect.top;
   const inlineBand = rect.width * 0.25;
