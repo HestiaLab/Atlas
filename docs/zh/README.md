@@ -34,6 +34,7 @@
 ### 开发者指南
 
 - [使用 Atlas（完整示例）](./guides/using-atlas.md)
+- [样式与主题定制](./theming.md)
 - [开发 Atlas（完整示例）](./guides/developing-atlas.md)
 - [架构概览](./guides/architecture-overview.md)
 - [开发指南](./guides/development-guide.md)

@@ -4739,6 +4739,38 @@ When the preference change is detected
 Then the system should apply the new animation setting at the next interaction
 ```
 
+```
+REQ-NF-009 🟡 [Actor: Application Developer]
+
+Title
+Style Customization via CSS Variables
+
+Description
+The system should expose its visual styling through documented CSS custom properties (variables) prefixed with `--atlas-`, allowing Application Developers to customize colors, sizes, layering, and opacity without overriding internal component selectors or relying on `!important`.
+
+Acceptance Criteria
+
+AC1: CSS Variable Contract
+
+Given an Application Developer consumes the Atlas NuGet package and links the default atlas-v2 stylesheet
+When they inspect the stylesheet
+Then the stylesheet should define a documented set of `--atlas-*` variables
+And every hard-coded color, size, border radius, and opacity value should be expressed through these variables
+
+AC2: Override Without Selector Hacks
+
+Given an Application Developer wants to customize the accent color
+When they declare `--atlas-accent: <color>` on the workspace container (or an ancestor)
+Then the drop-zone highlight, focus indicator, and drag-preview border should use the overridden color
+And no `!important` or Atlas-internal selector overrides should be required
+
+AC3: Default Appearance Preserved
+
+Given an Application Developer does not declare any Atlas variable overrides
+When the workspace renders
+Then the default appearance should be identical to the pre-customization baseline
+```
+
 # 5 Requirements Statistics
 
 | Section                                        | Requirements | P0     | P1     | P2    |
@@ -4750,8 +4782,8 @@ Then the system should apply the new animation setting at the next interaction
 | §3.7 Layout Save and Restore                  | 14           | 4      | 9      | 1     |
 | §3.8 Developer Interface and Events           | 22           | 13     | 8      | 1     |
 | §3.9 Error Handling and Fault Tolerance       | 11           | 8      | 3      | 0     |
-| §4 Non-Functional Requirements                | 8            | 3      | 4      | 1     |
-| **Total**                                     | **150**      | **79** | **66** | **5** |
+| §4 Non-Functional Requirements                | 9            | 3      | 5      | 1     |
+| **Total**                                     | **151**      | **79** | **67** | **5** |
 
 ## Appendix A: Requirements Statistics
 
@@ -4951,8 +4983,9 @@ Then the system should apply the new animation setting at the next interaction
 | REQ-NF-006 | 🔴 | System | Content Rendering Security |
 | REQ-NF-007 | 🟡 | End User | WAI-ARIA Accessibility |
 | REQ-NF-008 | 🟢 | End User | Animation Preference Adaptation |
+| REQ-NF-009 | 🟡 | Application Developer | Style Customization via CSS Variables |
 
-> There are **150** formal requirements in total (F: 142 + NF: 8). Formal requirements are defined by the requirement blocks in the body that include an Actor and Acceptance Criteria; Appendix A corresponds one-to-one with the body.
+> There are **151** formal requirements in total (F: 142 + NF: 9). Formal requirements are defined by the requirement blocks in the body that include an Actor and Acceptance Criteria; Appendix A corresponds one-to-one with the body.
 
 ### Handling of Non-normative Historical Identifiers
 

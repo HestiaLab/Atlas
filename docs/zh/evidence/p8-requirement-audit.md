@@ -173,6 +173,7 @@
 | REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | [P7 evidence](./p7-content-lifetime-security.md)：自动化、真实浏览器与 Phase Exit。 |
 | REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/真实 accessibility tree 验证现有 chrome；未实现控件与全焦点矩阵缺口仍保留。 |
 | REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md)：Node + 真实浏览器动态 change、dispose 和 CSS fallback。 |
+| REQ-NF-009 | Implemented | DES-NFR-005、DES-PRJ-002 | [ADR-0023](../adr/0023-css-variable-theming.md) 契约：atlas.css 已 token 化，真实浏览器默认 + `--atlas-accent` 覆盖已验证；[主题指南](../theming.md) 已发布。 |
 
 ## Audit interpretation
 
