@@ -46,6 +46,45 @@ for name in INTERACTION:
 for name in HELPERS:
     DOMAIN_FOR[name] = "Helpers"
 
+
+# AtlasXmlLayoutSerializer domains.
+SERIALIZER_READ = {
+    "LoadSecure", "ValidateSchema", "ValidateLimits",
+    "ReadSnapshot", "ReadItem", "ReadNode", "ReadStrip",
+}
+SERIALIZER_WRITE = {
+    "WriteItems", "WriteLayout", "WriteNode", "WriteToolBars",
+    "WriteAutoHide", "CreateSchemas",
+}
+SERIALIZER_LEGACY = {
+    "ReadLegacy", "ChainLegacyRoots", "ChooseActive",
+    "ParseLegacyRegion", "EdgeFor",
+}
+SERIALIZER_RESTORE = {
+    "ApplyRestoreOptions", "BuildRemaps", "RemapSnapshot",
+    "ReplaceWithPlaceholders", "DropItems", "CopySnapshot",
+}
+SERIALIZER_HELPERS = {
+    "EnsureSnapshotValid", "TryCompatibleVersion", "Required", "Optional",
+    "OptionalAttribute", "Format", "ParseEnum", "ParseBool", "ParseInt",
+    "ParseFinite", "ParseNullableFinite", "Invalid", "InvalidVersion",
+}
+
+
+def serializer_domains():
+    mapping = {}
+    for name in SERIALIZER_READ:
+        mapping[name] = "Read"
+    for name in SERIALIZER_WRITE:
+        mapping[name] = "Write"
+    for name in SERIALIZER_LEGACY:
+        mapping[name] = "Legacy"
+    for name in SERIALIZER_RESTORE:
+        mapping[name] = "Restore"
+    for name in SERIALIZER_HELPERS:
+        mapping[name] = "Helpers"
+    return mapping
+
 ATTR_ONLY = re.compile(r"^    \[[^\]]+\]\s*$")
 COMMENT_LINE = re.compile(r"^    //")
 
@@ -75,11 +114,18 @@ def split_file(path: Path):
     # .editorconfig (end_of_line = lf) and git diff stays clean.
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     lines = text.splitlines(keepends=True)
+    is_serializer = "AtlasXmlLayoutSerializer" in path.name
+    domain_for = serializer_domains() if is_serializer else DOMAIN_FOR
+    class_name = "AtlasXmlLayoutSerializer" if is_serializer else "AtlasWorkspaceHost"
+    domains = (["Read", "Write", "Legacy", "Restore", "Helpers"]
+               if is_serializer
+               else ["Rendering", "Declarative", "Interaction", "Helpers"])
+    ns = "Atlas.Core.Persistence" if is_serializer else "Atlas.Blazor.Components"
 
     # Find class opening brace.
     class_line = next(
         i for i, l in enumerate(lines)
-        if "class AtlasWorkspaceHost" in l)
+        if "class " + class_name in l)
     open_brace = next(
         i for i in range(class_line, len(lines))
         if "{" in lines[i])
@@ -130,35 +176,34 @@ def split_file(path: Path):
         pending_attrs = []
 
     # Build partial files.
-    domains = ["Rendering", "Declarative", "Interaction", "Helpers"]
     # Reuse the main file's full using block so every partial compiles.
     using_block = "".join(
         l for l in lines if l.startswith("using "))
     for domain in domains:
-        domain_members = {n: t for n, t in members.items() if DOMAIN_FOR.get(n) == domain}
+        domain_members = {n: t for n, t in members.items() if domain_for.get(n) == domain}
         body = "".join(domain_members[n] for n in domain_members)  # insertion order = source order
         partial = (
             using_block
             + "\n"
-            + "namespace Atlas.Blazor.Components;\n"
+            + "namespace " + ns + ";\n"
             + "\n"
-            + f"/// <summary>{domain} members of <see cref=\"AtlasWorkspaceHost\"/> (partial).</summary>\n"
-            + "public sealed partial class AtlasWorkspaceHost\n"
+            + f"/// <summary>{domain} members of <see cref=\"{class_name}\"/> (partial).</summary>\n"
+            + "public sealed partial class " + class_name + "\n"
             + "{\n"
             + body
             + "}\n"
         )
-        out = path.with_name(f"AtlasWorkspaceHost.{domain}.cs")
+        out = path.with_name(f"{class_name}.{domain}.cs")
         with open(out, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(partial)
         print(f"wrote {out.name}: {len(domain_members)} members")
 
     # Rewrite the main file: header + kept members + trailer.
-    kept = {n: t for n, t in members.items() if DOMAIN_FOR.get(n) is None}
+    kept = {n: t for n, t in members.items() if domain_for.get(n) is None}
     # Keep field/property order as-is: iterate members in original order.
     kept_ordered = []
     for n in members:
-        if DOMAIN_FOR.get(n) is None:
+        if domain_for.get(n) is None:
             kept_ordered.append(members[n])
     new_main = header + "".join(kept_ordered) + trailer
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
