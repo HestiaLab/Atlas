@@ -59,15 +59,22 @@ button { font: inherit; }
     --atlas-drop-highlight-alpha-strong: 28%;
     --atlas-toolbar-divider-opacity: 0.4;
     --atlas-drag-preview-opacity: 0.98;
+    /* Chrome tokens (ADR-0023 extension) */
+    --atlas-group-bg: #fffdf7;
+    --atlas-chrome-bg: #ffd93d;
+    --atlas-tab-text: #3d3a35;
+    --atlas-tab-text-active: #e63946;
+    --atlas-tab-bg-active: #fffdf7;
+    --atlas-tab-bg-hover: #ffb3b3;
+    --atlas-splitter-color: #4d96ff;
     background: #fff8e7;
     color: #3d3a35;
 }
 
 /* ============================================================
-   Atlas chrome without a variable token yet (ADR-0023 gap):
-   group background/border, tab strip, panel header, toolbar, splitter
-   color. These are consumer-side selector overrides until the contract
-   grows chrome tokens.
+   Atlas chrome effect layer — borders, radii, shadows that are not
+   part of the variable contract yet. Backgrounds are driven by the
+   --atlas-* chrome tokens above.
    ============================================================ */
 .atlas-demo-shell .atlas-v2-work-area,
 .atlas-demo-shell .atlas-v2-split,
@@ -79,7 +86,6 @@ button { font: inherit; }
 }
 
 .atlas-demo-shell .atlas-v2-group {
-    background: #fffdf7;
     border: 2px solid #3d3a35;
     border-radius: var(--atlas-radius, 0.75rem);
     box-shadow: 0 0.3rem 0 rgba(61, 58, 53, 0.18);
@@ -87,8 +93,6 @@ button { font: inherit; }
 }
 
 .atlas-demo-shell .atlas-v2-splitter {
-    background: #4d96ff;
-    color: #4d96ff;
     border-radius: 0.3rem;
     box-shadow: 0 0 0 2px #fff8e7;
 }
@@ -97,7 +101,6 @@ button { font: inherit; }
 .atlas-demo-shell .atlas-v2-tab-strip {
     min-height: 2.5rem;
     align-items: center;
-    background: #ffd93d;
     border-bottom: 2px solid #3d3a35;
     border-radius: 0.6rem 0.6rem 0 0;
     user-select: none;
@@ -114,25 +117,15 @@ button { font: inherit; }
     border: 2px solid transparent;
     border-radius: 0.5rem 0.5rem 0 0;
     padding: 0.25rem 0.8rem;
-    background: transparent;
-    color: #3d3a35;
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .atlas-demo-shell .atlas-v2-tab-strip [role="tab"][aria-selected="true"] {
-    background: #fffdf7;
-    color: #e63946;
     border-color: #3d3a35;
-    border-bottom-color: #fffdf7;
+    border-bottom-color: var(--atlas-tab-bg-active);
     box-shadow: 0 0.25rem 0 #e63946;
-}
-
-.atlas-demo-shell .atlas-v2-tab-strip [role="tab"]:hover:not([aria-selected="true"]),
-.atlas-demo-shell .atlas-v2-tab-strip [role="tab"]:focus-visible {
-    background: #ffb3b3;
-    color: #3d3a35;
 }
 
 .atlas-demo-shell .atlas-v2-toolbar {
@@ -141,7 +134,6 @@ button { font: inherit; }
     box-sizing: border-box;
     align-items: center;
     padding: 0.3rem 0;
-    background: #ffd93d;
     border-inline: 2px solid #3d3a35;
 }
 
