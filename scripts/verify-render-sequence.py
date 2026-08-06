@@ -49,10 +49,14 @@ def find_methods(source: str):
 
 
 def extract_calls(source: str, start: int, end: int):
-    """Return ordered builder-call signatures inside [start, end)."""
+    """Return ordered builder-call signatures inside [start, end).
+    SetKey is excluded: it does not produce a render frame and its
+    presence is covered by manual review and browser verification."""
     calls = []
     for m in BUILDER_CALL.finditer(source, start, end):
         op = m.group(1)
+        if op == "SetKey":
+            continue
         call_start = m.end()
         # capture up to the closing paren (naive, no nested parens in args used)
         paren = source.find(")", call_start)
@@ -118,10 +122,15 @@ def cmd_baseline(files, out_path):
 
 
 def check_continuous(seq):
-    """Each 0-start segment must be 0..N-1 continuous; segments may restart
-    at 0 for conditional branches and collection iterations (local domain)."""
-    expected = 0
+    """Conditional branches may reuse the same sequence slot (e.g. two
+    mutually exclusive AddContent(8, ...)); collapse adjacent duplicates
+    first, then require each 0-start segment to be continuous."""
+    deduped = []
     for v in seq:
+        if not deduped or deduped[-1] != v:
+            deduped.append(v)
+    expected = 0
+    for v in deduped:
         if v == 0:
             expected = 1
         elif v == expected:
