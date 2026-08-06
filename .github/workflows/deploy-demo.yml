@@ -36,17 +36,19 @@ jobs:
             --output publish/demo \
             --source https://api.nuget.org/v3/index.json
 
-      # GitHub Pages project site serves the repo at /Atlas/; the dev
-      # index.html keeps base href="/" so local `dotnet run` keeps working.
+      # GitHub Pages project site maps the deployed artifact root to the
+      # /Atlas/ subpath, so the staged root must BE the site: no extra
+      # Atlas/ directory (that would serve /Atlas/Atlas/...). The dev
+      # index.html keeps base href="/" so local `dotnet run` works; the
+      # deployed copy must resolve assets from /Atlas/.
       - name: Rewrite base href for the /Atlas/ subpath
         run: |
           sed -i 's|<base href="/" />|<base href="/Atlas/" />|' publish/demo/wwwroot/index.html
 
-      - name: Stage site at /Atlas/ with root 404 fallback
+      - name: Stage site (artifact root maps to /Atlas/)
         run: |
-          mkdir -p site/Atlas
-          cp -r publish/demo/wwwroot/. site/Atlas/
-          cp site/Atlas/404.html site/404.html
+          mkdir -p site
+          cp -r publish/demo/wwwroot/. site/
 
       - uses: actions/upload-pages-artifact@v3
         with:

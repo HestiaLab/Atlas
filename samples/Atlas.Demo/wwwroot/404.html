@@ -4,14 +4,15 @@
     <meta charset="utf-8" />
     <title>Atlas Demo</title>
     <script>
-        // GitHub Pages SPA fallback: unknown paths are redirected to the
-        // Blazor WASM application root so history routing keeps working.
+        // GitHub Pages SPA fallback: redirect only HTML page navigations
+        // (paths without a file extension) to the app root so client-side
+        // routing works. Asset requests (.js/.css/.dll/.wasm/...) must NOT
+        // be redirected, otherwise a missing asset would loop forever.
         (function () {
-            var base = "/Atlas/";
-            if (window.location.pathname.indexOf(base) === 0) {
-                window.location.replace(base + window.location.search + window.location.hash);
-            } else {
-                window.location.replace(base);
+            var path = window.location.pathname;
+            var lastSegment = path.substring(path.lastIndexOf("/") + 1);
+            if (lastSegment.indexOf(".") === -1) {
+                window.location.replace("/Atlas/" + window.location.search + window.location.hash);
             }
         })();
     </script>
