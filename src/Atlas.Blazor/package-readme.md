@@ -2,19 +2,15 @@
 
 **A dockable workspace component library for Blazor.**
 
-Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout
-persistence for IDEs, designers, admin consoles, and other complex web
-applications. The package embeds the UI-independent layout engine
-(`Atlas.Core`), so a single reference gives you the full workspace.
+Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout persistence for IDEs, designers, admin consoles, and other complex web applications. The package embeds the UI-independent layout engine (`Atlas.Core`), so a single reference gives you the full workspace.
 
 ## Install
 
 ```xml
-<PackageReference Include="Atlas.Blazor" Version="0.1.0" />
+<PackageReference Include="Atlas.Blazor" Version="0.2.0" />
 ```
 
-The package depends only on `Microsoft.AspNetCore.Components.Web`; `Atlas.Core`
-is embedded, so no additional Atlas references are needed.
+The package depends only on `Microsoft.AspNetCore.Components.Web`; `Atlas.Core` is embedded, so no additional Atlas references are needed.
 
 ## Quick Start
 
@@ -31,50 +27,48 @@ builder.Services.AddAtlasWorkspace();
 await builder.Build().RunAsync();
 ```
 
-Create a workspace from a definition and render it with the host:
-
-```csharp
-[Inject]
-private IAtlasWorkspaceFactory Factory { get; set; } = null!;
-
-private IAtlasWorkspace? workspace;
-
-protected override void OnInitialized()
-{
-    var result = Factory.Create(AtlasDemoWorkspaceDefinition.Create("atlas-demo"));
-    if (!result.Succeeded || result.Value is null)
-    {
-        throw new InvalidOperationException(result.Error?.DiagnosticId ?? "Workspace initialization failed.");
-    }
-
-    workspace = result.Value;
-    workspace.Changed += OnWorkspaceChanged;
-}
-```
+Declare the layout inside the host with the definition components:
 
 ```razor
-<AtlasWorkspaceHost Workspace="@workspace"
-                    WorkspaceOwnership="WorkspaceOwnership.External"
-                    EnableInteractions="true">
-    <ContentRoutes>
-        <AtlasContentRoute Kind="my-tool">
-            <ChildContent Context="content">
-                <MyToolPanel />
-            </ChildContent>
-        </AtlasContentRoute>
-    </ContentRoutes>
+<AtlasWorkspaceHost WorkspaceId="my-workspace">
+    <AtlasSplitDefinition Axis="SplitAxis.InlineChildren">
+        <AtlasToolGroupDefinition LogicalRegion="LogicalRegion.InlineStartUpper">
+            <AtlasToolItemDefinition Id="project" Kind="my-tool" Title="Project" />
+        </AtlasToolGroupDefinition>
+        <AtlasDocumentGroupDefinition>
+            <AtlasDocumentItemDefinition Id="program" Kind="my-editor" Title="Program.cs" />
+        </AtlasDocumentGroupDefinition>
+    </AtlasSplitDefinition>
 </AtlasWorkspaceHost>
 ```
 
-A complete runnable consumer lives in the [Atlas.Demo sample](https://github.com/wubing7755/Atlas/tree/main/samples/Atlas.Demo).
+The host collects the declarations, builds the workspace, and reconciles it atomically. You can also build the layout programmatically with `IAtlasWorkspaceFactory.Create(...)`. Content registered through `AtlasContentRoute` components (or the content map) is rendered inside tool panels and editor tabs.
+
+A complete runnable consumer lives in the [Atlas.Demo sample](https://github.com/wubing7755/Atlas/tree/main/samples/Atlas.Demo), and the [Using Atlas guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md) walks through both styles in depth.
+
+## Theme Customization
+
+Atlas exposes its visual style through documented `--atlas-*` CSS variables (colors, sizes, layering, opacity). Override them in your own stylesheet to theme the workspace without `!important` or internal selectors:
+
+```css
+.atlas-v2-workspace {
+  --atlas-accent: #d33;
+  --atlas-surface: #fffdf7;
+  --atlas-splitter-size: 0.375rem;
+}
+```
+
+See the [theming guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/theming.md) for the full variable contract.
 
 ## Core Capabilities
 
 - Tool Panel and Document Tab workspaces
 - Panel and tab drag-and-drop, docking, and cross-Group moves
-- Splitter mouse dragging and keyboard resizing
+- Five-zone drop preview (left/right/top/bottom/center) when docking tabs
+- Splitter mouse dragging and keyboard resizing, with elastic-absorb sizing
 - Layout history with undo and redo
 - XML layout persistence, restore, and presets
+- CSS variable theming contract for consumer customization
 - Blazor content hosting with a SandboxedFrame security boundary
 - Multi-Workspace, multi-Host state and DOM isolation
 - ARIA, focus coordination, and reduced-motion support
@@ -83,6 +77,7 @@ A complete runnable consumer lives in the [Atlas.Demo sample](https://github.com
 
 - [Atlas repository](https://github.com/wubing7755/Atlas)
 - [Using Atlas (worked example)](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md)
+- [Styling and theming](https://github.com/wubing7755/Atlas/blob/main/docs/en/theming.md)
 - [Software Requirements Specification](https://github.com/wubing7755/Atlas/blob/main/docs/en/SRS.md)
 - [Architecture Overview](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/architecture-overview.md)
 - [ADR index](https://github.com/wubing7755/Atlas/blob/main/docs/en/adr/README.md)

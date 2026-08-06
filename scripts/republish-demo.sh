@@ -14,7 +14,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Keep in sync with samples/Atlas.Demo/Directory.Packages.props.
-PACKAGE_VERSION="0.1.0"
+PACKAGE_VERSION="0.2.0"
 
 echo "==> [1/4] pack Atlas.Blazor $PACKAGE_VERSION"
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
