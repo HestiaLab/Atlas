@@ -6,7 +6,7 @@ import {
   isValidControllerIdentity,
   isSupportedProtocolVersion
 } from "../ClientScripts/protocol";
-import { AtlasInteractionController } from "../ClientScripts/controller";
+import { AtlasInteractionController, documentTargetKind } from "../ClientScripts/controller";
 import type {
   AtlasInteractionMessage,
   AtlasDotNetReceiver
@@ -1364,6 +1364,32 @@ test("document drag crosses threshold previews and commits one host-scoped inten
   assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
   assert.equal(dragPreview(fixture), undefined);
   fixture.controller.dispose();
+});
+
+test("documentTargetKind maps the five dock zones on the group body", () => {
+  const rect = { left: 0, top: 0, width: 400, height: 200 } as DOMRect;
+  const cases: Array<[number, number, string]> = [
+    // 25% 边缘带内 → 方向区
+    [10, 100, "document-inline-start"],
+    [390, 100, "document-inline-end"],
+    [200, 10, "document-block-start"],
+    [200, 190, "document-block-end"],
+    // 中心 50%×50% → center
+    [200, 100, "document-center"],
+    // 边界（25% 分界线本身归中心）
+    [99, 100, "document-inline-start"],
+    [100, 100, "document-center"],
+    [300, 100, "document-center"],
+    [301, 100, "document-inline-end"],
+    [200, 49, "document-block-start"],
+    [200, 50, "document-center"],
+    [200, 151, "document-block-end"],
+    // 角部：同距离时稳定取 inline-start（数组顺序 + stable sort）
+    [10, 10, "document-inline-start"]
+  ];
+  for (const [x, y, expected] of cases) {
+    assert.equal(documentTargetKind(rect, x, y), expected, `at (${x}, ${y})`);
+  }
 });
 
 test("drag terminal paths cancel without callback and generation update expires session", async () => {
