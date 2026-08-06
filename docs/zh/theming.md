@@ -10,7 +10,7 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 <link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/atlas.css" />
 ```
 
-这会加载默认主题。默认值使用浏览器系统颜色（`Highlight`、`Canvas`、`CanvasText`），因此组件开箱即用跟随操作系统外观。
+这会加载默认主题。默认值使用 CSS 系统颜色（`Highlight`、`Canvas`、`CanvasText`），由浏览器解析为平台界面颜色——例如在 Windows/Chrome 上 `Highlight` 解析为系统强调色，`Canvas`/`CanvasText` 解析为浅色模式的白底黑字。只有当浏览器配置为跟随系统明暗模式时，它们才会随之变化；具体解析值取决于浏览器与操作系统设置。
 
 ## 2. 覆盖变量（推荐）
 

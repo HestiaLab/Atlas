@@ -13,9 +13,13 @@ these variables — no `!important`, no internal selectors.
 <link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/atlas.css" />
 ```
 
-This loads the default theme. The defaults use browser system colors
-(`Highlight`, `Canvas`, `CanvasText`), so the component follows the OS
-appearance out of the box.
+This loads the default theme. The defaults use CSS system colors
+(`Highlight`, `Canvas`, `CanvasText`), which the browser resolves to
+platform interface colors — on Windows/Chrome, for example, `Highlight`
+resolves to the system accent color and `Canvas`/`CanvasText` resolve to
+the light-mode white/black. They follow the OS light/dark preference only
+when the browser is configured to follow the system theme, and the exact
+resolved values depend on the browser and platform.
 
 ## 2. Override variables (recommended)
 
