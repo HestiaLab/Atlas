@@ -171,7 +171,7 @@
 | REQ-NF-006 | Verified | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | [P7 evidence](./p7-content-lifetime-security.md): automation, real browser, and Phase Exit. |
 | REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/real accessibility tree verify the existing chrome; unimplemented controls and full focus-matrix gaps remain. |
 | REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md): Node + real-browser dynamic change, dispose, and CSS fallback. |
-| REQ-NF-009 | Not Started | — | New ADR-0023 theming contract; no implementation or evidence yet. |
+| REQ-NF-009 | Implemented | DES-NFR-005、DES-PRJ-002 | [ADR-0023](../adr/0023-css-variable-theming.md) contract: atlas.css tokenized, real-browser default + `--atlas-accent` override verified; [theming guide](../theming.md) published. |
 
 ## Audit Interpretation
 
