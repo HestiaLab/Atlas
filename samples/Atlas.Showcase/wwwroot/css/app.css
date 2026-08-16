@@ -353,19 +353,30 @@ button { font: inherit; }
 }
 
 .showcase-card {
-    margin: 0.5rem;
-    border: 1px solid var(--showcase-border);
-    border-radius: 0.125rem;
-    background: var(--showcase-surface);
+    padding: 0.5rem 0.625rem;
     color: var(--showcase-ink);
     font-size: 0.8125rem;
 }
 
+.showcase-req-line {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.showcase-req-line .req {
+    color: var(--showcase-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
 .showcase-card-title {
-    padding: 0.4rem 0.6rem;
+    margin: 0.25rem 0 0.5rem;
+    padding-bottom: 0.25rem;
     border-bottom: 1px solid var(--showcase-border);
-    background: var(--showcase-chrome);
-    color: var(--showcase-chrome-ink);
+    color: var(--showcase-ink);
     font-weight: 700;
     display: flex;
     align-items: center;
