@@ -10,9 +10,9 @@ applications. The project separates the layout domain model, Blazor rendering,
 and browser interaction into layers so that the UI layer never maintains a
 second copy of layout state.
 
-> **Live demo:** https://wubing7755.github.io/Atlas/
->
-> **Packages:** [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
+> **Consumer showcase:** [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+> (a DBC file viewer built on Atlas) · **Packages:**
+> [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
 > (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
 > [Releases](https://github.com/wubing7755/Atlas/releases)
 
@@ -41,7 +41,6 @@ Atlas.Core ← Atlas.Blazor ← Application
 |---------|----------------|
 | `Atlas.Core` | UI-independent layout model, operation engine, history, invariants, and persistence |
 | `Atlas.Blazor` | Blazor RenderTree, content hosting, CSS, and browser interaction |
-| `Atlas.Demo` | Frozen showcase that consumes the published `Atlas.Blazor` NuGet package; deployed to GitHub Pages. It only changes when a release bumps the referenced package version (or a showcase bug is fixed) |
 
 `Atlas.Core` does not depend on Blazor or JavaScript. Browser input is converted
 by TypeScript into structured intents, committed through Core operations into a
@@ -75,12 +74,10 @@ workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
 
 ## Sample Project
 
-[`samples/Atlas.Demo`](samples/Atlas.Demo/) is an independent Blazor WebAssembly
-consumer. It uses `Atlas.Core` and `Atlas.Blazor` from a local NuGet feed and
-does not reference Atlas source projects.
-
-Build and run instructions live in
-[`samples/Atlas.Demo/README.md`](samples/Atlas.Demo/README.md).
+The NuGet consumer showcase — a DBC file viewer built on Atlas — lives in the
+standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+repository. It consumes the published `Atlas.Blazor` package from nuget.org
+and does not reference Atlas source projects.
 
 ## Documentation
 

@@ -2344,15 +2344,14 @@ Project structure:
     Atlas.Blazor.Tests/      ← bUnit component tests
     browser/                 ← static real-browser verification fixtures
 
-  samples/
-    Atlas.Demo/              ← standalone Blazor WASM NuGet consumer (separate solution)
-
-Dependency direction: Atlas.Core ← Atlas.Blazor ← Atlas.Demo; test projects depend only
-on the artifact under test. Reverse dependencies are forbidden. `Atlas.Demo` is not part
-of `Atlas.sln`, does not belong to the Atlas dual-package implementation layer, and does
-not reference source projects; it only consumes `Atlas.Core` / `Atlas.Blazor` from the
-Release pack feed, so a clean restore of the main solution does not depend on locally
-pre-built packages. See ADR-0017 for details.
+Dependency direction: Atlas.Core ← Atlas.Blazor; test projects depend only
+on the artifact under test. Reverse dependencies are forbidden. The NuGet
+consumer showcase (a DBC file viewer) lives in the standalone
+`wubing7755/DbcView` repository: it is not part of `Atlas.sln`, does not
+belong to the Atlas implementation layer, and does not reference source
+projects; it only consumes `Atlas.Core` / `Atlas.Blazor` from the Release
+pack feed, so a clean restore of the main solution does not depend on
+locally pre-built packages. See ADR-0017 for details.
 
 V1/V2 coexistence rules:
 

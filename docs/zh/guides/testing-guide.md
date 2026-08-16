@@ -14,7 +14,7 @@ Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet c
 | Blazor component | `tests/Atlas.Blazor.Tests` | Host、projection、content、lifecycle、ARIA/metadata 合同 | 真实浏览器 diff、layout geometry、native pointer |
 | TypeScript | `src/Atlas.Blazor/tests` | protocol、controller 的可测试逻辑和 wire behavior | C# commit、Blazor lifecycle、完整浏览器集成 |
 | Browser fixture | `tests/browser` | 真实 DOM、pointer、sandbox、hardening 和跨层行为 | NuGet 包边界、consumer restore |
-| NuGet consumer | `samples/Atlas.Demo/tests` | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
+| NuGet consumer | `wubing7755/DbcView`（独立仓库） | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
 | Build/format/pack | solution、CI | 编译、analyzer、style、包内容 | 用户交互行为本身 |
 
 ## 2. Core 测试
@@ -145,16 +145,16 @@ python -m http.server 8765 --bind 127.0.0.1 --directory .
 
 ## 6. NuGet consumer 验证
 
-涉及以下内容时运行 independent sample：
+涉及以下内容时运行独立的 consumer showcase（`wubing7755/DbcView`）：
 
 - public API；
 - package metadata/dependencies；
 - RCL CSS/JavaScript；
 - DI registration；
 - content contract；
-- Demo 使用的布局行为。
+- consumer 使用的布局行为。
 
-执行顺序：
+该 showcase 是独立仓库，消费 nuget.org 上已发布的包（或用于预发布验证的本地 feed）。重新打包后，在 showcase 仓库内运行其自己的 restore/build/test/format：
 
 ```sh
 dotnet restore Atlas.sln
@@ -164,28 +164,22 @@ npm ci
 npm run build:js
 cd ../..
 
-# 0.0.0-dev 会重复使用同一包版本；先移除旧 artifact 和 Demo 的对应 NuGet 缓存。
-rm -f artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.core/0.0.0-dev \
-  samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
-
-dotnet pack src/Atlas.Core/Atlas.Core.csproj \
-  --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
+sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-上述删除只针对可重建的 `0.0.0-dev` Atlas 包缓存；不要删除其他包。记录新 nupkg 的 SHA-256，并使用 `--force --no-cache` restore，避免旧包产生假阳性。运行 Demo 复测静态资源时，硬刷新浏览器或更换端口。
+在 `wubing7755/DbcView` 仓库中：
+
+```sh
+dotnet restore DbcView.sln --configfile NuGet.Config --force --no-cache
+dotnet build DbcView.sln --no-restore
+dotnet test DbcView.sln --no-build --no-restore
+dotnet format DbcView.sln --verify-no-changes --no-restore
+```
+
+记录新 nupkg 的 SHA-256，并使用 `--force --no-cache` restore，避免旧包产生假阳性。运行 showcase 复测静态资源时，硬刷新浏览器或更换端口。
 
 ## 7. 改动到测试的选择矩阵
 

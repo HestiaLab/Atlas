@@ -95,9 +95,9 @@ Blazor 组件从 immutable snapshot 派生 UI，不在 component local state 保
 - `tests/fixtures`：跨 C#/TypeScript 的 protocol fixtures。
 - `tests/browser`：真实浏览器静态 fixtures；用于 bUnit/Node 无法证明的 DOM、pointer、sandbox 和 hardening 行为。
 
-### `samples/Atlas.Demo`
+### Consumer showcase（`wubing7755/DbcView`）
 
-这是独立 NuGet consumer，不在 `Atlas.sln` 中。它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该 sample 验证。
+NuGet consumer showcase（DBC 文件查看器）位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库，不在 `Atlas.sln` 中。它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该仓库验证。
 
 ## 4. 按改动类型工作
 
@@ -188,35 +188,26 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 Release，并在 Windows 和 Linux 上执行；需要在本地复现 CI 配置时，为 build/test 增加
 `--configuration Release`。本地单平台通过不等同于 CI 跨平台矩阵通过。
 
-### Pack 和独立 consumer
+### Pack
 
 ```sh
 dotnet restore Atlas.sln
 
 cd src/Atlas.Blazor
 npm ci
+npm run typecheck
+npm run test:js
 npm run build:js
 cd ../..
 
 # 单包发布（ADR-0019）：只发布 Atlas.Blazor，其内嵌 Atlas.Core.dll。
-# 0.0.0-dev 会重复使用同一包版本；先移除旧 artifact 和 Demo 的对应 NuGet 缓存。
-rm -f artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
-
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
-cd ../..
+sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-`samples/Atlas.Demo/NuGet.Config` 使用 `artifacts/packages` 作为 `atlas-local` feed，并把缓存放在 sample 自己的 `.packages/`。上述删除只针对可重建的 `0.0.0-dev` Atlas 包缓存；不要删除其他包。记录新 nupkg 的 SHA-256 后再 restore，可以证明本次验证使用的 artifact 身份。浏览器还可能缓存旧 RCL JavaScript/CSS，真实复测时应硬刷新或更换端口。
+NuGet consumer showcase（`wubing7755/DbcView`）通过自己的 restore/build/test/format 流程验证打包的包。记录新 nupkg 的 SHA-256 后再 restore，可以证明本次验证使用的 artifact 身份。浏览器还可能缓存旧 RCL JavaScript/CSS，真实复测时应硬刷新或更换端口。
 
 ## 6. 文档和 PR 同步
 

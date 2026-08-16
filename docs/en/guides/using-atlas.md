@@ -5,8 +5,9 @@
 This guide shows you how to build a real IDE-style workspace with Atlas,
 step by step. It complements the [architecture overview](./architecture-overview.md)
 and the [development guide](./development-guide.md): where those explain how
-Atlas works, this guide shows what a consumer writes. The example is the
-`samples/Atlas.Demo` consumer; every snippet below comes from code that runs.
+Atlas works, this guide shows what a consumer writes. The example follows the
+[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) consumer; every
+snippet below comes from code that runs.
 
 ## 1. Reference The Package
 
@@ -398,7 +399,7 @@ for the same key.
 
 ## Where To Go Next
 
-- The full runnable example: [`samples/Atlas.Demo`](../../../samples/Atlas.Demo/)
+- The full runnable example: [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
 - Product behavior: [SRS](../SRS.md)
 - Public API surface: [HLD §10.2](../HLD.md#102-normative-public-api-surface-manifest)
 - Accepted decisions: [ADR index](../adr/README.md)
