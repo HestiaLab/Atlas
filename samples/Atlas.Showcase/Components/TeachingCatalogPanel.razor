@@ -1,0 +1,31 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool" role="navigation" aria-label="Teaching catalog">
+    <ul class="showcase-list">
+        @foreach (var item in Items)
+        {
+            <li class="@(item.Key == ActiveKey ? "active" : "")" @onclick="() => OnSelect.InvokeAsync(item.Key)">
+                <span class="idx">@item.Index</span>
+                <span>@item.Title</span>
+            </li>
+        }
+    </ul>
+    <div class="showcase-card">
+        <div class="showcase-card-body">
+            <p>Every panel below demonstrates one Atlas capability. Click a row to
+            open the matching panel; use the <strong>Panels</strong> menu in the
+            top bar to hide, show, or move any panel.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<ShowcaseCatalogItem> Items { get; set; } = Array.Empty<ShowcaseCatalogItem>();
+
+    [Parameter]
+    public string? ActiveKey { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSelect { get; set; }
+}

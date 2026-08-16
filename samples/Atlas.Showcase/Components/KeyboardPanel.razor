@@ -1,0 +1,33 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Keyboard"
+                  Requirement="REQ-F-035 · REQ-F-116 · REQ-F-117"
+                  CodeSnippet="@Code">
+        <p>Atlas maps keyboard shortcuts to the same Core operations the
+        pointer uses. Arrow keys resize focused splitters;
+        <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+        cycles editor tabs;
+        <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
+        closes the active tab.</p>
+        <p><span class="showcase-tag accent">Try it</span> click an editor tab,
+        then press <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+        to switch. A command map can rebind any action.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"// Default bindings (subset)
+AtlasKeyboardCommand.NextTab            → Ctrl+Tab
+AtlasKeyboardCommand.CloseActiveDocument → Ctrl+W
+
+// Custom binding:
+var bindings = new[]
+{
+    new AtlasKeyboardBinding(
+        new AtlasKeyboardChord(""KeyQ"", control: true),
+        AtlasKeyboardCommand.CloseActiveDocument),
+};
+var map = new AtlasKeyboardCommandMap(bindings);
+<AtlasWorkspaceHost KeyboardCommands=""map"">…</AtlasWorkspaceHost>";
+}

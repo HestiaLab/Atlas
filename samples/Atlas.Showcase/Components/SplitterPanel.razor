@@ -1,0 +1,28 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Splitter"
+                  Requirement="REQ-F-073 · REQ-F-076"
+                  CodeSnippet="@Code">
+        <p>Dragging a splitter resizes adjacent panels with live preview and
+        commits once on release. Double-click equalizes. Splits honor
+        <code>SplitConstraints</code> min/max bounds.</p>
+        <p><span class="showcase-tag accent">Try it</span> drag the vertical
+        splitter between the left dock and the editor; double-click it to
+        equalize. Keyboard: focus a splitter and use arrow keys.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"var split = new SplitNode(
+    new LayoutNodeId(""main""),
+    SplitAxis.InlineChildren,
+    SplitBasis.Proportional(0.5),
+    firstId,
+    secondId,
+    new SplitConstraints(minFirst: 150, maxFirst: 380));
+
+// Resize commit (Core):
+await workspace.ExecuteAsync(new ResizeSplitOperation(
+    splitId, SplitBasis.FixedPixels(240, SplitAnchor.First)));";
+}

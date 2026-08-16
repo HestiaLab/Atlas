@@ -68,6 +68,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 示例项目
 
+仓库内的 [`samples/Atlas.Showcase`](samples/Atlas.Showcase/) 是框架公共 API 的教学演示——一个可运行的工作区，每个面板演示 Atlas 的一项能力并展示其背后的真实 API 代码。
+
 NuGet consumer showcase——一个基于 Atlas 的 DBC 文件查看器——位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库。它从 nuget.org 消费已发布的 `Atlas.Blazor` 包，不引用 Atlas 源码项目。
 
 ## 文档

@@ -1,0 +1,88 @@
+@namespace Atlas.Showcase.Components
+@using Atlas.Core.Layout
+@using Atlas.Core.Placement
+
+<header class="showcase-topbar" data-testid="showcase-top-toolbar">
+    <div class="showcase-brand" aria-label="Atlas Showcase">A</div>
+    <nav class="showcase-menu" aria-label="Showcase sections">
+        <button type="button">Getting Started</button>
+        <button type="button">Capabilities</button>
+        <button type="button">Theming</button>
+    </nav>
+    <div class="showcase-history" aria-label="Layout history">
+        <button type="button" disabled="@(!CanUndo)" @onclick="OnUndo" aria-label="Undo layout change">↶</button>
+        <button type="button" disabled="@(!CanRedo)" @onclick="OnRedo" aria-label="Redo layout change">↷</button>
+    </div>
+    <div class="showcase-actions">
+        <div class="showcase-quickmenu">
+            <button class="showcase-action" type="button" aria-haspopup="true" aria-expanded="@QuickMenuOpen" @onclick="ToggleMenu">
+                ☰ Panels
+            </button>
+            @if (QuickMenuOpen)
+            {
+                <div class="showcase-quickmenu-popup" role="menu" aria-label="Panel quick menu">
+                    @foreach (var group in Panels.GroupBy(p => p.Region))
+                    {
+                        <div class="showcase-quickmenu-group">@group.Key</div>
+                        @foreach (var panel in group)
+                        {
+                            <div class="showcase-quickmenu-row" role="menuitem">
+                                <span class="name" title="@panel.Title">@panel.Title</span>
+                                <span class="hint">@(IsPanelVisible(panel) ? "visible" : "hidden")</span>
+                                <button type="button" @onclick="() => OnTogglePanel(panel)" aria-label="Toggle @panel.Title">
+                                    @(IsPanelVisible(panel) ? "Hide" : "Show")
+                                </button>
+                            </div>
+                        }
+                    }
+                    <div class="showcase-quickmenu-group">Move to…</div>
+                    @foreach (var panel in Panels)
+                    {
+                        foreach (var region in (LogicalRegion[])Enum.GetValues(typeof(LogicalRegion)))
+                        {
+                            var target = region;
+                            <div class="showcase-quickmenu-row">
+                                <span class="name">@panel.Title → @target</span>
+                                <button type="button" @onclick="() => OnMovePanel(panel, target)" aria-label="Move @panel.Title to @target">
+                                    Move
+                                </button>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <span class="showcase-branch">atlas/showcase</span>
+        <button class="showcase-run" type="button" aria-label="Run showcase">▶</button>
+    </div>
+</header>
+
+@code {
+    [Parameter]
+    public bool CanUndo { get; set; }
+
+    [Parameter]
+    public bool CanRedo { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<ShowcasePanelEntry> Panels { get; set; } = Array.Empty<ShowcasePanelEntry>();
+
+    [Parameter]
+    public Func<ShowcasePanelEntry, bool> IsPanelVisible { get; set; } = static _ => true;
+
+    [Parameter]
+    public Func<ShowcasePanelEntry, Task> OnTogglePanel { get; set; } = static _ => Task.CompletedTask;
+
+    [Parameter]
+    public Func<ShowcasePanelEntry, LogicalRegion, Task> OnMovePanel { get; set; } = static (_, _) => Task.CompletedTask;
+
+    [Parameter]
+    public EventCallback OnUndo { get; set; }
+
+    [Parameter]
+    public EventCallback OnRedo { get; set; }
+
+    private bool QuickMenuOpen { get; set; }
+
+    private void ToggleMenu() => QuickMenuOpen = !QuickMenuOpen;
+}

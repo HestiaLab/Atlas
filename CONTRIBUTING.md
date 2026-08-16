@@ -87,9 +87,11 @@ maintenance requests.
 - Atlas domain, operation, history, and persistence code belongs in `src/Atlas.Core` and must not reference Blazor or JS interop.
 - Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
 - Browser verification fixtures belong in `tests/browser`.
-- The NuGet consumer showcase moved to the standalone
+- `samples/Atlas.Showcase` is the in-repo teaching demo of the public API; it
+  references Atlas source projects and is part of `Atlas.sln`.
+- The NuGet consumer showcase lives in the standalone
   [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository
-  (ADR-0017 boundary); Atlas itself keeps no application projects.
+  (ADR-0017 boundary); it is not part of `Atlas.sln`.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in
@@ -101,7 +103,8 @@ Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
 NuGet.org and GitHub Packages. The NuGet consumer showcase lives in the
 standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
 repository, which consumes the published package from nuget.org and verifies
-the consumer boundary independently.
+the consumer boundary independently. The in-repo `samples/Atlas.Showcase`
+teaching demo is covered by the main solution's build/test/format gates.
 
 ### Major-node release checklist
 

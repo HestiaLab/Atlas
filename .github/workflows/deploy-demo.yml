@@ -1,0 +1,57 @@
+name: Deploy Showcase to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      # Atlas.Showcase is the in-repo teaching demo. The deploy resolves the
+      # exact source revision of this branch — the Pages site always reflects
+      # the checked-out Atlas source, not a local pack or cache.
+      - name: Publish showcase
+        run: |
+          dotnet publish samples/Atlas.Showcase/Atlas.Showcase.csproj \
+            --configuration Release \
+            --output publish/showcase \
+            --source https://api.nuget.org/v3/index.json
+
+      # GitHub Pages project site maps the deployed artifact root to the
+      # /Atlas/ subpath, so the staged root must BE the site: no extra
+      # Atlas/ directory (that would serve /Atlas/Atlas/...). The dev
+      # index.html keeps base href="/" so local `dotnet run` works; the
+      # deployed copy must resolve assets from /Atlas/.
+      - name: Rewrite base href for the /Atlas/ subpath
+        run: |
+          sed -i 's|<base href="/" />|<base href="/Atlas/" />|' publish/showcase/wwwroot/index.html
+
+      - name: Stage site (artifact root maps to /Atlas/)
+        run: |
+          mkdir -p site
+          cp -r publish/showcase/wwwroot/. site/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - uses: actions/deploy-pages@v4
+        id: deployment

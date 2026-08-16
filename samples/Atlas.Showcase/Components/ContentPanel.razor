@@ -1,0 +1,28 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Content Registration"
+                  Requirement="REQ-F-006 · REQ-F-007 · REQ-F-008"
+                  CodeSnippet="@Code">
+        <p>Panels and tabs render components registered by <em>Kind</em>.
+        The effective Content Catalog merges startup DI registrations,
+        Host-local <code>AtlasContentRoute</code> declarations, and a
+        functional map.</p>
+        <p>This showcase registers every panel with an
+        <code>AtlasContentRoute</code> inside the Host (see
+        <code>ShowcaseWorkspace.razor</code>).</p>
+        <p><span class="showcase-tag accent">Try it</span> the panels you see
+        now are all route-registered content.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"<AtlasContentRoute Kind=""explorer"">
+  <ChildContent Context=""content"">
+    <ExplorerPanel />
+  </ChildContent>
+</AtlasContentRoute>
+
+// Alternative: register from Program.cs with DI
+builder.Services.AddAtlasContent<ExplorerPanel>(""explorer"");";
+}

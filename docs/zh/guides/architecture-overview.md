@@ -13,7 +13,7 @@ Atlas 是一个面向 Blazor 应用的 Dock Layout 组件库，提供工具面�
 - `Atlas.Core`：与 UI 无关的领域模型、操作引擎、历史和持久化。
 - `Atlas.Blazor`：Blazor 渲染、内容承载、CSS 和浏览器交互；依赖 `Atlas.Core`。
 
-NuGet consumer showcase（DBC 文件查看器）位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库，不属于主 solution，也不能引用 Atlas 源码项目。
+仓内教学演示 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 用可运行面板演示框架公共 API。NuGet consumer showcase（DBC 文件查看器）位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库，不属于主 solution，也不能引用 Atlas 源码项目。
 
 ## 2. 三个运行层
 
@@ -112,7 +112,7 @@ user input
 ## 5. 依赖和所有权边界
 
 ```text
-Atlas.Core ← Atlas.Blazor ← DbcView (consumer showcase)
+Atlas.Core ← Atlas.Blazor ← Atlas.Showcase (teaching demo)
 ```
 
 强制规则：

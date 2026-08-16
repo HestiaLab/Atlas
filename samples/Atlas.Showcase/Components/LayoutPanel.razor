@@ -1,0 +1,34 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Declarative Layout"
+                  Requirement="REQ-F-001 · REQ-F-002"
+                  CodeSnippet="@Code">
+        <p>Atlas layouts are declared with Razor components. Splits, groups,
+        tool panels, and editor tabs are ordinary components — the host
+        collects them and builds a validated workspace.</p>
+        <p>This showcase workspace is built with the programmatic API in
+        <code>ShowcaseWorkspaceDefinition.cs</code> (so the top-bar quick menu
+        can reach the workspace). The declarative form below produces the same
+        structure.</p>
+        <p><span class="showcase-tag accent">Try it</span> drag a panel header
+        to another region, or drag an editor tab to split the editor.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"<AtlasWorkspaceHost WorkspaceId=""demo"">
+  <TopToolbarContent>…</TopToolbarContent>
+  <StatusBarContent>…</StatusBarContent>
+  <ChildContent>
+    <AtlasSplitDefinition Axis=""SplitAxis.BlockChildren"">
+      <AtlasToolGroupDefinition LogicalRegion=""LogicalRegion.InlineStartUpper"">
+        <AtlasToolItemDefinition ContentKind=""explorer"" Title=""Explorer"" />
+      </AtlasToolGroupDefinition>
+      <AtlasDocumentGroupDefinition>
+        <AtlasDocumentItemDefinition ContentKind=""markdown"" Title=""Readme.md"" />
+      </AtlasDocumentGroupDefinition>
+    </AtlasSplitDefinition>
+  </ChildContent>
+</AtlasWorkspaceHost>";
+}

@@ -1,0 +1,30 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Theming"
+                  Requirement="REQ-NF-009"
+                  CodeSnippet="@Code">
+        <p>Atlas exposes its visual style through documented
+        <code>--atlas-*</code> CSS variables (ADR-0023). Override them in your
+        own stylesheet to theme the workspace without <code>!important</code>
+        or internal selectors. This showcase drives every Atlas token from a
+        <code>--showcase-*</code> palette in <code>app.css</code>.</p>
+        <p><span class="showcase-tag accent">Try it</span> the accent you see
+        on drop zones and focus rings is <code>--showcase-accent</code>; it
+        follows the OS light/dark preference via <code>color-scheme</code>.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"/* app.css — loaded after atlas.css */
+.atlas-v2-workspace {
+  --atlas-accent: #0b6bcb;      /* drop zones, focus, drag preview */
+  --atlas-surface: #ffffff;     /* panel backgrounds */
+  --atlas-text: #26303a;        /* labels */
+  --atlas-splitter-size: 0.25rem;
+  --atlas-radius: 0.125rem;
+}
+
+/* Dark palette follows the OS via color-scheme:
+   :root { color-scheme: dark } resolves system colors to dark. */";
+}

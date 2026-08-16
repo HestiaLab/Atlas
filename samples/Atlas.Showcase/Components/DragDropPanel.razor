@@ -1,0 +1,27 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="Drag & Dock"
+                  Requirement="REQ-F-050 · REQ-F-055 · REQ-F-058"
+                  CodeSnippet="@Code">
+        <p>Atlas implements pointer drag without the browser's native drag
+        image. Drag a document tab to the edge of an editor to dock it in a
+        new direction, or to the center to append it. Drop zones highlight in
+        the accent color.</p>
+        <p><span class="showcase-tag accent">Try it</span> drag the
+        <strong>Quick Start</strong> tab onto the left edge of the editor, or
+        drag a panel header from the toolbar into a region.</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"// No configuration needed: AtlasWorkspaceHost wires the drag
+// session automatically when EnableInteractions=""true"".
+<AtlasWorkspaceHost Workspace=""workspace"" EnableInteractions=""true"">
+  …
+</AtlasWorkspaceHost>
+
+// Programmatic docking (Core):
+await workspace.ExecuteAsync(new DockDocumentOperation(
+    itemId, targetGroupId, DocumentDockZone.InlineStart));";
+}

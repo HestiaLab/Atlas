@@ -1,0 +1,66 @@
+@namespace Atlas.Showcase.Components
+@using Atlas.Core.Persistence
+
+<div class="showcase-tool">
+    <TeachingCard Title="Persistence"
+                  Requirement="REQ-F-085 · REQ-F-086"
+                  CodeSnippet="@Code">
+        <p>Atlas serializes the committed layout to a versioned XML document
+        (V2 schema) and can restore it atomically. Presets are named layout
+        snapshots; auto-persistence debounces saves for you.</p>
+        <p><span class="showcase-tag accent">Try it</span> drag a panel or tab,
+        then click <button class="showcase-action" type="button" @onclick="Capture">Capture</button>
+        to snapshot the current layout. Restore with
+        <button class="showcase-action" type="button" @onclick="Restore">Restore</button>.</p>
+        @if (LastEvent is not null)
+        {
+            <p><span class="showcase-tag ok">@LastEvent</span></p>
+        }
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"// Serialize the committed snapshot to V2 XML
+var serializer = new AtlasXmlLayoutSerializer();
+string xml = serializer.Serialize(workspace.Current);
+
+// Restore atomically (validated candidate, history barrier)
+var doc = serializer.Deserialize(xml, workspace.Id).Value;
+await workspace.ExecuteAsync(new RestoreWorkspaceOperation(doc));";
+
+    private string? lastXml;
+
+    [Parameter]
+    public Func<Task<string?>>? CaptureLayout { get; set; }
+
+    [Parameter]
+    public Func<string, Task>? RestoreLayout { get; set; }
+
+    [Parameter]
+    public string? LastEvent { get; set; }
+
+    private async Task Capture()
+    {
+        if (CaptureLayout is null)
+        {
+            return;
+        }
+
+        lastXml = await CaptureLayout();
+        if (LastEvent is not null)
+        {
+            LastEvent = "Layout captured";
+        }
+    }
+
+    private async Task Restore()
+    {
+        if (RestoreLayout is null || lastXml is null)
+        {
+            return;
+        }
+
+        await RestoreLayout(lastXml);
+        LastEvent = "Layout restored";
+    }
+}
