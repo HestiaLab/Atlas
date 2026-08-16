@@ -6,7 +6,8 @@
 
 Atlas 为 IDE、设计器、管理后台和其他复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。项目将布局领域模型、Blazor 渲染和浏览器交互分层，避免 UI 层维护第二份布局状态。
 
-> **在线演示：** https://wubing7755.github.io/Atlas/
+> **Consumer showcase：** [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+> （一个基于 Atlas 的 DBC 文件查看器）·
 >
 > **NuGet 包：** [NuGet.org 上的 Atlas.Blazor](https://www.nuget.org/packages/Atlas.Blazor)
 > （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
@@ -37,7 +38,6 @@ Atlas.Core ← Atlas.Blazor ← Application
 |------|------|
 | `Atlas.Core` | 与 UI 无关的布局模型、操作引擎、历史、不变量和持久化 |
 | `Atlas.Blazor` | Blazor RenderTree、内容承载、CSS 和浏览器交互 |
-| `Atlas.Demo` | 冻结的展示示例：消费已发布的 `Atlas.Blazor` NuGet 包并部署到 GitHub Pages。仅在发布版本更新引用的包版本（或修复展示 bug）时变更 |
 
 `Atlas.Core` 不依赖 Blazor 或 JavaScript。浏览器输入由 TypeScript 转换为结构化 intent，经 Core operation 提交后生成新的 immutable snapshot，再由 Blazor 投影到 DOM。
 
@@ -68,9 +68,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 示例项目
 
-[`samples/Atlas.Demo`](samples/Atlas.Demo/) 是一个独立 Blazor WebAssembly consumer。它从本地 NuGet feed 使用 `Atlas.Core` 和 `Atlas.Blazor`，不引用 Atlas 源码项目。
-
-构建和运行方式见 [`samples/Atlas.Demo/README.md`](samples/Atlas.Demo/README.md)。
+NuGet consumer showcase——一个基于 Atlas 的 DBC 文件查看器——位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库。它从 nuget.org 消费已发布的 `Atlas.Blazor` 包，不引用 Atlas 源码项目。
 
 ## 文档
 

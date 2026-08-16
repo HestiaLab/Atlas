@@ -38,8 +38,8 @@ Atlas enforces a layered ownership:
   Blazor, no JS.
 - `Atlas.Blazor` — rendering, content hosting, CSS, JS interop. Depends on
   Core.
-- `samples/Atlas.Demo` — an independent NuGet consumer, never referenced by
-  the framework.
+- `wubing7755/DbcView` — the standalone NuGet consumer showcase, never
+  referenced by the framework.
 
 A behavior change to close/selection belongs in `Atlas.Core`. The planner
 lives in `src/Atlas.Core/Operations/Engine/`, and the operation request object
@@ -135,18 +135,14 @@ If you add or change a public symbol:
 - Check whether an ADR is required (public API, package structure, protocol,
   persistence compatibility, or security boundaries).
 - Update the affected SRS/HLD/ADR/traceability sections.
-- Pack both packages and verify through `samples/Atlas.Demo`:
+- Pack the single package (ADR-0019) and verify through the consumer showcase:
 
 ```sh
-dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-cd ../..
 ```
+
+The standalone `wubing7755/DbcView` repository then restores, builds, tests,
+and formats against the packed package (or the published nuget.org version).
 
 ## 9. Commit With Conventional Commits
 

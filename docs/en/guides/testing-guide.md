@@ -15,7 +15,7 @@ change.
 | Blazor component | `tests/Atlas.Blazor.Tests` | Host, projection, content, lifecycle, ARIA/metadata contracts | real-browser diff, layout geometry, native pointer |
 | TypeScript | `src/Atlas.Blazor/tests` | protocol, testable controller logic, and wire behavior | C# commit, Blazor lifecycle, full browser integration |
 | Browser fixture | `tests/browser` | real DOM, pointer, sandbox, hardening, and cross-layer behavior | NuGet package boundary, consumer restore |
-| NuGet consumer | `samples/Atlas.Demo/tests` | PackageReference, RCL assets, public API, portability | all framework-internal boundary cases |
+| NuGet consumer | `wubing7755/DbcView` (standalone repo) | PackageReference, RCL assets, public API, portability | all framework-internal boundary cases |
 | Build/format/pack | solution, CI | compilation, analyzers, style, package content | user interaction behavior itself |
 
 ## 2. Core Tests
@@ -170,16 +170,18 @@ replace current re-verification.
 
 ## 6. NuGet Consumer Verification
 
-Run the independent sample when touching:
+Run the standalone consumer showcase (`wubing7755/DbcView`) when touching:
 
 - public API;
 - package metadata/dependencies;
 - RCL CSS/JavaScript;
 - DI registration;
 - content contracts;
-- Demo layout behavior.
+- consumer layout behavior.
 
-Execution order:
+The showcase is a separate repository that consumes the published package
+from nuget.org (or a local feed for pre-release verification). Repack the
+package, then run the showcase's own restore/build/test/format flow:
 
 ```sh
 dotnet restore Atlas.sln
@@ -189,33 +191,24 @@ npm ci
 npm run build:js
 cd ../..
 
-# 0.0.0-dev reuses the same package version; remove old artifacts and the
-# Demo's matching NuGet cache first.
-rm -f artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.core/0.0.0-dev \
-  samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
-
-dotnet pack src/Atlas.Core/Atlas.Core.csproj \
-  --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Core.0.0.0-dev.nupkg \
-  artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
+sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-The deletions above target only the rebuildable `0.0.0-dev` Atlas package
-cache; do not delete other packages. Record the new nupkg SHA-256 values and
-use `--force --no-cache` restore to avoid false positives from old packages.
-When re-testing static assets by running the Demo, hard-refresh the browser or
-change the port.
+In the `wubing7755/DbcView` repository:
+
+```sh
+dotnet restore DbcView.sln --configfile NuGet.Config --force --no-cache
+dotnet build DbcView.sln --no-restore
+dotnet test DbcView.sln --no-build --no-restore
+dotnet format DbcView.sln --verify-no-changes --no-restore
+```
+
+Record the new nupkg SHA-256 values and use `--force --no-cache` restore to
+avoid false positives from old packages. When re-testing static assets by
+running the showcase, hard-refresh the browser or change the port.
 
 ## 7. Test Selection Matrix By Change
 

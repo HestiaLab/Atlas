@@ -49,9 +49,13 @@ src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazo
 tests/Atlas.Core.Tests/   Core xUnit tests
 tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
 tests/browser/            Static real-browser verification fixtures
-samples/Atlas.Demo/       Independent NuGet consumer sample and tests
 docs/                     SRS, HLD, traceability and ADRs
 ```
+
+The NuGet consumer showcase (the DBC viewer application) moved to the
+standalone repository [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView);
+Atlas itself keeps no application projects. A framework-focused demo may later
+occupy `samples/`.
 
 ## Build And Verification
 
@@ -79,18 +83,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 # Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 
-# Verify the independent NuGet consumer sample after packing
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
-cd ../..
-
-# One-shot alternative: republish Atlas.Blazor (0.1.0, pinned to the demo's
-# central package version) to artifacts/packages, clear the demo's .packages
-# cache, and run the demo restore/build/test/format verification above.
-bash scripts/republish-demo.sh
+# The NuGet consumer showcase lives in the standalone wubing7755/DbcView
+# repository; it consumes the published package and verifies itself.
 ```
 
 ## Ownership Rules
@@ -99,8 +93,9 @@ bash scripts/republish-demo.sh
   against `docs/en/SRS.md`.
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
-- `samples/Atlas.Demo` is a portable NuGet consumer, is not part of `Atlas.sln`, and
-  must not reference or link Atlas source projects or copy RCL assets.
+- `samples/` is reserved for a future framework-focused demo; the business
+  DBC viewer showcase lives in the standalone `wubing7755/DbcView` repository
+  and is not part of `Atlas.sln`.
 - `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
 - Tests should cover behaviour, not accidental implementation details.
 - Keep NuGet dependency graph narrow — prefer framework types over third-party packages.

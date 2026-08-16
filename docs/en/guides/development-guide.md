@@ -121,12 +121,13 @@ Must follow:
 - `tests/browser`: real-browser static fixtures for DOM, pointer, sandbox, and
   hardening behavior that bUnit/Node cannot prove.
 
-### `samples/Atlas.Demo`
+### Consumer showcase (`wubing7755/DbcView`)
 
-This is an independent NuGet consumer and is not in `Atlas.sln`. It cannot
-reference Atlas source projects, internal APIs, linked source, or test
-helpers. After changing package content, RCL assets, or consumer-facing APIs,
-repack and verify through this sample.
+The NuGet consumer showcase (a DBC file viewer) lives in the standalone
+[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository and is
+not in `Atlas.sln`. It cannot reference Atlas source projects, internal APIs,
+linked source, or test helpers. After changing package content, RCL assets, or
+consumer-facing APIs, repack and verify through that repository.
 
 ## 4. Working By Change Type
 
@@ -200,7 +201,8 @@ require an ADR.
 2. Update the matching Core/Blazor `PublicAPI.Unshipped.txt`.
 3. Add a compile-time or behavioral contract test.
 4. Update the genuinely affected SRS/HLD/ADR/traceability sections.
-5. Pack both NuGet packages and verify with the independent Demo.
+5. Pack the NuGet package and verify with the consumer showcase
+   (`wubing7755/DbcView`).
 
 Do not make API checks pass by deleting baselines, weakening analyzers, or
 hiding warnings.
@@ -230,41 +232,30 @@ reproduce the CI configuration locally, add `--configuration Release` to
 build/test. A local single-platform pass does not equal the CI cross-platform
 matrix.
 
-### Pack And Independent Consumer
+### Pack
 
 ```sh
 dotnet restore Atlas.sln
 
 cd src/Atlas.Blazor
 npm ci
+npm run typecheck
+npm run test:js
 npm run build:js
 cd ../..
 
 # Single-package distribution (ADR-0019): only Atlas.Blazor is published;
-# it embeds Atlas.Core.dll. 0.0.0-dev reuses the same package version;
-# remove old artifacts and the Demo's matching NuGet cache first.
-rm -f artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-rm -rf samples/Atlas.Demo/.packages/atlas.blazor/0.0.0-dev
-
+# it embeds Atlas.Core.dll.
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
   --configuration Release --no-restore --output artifacts/packages
 
-sha256sum artifacts/packages/Atlas.Blazor.0.0.0-dev.nupkg
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
-cd ../..
+sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-`samples/Atlas.Demo/NuGet.Config` uses `artifacts/packages` as the
-`atlas-local` feed and keeps its cache under the sample's own `.packages/`.
-The deletions above target only the rebuildable `0.0.0-dev` Atlas package
-cache; do not delete other packages. Record the new nupkg SHA-256 values
-before restore to prove which artifact this verification used. Browsers may
-also cache old RCL JavaScript/CSS; hard-refresh or change the port for real
+The NuGet consumer showcase (`wubing7755/DbcView`) verifies the packed package
+against its own restore/build/test/format flow. Record the new nupkg SHA-256
+values before restore to prove which artifact that verification used. Browsers
+may also cache old RCL JavaScript/CSS; hard-refresh or change the port for real
 re-verification.
 
 ## 6. Documentation and PR Sync

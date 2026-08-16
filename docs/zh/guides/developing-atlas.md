@@ -28,7 +28,7 @@ Atlas 强制分层所有权：
 
 - `Atlas.Core` — 领域模型、操作、不变量、持久化。无 Blazor、无 JS。
 - `Atlas.Blazor` — 渲染、内容承载、CSS、JS interop。依赖 Core。
-- `samples/Atlas.Demo` — 独立 NuGet consumer，框架从不引用它。
+- `wubing7755/DbcView` — 独立的 NuGet consumer showcase，框架从不引用它。
 
 关闭/选择的行为改动属于 `Atlas.Core`。planner 位于 `src/Atlas.Core/Operations/Engine/`，操作请求对象位于 `src/Atlas.Core/Operations/`。
 
@@ -113,18 +113,13 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 - 添加编译时或行为 contract test。
 - 检查是否需要 ADR（公共 API、包结构、协议、持久化兼容性或安全边界）。
 - 更新受影响的 SRS/HLD/ADR/追溯段落。
-- 打包两个包并通过 `samples/Atlas.Demo` 验证：
+- 打包单个包（ADR-0019）并通过 consumer showcase 验证：
 
 ```sh
-dotnet pack src/Atlas.Core/Atlas.Core.csproj --configuration Release --no-restore --output artifacts/packages
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
-
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config --force --no-cache
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-cd ../..
 ```
+
+独立的 `wubing7755/DbcView` 仓库随后对打包的包（或已发布的 nuget.org 版本）执行 restore/build/test/format。
 
 ## 9. 用 Conventional Commits 提交
 

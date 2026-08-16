@@ -14,7 +14,6 @@
 - [ ] `dotnet test Atlas.sln` — all xUnit tests pass
 - [ ] `dotnet format Atlas.sln --verify-no-changes` — no style violations
 - [ ] `npm ci && npm run typecheck && npm run test:js && npm run build:js` in `src/Atlas.Blazor`
-- [ ] Manual smoke: `dotnet run --project src/Atlas.Demo` and inspect layout
 - [ ] Not run; reason:
 
 ## Impact

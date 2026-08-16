@@ -44,7 +44,7 @@ Declare the layout inside the host with the definition components:
 
 The host collects the declarations, builds the workspace, and reconciles it atomically. You can also build the layout programmatically with `IAtlasWorkspaceFactory.Create(...)`. Content registered through `AtlasContentRoute` components (or the content map) is rendered inside tool panels and editor tabs.
 
-A complete runnable consumer lives in the [Atlas.Demo sample](https://github.com/wubing7755/Atlas/tree/main/samples/Atlas.Demo), and the [Using Atlas guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md) walks through both styles in depth.
+A complete runnable consumer lives in the [DbcView showcase](https://github.com/wubing7755/DbcView), and the [Using Atlas guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md) walks through both styles in depth.
 
 ## Theme Customization
 

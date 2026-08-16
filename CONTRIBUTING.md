@@ -45,14 +45,6 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 # Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
-
-# Verify the independent consumer sample against the packed feed
-cd samples/Atlas.Demo
-dotnet restore Atlas.Demo.sln --configfile NuGet.Config
-dotnet build Atlas.Demo.sln --no-restore
-dotnet test Atlas.Demo.sln --no-build --no-restore
-dotnet format Atlas.Demo.sln --verify-no-changes --no-restore
-cd ../..
 ```
 
 ## Branches
@@ -95,9 +87,9 @@ maintenance requests.
 - Atlas domain, operation, history, and persistence code belongs in `src/Atlas.Core` and must not reference Blazor or JS interop.
 - Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
 - Browser verification fixtures belong in `tests/browser`.
-- The maintainer-approved `samples/Atlas.Demo` project is an independent NuGet consumer under
-  ADR-0017. It stays outside `Atlas.sln`, never references Atlas source projects, and must remain
-  portable by changing only its NuGet feed or package version.
+- The NuGet consumer showcase moved to the standalone
+  [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository
+  (ADR-0017 boundary); Atlas itself keeps no application projects.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
 - The accepted runtime/package/toolchain baseline is documented in
@@ -106,37 +98,30 @@ maintenance requests.
 ## Releases
 
 Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
-NuGet.org and GitHub Packages, and showcases the demo on GitHub Pages. The
-demo (`samples/Atlas.Demo`) is frozen: it consumes the published package and
-only changes to bump the referenced version or fix a showcase bug.
+NuGet.org and GitHub Packages. The NuGet consumer showcase lives in the
+standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+repository, which consumes the published package from nuget.org and verifies
+the consumer boundary independently.
 
 ### Major-node release checklist
 
 1. Iterate on `src/Atlas.Core` / `src/Atlas.Blazor` (SRS traceability, tests,
    format, CI green).
-2. Bump the version in **all four touchpoints** (grep the old version string
-   to be sure): `samples/Atlas.Demo/Directory.Packages.props`,
-   `scripts/republish-demo.sh`, `.github/workflows/ci.yml`,
-   `src/Atlas.Blazor/package-readme.md`.
-3. Verify locally: `bash scripts/republish-demo.sh` (packs the new version,
-   clears the demo `.packages` cache, restores/builds/tests/format the demo).
-4. Open the release-prep PR (CI pack job must pass — it re-verifies the demo
-   against the packed package).
-5. Publish the nupkg to NuGet.org and GitHub Packages (PAT with
+2. Bump the version in **all three touchpoints** (grep the old version string
+   to be sure): `src/Atlas.Blazor/package-readme.md`,
+   `.github/workflows/ci.yml` (`-p:PackageVersion=`), and the
+   `Directory.Packages.props` of the standalone DbcView consumer repository.
+3. Open the release-prep PR (CI pack job must pass).
+4. Publish the nupkg to NuGet.org and GitHub Packages (PAT with
    `write:packages`; never commit credentials).
-6. Tag the release (`git tag -a X.Y.Z`) and create a GitHub Release with the
+5. Tag the release (`git tag -a X.Y.Z`) and create a GitHub Release with the
    nupkg asset.
-7. Deploy the demo to GitHub Pages: run the `Deploy Demo to GitHub Pages`
-   workflow (`deploy-demo.yml`, manual trigger). It `dotnet publish`s the demo
-   with `--source https://api.nuget.org/v3/index.json` — the Pages site always
-   reflects the officially published NuGet version, never a local pack or
-   cache.
 
 ### Version bump pitfalls
 
-- The four version touchpoints above must agree; a stale `ci.yml`
-  `-p:PackageVersion=` fails the pack job with `NU1102`.
-- The Pages deploy resolves the exact version pinned in the demo's
+- The `ci.yml` `-p:PackageVersion=` must match the published release; a stale
+  value fails the pack job with `NU1102`.
+- The DbcView consumer resolves the exact version pinned in its
   `Directory.Packages.props` from nuget.org — publish the package **before**
-  deploying, or the workflow fails (which doubles as a "package is
+  bumping DbcView, or its restore fails (which doubles as a "package is
   consumable" check).

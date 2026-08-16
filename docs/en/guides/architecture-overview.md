@@ -18,9 +18,9 @@ packages:
 - `Atlas.Blazor`: Blazor rendering, content hosting, CSS, and browser
   interaction; depends on `Atlas.Core`.
 
-`samples/Atlas.Demo` is an independent Blazor WebAssembly sample that consumes
-both packages from a local NuGet feed. It is not part of the main solution and
-must not reference Atlas source projects.
+The NuGet consumer showcase (a DBC file viewer) lives in the standalone
+[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository. It is
+not part of the main solution and must not reference Atlas source projects.
 
 ## 2. Three Runtime Layers
 
@@ -146,7 +146,7 @@ concurrency semantics are in HLD §4.
 ## 5. Dependency and Ownership Boundaries
 
 ```text
-Atlas.Core ← Atlas.Blazor ← Atlas.Demo
+Atlas.Core ← Atlas.Blazor ← DbcView (consumer showcase)
 ```
 
 Enforced rules:
