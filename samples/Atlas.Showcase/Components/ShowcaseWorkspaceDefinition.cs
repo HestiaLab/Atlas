@@ -69,14 +69,14 @@ internal static class ShowcaseWorkspaceDefinition
             0.5d,
             leftUpper.Id,
             leftLower.Id,
-            new SplitConstraints(140d, 320d, 140d, 320d));
+            new SplitConstraints(100d, null, 100d, null));
         var rightDock = Split(
             "right-dock",
             SplitAxis.BlockChildren,
             0.5d,
             rightUpper.Id,
             rightLower.Id,
-            new SplitConstraints(140d, 320d, 140d, 320d));
+            new SplitConstraints(100d, null, 100d, null));
         var editorAndRight = Split(
             "editor-right",
             SplitAxis.InlineChildren,
