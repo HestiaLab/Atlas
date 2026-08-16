@@ -95,8 +95,8 @@ button { font: inherit; }
     --atlas-accent: var(--showcase-accent);
     --atlas-surface: var(--showcase-surface);
     --atlas-text: var(--showcase-ink);
-    --atlas-splitter-size: 0.25rem;
-    --atlas-splitter-hit-area: 0.25rem;
+    --atlas-splitter-size: 5px;
+    --atlas-splitter-hit-area: 8px;
     --atlas-chrome-height: 2rem;
     --atlas-gap: 0.375rem;
     --atlas-padding-compact: 0.375rem 0.625rem;
