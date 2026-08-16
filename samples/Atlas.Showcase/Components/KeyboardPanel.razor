@@ -1,27 +1,25 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="Keyboard"
+    <TeachingCard Title="键盘操作"
                   Requirement="REQ-F-035 · REQ-F-116 · REQ-F-117"
                   CodeSnippet="@Code">
-        <p>Atlas maps keyboard shortcuts to the same Core operations the
-        pointer uses. Arrow keys resize focused splitters;
-        <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
-        cycles editor tabs;
-        <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
-        closes the active tab.</p>
-        <p><span class="showcase-tag accent">Try it</span> click an editor tab,
-        then press <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
-        to switch. A command map can rebind any action.</p>
+        <p>Atlas 将键盘快捷键映射到与指针相同的 Core 操作。方向键调整
+        已聚焦分割条的大小；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+        切换编辑器标签页；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
+        关闭当前标签页。</p>
+        <p><span class="showcase-tag accent">试一试</span> 点击一个编辑器
+        标签页，然后按 <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+        切换。命令映射可以重新绑定任意操作。</p>
     </TeachingCard>
 </div>
 
 @code {
-    private const string Code = @"// Default bindings (subset)
+    private const string Code = @"// 默认绑定（子集）
 AtlasKeyboardCommand.NextTab            → Ctrl+Tab
 AtlasKeyboardCommand.CloseActiveDocument → Ctrl+W
 
-// Custom binding:
+// 自定义绑定：
 var bindings = new[]
 {
     new AtlasKeyboardBinding(

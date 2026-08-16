@@ -1,15 +1,15 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="Splitter"
+    <TeachingCard Title="分割条"
                   Requirement="REQ-F-073 · REQ-F-076"
                   CodeSnippet="@Code">
-        <p>Dragging a splitter resizes adjacent panels with live preview and
-        commits once on release. Double-click equalizes. Splits honor
-        <code>SplitConstraints</code> min/max bounds.</p>
-        <p><span class="showcase-tag accent">Try it</span> drag the vertical
-        splitter between the left dock and the editor; double-click it to
-        equalize. Keyboard: focus a splitter and use arrow keys.</p>
+        <p>拖动分割条会实时预览并调整相邻面板大小，松开时一次性提交。
+        双击分割条可等分。分割遵循 <code>SplitConstraints</code> 的
+        最小/最大边界。</p>
+        <p><span class="showcase-tag accent">试一试</span> 拖动左侧停靠区与
+        编辑器之间的垂直分割条；双击它等分。键盘：聚焦分割条后使用
+        方向键。</p>
     </TeachingCard>
 </div>
 
@@ -22,7 +22,7 @@
     secondId,
     new SplitConstraints(minFirst: 150, maxFirst: 380));
 
-// Resize commit (Core):
+// 调整大小提交（Core）：
 await workspace.ExecuteAsync(new ResizeSplitOperation(
     splitId, SplitBasis.FixedPixels(240, SplitAnchor.First)));";
 }

@@ -2,16 +2,17 @@
 @using Atlas.Core.Persistence
 
 <div class="showcase-tool">
-    <TeachingCard Title="Persistence"
+    <TeachingCard Title="持久化"
                   Requirement="REQ-F-085 · REQ-F-086"
                   CodeSnippet="@Code">
-        <p>Atlas serializes the committed layout to a versioned XML document
-        (V2 schema) and can restore it atomically. Presets are named layout
-        snapshots; auto-persistence debounces saves for you.</p>
-        <p><span class="showcase-tag accent">Try it</span> drag a panel or tab,
-        then click <button class="showcase-action" type="button" @onclick="Capture">Capture</button>
-        to snapshot the current layout. Restore with
-        <button class="showcase-action" type="button" @onclick="Restore">Restore</button>.</p>
+        <p>Atlas 将已提交的布局序列化为带版本的 XML 文档（V2 schema），
+        并可原子地恢复它。预设是具名布局快照；自动持久化会为你
+        防抖保存。</p>
+        <p><span class="showcase-tag accent">试一试</span> 拖动面板或标签页，
+        然后点击 <button class="showcase-action" type="button" @onclick="Capture">捕获</button>
+        快照当前布局。用
+        <button class="showcase-action" type="button" @onclick="Restore">恢复</button>
+        还原。</p>
         @if (LastEvent is not null)
         {
             <p><span class="showcase-tag ok">@LastEvent</span></p>
@@ -20,11 +21,11 @@
 </div>
 
 @code {
-    private const string Code = @"// Serialize the committed snapshot to V2 XML
+    private const string Code = @"// 将已提交的快照序列化为 V2 XML
 var serializer = new AtlasXmlLayoutSerializer();
 string xml = serializer.Serialize(workspace.Current);
 
-// Restore atomically (validated candidate, history barrier)
+// 原子恢复（经过验证的候选，历史屏障）
 var doc = serializer.Deserialize(xml, workspace.Id).Value;
 await workspace.ExecuteAsync(new RestoreWorkspaceOperation(doc));";
 
@@ -49,7 +50,7 @@ await workspace.ExecuteAsync(new RestoreWorkspaceOperation(doc));";
         lastXml = await CaptureLayout();
         if (LastEvent is not null)
         {
-            LastEvent = "Layout captured";
+            LastEvent = "布局已捕获";
         }
     }
 
@@ -61,6 +62,6 @@ await workspace.ExecuteAsync(new RestoreWorkspaceOperation(doc));";
         }
 
         await RestoreLayout(lastXml);
-        LastEvent = "Layout restored";
+        LastEvent = "布局已恢复";
     }
 }

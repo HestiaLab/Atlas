@@ -39,15 +39,15 @@ internal static class ShowcaseWorkspaceDefinition
             throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
         }
 
-        var catalog = Tool("showcase-catalog", "Teaching Catalog", ShowcaseContentKinds.Catalog);
-        var layout = Tool("showcase-layout", "Declarative Layout", ShowcaseContentKinds.Layout);
-        var content = Tool("showcase-content", "Content Registration", ShowcaseContentKinds.Content);
-        var dragDrop = Tool("showcase-dragdrop", "Drag & Dock", ShowcaseContentKinds.DragDrop);
-        var splitter = Tool("showcase-splitter", "Splitter", ShowcaseContentKinds.Splitter);
-        var keyboard = Tool("showcase-keyboard", "Keyboard", ShowcaseContentKinds.Keyboard);
-        var theme = Tool("showcase-theme", "Theming", ShowcaseContentKinds.Theme);
-        var persistence = Tool("showcase-persistence", "Persistence", ShowcaseContentKinds.Persistence);
-        var guide = Document("showcase-guide", "Quick Start", isPinned: true, ShowcaseContentKinds.Guide);
+        var catalog = Tool("showcase-catalog", "教学目录", ShowcaseContentKinds.Catalog);
+        var layout = Tool("showcase-layout", "声明式布局", ShowcaseContentKinds.Layout);
+        var content = Tool("showcase-content", "内容注册", ShowcaseContentKinds.Content);
+        var dragDrop = Tool("showcase-dragdrop", "拖拽与停靠", ShowcaseContentKinds.DragDrop);
+        var splitter = Tool("showcase-splitter", "分割条", ShowcaseContentKinds.Splitter);
+        var keyboard = Tool("showcase-keyboard", "键盘操作", ShowcaseContentKinds.Keyboard);
+        var theme = Tool("showcase-theme", "主题定制", ShowcaseContentKinds.Theme);
+        var persistence = Tool("showcase-persistence", "持久化", ShowcaseContentKinds.Persistence);
+        var guide = Document("showcase-guide", "快速上手", isPinned: true, ShowcaseContentKinds.Guide);
 
         var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, catalog.Id);
         var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, layout.Id);

@@ -4,23 +4,23 @@
 
 <header class="showcase-topbar" data-testid="showcase-top-toolbar">
     <div class="showcase-brand" aria-label="Atlas Showcase">A</div>
-    <nav class="showcase-menu" aria-label="Showcase sections">
-        <button type="button">Getting Started</button>
-        <button type="button">Capabilities</button>
-        <button type="button">Theming</button>
+    <nav class="showcase-menu" aria-label="演示分区">
+        <button type="button">快速上手</button>
+        <button type="button">能力</button>
+        <button type="button">主题</button>
     </nav>
-    <div class="showcase-history" aria-label="Layout history">
-        <button type="button" disabled="@(!CanUndo)" @onclick="OnUndo" aria-label="Undo layout change">↶</button>
-        <button type="button" disabled="@(!CanRedo)" @onclick="OnRedo" aria-label="Redo layout change">↷</button>
+    <div class="showcase-history" aria-label="布局历史">
+        <button type="button" disabled="@(!CanUndo)" @onclick="OnUndo" aria-label="撤销布局更改">↶</button>
+        <button type="button" disabled="@(!CanRedo)" @onclick="OnRedo" aria-label="重做布局更改">↷</button>
     </div>
     <div class="showcase-actions">
         <div class="showcase-quickmenu">
             <button class="showcase-action" type="button" aria-haspopup="true" aria-expanded="@QuickMenuOpen" @onclick="ToggleMenu">
-                ☰ Panels
+                ☰ 面板
             </button>
             @if (QuickMenuOpen)
             {
-                <div class="showcase-quickmenu-popup" role="menu" aria-label="Panel quick menu">
+                <div class="showcase-quickmenu-popup" role="menu" aria-label="面板快捷菜单">
                     @foreach (var group in Panels.GroupBy(p => p.Region))
                     {
                         <div class="showcase-quickmenu-group">@group.Key</div>
@@ -28,14 +28,14 @@
                         {
                             <div class="showcase-quickmenu-row" role="menuitem">
                                 <span class="name" title="@panel.Title">@panel.Title</span>
-                                <span class="hint">@(IsPanelVisible(panel) ? "visible" : "hidden")</span>
-                                <button type="button" @onclick="() => OnTogglePanel(panel)" aria-label="Toggle @panel.Title">
-                                    @(IsPanelVisible(panel) ? "Hide" : "Show")
+                                <span class="hint">@(IsPanelVisible(panel) ? "可见" : "隐藏")</span>
+                                <button type="button" @onclick="() => OnTogglePanel(panel)" aria-label="切换 @panel.Title">
+                                    @(IsPanelVisible(panel) ? "隐藏" : "显示")
                                 </button>
                             </div>
                         }
                     }
-                    <div class="showcase-quickmenu-group">Move to…</div>
+                    <div class="showcase-quickmenu-group">移动到…</div>
                     @foreach (var panel in Panels)
                     {
                         foreach (var region in (LogicalRegion[])Enum.GetValues(typeof(LogicalRegion)))
@@ -43,8 +43,8 @@
                             var target = region;
                             <div class="showcase-quickmenu-row">
                                 <span class="name">@panel.Title → @target</span>
-                                <button type="button" @onclick="() => OnMovePanel(panel, target)" aria-label="Move @panel.Title to @target">
-                                    Move
+                                <button type="button" @onclick="() => OnMovePanel(panel, target)" aria-label="将 @panel.Title 移动到 @target">
+                                    移动
                                 </button>
                             </div>
                         }
@@ -53,7 +53,7 @@
             }
         </div>
         <span class="showcase-branch">atlas/showcase</span>
-        <button class="showcase-run" type="button" aria-label="Run showcase">▶</button>
+        <button class="showcase-run" type="button" aria-label="运行演示">▶</button>
     </div>
 </header>
 

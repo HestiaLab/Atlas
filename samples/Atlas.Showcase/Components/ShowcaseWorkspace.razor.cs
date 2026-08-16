@@ -24,7 +24,7 @@ public sealed record ShowcasePanelEntry(
 public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 {
     private IAtlasWorkspace? workspace;
-    private string operationStatus = "Ready";
+    private string operationStatus = "就绪";
     private string? persistenceEvent;
     private readonly AtlasXmlLayoutSerializer serializer = new();
 
@@ -37,26 +37,26 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     /// <summary>Fixed panel catalog for the quick menu (hide/move actions).</summary>
     internal static readonly ShowcasePanelEntry[] Panels =
     {
-        new("catalog", "Teaching Catalog", new DockItemId("showcase-catalog"), new LayoutNodeId("left-upper"), LogicalRegion.InlineStartUpper),
-        new("layout", "Declarative Layout", new DockItemId("showcase-layout"), new LayoutNodeId("left-lower"), LogicalRegion.InlineStartLower),
-        new("content", "Content Registration", new DockItemId("showcase-content"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
-        new("dragdrop", "Drag & Dock", new DockItemId("showcase-dragdrop"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
-        new("keyboard", "Keyboard", new DockItemId("showcase-keyboard"), new LayoutNodeId("right-lower"), LogicalRegion.InlineEndLower),
-        new("splitter", "Splitter", new DockItemId("showcase-splitter"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
-        new("theme", "Theming", new DockItemId("showcase-theme"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
-        new("persistence", "Persistence", new DockItemId("showcase-persistence"), new LayoutNodeId("bottom-right"), LogicalRegion.BlockEndInlineEnd),
+        new("catalog", "教学目录", new DockItemId("showcase-catalog"), new LayoutNodeId("left-upper"), LogicalRegion.InlineStartUpper),
+        new("layout", "声明式布局", new DockItemId("showcase-layout"), new LayoutNodeId("left-lower"), LogicalRegion.InlineStartLower),
+        new("content", "内容注册", new DockItemId("showcase-content"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
+        new("dragdrop", "拖拽与停靠", new DockItemId("showcase-dragdrop"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
+        new("keyboard", "键盘操作", new DockItemId("showcase-keyboard"), new LayoutNodeId("right-lower"), LogicalRegion.InlineEndLower),
+        new("splitter", "分割条", new DockItemId("showcase-splitter"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
+        new("theme", "主题定制", new DockItemId("showcase-theme"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
+        new("persistence", "持久化", new DockItemId("showcase-persistence"), new LayoutNodeId("bottom-right"), LogicalRegion.BlockEndInlineEnd),
     };
 
     internal static readonly ShowcaseCatalogItem[] CatalogItems =
     {
-        new("catalog", "Teaching Catalog", "01"),
-        new("layout", "Declarative Layout", "02"),
-        new("content", "Content Registration", "03"),
-        new("dragdrop", "Drag & Dock", "04"),
-        new("splitter", "Splitter", "05"),
-        new("keyboard", "Keyboard", "06"),
-        new("theme", "Theming", "07"),
-        new("persistence", "Persistence", "08"),
+        new("catalog", "教学目录", "01"),
+        new("layout", "声明式布局", "02"),
+        new("content", "内容注册", "03"),
+        new("dragdrop", "拖拽与停靠", "04"),
+        new("splitter", "分割条", "05"),
+        new("keyboard", "键盘操作", "06"),
+        new("theme", "主题定制", "07"),
+        new("persistence", "持久化", "08"),
     };
 
     protected override void OnInitialized()
@@ -94,7 +94,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         var target = IsPanelVisible(panel) ? GroupVisibility.Collapsed : GroupVisibility.Expanded;
         await RunOperationAsync(
             new SetGroupVisibilityOperation(panel.GroupId, target),
-            $"{(target == GroupVisibility.Expanded ? "Showed" : "Hidden")} {panel.Title}");
+            $"{(target == GroupVisibility.Expanded ? "已显示" : "已隐藏")} {panel.Title}");
     }
 
     private async Task MovePanelAsync(ShowcasePanelEntry panel, LogicalRegion targetRegion)
@@ -113,7 +113,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 
         await RunOperationAsync(
             new MoveToolOperation(panel.ItemId, targetGroupId.Value),
-            $"Moved {panel.Title} to {targetRegion}");
+            $"已将 {panel.Title} 移动到 {targetRegion}");
     }
 
     private static LayoutNodeId? RegionToGroupId(LogicalRegion region) => region switch
@@ -135,7 +135,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.ExecuteAsync(operation);
-        operationStatus = result.Succeeded ? successMessage : $"No change: {result.Error?.DiagnosticId ?? "unknown"}";
+        operationStatus = result.Succeeded ? successMessage : $"无变化: {result.Error?.DiagnosticId ?? "未知"}";
         await InvokeAsync(StateHasChanged);
     }
 
@@ -147,7 +147,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var xml = serializer.Serialize(workspace.Current);
-        persistenceEvent = "Layout captured to XML";
+        persistenceEvent = "布局已捕获为 XML";
         await InvokeAsync(StateHasChanged);
         return xml;
     }
@@ -169,8 +169,8 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 
         var result = await workspace.ExecuteAsync(new RestoreWorkspaceOperation(deserialize.Value));
         persistenceEvent = result.Succeeded
-            ? "Layout restored"
-            : $"Restore failed: {result.Error?.DiagnosticId ?? "unknown"}";
+            ? "布局已恢复"
+            : $"恢复失败: {result.Error?.DiagnosticId ?? "未知"}";
         await InvokeAsync(StateHasChanged);
     }
 
@@ -182,7 +182,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.UndoAsync();
-        operationStatus = result.Succeeded ? "Undid last change" : "Nothing to undo";
+        operationStatus = result.Succeeded ? "已撤销上次更改" : "无可撤销";
         await InvokeAsync(StateHasChanged);
     }
 
@@ -194,7 +194,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.RedoAsync();
-        operationStatus = result.Succeeded ? "Redid last change" : "Nothing to redo";
+        operationStatus = result.Succeeded ? "已重做上次更改" : "无可重做";
         await InvokeAsync(StateHasChanged);
     }
 

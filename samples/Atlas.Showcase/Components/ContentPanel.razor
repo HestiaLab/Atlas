@@ -1,18 +1,16 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="Content Registration"
+    <TeachingCard Title="内容注册"
                   Requirement="REQ-F-006 · REQ-F-007 · REQ-F-008"
                   CodeSnippet="@Code">
-        <p>Panels and tabs render components registered by <em>Kind</em>.
-        The effective Content Catalog merges startup DI registrations,
-        Host-local <code>AtlasContentRoute</code> declarations, and a
-        functional map.</p>
-        <p>This showcase registers every panel with an
-        <code>AtlasContentRoute</code> inside the Host (see
-        <code>ShowcaseWorkspace.razor</code>).</p>
-        <p><span class="showcase-tag accent">Try it</span> the panels you see
-        now are all route-registered content.</p>
+        <p>面板和标签页渲染按 <em>Kind</em> 注册的组件。生效的 Content
+        Catalog 合并了启动时 DI 注册、宿主内 <code>AtlasContentRoute</code>
+        声明以及函数式映射。</p>
+        <p>本演示在宿主内用 <code>AtlasContentRoute</code> 注册了每个面板
+        （见 <code>ShowcaseWorkspace.razor</code>）。</p>
+        <p><span class="showcase-tag accent">试一试</span> 你现在看到的所有
+        面板都是通过路由注册的内容。</p>
     </TeachingCard>
 </div>
 
@@ -23,6 +21,6 @@
   </ChildContent>
 </AtlasContentRoute>
 
-// Alternative: register from Program.cs with DI
+// 另一种方式：在 Program.cs 中通过 DI 注册
 builder.Services.AddAtlasContent<ExplorerPanel>(""explorer"");";
 }
