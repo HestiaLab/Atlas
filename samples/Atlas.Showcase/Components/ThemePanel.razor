@@ -1,0 +1,30 @@
+@namespace Atlas.Showcase.Components
+
+<div class="showcase-tool">
+    <TeachingCard Title="主题定制"
+                  Requirement="REQ-NF-009"
+                  CodeSnippet="@Code">
+        <p>Atlas 通过文档化的 <code>--atlas-*</code> CSS 变量（ADR-0023）
+        暴露视觉样式。在你自己的样式表中覆盖这些变量即可定制主题，
+        无需 <code>!important</code> 或内部选择器。本演示用
+        <code>app.css</code> 中的 <code>--showcase-*</code> 调色板驱动
+        每个 Atlas token。</p>
+        <p><span class="showcase-tag accent">试一试</span> 你在放置区域和
+        焦点环上看到的强调色就是 <code>--showcase-accent</code>；它通过
+        <code>color-scheme</code> 跟随操作系统明暗偏好。</p>
+    </TeachingCard>
+</div>
+
+@code {
+    private const string Code = @"/* app.css —— 在 atlas.css 之后加载 */
+.atlas-v2-workspace {
+  --atlas-accent: #0b6bcb;      /* 放置区域、焦点、拖拽预览 */
+  --atlas-surface: #ffffff;     /* 面板背景 */
+  --atlas-text: #26303a;        /* 标签 */
+  --atlas-splitter-size: 5px;
+  --atlas-radius: 0.125rem;
+}
+
+/* 暗色调色板通过 color-scheme 跟随操作系统：
+   :root { color-scheme: dark } 将系统颜色解析为暗色。 */";
+}

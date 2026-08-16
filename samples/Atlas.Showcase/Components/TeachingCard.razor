@@ -1,0 +1,36 @@
+@namespace Atlas.Showcase.Components
+
+@* Shared teaching card: requirement tag + body + optional code view.
+   The panel title is rendered by the Atlas framework header, so this
+   component deliberately does not repeat it. *@
+<div class="showcase-card">
+    <div class="showcase-req-line">
+        <span class="req">@Requirement</span>
+    </div>
+    <div class="showcase-card-body">
+        @ChildContent
+    </div>
+    @if (ShowCode)
+    {
+        <pre class="showcase-code">@CodeSnippet</pre>
+    }
+    <button class="showcase-code-toggle" type="button" @onclick="() => ShowCode = !ShowCode">
+        @(ShowCode ? "Hide API code" : "View API code")
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Requirement { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string CodeSnippet { get; set; } = "";
+
+    private bool ShowCode { get; set; }
+}

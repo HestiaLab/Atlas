@@ -18,9 +18,12 @@ packages:
 - `Atlas.Blazor`: Blazor rendering, content hosting, CSS, and browser
   interaction; depends on `Atlas.Core`.
 
-The NuGet consumer showcase (a DBC file viewer) lives in the standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository. It is
-not part of the main solution and must not reference Atlas source projects.
+The in-repo teaching demo [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)
+demonstrates the framework's public API with runnable panels. The NuGet
+consumer showcase (a DBC file viewer) lives in the standalone
+[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository. Neither
+is part of the main solution's packaging layer; DbcView must not reference
+Atlas source projects.
 
 ## 2. Three Runtime Layers
 
@@ -146,7 +149,7 @@ concurrency semantics are in HLD §4.
 ## 5. Dependency and Ownership Boundaries
 
 ```text
-Atlas.Core ← Atlas.Blazor ← DbcView (consumer showcase)
+Atlas.Core ← Atlas.Blazor ← Atlas.Showcase (teaching demo)
 ```
 
 Enforced rules:

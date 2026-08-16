@@ -16,6 +16,7 @@ change.
 | TypeScript | `src/Atlas.Blazor/tests` | protocol, testable controller logic, and wire behavior | C# commit, Blazor lifecycle, full browser integration |
 | Browser fixture | `tests/browser` | real DOM, pointer, sandbox, hardening, and cross-layer behavior | NuGet package boundary, consumer restore |
 | NuGet consumer | `wubing7755/DbcView` (standalone repo) | PackageReference, RCL assets, public API, portability | all framework-internal boundary cases |
+| Teaching demo | `samples/Atlas.Showcase` (in `Atlas.sln`) | public API usage, rendering, interactions | NuGet package boundary |
 | Build/format/pack | solution, CI | compilation, analyzers, style, package content | user interaction behavior itself |
 
 ## 2. Core Tests

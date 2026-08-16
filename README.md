@@ -74,6 +74,10 @@ workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
 
 ## Sample Project
 
+The in-repo [`samples/Atlas.Showcase`](samples/Atlas.Showcase/) is a teaching
+demo of the framework's public API — a runnable workspace where every panel
+demonstrates one Atlas capability and shows the real API code behind it.
+
 The NuGet consumer showcase — a DBC file viewer built on Atlas — lives in the
 standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
 repository. It consumes the published `Atlas.Blazor` package from nuget.org

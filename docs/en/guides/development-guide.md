@@ -121,13 +121,16 @@ Must follow:
 - `tests/browser`: real-browser static fixtures for DOM, pointer, sandbox, and
   hardening behavior that bUnit/Node cannot prove.
 
-### Consumer showcase (`wubing7755/DbcView`)
+### Teaching demo (`samples/Atlas.Showcase`)
 
-The NuGet consumer showcase (a DBC file viewer) lives in the standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository and is
-not in `Atlas.sln`. It cannot reference Atlas source projects, internal APIs,
-linked source, or test helpers. After changing package content, RCL assets, or
-consumer-facing APIs, repack and verify through that repository.
+The in-repo teaching demo lives in `samples/Atlas.Showcase`, is part of
+`Atlas.sln`, and references Atlas source projects (so CI covers it). Its
+panels demonstrate the public API and show real code snippets. The standalone
+[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository is the
+independent NuGet consumer showcase; it cannot reference Atlas source
+projects, internal APIs, linked source, or test helpers. After changing
+package content, RCL assets, or consumer-facing APIs, repack and verify
+through that repository.
 
 ## 4. Working By Change Type
 
