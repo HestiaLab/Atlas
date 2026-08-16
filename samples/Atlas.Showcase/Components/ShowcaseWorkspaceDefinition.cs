@@ -47,7 +47,7 @@ internal static class ShowcaseWorkspaceDefinition
         var keyboard = Tool("showcase-keyboard", "键盘操作", ShowcaseContentKinds.Keyboard);
         var theme = Tool("showcase-theme", "主题定制", ShowcaseContentKinds.Theme);
         var persistence = Tool("showcase-persistence", "持久化", ShowcaseContentKinds.Persistence);
-        var guide = Document("showcase-guide", "快速上手", isPinned: true, ShowcaseContentKinds.Guide);
+        var guide = Document("showcase-guide", "使用指南", isPinned: true, ShowcaseContentKinds.Guide);
 
         var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, catalog.Id);
         var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, layout.Id);

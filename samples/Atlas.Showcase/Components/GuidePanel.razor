@@ -1,29 +1,169 @@
 @namespace Atlas.Showcase.Components
 
-<div class="showcase-editor">
+<div class="showcase-editor showcase-guide">
     <div class="showcase-card">
         <div class="showcase-req-line">
             <span class="req">REQ-F-099 · REQ-F-101</span>
         </div>
         <div class="showcase-card-body">
+            <h2>Atlas 快速上手</h2>
             <p><strong>Atlas</strong> 是面向 Blazor 的停靠布局组件库。
             本演示是真实可运行的示例：每个面板演示一项能力，
             每个面板都可以查看其背后的真实 API 代码。</p>
-            <h3 style="margin:0.5rem 0 0.25rem">三步创建一个工作区</h3>
-            <ol style="margin:0;padding-inline-start:1.25rem">
+            <h3>三步创建一个工作区</h3>
+            <ol>
                 <li>引用 <code>Atlas.Blazor</code> NuGet 包。</li>
                 <li>注册服务：<code>builder.Services.AddAtlasWorkspace()</code>。</li>
                 <li>承载工作区并声明布局与内容。</li>
             </ol>
-            <p style="margin-top:0.5rem"><span class="showcase-tag accent">试一试</span>
+            <p><span class="showcase-tag accent">试一试</span>
             使用顶部导航栏的 <strong>面板</strong> 菜单隐藏、显示或移动任意面板；
-            拖动标签页进行停靠；拖动分割条调整大小。</p>
+            拖动标签页进行停靠；拖动分割条调整大小。下面的章节逐项说明。</p>
         </div>
     </div>
+
     <div class="showcase-card">
-        <div class="showcase-card-title">
-            能力索引
+        <div class="showcase-card-title">1. 引用包与注册服务</div>
+        <div class="showcase-card-body">
+            <p>在项目中添加 <code>Atlas.Blazor</code> 包引用，并在
+            <code>Program.cs</code> 中注册 Atlas 服务：</p>
+            <pre class="showcase-code">// csproj
+&lt;PackageReference Include="Atlas.Blazor" Version="0.2.0" /&gt;
+
+// Program.cs（Blazor WASM）
+builder.Services.AddAtlasWorkspace();</pre>
+            <p>包内嵌 <code>Atlas.Core</code>（ADR-0019），你只需要这一个包。
+            框架提供的 DI 服务包括工作区工厂、历史与持久化支持。</p>
         </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">2. 声明布局</div>
+        <div class="showcase-card-body">
+            <p>布局由 Split（分割）、Group（分组）和 Item（面板/标签页）
+            三层结构组成。有两种声明方式：</p>
+            <h3>声明式（Razor 组件）</h3>
+            <pre class="showcase-code">&lt;AtlasWorkspaceHost WorkspaceId="demo"&gt;
+  &lt;ChildContent&gt;
+    &lt;AtlasSplitDefinition Axis="SplitAxis.InlineChildren"&gt;
+      &lt;AtlasToolGroupDefinition LogicalRegion="LogicalRegion.InlineStartUpper"&gt;
+        &lt;AtlasToolItemDefinition ContentKind="explorer" Title="Explorer" /&gt;
+      &lt;/AtlasToolGroupDefinition&gt;
+      &lt;AtlasDocumentGroupDefinition&gt;
+        &lt;AtlasDocumentItemDefinition ContentKind="markdown" Title="Readme.md" /&gt;
+      &lt;/AtlasDocumentGroupDefinition&gt;
+    &lt;/AtlasSplitDefinition&gt;
+  &lt;/ChildContent&gt;
+&lt;/AtlasWorkspaceHost&gt;</pre>
+            <h3>程序式（C# 定义）</h3>
+            <pre class="showcase-code">var factory = services.GetRequiredService&lt;IAtlasWorkspaceFactory&gt;();
+var workspace = factory.Create(definition);   // AtlasWorkspaceDefinition</pre>
+            <p>本演示的工作区用程序式 API 构建（见
+            <code>ShowcaseWorkspaceDefinition.cs</code>），以便顶部快捷菜单
+            能直接访问工作区句柄；两种方式产生相同的结构。</p>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">3. 注册内容</div>
+        <div class="showcase-card-body">
+            <p>面板和标签页按 <em>Kind</em> 渲染组件。生效的 Content Catalog
+            合并三处来源：</p>
+            <ul>
+                <li>启动时 DI 注册：<code>AddAtlasContent&lt;TComponent&gt;(kind)</code></li>
+                <li>Host 内 <code>AtlasContentRoute</code> 声明</li>
+                <li>函数式内容映射</li>
+            </ul>
+            <pre class="showcase-code">&lt;AtlasContentRoute Kind="explorer"&gt;
+  &lt;ChildContent Context="content"&gt;
+    &lt;ExplorerPanel /&gt;
+  &lt;/ChildContent&gt;
+&lt;/AtlasContentRoute&gt;
+
+// 另一种方式：Program.cs 中 DI 注册
+builder.Services.AddAtlasContent&lt;ExplorerPanel&gt;("explorer");</pre>
+            <p>Kind 字符串必须与布局定义中的 <code>ContentKind</code> 一致；
+            不一致会得到「Content is not registered」运行时错误。</p>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">4. 交互操作</div>
+        <div class="showcase-card-body">
+            <p>框架开箱即用：<code>EnableInteractions="true"</code> 时，
+            <code>AtlasWorkspaceHost</code> 自动接线拖拽、停靠、分割与
+            键盘命令。指针交互无需配置：</p>
+            <pre class="showcase-code">&lt;AtlasWorkspaceHost Workspace="workspace" EnableInteractions="true"&gt;…&lt;/AtlasWorkspaceHost&gt;</pre>
+            <p>键盘默认绑定（可自定义命令映射）：</p>
+            <ul>
+                <li><span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+                切换编辑器标签页</li>
+                <li><span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
+                关闭当前标签页</li>
+                <li>方向键调整已聚焦分割条的大小</li>
+            </ul>
+            <p>所有交互最终提交为 Core 操作（如
+            <code>SetGroupVisibilityOperation</code>、
+            <code>MoveToolOperation</code>、<code>DockDocumentOperation</code>），
+            进入历史栈，可撤销/重做。</p>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">5. 主题定制</div>
+        <div class="showcase-card-body">
+            <p>Atlas 通过文档化的 <code>--atlas-*</code> CSS 变量
+            （ADR-0023）暴露视觉样式。在 <code>atlas.css</code> 之后加载
+            自己的样式表并覆盖变量即可，无需 <code>!important</code>：</p>
+            <pre class="showcase-code">.atlas-v2-workspace {
+  --atlas-accent: #0b6bcb;    /* 放置区域、焦点、拖拽预览 */
+  --atlas-surface: #ffffff;   /* 面板背景 */
+  --atlas-text: #26303a;      /* 标签 */
+  --atlas-splitter-size: 5px;
+  --atlas-radius: 0.125rem;
+}</pre>
+            <p>明暗主题：设置 <code>color-scheme</code> 后，系统颜色跟随
+            操作系统偏好自动切换。本演示在 <code>app.css</code> 中用
+            <code>--showcase-*</code> 调色板驱动每个 Atlas token。</p>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">6. 持久化</div>
+        <div class="showcase-card-body">
+            <p>布局快照可序列化为版本化 XML（V2 schema），并可原子恢复：</p>
+            <pre class="showcase-code">var serializer = new AtlasXmlLayoutSerializer();
+string xml = serializer.Serialize(workspace.Current);   // 快照
+
+var doc = serializer.Deserialize(xml, workspace.Id).Value;
+await workspace.ExecuteAsync(new RestoreWorkspaceOperation(doc)); // 恢复</pre>
+            <p>可在「持久化」面板实际试一试：拖动面板后点
+            <strong>捕获</strong>，再点 <strong>恢复</strong>。</p>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">7. 常见问题</div>
+        <div class="showcase-card-body">
+            <dl class="showcase-faq">
+                <dt>声明式还是程序式？</dt>
+                <dd>布局在 Razor 中固定时用声明式；需要动态创建、或要
+                直接调用工作区操作（如本演示的快捷菜单）时用程序式。</dd>
+                <dt>面板显示「Content is not registered」？</dt>
+                <dd>Kind 字符串不匹配。检查布局里的
+                <code>ContentKind</code> 与注册的 kind 是否完全一致。</dd>
+                <dt>需要多个独立工作区？</dt>
+                <dd>每个 <code>AtlasWorkspaceHost</code> 拥有独立的工作区
+                与历史。访问 <code>/verification</code> 页可看双 Host 演示。</dd>
+                <dt>如何修改键盘绑定？</dt>
+                <dd>构造 <code>AtlasKeyboardCommandMap(bindings)</code> 传给
+                Host 的 <code>KeyboardCommands</code> 参数。</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="showcase-card">
+        <div class="showcase-card-title">能力索引</div>
         <div class="showcase-card-body">
             <table class="showcase-table">
                 <thead>
