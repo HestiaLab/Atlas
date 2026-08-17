@@ -2311,6 +2311,39 @@ Source: F-120, F-128, NF-006
 
 ---
 
+```
+DES-NFR-005
+Style Customization via CSS Variables
+Atlas exposes its visual style through documented CSS custom properties prefixed
+with `--atlas-` (REQ-NF-009, ADR-0023). The default theme is defined entirely by
+these variables on the `.atlas-v2-workspace` root; components must not hard-code
+competing colors, sizes, border radii, or opacity values outside the variable
+block, and consumers customize by overriding the variables on the workspace
+container or an ancestor — no `!important`, no Atlas-internal selectors.
+
+The token set is a public, additive contract. Variables are grouped by concern:
+
+- **Colors**: accent, surface, text, chrome, tab, splitter, and drag-preview
+  tokens. System-color defaults (`Highlight`, `Canvas`, `CanvasText`) resolve
+  through the CSS `color-scheme` palette; `currentColor` text/border values are
+  intentionally not tokenized and follow the host application's text color.
+- **Sizing**: splitter thickness and hit area, chrome height, gap, padding,
+  radius, border width, focus-ring width, and drag-preview cap.
+- **Layering**: root-scoped z-index tokens (`--atlas-layer-*`) matching the
+  layer table in DES-PRJ-003; components must not hard-code individual z-index
+  values.
+- **Opacity**: splitter idle/hover/focus/disabled, drop-highlight mix ratios,
+  toolbar divider, and drag-preview opacity.
+
+The full token catalog, defaults, and worked examples live in
+`docs/en/theming.md`. Variables may be added or have their defaults adjusted in
+future versions, but never removed; removing a variable is a breaking change.
+
+Source: NF-009
+```
+
+---
+
 ## 9 Project Structure
 
 ```
@@ -2481,7 +2514,7 @@ the user's behalf through default values, skipped tests, or documentation wordin
 | DEV-GATE-001 Repository Baseline | OI-004 | solution, TargetFramework, PackageId, namespace, CI, NuGet dependencies | Repository baseline ADR + runnable SDK/CI configuration | Documentation-only, TFM-independent model Spikes |
 | DEV-GATE-002 Panel Drop Policy | OI-001 | Panel target resolver default policy, Panel drag E2E, user documentation | **Closed**: ADR-0007 Accepted; the SRS has unified the enabled set, priority, failure semantics, and default policy | Parameterized resolver, pure-function tests for all candidate policies |
 | DEV-GATE-003 Content Lifetime | **Closed**: ADR-0012; cross-Group remount/dispose + external business state restore Spike | Cross-Group instance-preservation claims and Workspace-wide keep-alive | Blazor Spike + Accepted ADR clarifying the business state contract | Default, KeepAliveWithinGroup, external state restore |
-| DEV-GATE-004 Content Trust | **Closed**: ADR-0013; [threat model](../zh/security/content-threat-model.md) | External security commitments, SandboxedFrame public API, threat model E2E | Product decision + threat model + Accepted ADR; browser E2E remains a P7 Exit condition | TrustedComponent + ErrorBoundary, but must not claim a security sandbox |
+| DEV-GATE-004 Content Trust | **Closed**: ADR-0013; [threat model](./security/content-threat-model.md) | External security commitments, SandboxedFrame public API, threat model E2E | Product decision + threat model + Accepted ADR; browser E2E remains a P7 Exit condition | TrustedComponent + ErrorBoundary, but must not claim a security sandbox |
 | DEV-GATE-005 Persistence Schema | **Closed**: ADR-0010 Accepted; namespace/version/order/default/limits/unknown policy and V1 narrow compatibility are frozen | V2 Serializer, V1 importer, Preset compatibility | Schema ADR, XSD, V1/V2 golden files, schema validation tests | DTO/validator interfaces and adversarial parser tests |
 | DEV-GATE-006 Traceability Baseline | **Closed**: ADR-0014; 151 = F142 + NF9 (baseline count updated by REQ-NF-009/ADR-0023) | Automated coverage statistics and "all requirements complete" claims | SRS/appendix set consistency tests; historical removals and non-canonical IDs already have an explicit disposition | Maintain the matrix with the 151 formal requirement blocks |
 | DEV-GATE-007 Unified Content Catalog | **Closed**: ADR-0018; startup DI, Host-local Route, and immutable Host-local Map contribute to one strict Catalog | Removal of the legacy host-wide template API, public Route/Map API, and cross-Panel coordination sample | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | TDD implementation and package/browser evidence under the frozen contract |
@@ -3063,6 +3096,7 @@ The Panel Drag Session only manages transient interaction state; only the succes
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA Semantics and Focus Contract | F-022, F-035, F-116~118, NF-003, NF-007 |
 | DES-NFR-004 | Content Trust Model and Security Isolation | F-120, F-128, NF-006 |
+| DES-NFR-005 | Style Customization via CSS Variables | NF-009 |
 | DES-PRJ-001 | Module Partitioning and Dependency Direction | F-109, NF-002 |
 | DES-PRJ-002 | TypeScript Module Partitioning | NF-003~004, NF-006, NF-008 |
 | DES-PRJ-003 | ToolBar and Panel Drag Verification Matrix | F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007 |
@@ -3121,6 +3155,7 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-NF-005 | DES-INT-004, DES-INT-006, DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-006 | DES-ARCH-003, DES-NFR-004, DES-PRJ-002 | Security/E2E | Designed; OI-006 closed by ADR-0013 |
 | REQ-NF-007 | DES-NFR-003, DES-RND-006, DES-RND-009 | Blazor/E2E | Designed |
+| REQ-NF-009 | DES-NFR-005 | Blazor/CSS | Designed; ADR-0023 Accepted, theming guide published |
 
 ### D.2 Full Requirement Mapping
 
@@ -3215,3 +3250,4 @@ interpreted directly as `Implemented` or `Verified`.
 | REQ-NF-006 | DES-ARCH-003, DES-NFR-004, DES-PRJ-002, DES-RND-001 | Designed |
 | REQ-NF-007 | DES-INT-007, DES-INT-008, DES-NFR-003, DES-PRJ-003, DES-RND-006, DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002, DES-PRJ-002 | Designed |
+| REQ-NF-009 | DES-NFR-005 | Designed |

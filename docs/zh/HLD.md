@@ -2115,6 +2115,25 @@ NF-006 的恶意脚本隔离仅适用于 SandboxedFrame。Frame 使用固定 den
 
 ---
 
+```
+DES-NFR-005
+通过 CSS 变量进行样式定制
+Atlas 通过带 `--atlas-` 前缀的、已文档化的 CSS 自定义属性（变量）暴露视觉样式（REQ-NF-009，ADR-0023）。默认主题完全由 `.atlas-v2-workspace` 根元素上的这些变量定义；组件不得在变量块之外硬编码相互冲突的颜色、尺寸、圆角或透明度值。consumer 通过在 workspace 容器或其祖先上覆盖变量来定制外观——无需 `!important`，也无需使用 Atlas 内部选择器。
+
+token 集合是公开的、只增不减（additive）的契约。变量按用途分组：
+
+- **颜色（Colors）**：accent、surface、text、chrome、tab、splitter 与 drag-preview token。系统颜色默认值（`Highlight`、`Canvas`、`CanvasText`）通过 CSS `color-scheme` 调色板解析；`currentColor` 文本/边框值有意不 token 化，跟随宿主应用的文本颜色。
+- **尺寸（Sizing）**：splitter 粗细与命中区域、chrome 高度、间距、内边距、圆角、边框宽度、focus-ring 宽度与 drag-preview 上限。
+- **层级（Layering）**：根作用域 z-index token（`--atlas-layer-*`），与 DES-PRJ-003 中的层级表一致；组件不得单独硬编码 z-index 值。
+- **透明度（Opacity）**：splitter 空闲/悬停/聚焦/禁用、drop-highlight 混合比例、toolbar 分隔线与 drag-preview 透明度。
+
+完整 token 目录、默认值与实操示例见 `docs/zh/theming.md`。未来版本可以新增变量或调整默认值，但不得移除变量；移除变量属于破坏性变更。
+
+来源：NF-009
+```
+
+---
+
 ## 9 项目结构
 
 ```
@@ -2782,6 +2801,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA 语义与焦点合同 | F-022, F-035, F-116~118, NF-003, NF-007 |
 | DES-NFR-004 | 内容信任模式与安全隔离 | F-120, F-128, NF-006 |
+| DES-NFR-005 | 通过 CSS 变量进行样式定制 | NF-009 |
 | DES-PRJ-001 | 模块划分与依赖方向 | F-109, NF-002 |
 | DES-PRJ-002 | TypeScript 模块划分 | NF-003~004, NF-006, NF-008 |
 | DES-PRJ-003 | ToolBar 与 Panel 拖拽验证矩阵 | F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007 |
@@ -2833,6 +2853,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-005 | DES-INT-004、DES-INT-006、DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Designed，OI-006 已由 ADR-0013 关闭 |
 | REQ-NF-007 | DES-NFR-003、DES-RND-006、DES-RND-009 | Blazor/E2E | Designed |
+| REQ-NF-009 | DES-NFR-005 | Blazor/CSS | Designed；ADR-0023 已接受，主题指南已发布 |
 
 ### D.2 完整需求映射
 
@@ -2927,3 +2948,4 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | Designed |
 | REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |
+| REQ-NF-009 | DES-NFR-005 | Designed |
