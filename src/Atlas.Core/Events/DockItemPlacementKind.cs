@@ -1,11 +1,17 @@
 namespace Atlas.Core.Events;
 
-/// <summary>Identifies the committed placement represented by an event snapshot.</summary>
+/// <summary>
+///     标识事件快照中项的已提交放置位置。
+/// </summary>
 public enum DockItemPlacementKind
 {
-    /// <summary>The item is placed in a layout group.</summary>
+    /// <summary>
+    ///     项放置于布局组中。
+    /// </summary>
     Group = 0,
 
-    /// <summary>The item is placed in an auto-hide strip.</summary>
+    /// <summary>
+    ///     项放置于自动隐藏条中。
+    /// </summary>
     AutoHide = 1,
 }

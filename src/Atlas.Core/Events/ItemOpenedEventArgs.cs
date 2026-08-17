@@ -2,7 +2,9 @@ using Atlas.Core.Changes;
 
 namespace Atlas.Core.Events;
 
-/// <summary>Provides data for a document-opened event.</summary>
+/// <summary>
+///     为文档打开事件提供数据。
+/// </summary>
 public sealed class ItemOpenedEventArgs : WorkspaceItemEventArgs
 {
     internal ItemOpenedEventArgs(

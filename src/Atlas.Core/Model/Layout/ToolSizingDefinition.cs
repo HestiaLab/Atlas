@@ -1,12 +1,14 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Defines trusted initial and constraint metadata for a tool item.
+///     工具项尺寸的受信任元数据：初始比例与最小/最大内容尺寸、折叠尺寸；
+///     由宿主声明，工作区据此初始化并约束工具组。
 /// </summary>
 public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ToolSizingDefinition"/> struct.
+    ///     构造尺寸定义；初始比例须在 (0, 1] 内、尺寸须有限非负、
+    ///     最大不得小于最小、折叠尺寸须有限非负。
     /// </summary>
     public ToolSizingDefinition(
         double? initialRatio = null,
@@ -53,22 +55,22 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    /// Gets the optional ratio used for initialization and reset.
+    ///     工具组初始化与重置时使用的比例；<see langword="null"/> 表示不指定初始比例。
     /// </summary>
     public double? InitialRatio { get; }
 
     /// <summary>
-    /// Gets the optional minimum content extent.
+    ///     工具组的最小内容尺寸；<see langword="null"/> 表示不约束下限。
     /// </summary>
     public double? MinExtent { get; }
 
     /// <summary>
-    /// Gets the optional maximum content extent.
+    ///     工具组的最大内容尺寸；<see langword="null"/> 表示不约束上限。
     /// </summary>
     public double? MaxExtent { get; }
 
     /// <summary>
-    /// Gets the content extent used while collapsed.
+    ///     工具组折叠时占据的尺寸；默认 0（完全收起）。
     /// </summary>
     public double CollapsedExtent { get; }
 
@@ -94,7 +96,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    /// Determines whether two sizing definitions are equal.
+    ///     确定两个尺寸定义是否相等。
     /// </summary>
     public static bool operator ==(ToolSizingDefinition left, ToolSizingDefinition right)
     {
@@ -102,7 +104,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    /// Determines whether two sizing definitions are not equal.
+    ///     确定两个尺寸定义是否不相等。
     /// </summary>
     public static bool operator !=(ToolSizingDefinition left, ToolSizingDefinition right)
     {

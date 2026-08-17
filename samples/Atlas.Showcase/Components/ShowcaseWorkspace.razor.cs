@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Components;
 namespace Atlas.Showcase.Components;
 
 /// <summary>
-/// Describes one showcase tool panel for the top-bar quick menu.
+///     描述顶栏快捷菜单中的一个示例工具面板。
 /// </summary>
 public sealed record ShowcasePanelEntry(
     string Key,
@@ -34,7 +34,9 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     [Parameter]
     public string WorkspaceName { get; set; } = "atlas-showcase";
 
-    /// <summary>Fixed panel catalog for the quick menu (hide/move actions).</summary>
+    /// <summary>
+    ///     快捷菜单的固定面板目录（隐藏/移动操作）。
+    /// </summary>
     internal static readonly ShowcasePanelEntry[] Panels =
     {
         new("catalog", "教学目录", new DockItemId("showcase-catalog"), new LayoutNodeId("left-upper"), LogicalRegion.InlineStartUpper),
@@ -104,7 +106,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
             return;
         }
 
-        // Map the destination region to the owning tool group.
+        // 将目标区域映射到所属工具组。
         var targetGroupId = RegionToGroupId(targetRegion);
         if (targetGroupId is null || targetGroupId.Value == panel.GroupId)
         {

@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Identifies the child whose extent is stored by a fixed-pixel split basis.
+///     FixedPixels 基准中，固定尺寸归属于哪个子项。
 /// </summary>
 public enum SplitAnchor
 {
     /// <summary>
-    /// The first child is anchored.
+    ///     第一个子项持有固定尺寸。
     /// </summary>
     First = 0,
 
     /// <summary>
-    /// The second child is anchored.
+    ///     第二个子项持有固定尺寸。
     /// </summary>
     Second = 1,
 }

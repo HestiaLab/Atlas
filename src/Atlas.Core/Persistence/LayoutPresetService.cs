@@ -5,16 +5,27 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Coordinates named preset capture, ordered storage and atomic restore.</summary>
+/// <summary>
+///     协调命名预设的捕获、有序存储与原子恢复。
+/// </summary>
 public sealed class LayoutPresetService
 {
+    // 捕获当前快照的工作区。
     private readonly IAtlasWorkspace workspace;
+
+    // 快照 ↔ XML 的序列化器。
     private readonly IAtlasLayoutSerializer serializer;
+
+    // 预设文档的落盘/读取存储。
     private readonly ILayoutPresetStore store;
+
+    // 预设名 → 写入状态（门闩 + 代际）映射；同名保存串行化，不同名互不阻塞。
     private readonly ConcurrentDictionary<string, WriterState> writers =
         new(StringComparer.Ordinal);
 
-    /// <summary>Initializes a preset service for one workspace.</summary>
+    /// <summary>
+    ///     为一个工作区初始化预设服务。
+    /// </summary>
     public LayoutPresetService(
         IAtlasWorkspace workspace,
         IAtlasLayoutSerializer serializer,
@@ -25,7 +36,9 @@ public sealed class LayoutPresetService
         this.store = store ?? throw new ArgumentNullException(nameof(store));
     }
 
-    /// <summary>Captures and saves the current snapshot.</summary>
+    /// <summary>
+    ///     捕获并保存当前快照。
+    /// </summary>
     public async ValueTask<WorkspaceResult<LayoutPresetDescriptor>> SaveAsync(
         string name,
         CancellationToken cancellationToken = default)
@@ -44,6 +57,7 @@ public sealed class LayoutPresetService
 
         cancellationToken.ThrowIfCancellationRequested();
         var snapshot = workspace.Current;
+        // 序列化在门闩外完成，门闩只保护存储写入本身。
         string xml;
         try
         {
@@ -62,7 +76,10 @@ public sealed class LayoutPresetService
             snapshot.Revision,
             DateTimeOffset.UtcNow);
         var document = new LayoutPresetDocument(descriptor, xml);
+        // 每个预设名独立串行化写入：同名保存排队执行，不同名互不阻塞。
         var writer = writers.GetOrAdd(validatedName, _ => new WriterState());
+        // 代际计数用于丢弃过期请求：排队期间若出现更新的保存，本次写入视为过时，
+        // 返回 NoChange 而不是让旧快照覆盖新快照。
         var generation = Interlocked.Increment(ref writer.LatestGeneration);
         await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -88,11 +105,14 @@ public sealed class LayoutPresetService
         }
     }
 
-    /// <summary>Applies a named preset as one restore history barrier.</summary>
+    /// <summary>
+    ///     将命名预设作为单个恢复历史屏障应用。
+    /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ApplyAsync(
         string name,
         CancellationToken cancellationToken = default)
     {
+        // 名称非法或存储读取失败都返回诊断化错误；预设不存在视为“无变更”而非错误。
         LayoutPresetDocument? stored;
         try
         {
@@ -127,6 +147,7 @@ public sealed class LayoutPresetService
             return WorkspaceResult<LayoutChangeSet>.Failure(parsed.Error!);
         }
 
+        // 预设恢复经操作引擎提交，作为恢复历史屏障，而不是直接替换当前快照。
         return await workspace.ExecuteAsync(
             new RestoreWorkspaceOperation(
                 parsed.Value!,
@@ -134,7 +155,9 @@ public sealed class LayoutPresetService
             cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Deletes a named preset without changing workspace state.</summary>
+    /// <summary>
+    ///     删除命名预设，不改变工作区状态。
+    /// </summary>
     public async ValueTask<WorkspaceResult<bool>> DeleteAsync(
         string name,
         CancellationToken cancellationToken = default)
@@ -162,7 +185,9 @@ public sealed class LayoutPresetService
         }
     }
 
-    /// <summary>Lists named user presets in ordinal name order.</summary>
+    /// <summary>
+    ///     按序号名称顺序列出命名用户预设。
+    /// </summary>
     public async ValueTask<WorkspaceResult<IReadOnlyList<LayoutPresetDescriptor>>> ListAsync(
         CancellationToken cancellationToken = default)
     {
@@ -195,8 +220,15 @@ public sealed class LayoutPresetService
 
     private sealed class WriterState
     {
+        /// <summary>
+        ///     串行化同名预设写入的互斥门闩。
+        /// </summary>
         internal SemaphoreSlim Gate { get; } = new(1, 1);
 
+        /// <summary>
+        ///     单调递增的代际计数；排队期间若值已推进，说明出现了更新的保存请求，
+        ///     本次写入视为过期并放弃，避免旧快照覆盖新快照。
+        /// </summary>
         internal long LatestGeneration;
     }
 }

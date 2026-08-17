@@ -14,11 +14,14 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Write members of <see cref="AtlasXmlLayoutSerializer"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasXmlLayoutSerializer"/> 的写入成员（partial）。
+/// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {
     private static XElement WriteItems(WorkspaceSnapshot snapshot)
     {
+        // 项按 ID 字典序写出，保证同一快照的序列化结果字节级稳定，便于缓存与对比。
         return new XElement(
             Namespace + "Items",
             snapshot.Items.Values
@@ -54,6 +57,8 @@ public sealed partial class AtlasXmlLayoutSerializer
 
     private static XElement WriteNode(WorkspaceSnapshot snapshot, LayoutNodeId id)
     {
+        // 前序递归把布局树展开为嵌套 XML，与 ReadNode 的后序重建对称；
+        // 分割基准用 round-trip 格式写出，保证双精度值经序列化往返后位级不变。
         return snapshot.Nodes[id] switch
         {
             GroupNode group => new XElement(

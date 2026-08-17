@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Defines the minimum and maximum extents for both children of a split.
+///     定义分割的两个子项的最小与最大尺寸；解析时用于推导可行区间与钳制。
 /// </summary>
 public readonly struct SplitConstraints : IEquatable<SplitConstraints>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SplitConstraints"/> struct.
+    ///     构造约束集；最小值必须有限非负，最大值必须有限且不小于对应最小值。
     /// </summary>
-    /// <param name="firstMinimum">The finite, non-negative first-child minimum.</param>
-    /// <param name="firstMaximum">The optional finite first-child maximum.</param>
-    /// <param name="secondMinimum">The finite, non-negative second-child minimum.</param>
-    /// <param name="secondMaximum">The optional finite second-child maximum.</param>
+    /// <param name="firstMinimum">有限且非负的第一个子项最小尺寸。</param>
+    /// <param name="firstMaximum">可选的有限第一个子项最大尺寸。</param>
+    /// <param name="secondMinimum">有限且非负的第二个子项最小尺寸。</param>
+    /// <param name="secondMaximum">可选的有限第二个子项最大尺寸。</param>
     public SplitConstraints(
         double firstMinimum = 0d,
         double? firstMaximum = null,
@@ -28,22 +28,22 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    /// Gets the first-child minimum extent.
+    ///     第一个子项的最小尺寸（有限非负）。
     /// </summary>
     public double FirstMinimum { get; }
 
     /// <summary>
-    /// Gets the optional first-child maximum extent.
+    ///     第一个子项的最大尺寸；<see langword="null"/> 表示无上限。
     /// </summary>
     public double? FirstMaximum { get; }
 
     /// <summary>
-    /// Gets the second-child minimum extent.
+    ///     第二个子项的最小尺寸（有限非负）。
     /// </summary>
     public double SecondMinimum { get; }
 
     /// <summary>
-    /// Gets the optional second-child maximum extent.
+    ///     第二个子项的最大尺寸；<see langword="null"/> 表示无上限。
     /// </summary>
     public double? SecondMaximum { get; }
 
@@ -73,7 +73,7 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    /// Determines whether two constraint sets are equal.
+    ///     确定两个约束集是否相等。
     /// </summary>
     public static bool operator ==(SplitConstraints left, SplitConstraints right)
     {
@@ -81,7 +81,7 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    /// Determines whether two constraint sets are not equal.
+    ///     确定两个约束集是否不相等。
     /// </summary>
     public static bool operator !=(SplitConstraints left, SplitConstraints right)
     {

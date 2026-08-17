@@ -2,7 +2,9 @@ using Atlas.Core.Changes;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Reports one successfully committed workspace restore.</summary>
+/// <summary>
+///     报告一次成功提交的工作区恢复。
+/// </summary>
 public sealed class LayoutRestoreResult
 {
     internal LayoutRestoreResult(
@@ -18,24 +20,38 @@ public sealed class LayoutRestoreResult
         DroppedItems = document.DroppedItems;
     }
 
-    /// <summary>Gets the single atomic restore change.</summary>
+    /// <summary>
+    ///     获取唯一的原子恢复变更。
+    /// </summary>
     public LayoutChangeSet ChangeSet { get; }
 
-    /// <summary>Gets the committed target revision.</summary>
+    /// <summary>
+    ///     获取已提交的目标修订号。
+    /// </summary>
     public long TargetRevision => ChangeSet.AfterRevision;
 
-    /// <summary>Gets the source schema version.</summary>
+    /// <summary>
+    ///     获取源架构版本。
+    /// </summary>
     public string SourceSchemaVersion { get; }
 
-    /// <summary>Gets non-fatal migration warnings.</summary>
+    /// <summary>
+    ///     获取非致命的迁移警告。
+    /// </summary>
     public IReadOnlyList<string> Warnings { get; }
 
-    /// <summary>Gets identity remaps applied before commit.</summary>
+    /// <summary>
+    ///     获取提交前应用的标识重映射。
+    /// </summary>
     public IReadOnlyList<IdentityRemap> IdentityRemaps { get; }
 
-    /// <summary>Gets safe placeholder items.</summary>
+    /// <summary>
+    ///     获取恢复后以占位符保留的项。
+    /// </summary>
     public IReadOnlyList<DockItemId> PlaceholderItems { get; }
 
-    /// <summary>Gets items removed by missing-content policy.</summary>
+    /// <summary>
+    ///     获取按缺失内容策略移除的项。
+    /// </summary>
     public IReadOnlyList<DockItemId> DroppedItems { get; }
 }

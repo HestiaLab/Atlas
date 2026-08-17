@@ -1,61 +1,97 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-/// Identifies a stable Atlas workspace operation kind.
+///     标识稳定的 Atlas 工作区操作种类。
 /// </summary>
 public enum LayoutOperationKind
 {
-    /// <summary>Opens an item.</summary>
+    /// <summary>
+    ///     打开一个项。
+    /// </summary>
     OpenItem = 0,
 
-    /// <summary>Closes an item.</summary>
+    /// <summary>
+    ///     关闭一个项。
+    /// </summary>
     CloseItem = 1,
 
-    /// <summary>Selects an item in its group.</summary>
+    /// <summary>
+    ///     在其组中选择一个项。
+    /// </summary>
     SelectItem = 2,
 
-    /// <summary>Moves an item to a different placement.</summary>
+    /// <summary>
+    ///     将一个项移动到不同的放置。
+    /// </summary>
     MoveItem = 3,
 
-    /// <summary>Reorders an item within its current placement.</summary>
+    /// <summary>
+    ///     在当前放置内重排一个项。
+    /// </summary>
     ReorderItem = 4,
 
-    /// <summary>Creates a split placement for an item.</summary>
+    /// <summary>
+    ///     为一个项创建分屏放置。
+    /// </summary>
     SplitItem = 5,
 
-    /// <summary>Resizes an existing split.</summary>
+    /// <summary>
+    ///     调整现有分屏的大小。
+    /// </summary>
     ResizeSplit = 6,
 
-    /// <summary>Changes a group's visibility.</summary>
+    /// <summary>
+    ///     更改组的可见性。
+    /// </summary>
     SetGroupVisibility = 7,
 
-    /// <summary>Moves an item into or out of auto-hide.</summary>
+    /// <summary>
+    ///     将项移入或移出自动隐藏。
+    /// </summary>
     SetAutoHide = 8,
 
-    /// <summary>Restores an auto-hidden item to its committed dock-back target.</summary>
+    /// <summary>
+    ///     将自动隐藏的项恢复到其已提交的停靠返回目标。
+    /// </summary>
     RestoreAutoHiddenItem = 9,
 
-    /// <summary>Updates an item's presentation metadata.</summary>
+    /// <summary>
+    ///     更新项的呈现元数据。
+    /// </summary>
     UpdateItemPresentation = 10,
 
-    /// <summary>Replaces an item's content reference.</summary>
+    /// <summary>
+    ///     替换项的内容引用。
+    /// </summary>
     ReplaceContentReference = 11,
 
-    /// <summary>Resets a workspace to its configured definition.</summary>
+    /// <summary>
+    ///     将工作区重置为其配置的定义。
+    /// </summary>
     ResetWorkspace = 12,
 
-    /// <summary>Restores a persisted workspace state.</summary>
+    /// <summary>
+    ///     恢复持久化的工作区状态。
+    /// </summary>
     RestoreWorkspace = 13,
 
-    /// <summary>Changes toolbar visibility for a logical side.</summary>
+    /// <summary>
+    ///     更改逻辑侧的工具栏可见性。
+    /// </summary>
     SetToolBarVisibility = 14,
 
-    /// <summary>Reorders a toolbar entry within a logical region.</summary>
+    /// <summary>
+    ///     在逻辑区域内重排工具栏条目。
+    /// </summary>
     ReorderToolBarEntry = 15,
 
-    /// <summary>Reconciles the committed state with a declarative definition.</summary>
+    /// <summary>
+    ///     将已提交状态与声明式定义对账。
+    /// </summary>
     ReconcileDefinition = 16,
 
-    /// <summary>Equalizes the two children of an existing split.</summary>
+    /// <summary>
+    ///     均衡现有分屏的两个子节点。
+    /// </summary>
     EqualizeSplit = 17,
 }

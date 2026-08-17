@@ -14,12 +14,23 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Implements the strict Atlas V2 XML persistence contract.</summary>
+/// <summary>
+///     实现严格的 Atlas V2 XML 持久化契约：
+///     写入前校验快照域不变量；读取时先按根形状分派 V1/V2（含 V1 迁移），
+///     再依次做架构校验、资源限制与域不变量验证，失败统一归一为诊断化错误。
+/// </summary>
 public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 {
+    // V2 文档的 XML 命名空间常量。
     private const string NamespaceValue = "urn:atlas:workspace:2";
+
+    // 当前写入的 schema 版本号，随文档序列化输出。
     private const string CurrentVersion = "2.0";
+
+    // 命名空间的 XNamespace 实例；构造与读取 XML 元素共用。
     private static readonly XNamespace Namespace = NamespaceValue;
+
+    // 惰性加载的 XSD 校验集；读取路径首次执行架构校验时才构建。
     private static readonly Lazy<XmlSchemaSet> Schemas = new(CreateSchemas);
 
     /// <inheritdoc />
@@ -56,6 +67,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
                 nameof(targetWorkspaceId));
         }
 
+        // 在进入 XML 解析前先按字节上限拒绝超大输入，避免对不可信文档投入解析成本。
         limits ??= new LayoutPersistenceLimits();
         if (Encoding.UTF8.GetByteCount(xml) > limits.MaxDocumentBytes)
         {
@@ -72,6 +84,8 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             }
 
             var version = (string?)root.Attribute("schemaVersion");
+            // 先按根元素形状分派版本：无命名空间的 AtlasLayout 是 V1 文档，走迁移路径；
+            // 其余必须精确匹配 V2 命名空间与根名，否则视为不支持的版本。
             if (root.Name.NamespaceName.Length == 0
                 && root.Name.LocalName == "AtlasLayout")
             {
@@ -84,19 +98,23 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
                 return InvalidVersion();
             }
 
+            // 版本兼容按主版本判定：任何 2.x 都视为可读，为同主版本的格式演进留出空间。
             if (!TryCompatibleVersion(version))
             {
                 return InvalidVersion();
             }
 
+            // 先按嵌入式 XSD 校验结构，再做规模限制扫描，两者都通过才进入对象构建。
             ValidateSchema(document);
             ValidateLimits(root, limits);
+            // 恢复文档必须属于目标工作区，防止把其他工作区的布局灌入当前工作区。
             var persistedWorkspaceId = Required(root, "workspaceId");
             if (!StringComparer.Ordinal.Equals(persistedWorkspaceId, targetWorkspaceId.Value))
             {
                 return Invalid("ATLAS-PERSIST-WORKSPACE");
             }
 
+            // XML 合法不等于语义合法：快照仍须通过域不变量校验，失败即整体拒绝恢复。
             var snapshot = ReadSnapshot(root, targetWorkspaceId, limits);
             var violations = WorkspaceInvariantValidator.Validate(snapshot);
             if (violations.Count != 0)
@@ -115,6 +133,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             or FormatException
             or OverflowException)
         {
+            // 把解析与校验中的各类结构错误统一归一为“文档无效”诊断，调用方只需处理一种失败形态。
             return Invalid("ATLAS-PERSIST-INVALID");
         }
     }

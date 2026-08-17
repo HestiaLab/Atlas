@@ -4,22 +4,49 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Debounces automatic saves and restores one reserved workspace document.</summary>
+/// <summary>
+///     防抖自动保存并恢复已保留的工作区文档。
+///     变更触发防抖窗口后按代际写入：排队期间若出现更新的快照，旧快照直接放弃，
+///     保证落盘的始终是最新状态；存储与序列化失败一律降级为诊断上报，不中断应用。
+/// </summary>
 public sealed class LayoutAutoPersistence : IAsyncDisposable
 {
+    // 防抖状态互斥锁：保护取消源、待决保存任务与释放标记。
     private readonly object gate = new();
+
+    // 存储写入互斥门闩：串行化落盘；序列化在其外完成，缩短串行窗口。
     private readonly SemaphoreSlim writer = new(1, 1);
+
+    // 订阅变更并读取当前快照的工作区。
     private readonly IAtlasWorkspace workspace;
+
+    // 快照 ↔ XML 的序列化器。
     private readonly IAtlasLayoutSerializer serializer;
+
+    // 布局文档的落盘/读取存储。
     private readonly IWorkspaceLayoutStore store;
+
+    // 防抖窗口：变更后等待该时长才落盘，窗口内新变更重置计时。
     private readonly TimeSpan debounceDelay;
+
+    // 降级诊断回调：存储/序列化失败时上报，回调异常被吞掉不中断应用。
     private readonly Action<WorkspacePersistenceDiagnostic>? diagnosticSink;
+
+    // 当前防抖计时的取消源；新变更到达时取消旧计时并重建。
     private CancellationTokenSource? delayCancellation;
+
+    // 待决/进行中的保存任务；释放与冲刷前等待它完成。
     private Task pendingSave = Task.CompletedTask;
+
+    // 保存代际计数；排队期间若已推进，本次写入视为过期放弃。
     private long generation;
+
+    // 释放标记：置位后停止订阅、取消计时并排空在途保存。
     private bool disposed;
 
-    /// <summary>Initializes and enables automatic persistence.</summary>
+    /// <summary>
+    ///     订阅工作区变更并启动防抖自动保存；防抖间隔缺省 500ms，不能为负。
+    /// </summary>
     public LayoutAutoPersistence(
         IAtlasWorkspace workspace,
         IAtlasLayoutSerializer serializer,
@@ -43,11 +70,15 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         workspace.Changed += OnWorkspaceChanged;
     }
 
-    /// <summary>Loads and atomically restores the saved document when one exists.</summary>
+    /// <summary>
+    ///     加载已保存文档并经操作引擎原子恢复；从未保存过返回 NoChange，
+    ///     存储不可用或文档损坏返回诊断化失败，绝不强行恢复残缺布局。
+    /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> RestoreIfAvailableAsync(
         CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
+        // 存储不可用按降级处理：只上报诊断，不让自动恢复的失败中断应用。
         WorkspaceLayoutDocument? stored;
         try
         {
@@ -61,12 +92,14 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
             return Failure<LayoutChangeSet>("ATLAS-AUTO-READ");
         }
 
+        // 从未保存过文档（首次运行）视为无变更，不产生恢复操作。
         if (stored is null)
         {
             return WorkspaceResult<LayoutChangeSet>.NoChange(
                 LayoutChangeSet.Empty(workspace.Current.Revision, LayoutChangeKind.Restore));
         }
 
+        // 已保存文档损坏时上报诊断并原样返回解析错误，绝不强行恢复残缺布局。
         var parsed = serializer.Deserialize(stored.Xml, workspace.Id);
         if (!parsed.Succeeded)
         {
@@ -76,12 +109,16 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
             return WorkspaceResult<LayoutChangeSet>.Failure(parsed.Error!);
         }
 
+        // 恢复必须经工作区操作引擎提交，使快照替换走统一的提交路径（历史/事件/不变量校验）。
         return await workspace.ExecuteAsync(
             new RestoreWorkspaceOperation(parsed.Value!, workspace.Current.Revision),
             cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Forces the latest snapshot through the ordered writer.</summary>
+    /// <summary>
+    ///     取消未决的防抖写入，等待在途保存结束后强制把当前快照落盘；
+    ///     force 跳过代际过期检查，保证即使排队期间有更新提交也会写入。
+    /// </summary>
     public async ValueTask<WorkspaceResult<bool>> FlushAsync(
         CancellationToken cancellationToken = default)
     {
@@ -174,6 +211,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         CancellationToken cancellationToken,
         bool force = false)
     {
+        // 序列化在写入器外并行完成，写入器只保护存储写入，避免拖长串行化窗口。
         string xml;
         try
         {
@@ -195,6 +233,8 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         await writer.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // 排队等待期间若有更新的快照产生，说明本次捕获已过期，直接放弃写入（force 除外），
+            // 保证落盘的始终是最新状态，旧快照不会覆盖新快照。
             if (!force && capturedGeneration != Volatile.Read(ref generation))
             {
                 return WorkspaceResult<bool>.NoChange(false);
@@ -239,7 +279,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         }
         catch
         {
-            // Diagnostics must never turn persistence degradation into a workspace failure.
+            // 诊断绝不能将持久化降级演变为工作区失败。
         }
     }
 

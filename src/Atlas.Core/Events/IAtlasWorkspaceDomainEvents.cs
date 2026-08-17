@@ -1,23 +1,37 @@
 namespace Atlas.Core.Events;
 
-/// <summary>Exposes strongly typed events derived from committed workspace changes.</summary>
+/// <summary>
+///     公开从已提交工作区变更派生的强类型事件。
+/// </summary>
 public interface IAtlasWorkspaceDomainEvents
 {
-    /// <summary>Occurs when a document item is opened.</summary>
+    /// <summary>
+    ///     当文档项被打开时发生。
+    /// </summary>
     event EventHandler<ItemOpenedEventArgs>? ItemOpened;
 
-    /// <summary>Occurs when a document item is closed.</summary>
+    /// <summary>
+    ///     当文档项被关闭时发生。
+    /// </summary>
     event EventHandler<ItemClosedEventArgs>? ItemClosed;
 
-    /// <summary>Occurs when an item becomes selected in a group.</summary>
+    /// <summary>
+    ///     当项在组中被选中时发生。
+    /// </summary>
     event EventHandler<ItemActivatedEventArgs>? ItemActivated;
 
-    /// <summary>Occurs when a tool item is created.</summary>
+    /// <summary>
+    ///     当工具项被创建时发生。
+    /// </summary>
     event EventHandler<ToolCreatedEventArgs>? ToolCreated;
 
-    /// <summary>Occurs when a tool item is removed.</summary>
+    /// <summary>
+    ///     当工具项被移除时发生。
+    /// </summary>
     event EventHandler<ToolRemovedEventArgs>? ToolRemoved;
 
-    /// <summary>Occurs after a persisted workspace is restored.</summary>
+    /// <summary>
+    ///     在持久化的工作区恢复之后发生。
+    /// </summary>
     event EventHandler<WorkspaceRestoredEventArgs>? WorkspaceRestored;
 }

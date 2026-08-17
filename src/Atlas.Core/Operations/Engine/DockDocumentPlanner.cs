@@ -4,10 +4,23 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     文档停靠规划器：将文档项并入目标组（Center），或按分区新建动态组与分割节点。
+/// </summary>
 internal static class DockDocumentPlanner
 {
+    /// <summary>
+    ///     规划文档停靠：校验项与目标组、幂等判定，并生成合并或新建分割的候选快照。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">文档停靠操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan Plan(WorkspaceSnapshot snapshot, DockDocumentOperation operation)
     {
+        // 停靠分区决定改动形态：Center 只合并进目标组，其余分区要新建动态组与分割节点，
+        // 因此非 Center 停靠额外要求 CanSplit 能力；校验失败一律返回结构化错误。
         if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
         {
             return Failure(WorkspaceErrorCode.ItemNotFound, operation, "ATLAS-ITEM-MISSING", "Atlas.Item.NotFound");
@@ -39,6 +52,8 @@ internal static class DockDocumentPlanner
             return Failure(WorkspaceErrorCode.TargetRejectedByPolicy, operation, "ATLAS-DOCK-SOURCE-REJECTED", "Atlas.Dock.SourceRejected");
         }
 
+        // 源组即目标组时有两种幂等情形：中心区停靠只是再次激活，
+        // 动态组的唯一项停靠回自身也没有结构变化——都直接判定无变更。
         if (source.Id == target.Id
             && (operation.Zone == DocumentDockZone.Center
                 || (source.ItemIds.Count == 1 && source.RetentionPolicy == GroupRetentionPolicy.Dynamic)))
@@ -46,6 +61,8 @@ internal static class DockDocumentPlanner
             return WorkspacePlan.NoChange();
         }
 
+        // 新建组/分割的 ID 必须预先确认不与现有节点冲突：先验证后修改，
+        // 避免在部分应用之后才发现结构损坏。
         if (operation.Zone != DocumentDockZone.Center
             && (snapshot.Nodes.ContainsKey(operation.NewGroupId!.Value)
                 || snapshot.Nodes.ContainsKey(operation.NewSplitId!.Value)))
@@ -57,6 +74,9 @@ internal static class DockDocumentPlanner
         var rootNodeId = snapshot.RootNodeId;
         RemoveFromSource(nodes, source, item.Id, ref rootNodeId);
 
+        // 两条落地路径：中心区把项追加进目标组并更新最近访问；
+        // 非中心区创建动态组并用分割节点替换目标组——轴方向由分区决定，
+        // Start 分区把新组置于分割首侧、End 分区置于次侧。
         if (operation.Zone == DocumentDockZone.Center)
         {
             target = (GroupNode)nodes[target.Id];

@@ -1,16 +1,22 @@
 namespace Atlas.Core.Results;
 
 /// <summary>
-/// Identifies whether an operation committed, changed nothing, or failed as expected.
+///     标识操作是已提交、未变更还是按预期失败。
 /// </summary>
 public enum WorkspaceResultStatus
 {
-    /// <summary>The operation committed a new revision.</summary>
+    /// <summary>
+    ///     操作提交了新修订。
+    /// </summary>
     Success = 0,
 
-    /// <summary>The operation completed without changing the snapshot.</summary>
+    /// <summary>
+    ///     操作在未更改快照的情况下完成。
+    /// </summary>
     NoChange = 1,
 
-    /// <summary>The operation failed with an expected workspace error.</summary>
+    /// <summary>
+    ///     操作因预期的工作区错误而失败。
+    /// </summary>
     Failure = 2,
 }

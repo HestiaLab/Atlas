@@ -1,26 +1,27 @@
 namespace Atlas.Core;
 
 /// <summary>
-/// Identifies a dock item within an Atlas workspace.
+///     标识 Atlas 工作区内的停靠项。
 /// </summary>
 public readonly struct DockItemId : IEquatable<DockItemId>
 {
+    // 包装的原始标识字符串；default 实例为 null，访问 Value 抛异常。
     private readonly string? _value;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DockItemId"/> struct.
+    ///     包装一个标识字符串；值为 null 或空白时立即抛参数异常。
     /// </summary>
-    /// <param name="value">The non-empty, non-whitespace identifier value.</param>
+    /// <param name="value">非空、非空白的标识符值。</param>
     public DockItemId(string value)
     {
         _value = IdentifierGuard.RequireValue(value, nameof(value));
     }
 
     /// <summary>
-    /// Gets the identifier value.
+    ///     构造时经 IdentifierGuard 校验的原始标识字符串。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     该实例是默认的未初始化值。
     /// </exception>
     public string Value => _value
         ?? throw new InvalidOperationException("A default DockItemId does not have a value.");
@@ -50,7 +51,7 @@ public readonly struct DockItemId : IEquatable<DockItemId>
     }
 
     /// <summary>
-    /// Determines whether two dock item identifiers are equal.
+    ///     按底层字符串序数比较两个停靠项标识是否相等。
     /// </summary>
     public static bool operator ==(DockItemId left, DockItemId right)
     {
@@ -58,7 +59,7 @@ public readonly struct DockItemId : IEquatable<DockItemId>
     }
 
     /// <summary>
-    /// Determines whether two dock item identifiers are not equal.
+    ///     按底层字符串序数比较两个停靠项标识是否不等。
     /// </summary>
     public static bool operator !=(DockItemId left, DockItemId right)
     {

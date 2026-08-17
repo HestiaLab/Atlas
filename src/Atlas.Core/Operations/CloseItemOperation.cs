@@ -1,9 +1,13 @@
 namespace Atlas.Core.Operations;
 
-/// <summary>Closes an existing workspace item after capability and guard checks.</summary>
+/// <summary>
+///     在能力与守卫检查后关闭现有工作区项。
+/// </summary>
 public sealed class CloseItemOperation : LayoutOperation
 {
-    /// <summary>Initializes a close operation.</summary>
+    /// <summary>
+    ///     初始化 <see cref="CloseItemOperation"/> 类的新实例。
+    /// </summary>
     public CloseItemOperation(DockItemId itemId, long? baseRevision = null)
         : base(LayoutOperationKind.CloseItem, baseRevision)
     {
@@ -17,6 +21,8 @@ public sealed class CloseItemOperation : LayoutOperation
         ItemId = itemId;
     }
 
-    /// <summary>Gets the item to close.</summary>
+    /// <summary>
+    ///     获取要关闭的项。
+    /// </summary>
     public DockItemId ItemId { get; }
 }

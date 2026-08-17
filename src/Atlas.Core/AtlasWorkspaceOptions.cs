@@ -3,10 +3,15 @@ using Atlas.Core.Operations;
 
 namespace Atlas.Core;
 
-/// <summary>Defines immutable create-time workspace services and history behavior.</summary>
+/// <summary>
+///     定义不可变的创建时工作区服务与历史行为。
+/// </summary>
 public sealed class AtlasWorkspaceOptions
 {
-    /// <summary>Initializes workspace options.</summary>
+    /// <summary>
+    ///     构造不可变选项；历史缺省为默认历史选项，
+    ///     内容标识策略与关闭守卫解析器可选注入。
+    /// </summary>
     public AtlasWorkspaceOptions(
         WorkspaceHistoryOptions? history = null,
         IContentIdentityPolicy? contentIdentityPolicy = null,
@@ -17,12 +22,18 @@ public sealed class AtlasWorkspaceOptions
         CloseGuardResolver = closeGuardResolver;
     }
 
-    /// <summary>Gets bounded history behavior.</summary>
+    /// <summary>
+    ///     获取有界的历史行为。
+    /// </summary>
     public WorkspaceHistoryOptions History { get; }
 
-    /// <summary>Gets the optional custom content identity policy.</summary>
+    /// <summary>
+    ///     获取可选的自定义内容标识策略。
+    /// </summary>
     public IContentIdentityPolicy? ContentIdentityPolicy { get; }
 
-    /// <summary>Gets the optional item close guard resolver.</summary>
+    /// <summary>
+    ///     获取可选的项关闭守卫解析器。
+    /// </summary>
     public IDockItemCloseGuardResolver? CloseGuardResolver { get; }
 }

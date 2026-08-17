@@ -2,8 +2,16 @@ using Atlas.Core.Layout;
 
 namespace Atlas.Core.Validation;
 
+/// <summary>
+///     校验布局树拓扑结构的不变式。
+/// </summary>
 internal static class TopologyInvariantRules
 {
+    /// <summary>
+    ///     检查根节点有效性、父子关系、环与孤儿节点。
+    /// </summary>
+    /// <param name="snapshot">待校验的工作区快照。</param>
+    /// <param name="violations">收集违规项的目标集合。</param>
     internal static void Validate(
         WorkspaceSnapshot snapshot,
         ICollection<InvariantViolation> violations)
@@ -42,6 +50,8 @@ internal static class TopologyInvariantRules
         WorkspaceSnapshot snapshot,
         ICollection<InvariantViolation> violations)
     {
+        // 只有分割节点有子节点（组是叶子）：按父→子方向构建邻接表，
+        // 供父计数与可达性两遍校验共用，缺失的子节点在此直接报告。
         var adjacency = new Dictionary<LayoutNodeId, IReadOnlyList<LayoutNodeId>>();
 
         foreach (var pair in snapshot.Nodes)
@@ -101,6 +111,8 @@ internal static class TopologyInvariantRules
         WorkspaceSnapshot snapshot,
         ICollection<InvariantViolation> violations)
     {
+        // 三色 DFS 用显式栈 + 进出帧实现（深树不递归，避免爆栈）：进入标 Visiting、再次遇到即环，
+        // 子树处理完才标 Visited；遍历后索引中未达的节点即孤儿。
         var states = new Dictionary<LayoutNodeId, VisitState>();
         var reachable = new HashSet<LayoutNodeId>();
         var stack = new Stack<(LayoutNodeId Id, bool IsExit)>();

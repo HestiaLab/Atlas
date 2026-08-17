@@ -1,7 +1,8 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Represents a node in the closed Atlas layout tree hierarchy.
+///     布局树节点的抽象基类；树由 <see cref="GroupNode"/> 叶子与 <see cref="SplitNode"/> 分割组成，
+///     构造校验节点标识非默认值。
 /// </summary>
 public abstract class LayoutNode
 {
@@ -18,7 +19,7 @@ public abstract class LayoutNode
     }
 
     /// <summary>
-    /// Gets the workspace-scoped node identity.
+    ///     工作区作用域内的节点标识。
     /// </summary>
     public LayoutNodeId Id { get; }
 }
