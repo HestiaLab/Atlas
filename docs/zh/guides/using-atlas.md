@@ -259,7 +259,44 @@ private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
 
 Host 收集声明、构建定义，并在一次原子操作中协调。声明条目由声明拥有；你在声明变更后以编程方式打开的条目在其 Group 和 Kind 保持时会被保留。
 
-## 8. 持久化
+## 8. 分割尺寸：弹性吸收（Elastic-Absorb）
+
+Atlas 使用弹性吸收分割尺寸（ADR-0021）：每个分割最多有一个弹性轨道（`FixedPixels` basis 中隐式的 `minmax(0,1fr)` 一侧），其余都以 CSS 像素固定。
+
+- Tool/dock 面板使用 `SplitBasis.FixedPixels(pixels, anchor)`。拖动其他 splitter 或调整窗口大小时，它们的宽度保持稳定。
+- Editor/工作区面板是其所在分割的弹性轨道：它们吸收所有剩余空间变化。
+- `SplitBasis.Proportional` 锁定比例（子元素随容器缩放）。只用于单个面板内部的非关键分区——绝不用于分隔面板与工作区的分割。
+
+```csharp
+// 左侧面板固定 280px；该行的其余部分（editor 区域）是弹性的。
+var mainArea = new SplitNode(
+    new LayoutNodeId("main-area"),
+    SplitAxis.InlineChildren,
+    SplitBasis.FixedPixels(280d, SplitAnchor.First),
+    new SplitConstraints(150d, 380d, 360d, null),
+    leftDock.Id,
+    editorAndRight.Id);
+
+// Editor 弹性；右侧面板固定 300px。
+var editorAndRight = new SplitNode(
+    new LayoutNodeId("editor-right"),
+    SplitAxis.InlineChildren,
+    SplitBasis.FixedPixels(300d, SplitAnchor.Second),
+    new SplitConstraints(280d, null, 160d, 420d),
+    editor.Id,
+    rightDock.Id);
+```
+
+在 Razor 中，将 basis 传给 `AtlasSplitDefinition`：
+
+```razor
+<AtlasSplitDefinition Axis="SplitAxis.InlineChildren"
+                      Basis="SplitBasis.FixedPixels(280, SplitAnchor.First)">
+```
+
+终态 resize 提交保留分割的 basis 类型：`FixedPixels` 分割在拖拽、键盘步进或双击均分后仍保持像素基准，布局不会悄悄退化为比例尺寸。
+
+## 9. 持久化
 
 序列化器是同步且无 I/O 的；存储适配器由你提供：
 

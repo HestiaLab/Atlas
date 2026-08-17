@@ -75,13 +75,6 @@ independent NuGet consumer verification records. Evidence only describes the
 result at the time it was recorded; current state must be re-verified by
 running tests and consulting the requirements traceability matrix.
 
-### Code Reviews
-
-[`reviews/`](./reviews/) stores review reports that identify library gaps or
-sample defects from a consumer perspective. Reviews are point-in-time source
-inspection records; findings are proposals until the maintainer records a
-decision in the report's decision log.
-
 ### Security
 
 [`security/`](./security/) stores the content trust model and security boundary
