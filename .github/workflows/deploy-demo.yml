@@ -1,6 +1,12 @@
 name: Deploy Showcase to GitHub Pages
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'samples/Atlas.Showcase/**'
+      - '.github/workflows/deploy-demo.yml'
   workflow_dispatch:
 
 permissions:
@@ -10,7 +16,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -19,11 +25,27 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '6.0.x'
+
+      # atlas.js is a gitignored build artifact. A clean checkout contains
+      # only atlas.css, so the bundle must be generated before publish;
+      # without npm the csproj target warns and continues, silently shipping
+      # a bundle-less package. Run the real JS pipeline explicitly.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/Atlas.Blazor/package-lock.json
+
+      - name: Build Atlas TypeScript bundle
+        working-directory: src/Atlas.Blazor
+        run: |
+          npm ci
+          npm run build:js
 
       # Atlas.Showcase is the in-repo teaching demo. The deploy resolves the
       # exact source revision of this branch — the Pages site always reflects
@@ -34,6 +56,11 @@ jobs:
             --configuration Release \
             --output publish/showcase \
             --source https://api.nuget.org/v3/index.json
+
+      - name: Verify bundle is present in publish output
+        run: |
+          test -f publish/showcase/wwwroot/_content/Atlas.Blazor/atlas-v2/atlas.js \
+            && echo "atlas.js present"
 
       # GitHub Pages project site maps the deployed artifact root to the
       # /Atlas/ subpath, so the staged root must BE the site: no extra
@@ -48,6 +75,15 @@ jobs:
         run: |
           mkdir -p site
           cp -r publish/showcase/wwwroot/. site/
+
+      # GitHub Pages runs Jekyll on project-site branches unless told not to;
+      # without .nojekyll the _framework/ directory is dropped and the site
+      # renders blank. The SPA fallback serves index.html for unknown paths so
+      # direct navigation to /verification works on refresh.
+      - name: Add .nojekyll and SPA fallback
+        run: |
+          touch site/.nojekyll
+          cp site/index.html site/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
