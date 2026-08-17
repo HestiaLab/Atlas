@@ -2,8 +2,9 @@
 
 > English (canonical) | [简体中文](../../zh/evidence/p8-requirement-audit.md)
 
-- Date: 2026-08-03
-- Baseline: ADR-0014; 150 = REQ-F 142 + REQ-NF 8
+- Date: 2026-08-03 (baseline updated 2026-08-06: REQ-NF-009 added via
+  ADR-0023 brings the count to 151)
+- Baseline: ADR-0014; 151 = REQ-F 142 + REQ-NF 9
 - Rule: each formal requirement has exactly one row; status is the
   implementation status and does not inherit the HLD's Designed.
 
@@ -11,7 +12,7 @@
 
 | Dimension | Conclusion | Evidence/Gap |
 |-----------|------------|--------------|
-| Requirement correctness | Pass | ADR-0014 and RequirementsBaselineTests fix the body/index to the same 150-item set. |
+| Requirement correctness | Pass | ADR-0014 and RequirementsBaselineTests fix the body/index to the same 151-item set. |
 | Architecture boundary | Pass | The Atlas.Core architecture test forbids Blazor, JS interop, and Atlas.Blazor references; the two-package boundary holds. |
 | Domain model | Partial | identity, snapshot, layout, placement, sizing, and persistence models exist; Auto-hide runtime, Reset, and other behaviors are still missing. |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 vertical slices exist; Overflow Menu/Wrap, Context Menu, and some repair policies are not implemented. |
