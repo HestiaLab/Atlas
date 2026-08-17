@@ -2,10 +2,14 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Operations;
 
-/// <summary>Changes committed visibility for one logical toolbar.</summary>
+/// <summary>
+///     更改一个逻辑工具栏的已提交可见性。
+/// </summary>
 public sealed class SetToolBarVisibilityOperation : LayoutOperation
 {
-    /// <summary>Initializes a toolbar visibility operation.</summary>
+    /// <summary>
+    ///     初始化工具栏可见性操作。
+    /// </summary>
     public SetToolBarVisibilityOperation(
         LogicalSide side,
         ToolBarVisibility visibility,
@@ -30,9 +34,13 @@ public sealed class SetToolBarVisibilityOperation : LayoutOperation
         Visibility = visibility;
     }
 
-    /// <summary>Gets the logical toolbar side.</summary>
+    /// <summary>
+    ///     获取工具栏的逻辑侧。
+    /// </summary>
     public LogicalSide Side { get; }
 
-    /// <summary>Gets the requested toolbar visibility.</summary>
+    /// <summary>
+    ///     获取请求的工具栏可见性。
+    /// </summary>
     public ToolBarVisibility Visibility { get; }
 }

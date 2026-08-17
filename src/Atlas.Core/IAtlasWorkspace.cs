@@ -6,45 +6,69 @@ using Atlas.Core.Results;
 namespace Atlas.Core;
 
 /// <summary>
-/// Provides atomic access to one isolated Atlas workspace.
+///     提供对单个隔离 Atlas 工作区的原子访问。
 /// </summary>
 public interface IAtlasWorkspace : IAsyncDisposable
 {
-    /// <summary>Gets the stable workspace identity.</summary>
+    /// <summary>
+    ///     获取稳定的工作区标识。
+    /// </summary>
     WorkspaceId Id { get; }
 
-    /// <summary>Gets the latest committed immutable snapshot.</summary>
+    /// <summary>
+    ///     获取最新已提交的不可变快照。
+    /// </summary>
     WorkspaceSnapshot Current { get; }
 
-    /// <summary>Gets whether a committed operation can be undone.</summary>
+    /// <summary>
+    ///     获取已提交操作是否可撤销。
+    /// </summary>
     bool CanUndo { get; }
 
-    /// <summary>Gets whether an undone operation can be redone.</summary>
+    /// <summary>
+    ///     获取已撤销操作是否可重做。
+    /// </summary>
     bool CanRedo { get; }
 
-    /// <summary>Gets the strongly typed events derived from committed changes.</summary>
+    /// <summary>
+    ///     获取从已提交变更派生的强类型事件。
+    /// </summary>
     IAtlasWorkspaceDomainEvents DomainEvents { get; }
 
-    /// <summary>Occurs after a new snapshot has been committed.</summary>
+    /// <summary>
+    ///     在新快照提交后发生。
+    /// </summary>
     event EventHandler<WorkspaceChangedEventArgs>? Changed;
 
-    /// <summary>Executes one operation atomically.</summary>
-    /// <param name="operation">The immutable operation request.</param>
-    /// <param name="cancellationToken">A token that cancels pending asynchronous work.</param>
-    /// <returns>The committed change, no-change outcome, or expected failure.</returns>
+    /// <summary>
+    ///     原子地执行一个操作。
+    /// </summary>
+    /// <param name="operation">不可变操作请求。</param>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的变更、无变更结果或预期失败。
+    /// </returns>
     ValueTask<WorkspaceResult<LayoutChangeSet>> ExecuteAsync(
         LayoutOperation operation,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Moves one step backward through committed history.</summary>
-    /// <param name="cancellationToken">A token that cancels pending asynchronous work.</param>
-    /// <returns>The committed undo change, no-change outcome, or expected failure.</returns>
+    /// <summary>
+    ///     沿已提交历史向后移动一步。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的撤销变更、无变更结果或预期失败。
+    /// </returns>
     ValueTask<WorkspaceResult<LayoutChangeSet>> UndoAsync(
         CancellationToken cancellationToken = default);
 
-    /// <summary>Moves one step forward through previously undone history.</summary>
-    /// <param name="cancellationToken">A token that cancels pending asynchronous work.</param>
-    /// <returns>The committed redo change, no-change outcome, or expected failure.</returns>
+    /// <summary>
+    ///     沿先前已撤销的历史向前移动一步。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的重做变更、无变更结果或预期失败。
+    /// </returns>
     ValueTask<WorkspaceResult<LayoutChangeSet>> RedoAsync(
         CancellationToken cancellationToken = default);
 }

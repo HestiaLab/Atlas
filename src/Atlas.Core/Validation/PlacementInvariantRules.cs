@@ -4,8 +4,16 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Validation;
 
+/// <summary>
+///     校验停靠项放置相关的不变式。
+/// </summary>
 internal static class PlacementInvariantRules
 {
+    /// <summary>
+    ///     交叉核对项的放置计数、逻辑区域唯一性与工具栏排序。
+    /// </summary>
+    /// <param name="snapshot">待校验的工作区快照。</param>
+    /// <param name="violations">收集违规项的目标集合。</param>
     internal static void Validate(
         WorkspaceSnapshot snapshot,
         ICollection<InvariantViolation> violations)
@@ -39,6 +47,9 @@ internal static class PlacementInvariantRules
         IDictionary<LogicalRegion, LayoutNodeId> groupRegions,
         ICollection<InvariantViolation> violations)
     {
+        // 放置校验是多遍交叉核对的第一遍：登记组内放置计数与项→逻辑区域映射，
+        // 供后续遍（自动隐藏、放置计数、工具栏顺序）交叉验证——
+        // 单遍无法同时保证"恰好一个放置"与"顺序表完整"。
         if (group.Kind == DockItemKind.Tool && group.LogicalRegion is not null)
         {
             if (!groupRegions.TryAdd(group.LogicalRegion.Value, group.Id))
@@ -112,6 +123,8 @@ internal static class PlacementInvariantRules
         IDictionary<DockItemId, LogicalRegion> itemRegions,
         ICollection<InvariantViolation> violations)
     {
+        // 自动隐藏条是第二种放置点：条目必须引用真实且具备 CanAutoHide 的工具项，
+        // dock-back 书签必须能解析到工具组的逻辑区域——拖出还原时按该书签归位。
         foreach (var pair in snapshot.AutoHideStrips)
         {
             var strip = pair.Value;
@@ -212,6 +225,8 @@ internal static class PlacementInvariantRules
         IReadOnlyDictionary<DockItemId, LogicalRegion> itemRegions,
         ICollection<InvariantViolation> violations)
     {
+        // 顺序表必须与该区域实际放置的工具集合互为完全排列（双向集合相等）：
+        // 缺项或多余项都算违规，否则工具栏渲染顺序与布局树中的组顺序漂移。
         foreach (var pair in snapshot.ToolBarOrders)
         {
             var order = pair.Value;

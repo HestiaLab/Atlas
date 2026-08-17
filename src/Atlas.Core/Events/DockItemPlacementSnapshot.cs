@@ -2,7 +2,9 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Events;
 
-/// <summary>Describes one immutable committed item placement.</summary>
+/// <summary>
+///     描述一个不可变的已提交项放置。
+/// </summary>
 public sealed class DockItemPlacementSnapshot
 {
     internal DockItemPlacementSnapshot(LayoutNodeId groupId, int index)
@@ -38,16 +40,24 @@ public sealed class DockItemPlacementSnapshot
         Index = index;
     }
 
-    /// <summary>Gets the placement kind.</summary>
+    /// <summary>
+    ///     获取放置种类。
+    /// </summary>
     public DockItemPlacementKind Kind { get; }
 
-    /// <summary>Gets the group identity for a group placement.</summary>
+    /// <summary>
+    ///     获取组放置的组标识。
+    /// </summary>
     public LayoutNodeId? GroupId { get; }
 
-    /// <summary>Gets the workspace edge for an auto-hide placement.</summary>
+    /// <summary>
+    ///     获取自动隐藏放置的工作区边缘。
+    /// </summary>
     public WorkspaceEdge? AutoHideEdge { get; }
 
-    /// <summary>Gets the zero-based index within the placement.</summary>
+    /// <summary>
+    ///     获取放置中的从零开始的索引。
+    /// </summary>
     public int Index { get; }
 
     private static void ValidateIndex(int index)

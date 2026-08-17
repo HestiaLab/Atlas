@@ -14,7 +14,9 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Legacy members of <see cref="AtlasXmlLayoutSerializer"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasXmlLayoutSerializer"/> 的旧版成员（partial）。
+/// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {
     private static WorkspaceResult<LayoutRestoreDocument> ReadLegacy(
@@ -22,6 +24,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         WorkspaceId targetWorkspaceId,
         LayoutPersistenceLimits limits)
     {
+        // 迁移仅接受版本精确为 1.0 的文档；迁移步数上限是迁移成本开关，低于 1 视为禁止迁移。
         if (limits.MaxMigrationSteps < 1
             || !StringComparer.Ordinal.Equals(
                 (string?)root.Attribute("schemaVersion"),
@@ -38,6 +41,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             return Invalid("ATLAS-PERSIST-WORKSPACE");
         }
 
+        // V1 文档必须恰为 Panels + EditorViews 两个固定子节；只接受这个精确形状，
+        // 任何多余属性或子元素都视为未知方言拒绝，避免把不认识的变体误迁成 V2。
         var children = root.Elements().ToArray();
         if (children.Length != 2
             || children[0].Name != "Panels"
@@ -57,6 +62,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             return Invalid("ATLAS-V1-SHAPE");
         }
 
+        // 先完整提取面板的布局元数据（区域/激活/尺寸），再按区域重建组；
+        // V1 中这些信息与项本体混杂，单项构造时无法直接映射到 V2 结构。
         var items = new Dictionary<DockItemId, DockItem>();
         var panelData = new List<LegacyPanel>();
         foreach (var element in panelElements)
@@ -124,6 +131,8 @@ public sealed partial class AtlasXmlLayoutSerializer
                     documentState: new DocumentState(editor.Pinned, isPreview: false)));
         }
 
+        // 同一区域的面板合并为一个 Persistent 组，面板出现顺序即组内与工具栏顺序；
+        // autoHidden 面板不进入组，改为挂回该区域边缘的自动隐藏条目，供日后重新弹出。
         var nodes = new Dictionary<LayoutNodeId, LayoutNode>();
         var orderedRoots = new List<LayoutNodeId>();
         var orders = new Dictionary<LogicalRegion, ToolBarOrderState>();
@@ -162,6 +171,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             }
         }
 
+        // V1 编辑器没有区域归属，统一并入一个文档组。
         if (editorData.Count != 0)
         {
             var groupId = new LayoutNodeId("legacy-documents");
@@ -178,6 +188,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             orderedRoots.Add(groupId);
         }
 
+        // V1 无嵌套拓扑，按区域组与文档组的固定顺序用等比例 Split 链串成单根，属拓扑降级近似。
         var rootNodeId = ChainLegacyRoots(nodes, orderedRoots);
         var snapshot = new WorkspaceSnapshot(
             targetWorkspaceId,
@@ -204,6 +215,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             return Invalid("ATLAS-V1-INVARIANT");
         }
 
+        // 迁移结果附带两条警告：只接受 V1 严格子集（窄契约），且拓扑由链式拆分近似（回退）。
         return WorkspaceResult<LayoutRestoreDocument>.Success(
             new LayoutRestoreDocument(
                 snapshot,

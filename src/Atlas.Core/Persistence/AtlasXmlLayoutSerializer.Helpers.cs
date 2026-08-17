@@ -14,7 +14,9 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Helpers members of <see cref="AtlasXmlLayoutSerializer"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasXmlLayoutSerializer"/> 的辅助成员（partial）。
+/// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {
     private static void EnsureSnapshotValid(WorkspaceSnapshot snapshot)

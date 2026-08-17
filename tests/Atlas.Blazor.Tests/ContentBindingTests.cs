@@ -17,10 +17,10 @@ using Xunit;
 namespace Atlas.Blazor.Tests;
 
 /// <summary>
-/// Phase 3 typed functional content binding contract tests: immutable
-/// AtlasContentMap creation, strongly typed parameter/callback/fragment binding,
-/// selector validation, identity preservation, structural remounts, and
-/// deterministic Map/Route/DI collisions in the effective Catalog.
+///     Phase 3 类型化功能内容绑定契约测试：不可变的
+///     AtlasContentMap 创建、强类型参数/回调/片段绑定、
+///     选择器验证、标识保留、结构重挂载，以及
+///     生效 Catalog 中确定性的 Map/Route/DI 冲突。
 /// </summary>
 public sealed class ContentBindingTests : TestContext
 {

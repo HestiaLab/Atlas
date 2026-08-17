@@ -1,17 +1,17 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-/// Contains committed state that is valid only for document items.
+///     仅文档项携带的固定/预览状态；两者互斥。
 /// </summary>
 public readonly struct DocumentState : IEquatable<DocumentState>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DocumentState"/> struct.
+    ///     创建文档状态；固定与预览同时为 <see langword="true"/> 时立即抛异常。
     /// </summary>
-    /// <param name="isPinned">Whether the document is pinned.</param>
-    /// <param name="isPreview">Whether the document is a preview occurrence.</param>
+    /// <param name="isPinned">文档是否已固定。</param>
+    /// <param name="isPreview">文档是否为预览实例。</param>
     /// <exception cref="ArgumentException">
-    /// The document is both pinned and a preview.
+    ///     文档不能同时处于固定状态和预览状态。
     /// </exception>
     public DocumentState(bool isPinned, bool isPreview)
     {
@@ -25,12 +25,12 @@ public readonly struct DocumentState : IEquatable<DocumentState>
     }
 
     /// <summary>
-    /// Gets a value indicating whether the document is pinned.
+    ///     文档是否固定；与 <see cref="IsPreview"/> 互斥。
     /// </summary>
     public bool IsPinned { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the document is a preview occurrence.
+    ///     文档是否为预览实例；与 <see cref="IsPinned"/> 互斥。
     /// </summary>
     public bool IsPreview { get; }
 
@@ -53,7 +53,7 @@ public readonly struct DocumentState : IEquatable<DocumentState>
     }
 
     /// <summary>
-    /// Determines whether two document states are equal.
+    ///     确定两个文档状态是否相等。
     /// </summary>
     public static bool operator ==(DocumentState left, DocumentState right)
     {
@@ -61,7 +61,7 @@ public readonly struct DocumentState : IEquatable<DocumentState>
     }
 
     /// <summary>
-    /// Determines whether two document states are not equal.
+    ///     确定两个文档状态是否不相等。
     /// </summary>
     public static bool operator !=(DocumentState left, DocumentState right)
     {

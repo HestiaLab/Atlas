@@ -4,8 +4,19 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     工作区快照语义比较器：忽略修订号，逐条目比较布局内容是否等价。
+/// </summary>
 internal static class WorkspaceSemanticComparer
 {
+    /// <summary>
+    ///     判断两个快照是否语义等价：标识、根节点与各字典条目全部一致。
+    /// </summary>
+    /// <param name="left">参与比较的快照。</param>
+    /// <param name="right">参与比较的快照。</param>
+    /// <returns>
+    ///     语义等价时返回 <see langword="true"/>。
+    /// </returns>
     internal static bool Equals(WorkspaceSnapshot left, WorkspaceSnapshot right)
     {
         return left.Id == right.Id

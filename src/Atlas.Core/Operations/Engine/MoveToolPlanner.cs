@@ -5,12 +5,25 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     工具项移动规划器：处理工具项在组间、组内及自动隐藏条间的迁移。
+/// </summary>
 internal static class MoveToolPlanner
 {
+    /// <summary>
+    ///     规划工具项移动：校验能力与目标组、索引，同步更新组顺序与工具栏顺序。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">工具移动操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan Plan(
         WorkspaceSnapshot snapshot,
         MoveToolOperation operation)
     {
+        // 拖拽移动的校验决定"谁可以拖到哪"：项必须存在、是工具且可移动，目标必须是工具组、
+        // 索引不得越界；失败一律返回结构化错误而非抛异常，便于 UI 按诊断码提示。
         if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
         {
             return Failure(
@@ -61,6 +74,8 @@ internal static class MoveToolPlanner
                 target.Id);
         }
 
+        // 源有两种形态：布局树中的工具组，或自动隐藏条（source 为 null）。
+        // 同组移动退化为组内重排，跨组才走摘除-插入的迁移路径。
         var source = snapshot.Nodes.Values
             .OfType<GroupNode>()
             .SingleOrDefault(node => node.ItemIds.Contains(item.Id));
@@ -83,6 +98,8 @@ internal static class MoveToolPlanner
             RemoveFromAutoHide(strips, item.Id);
         }
 
+        // 目标组与其逻辑区域（工具栏）的条目顺序必须同步更新，
+        // 否则组内顺序与工具栏顺序漂移，违反 ToolBarOrder 不变式。
         var targetItems = target.ItemIds.ToList();
         targetItems.Insert(targetIndex, item.Id);
         nodes[target.Id] = new GroupNode(
@@ -182,12 +199,10 @@ internal static class MoveToolPlanner
             var selected = source.SelectedItemId == itemId
                 ? remaining.FirstOrDefault()
                 : source.SelectedItemId;
-            // An empty Persistent tool group stays in the tree (unlike
-            // Dynamic), and it must collapse so it stops occupying layout
-            // space after its final panel moved away (REQ-F-154). The
-            // collapse is enforced uniformly by GroupVisibilityInvariant at
-            // the snapshot boundary; the group re-expands when a panel is
-            // moved/selected into it again.
+            // 空的 Persistent 工具组保留在树中（与 Dynamic 不同），
+            // 最后一个面板移走后必须折叠以停止占用布局空间（REQ-F-154）。
+            // 折叠由 GroupVisibilityInvariant 在快照边界统一强制执行；
+            // 有面板再次移入或选中时组重新展开。
             nodes[source.Id] = new GroupNode(
                 source.Id,
                 source.Kind,

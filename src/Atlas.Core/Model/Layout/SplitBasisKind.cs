@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Identifies how a split stores its committed size.
+///     标识分割如何存储其已提交的尺寸。
 /// </summary>
 public enum SplitBasisKind
 {
     /// <summary>
-    /// One anchored child has a fixed extent measured in CSS pixels.
+    ///     一个锚定子项具有以 CSS 像素度量的固定尺寸。
     /// </summary>
     FixedPixels = 0,
 
     /// <summary>
-    /// The first child occupies a proportion of the available extent.
+    ///     第一个子项占据可用尺寸的一定比例。
     /// </summary>
     Proportional = 1,
 }

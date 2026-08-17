@@ -1,9 +1,14 @@
 namespace Atlas.Core;
 
-/// <summary>Defines bounded workspace history behavior.</summary>
+/// <summary>
+///     定义有界的工作区历史行为。
+/// </summary>
 public sealed class WorkspaceHistoryOptions
 {
-    /// <summary>Initializes history options.</summary>
+    /// <summary>
+    ///     构造历史选项；maxEntries 与 approximateMaxBytes 必须为正，
+    ///     合并窗口不能为负（缺省 500ms）。
+    /// </summary>
     public WorkspaceHistoryOptions(
         int maxEntries = 100,
         long? approximateMaxBytes = null,
@@ -30,12 +35,18 @@ public sealed class WorkspaceHistoryOptions
         ResizeCoalescingWindow = window;
     }
 
-    /// <summary>Gets the maximum retained undo entry count.</summary>
+    /// <summary>
+    ///     获取保留的最大撤销条目数。
+    /// </summary>
     public int MaxEntries { get; }
 
-    /// <summary>Gets the optional approximate history byte budget.</summary>
+    /// <summary>
+    ///     获取可选的近似历史字节预算。
+    /// </summary>
     public long? ApproximateMaxBytes { get; }
 
-    /// <summary>Gets the keyboard resize coalescing window.</summary>
+    /// <summary>
+    ///     获取键盘调整大小的合并窗口。
+    /// </summary>
     public TimeSpan ResizeCoalescingWindow { get; }
 }

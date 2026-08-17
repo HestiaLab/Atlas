@@ -1,18 +1,22 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-/// Identifies a content renderer kind and the application resource it renders.
+///     内容标识：Kind 选择渲染器或提供程序，ResourceId 定位其渲染的应用资源；
+///     两字段共同构成内容身份比较与去重判定的依据。
 /// </summary>
 public readonly struct ContentReference : IEquatable<ContentReference>
 {
+    // 内容种类：决定由哪个渲染器或提供程序呈现；default 实例为 null。
     private readonly string? _kind;
+
+    // 应用资源标识：在种类范围内定位具体内容；default 实例为 null。
     private readonly string? _resourceId;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ContentReference"/> struct.
+    ///     包装 (Kind, ResourceId) 内容引用；任一字段为 null 或空白时立即抛参数异常。
     /// </summary>
-    /// <param name="kind">The registered renderer or provider kind.</param>
-    /// <param name="resourceId">The application resource identity.</param>
+    /// <param name="kind">已注册的渲染器或提供程序种类。</param>
+    /// <param name="resourceId">应用程序资源标识。</param>
     public ContentReference(string kind, string resourceId)
     {
         _kind = IdentifierGuard.RequireValue(kind, nameof(kind));
@@ -20,19 +24,19 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    /// Gets the renderer or provider kind.
+    ///     内容种类：决定由哪个渲染器或提供程序呈现。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     该实例是默认的未初始化值。
     /// </exception>
     public string Kind => _kind
         ?? throw new InvalidOperationException("A default ContentReference does not have a kind.");
 
     /// <summary>
-    /// Gets the application resource identity.
+    ///     应用资源标识：在 <c>Kind</c> 种类范围内定位具体内容。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     该实例是默认的未初始化值。
     /// </exception>
     public string ResourceId => _resourceId
         ?? throw new InvalidOperationException("A default ContentReference does not have a resource identity.");
@@ -61,7 +65,7 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    /// Determines whether two content references are equal.
+    ///     按两字段序数比较两个内容引用是否相等。
     /// </summary>
     public static bool operator ==(ContentReference left, ContentReference right)
     {
@@ -69,7 +73,7 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    /// Determines whether two content references are not equal.
+    ///     按两字段序数比较两个内容引用是否不等。
     /// </summary>
     public static bool operator !=(ContentReference left, ContentReference right)
     {

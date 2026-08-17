@@ -17,7 +17,10 @@ using System.Globalization;
 
 namespace Atlas.Blazor.Components;
 
-/// <summary>Rendering members of <see cref="AtlasWorkspaceHost"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasWorkspaceHost"/> 的渲染投影（partial）：
+///     工作区根、分割节点、组、工具栏与固定槽位。
+/// </summary>
 public sealed partial class AtlasWorkspaceHost
 {
     /// <inheritdoc />
@@ -27,12 +30,12 @@ public sealed partial class AtlasWorkspaceHost
         if (ContentRoutes is not null)
         {
             builder.OpenComponent<CascadingValue<AtlasContentRouteCollector>>(0);
-            // The collector is a per-render registration vehicle: descendant
-            // AtlasContentRoute components must re-register on every parent
-            // render, so the CascadingValue key changes with the collector
-            // instance. The workspace root div below carries a STABLE key
-            // instead, so Blazor reuses that DOM node across re-renders and the
-            // interaction controller's listeners stay bound to a live element.
+            // 收集器是每次渲染的注册载体：后代 AtlasContentRoute 组件
+            // 必须在每次父渲染时重新注册，
+            // 因此 CascadingValue 的键随收集器实例变化。
+            // 下方的 workspace 根 div 反而携带 STABLE 键，
+            // 因此 Blazor 会在重渲染间复用该 DOM 节点，
+            // 交互控制器的监听器也保持绑定在存活的元素上。
             builder.SetKey(routeCollector);
             builder.AddAttribute(1, "Value", routeCollector);
             builder.AddAttribute(2, "ChildContent", ContentRoutes);
@@ -56,9 +59,9 @@ public sealed partial class AtlasWorkspaceHost
         }
 
         var snapshot = activeWorkspace.Current;
-        // Stable anchor for the interaction controller: Blazor reuses this DOM
-        // node across re-renders (only attributes change), so the controller's
-        // pointer listeners stay bound to a live element.
+        // 交互控制器的稳定锚点：Blazor 会在重渲染间复用此 DOM 节点
+        // （只有属性变化），因此控制器的指针监听器
+        // 保持绑定在存活的元素上。
         builder.OpenElement(6, "div");
         builder.SetKey("atlas-workspace-root");
         builder.AddAttribute(7, "class", "atlas-v2-workspace");
@@ -118,6 +121,8 @@ public sealed partial class AtlasWorkspaceHost
         WorkspaceSnapshot snapshot,
         LayoutNodeId nodeId)
     {
+        // 渲染树是 JS 交互控制器的数据契约：data-atlas-* 属性承载
+        // 分割缩放、折叠与拖拽所需的状态，属性名与值格式由交互脚本固定。
         var node = snapshot.Nodes[nodeId];
         if (node is SplitNode split)
         {
@@ -177,6 +182,8 @@ public sealed partial class AtlasWorkspaceHost
                 15,
                 "data-atlas-second-maximum",
                 split.Constraints.SecondMaximum);
+            // 折叠侧仍保留在 DOM 中（仅样式隐藏），
+            // 因此用 0px/1fr 覆盖比例样式，而非省略渲染或沿用基础比例。
             builder.AddAttribute(
                 16,
                 "style",
@@ -348,6 +355,7 @@ public sealed partial class AtlasWorkspaceHost
             .Where(region => region.Group.Visibility == GroupVisibility.Expanded)
             .Select(region => region.Group.SelectedItemId)
             .FirstOrDefault(itemId => itemId is not null);
+        // 漫游焦点项：展开组的选中项，无展开组时退回首个工具项，作为标签 tabindex 定位点。
         var rovingItemId = activeItemId
             ?? regions
                 .SelectMany(region => region.Items)
@@ -372,9 +380,8 @@ public sealed partial class AtlasWorkspaceHost
                     builder.CloseElement();
                 }
 
-                // Collection regions reuse the same sequence slot; the
-                // region count is declaration-fixed, so sequential diffing
-                // matches them in order.
+                // 集合区域复用相同的序列槽位；
+                // 区域数量由声明固定，因此顺序 diff 会按序匹配它们。
                 builder.OpenRegion(6);
                 RenderToolBarRegion(builder, upperRegions[regionIndex], rovingItemId);
                 builder.CloseRegion();
@@ -443,8 +450,8 @@ public sealed partial class AtlasWorkspaceHost
             var item = region.Items[itemIndex];
             var isActive = region.Group.Visibility == GroupVisibility.Expanded
                 && region.Group.SelectedItemId == item.Id;
-            // Collection items reuse the same sequence group each iteration
-            // and are distinguished by SetKey.
+            // 集合项在每次迭代中复用相同的序列组，
+            // 并通过 SetKey 区分。
             builder.OpenElement(0, "button");
             builder.SetKey(item.Id);
             builder.AddAttribute(1, "type", "button");
@@ -591,6 +598,9 @@ public sealed partial class AtlasWorkspaceHost
         string childName,
         bool enabled)
     {
+        // 折叠目标必须是组节点（分割子节点没有可见性概念），
+        // 可用性由分割条呈现能力位决定；按钮状态派生自快照的组可见性，
+        // 操作提交并重渲染后自然回到一致状态，无需本地状态同步。
         if (!enabled
             || !snapshot.Nodes.TryGetValue(childId, out var node)
             || node is not GroupNode group)

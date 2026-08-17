@@ -17,10 +17,10 @@ using Xunit;
 namespace Atlas.Blazor.Tests;
 
 /// <summary>
-/// Phase 2 content catalog contract tests: effective Catalog resolution across
-/// startup DI and Host-local declarative routes, deterministic conflicts,
-/// missing-item identity, atomic Host-local generation commits, and the
-/// Outlet-owned guarded Sandbox projection.
+///     Phase 2 内容目录契约测试：跨启动 DI 与宿主本地
+///     声明式路由的生效 Catalog 解析、确定性冲突、
+///     缺失项标识、原子的宿主本地源生成提交，以及
+///     Outlet 拥有的受保护沙箱投影。
 /// </summary>
 public sealed class ContentCatalogTests : TestContext
 {
@@ -332,10 +332,9 @@ public sealed class ContentCatalogTests : TestContext
                 "ROUTE[route-kind][doc]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        // The resolver runs once per guarded fragment execution. The initial projection
-        // pass evaluates the resolver before the route generation commits (one
-        // resolver-only pass), so the total equals fragment executions plus one. The
-        // missing-content reporter must never invoke the resolver.
+        // 解析器每次受保护的片段执行运行一次。初始投影阶段会在路由源生成提交之前
+        // 评估解析器（一次仅解析器的遍历），因此总数等于片段执行次数加一。
+        // 缺失内容报告器绝不能调用解析器。
         Assert.Equal(fragmentExecutions + 1, resolverCalls);
     }
 
@@ -378,7 +377,7 @@ public sealed class ContentCatalogTests : TestContext
                 Assert.DoesNotContain("DI[di-kind][faulting]", outlet.TextContent);
             });
 
-        // Fail-closed: the Catalog renderer never mounted for the faulting projection.
+        // 失败即关闭：Catalog 渲染器从未为故障投影挂载。
         Assert.Equal(0, tracker.Created);
         Assert.DoesNotContain("sandbox failure", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(errors, error => error.Code == AtlasHostErrorCode.ContentRenderFailed);
@@ -497,9 +496,9 @@ public sealed class ContentCatalogTests : TestContext
         Services.AddAtlasContent<OtherDiContent>("duplicate");
         var workspace = CreateWorkspace(Item("doc", "duplicate"));
 
-        // The scoped AtlasContentCatalog factory (AddAtlasWorkspace) combines
-        // every AtlasContentRegistration and throws deterministically before
-        // any Host or Outlet exists (REQ-F-122 AC1).
+        // 作用域化的 AtlasContentCatalog 工厂（AddAtlasWorkspace）会合并
+        // 每一个 AtlasContentRegistration，并在任何 Host 或 Outlet 存在之前
+        // 确定性抛出异常（REQ-F-122 AC1）。
         var exception = Assert.Throws<InvalidOperationException>(
             () => RenderComponent<AtlasWorkspaceHost>(
                 parameters => parameters.Add(host => host.Workspace, workspace)));

@@ -1,14 +1,22 @@
 namespace Atlas.Core.Persistence;
 
-/// <summary>Identifies why a persisted item identity was replaced.</summary>
+/// <summary>
+///     说明持久化项标识被替换的原因。
+/// </summary>
 public enum IdentityRemapReason
 {
-    /// <summary>The target runtime reserves the persisted identity.</summary>
+    /// <summary>
+    ///     目标作用域已占用该标识，恢复时改名以规避冲突。
+    /// </summary>
     Conflict = 0,
 
-    /// <summary>The document was explicitly cloned to another scope.</summary>
+    /// <summary>
+    ///     文档被显式克隆到另一个作用域。
+    /// </summary>
     CloneImport = 1,
 
-    /// <summary>A legacy identifier required normalization.</summary>
+    /// <summary>
+    ///     遗留标识符需要规范化。
+    /// </summary>
     LegacyMigration = 2,
 }

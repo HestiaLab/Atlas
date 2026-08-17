@@ -7,10 +7,10 @@ using Atlas.Core.Placement;
 namespace Atlas.Showcase.Components;
 
 /// <summary>
-/// Central content Kind constants shared between the workspace definition
-/// and the <see cref="AtlasContentRoute"/> declarations. Keeping the ordinal
-/// strings in one place prevents a rename on one side from silently
-/// producing a "Content is not registered" runtime failure.
+///     工作区定义与 <see cref="AtlasContentRoute"/> 声明之间共享的
+///     中心内容 Kind 常量。将这些字符串值集中在一处，
+///     可防止某一侧的改名悄然产生“Content is not registered”
+///     运行时失败。
 /// </summary>
 public static class ShowcaseContentKinds
 {
@@ -26,9 +26,9 @@ public static class ShowcaseContentKinds
 }
 
 /// <summary>
-/// Builds the Atlas.Showcase workspace: one teaching panel per framework
-/// capability, arranged in the six LogicalRegion slots plus an editor
-/// document holding the quick-start guide.
+///     构建 Atlas.Showcase 工作区：每个框架能力对应一个教学面板，
+///     排列在六个 LogicalRegion 槽位中，外加一个承载
+///     快速入门指南的编辑器文档。
 /// </summary>
 internal static class ShowcaseWorkspaceDefinition
 {

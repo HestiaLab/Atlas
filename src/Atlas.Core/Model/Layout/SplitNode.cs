@@ -1,19 +1,21 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Represents a two-child spatial division in the layout tree.
+///     布局树的内部分割节点：按轴把可用空间分给两个子节点，
+///     尺寸由 Basis 决定首选、Constraints 决定约束。
 /// </summary>
 public sealed class SplitNode : LayoutNode
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SplitNode"/> class.
+    ///     构造分割节点；轴必须已知、基准不得为默认值、
+    ///     两个子节点标识不得为默认值且不得相同，违反时抛参数异常。
     /// </summary>
-    /// <param name="id">The workspace-scoped node identity.</param>
-    /// <param name="axis">The logical child arrangement axis.</param>
-    /// <param name="basis">The committed sizing basis.</param>
-    /// <param name="constraints">The child sizing constraints.</param>
-    /// <param name="firstId">The first child identity.</param>
-    /// <param name="secondId">The second child identity.</param>
+    /// <param name="id">工作区作用域内的节点标识。</param>
+    /// <param name="axis">子项的逻辑排列轴。</param>
+    /// <param name="basis">已提交的尺寸基准。</param>
+    /// <param name="constraints">子项尺寸约束。</param>
+    /// <param name="firstId">第一个子项的标识。</param>
+    /// <param name="secondId">第二个子项的标识。</param>
     public SplitNode(
         LayoutNodeId id,
         SplitAxis axis,
@@ -64,27 +66,27 @@ public sealed class SplitNode : LayoutNode
     }
 
     /// <summary>
-    /// Gets the logical child arrangement axis.
+    ///     子项的逻辑排列轴。
     /// </summary>
     public SplitAxis Axis { get; }
 
     /// <summary>
-    /// Gets the committed sizing basis.
+    ///     已提交的尺寸基准。
     /// </summary>
     public SplitBasis Basis { get; }
 
     /// <summary>
-    /// Gets the child sizing constraints.
+    ///     子项尺寸约束。
     /// </summary>
     public SplitConstraints Constraints { get; }
 
     /// <summary>
-    /// Gets the first child identity.
+    ///     第一个子节点的标识。
     /// </summary>
     public LayoutNodeId FirstId { get; }
 
     /// <summary>
-    /// Gets the second child identity.
+    ///     第二个子节点的标识。
     /// </summary>
     public LayoutNodeId SecondId { get; }
 }

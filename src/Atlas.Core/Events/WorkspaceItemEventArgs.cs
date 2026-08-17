@@ -2,7 +2,9 @@ using Atlas.Core.Changes;
 
 namespace Atlas.Core.Events;
 
-/// <summary>Provides common data for an item domain event.</summary>
+/// <summary>
+///     为项域事件提供公共数据。
+/// </summary>
 public abstract class WorkspaceItemEventArgs : EventArgs
 {
     internal WorkspaceItemEventArgs(
@@ -23,24 +25,38 @@ public abstract class WorkspaceItemEventArgs : EventArgs
         CurrentPlacement = currentPlacement;
     }
 
-    /// <summary>Gets the workspace identity.</summary>
+    /// <summary>
+    ///     获取工作区标识。
+    /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
-    /// <summary>Gets the affected item identity.</summary>
+    /// <summary>
+    ///     获取受影响的项标识。
+    /// </summary>
     public DockItemId ItemId { get; }
 
-    /// <summary>Gets the revision before the commit.</summary>
+    /// <summary>
+    ///     获取提交前的修订。
+    /// </summary>
     public long BeforeRevision { get; }
 
-    /// <summary>Gets the revision after the commit.</summary>
+    /// <summary>
+    ///     获取提交后的修订。
+    /// </summary>
     public long AfterRevision { get; }
 
-    /// <summary>Gets the semantic source of the commit.</summary>
+    /// <summary>
+    ///     获取提交的语义来源。
+    /// </summary>
     public LayoutChangeKind ChangeKind { get; }
 
-    /// <summary>Gets the placement before the commit, when present.</summary>
+    /// <summary>
+    ///     获取提交前的放置；无先前放置时为 <see langword="null"/>。
+    /// </summary>
     public DockItemPlacementSnapshot? PreviousPlacement { get; }
 
-    /// <summary>Gets the placement after the commit, when present.</summary>
+    /// <summary>
+    ///     获取提交后的放置；无当前放置时为 <see langword="null"/>。
+    /// </summary>
     public DockItemPlacementSnapshot? CurrentPlacement { get; }
 }

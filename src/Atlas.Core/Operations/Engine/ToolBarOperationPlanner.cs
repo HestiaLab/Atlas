@@ -4,12 +4,25 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     工具栏操作规划器：处理工具栏可见性切换与逻辑区域内条目重排。
+/// </summary>
 internal static class ToolBarOperationPlanner
 {
+    /// <summary>
+    ///     规划工具栏可见性切换；目标值已生效时不产生修订。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">工具栏可见性操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan PlanVisibility(
         WorkspaceSnapshot snapshot,
         SetToolBarVisibilityOperation operation)
     {
+        // 可见性切换幂等：目标值已生效时直接 NoChange，避免重复切换产生空修订；
+        // 工具栏状态独立于布局树，只更新 ToolBars 字典即可。
         if (!snapshot.ToolBars.TryGetValue(operation.Side, out var toolbar))
         {
             return WorkspacePlan.Failure(
@@ -39,10 +52,21 @@ internal static class ToolBarOperationPlanner
                 snapshot.AutoHideStrips));
     }
 
+    /// <summary>
+    ///     规划工具栏条目重排；只更新逻辑区域顺序表，不触碰布局树。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">工具栏重排操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan PlanReorder(
         WorkspaceSnapshot snapshot,
         ReorderToolBarEntryOperation operation)
     {
+        // 工具栏重排只更新逻辑区域内的顺序表，不触碰布局树：
+        // 组内顺序与工具栏顺序由两条独立路径维护（组内拖拽走 ReorderItemPlanner），
+        // 这里只需校验项存在、是工具且目标索引合法。
         if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
         {
             return Failure(

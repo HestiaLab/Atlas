@@ -17,11 +17,16 @@ using System.Globalization;
 
 namespace Atlas.Blazor.Components;
 
-/// <summary>Declarative members of <see cref="AtlasWorkspaceHost"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasWorkspaceHost"/> 的声明式提交逻辑（partial）：
+///     构建声明定义、合并运行时项并对账提交；暂存并原子提交 Route/Map 源生成。
+/// </summary>
 public sealed partial class AtlasWorkspaceHost
 {
     private async Task ProcessDeclarationAsync()
     {
+        // 声明收集器在渲染期间经 CascadingValue 由子组件填充，
+        // 因此声明处理延后到 OnAfterRenderAsync，此处才拥有完整声明。
         if (!declarativeMode || disposed || WorkspaceId is null)
         {
             return;
@@ -30,6 +35,7 @@ public sealed partial class AtlasWorkspaceHost
         if (!collector.TryBuild(WorkspaceId.Value, out var declaration)
             || declaration is null)
         {
+            // 无效声明的指纹哨兵；与失败关联使同一错误只上报一次。
             var fingerprint = "invalid";
             if (!string.Equals(processedFingerprint, fingerprint, StringComparison.Ordinal))
             {
@@ -48,6 +54,8 @@ public sealed partial class AtlasWorkspaceHost
             StringComparison.Ordinal);
         presentationFingerprint = currentPresentationFingerprint;
         declarativeSplitterPresentations = collector.GetSplitPresentations();
+        // 布局指纹未变时声明内容等价，跳过创建/对账以省去一次工作区操作；
+        // 但分割条呈现变化仍需重渲染，以反映锁定与可折叠状态。
         var currentFingerprint = Fingerprint(declaration);
         if (string.Equals(processedFingerprint, currentFingerprint, StringComparison.Ordinal))
         {
@@ -82,6 +90,8 @@ public sealed partial class AtlasWorkspaceHost
             return;
         }
 
+        // 工作区已存在时不能直接对账新声明：程序化添加的运行时项不在声明中，
+        // 直接重建会被丢弃，因此先合并运行时项再对账。
         if (!TryMergeRuntimeItems(declaration, out var merged))
         {
             await ReportErrorAsync(DefinitionError(WorkspaceId));
@@ -113,10 +123,10 @@ public sealed partial class AtlasWorkspaceHost
             return;
         }
 
-        // Route/Map source generations are staged only when the parent actually
-        // re-rendered this Host (OnParametersSet ran). Internal Host rerenders
-        // re-execute the parent's ContentRoutes fragment without new parameter
-        // values; processing them again would create a perpetual render loop.
+        // 仅当父组件确实重新渲染了此宿主（OnParametersSet 已运行）时，
+        // 才暂存 Route/Map 源生成。宿主内部重渲染会重新执行
+        // 父组件的 ContentRoutes 片段，但没有新的参数值；
+        // 再次处理它们会造成无限渲染循环。
         if (!parentContentGenerationSeen)
         {
             return;
@@ -126,8 +136,8 @@ public sealed partial class AtlasWorkspaceHost
 
         if (!routeCollector.TryBuild(out var collectedRoutes))
         {
-            // A faulting/incomplete collection keeps the previously committed
-            // Route/Map generation active and reports a safe definition error.
+            // 出错或不完整的收集会保持先前已提交的 Route/Map 生成有效，
+            // 并报告安全的定义错误。
             if (!routeFaultReported)
             {
                 routeFaultReported = true;
@@ -147,13 +157,12 @@ public sealed partial class AtlasWorkspaceHost
 
         routeFaultReported = false;
 
-        // Each parent render cycle stages one candidate Host-local source
-        // generation. The candidate commits atomically after route collection
-        // completes: the rebuilt Catalog reference invalidates the group render
-        // stamp so outlets re-evaluate value factories and current route
-        // delegates. Value-only updates therefore preserve component identity
-        // while delivering the complete bound Parameter set on the follow-up
-        // projection. Internal Host rerenders never reach this path.
+        // 每个父渲染周期暂存一个候选的宿主本地源生成。
+        // 候选在路由收集完成后原子提交：重建的 Catalog 引用会使组渲染戳失效，
+        // 内容出口据此重新求值值工厂与当前路由委托。
+        // 因此，仅值更新的投影在保留组件标识的同时，
+        // 在后续投影中交付完整的绑定 Parameter 集。
+        // 宿主内部重渲染永远不会到达此路径。
         var previous = committedContentGeneration;
         var stagedMap = ContentMap?.Entries ?? Array.Empty<AtlasContentMapEntry>();
         var generation = BuildContentGeneration(previous, collectedRoutes, stagedMap);
@@ -167,6 +176,7 @@ public sealed partial class AtlasWorkspaceHost
         IReadOnlyList<AtlasContentRouteDescriptor> collectedRoutes,
         IReadOnlyList<AtlasContentMapEntry> stagedMap)
     {
+        // 上次提交的注册按 Kind 索引；同 Kind 同来源延续结构修订号。
         var previousByKind = previous
             .GroupBy(registration => registration.Kind, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
@@ -174,9 +184,9 @@ public sealed partial class AtlasWorkspaceHost
             collectedRoutes.Count + stagedMap.Count);
         foreach (var route in collectedRoutes)
         {
-            // Same Kind and source owner carries the structural revision forward so
-            // value-only updates preserve component identity; structural changes
-            // (new Kind, removed Kind, or owner switch) remount the outlet.
+            // 相同的 Kind 与源所有者会延续结构修订号，
+            // 仅值更新也能保留组件标识；
+            // 结构变化（新增 Kind、移除 Kind 或所有者切换）会重新挂载内容出口。
             var revision = previousByKind.TryGetValue(route.Kind, out var previousRoute)
                 && previousRoute.Source == AtlasContentRegistrationSource.Route
                 ? previousRoute.Revision
@@ -192,9 +202,8 @@ public sealed partial class AtlasWorkspaceHost
 
         foreach (var entry in stagedMap)
         {
-            // The map structural signature (owner, component type, ordered bound
-            // parameter names) drives revision carry-forward; value factories and
-            // their results are never structural.
+            // 映射结构签名（所有者、组件类型、有序绑定参数名）
+            // 驱动修订号延续；值工厂及其结果永远不会被视为结构变化。
             var revision = previousByKind.TryGetValue(entry.Kind, out var previousEntry)
                 && previousEntry.Source == AtlasContentRegistrationSource.Map
                 && string.Equals(
@@ -219,6 +228,8 @@ public sealed partial class AtlasWorkspaceHost
         AtlasWorkspaceDefinition declaration,
         out AtlasWorkspaceDefinition? merged)
     {
+        // 对账会按声明重建布局，未声明但仍在运行的项会被丢弃；
+        // 此方法把它们并入新声明，并验证全部运行时项仍被放置且不与声明冲突。
         merged = null;
         if (activeWorkspace is null || previousDeclaration is null)
         {
@@ -227,6 +238,7 @@ public sealed partial class AtlasWorkspaceHost
         }
 
         var current = activeWorkspace.Current;
+        // 未在声明中的运行时项；对账会丢弃它们，需先并入新声明。
         var runtimeIds = current.Items.Keys
             .Where(itemId => !declaredItemIds.Contains(itemId))
             .ToHashSet();
@@ -286,6 +298,8 @@ public sealed partial class AtlasWorkspaceHost
 
                 var ids = group.ItemIds.Concat(additions.Select(item => item.Id)).ToArray();
                 var currentGroup = (GroupNode)current.Nodes[group.Id];
+                // 运行时项并入后若正是当前选中项，需显式保留选中状态，
+                // 否则按声明重建会把选中项重置回声明值。
                 var selected = currentGroup.SelectedItemId is DockItemId selectedId
                     && additions.Any(item => item.Id == selectedId)
                     ? selectedId
@@ -300,6 +314,8 @@ public sealed partial class AtlasWorkspaceHost
                     group.EditorState,
                     group.LogicalRegion);
             }).ToArray();
+        // 工具栏顺序与自动隐藏条按「声明在前、运行时在后」合并，
+        // 使对账结果与运行时状态一致且顺序可复现。
         var orders = nodes.OfType<GroupNode>()
             .Where(group => group.Kind == DockItemKind.Tool)
             .Select(

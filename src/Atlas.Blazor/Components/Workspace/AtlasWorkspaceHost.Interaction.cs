@@ -17,7 +17,10 @@ using System.Globalization;
 
 namespace Atlas.Blazor.Components;
 
-/// <summary>Interaction members of <see cref="AtlasWorkspaceHost"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasWorkspaceHost"/> 的交互处理逻辑（partial）：
+///     分割调整、键盘命令、拖拽投递与焦点协调。
+/// </summary>
 public sealed partial class AtlasWorkspaceHost
 {
     private async Task ToggleToolAsync(
@@ -108,11 +111,10 @@ public sealed partial class AtlasWorkspaceHost
                 return;
             }
 
-            // Equalize is a terminal commit like pointer/keyboard resize:
-            // the controller reports the clamped target (0.5 clamped to the
-            // split's valid range) and the basis kind, so the Host rebuilds
-            // the exact basis instead of hard-coding a 50/50 proportion that
-            // could violate the split's pixel constraints.
+            // Equalize 与指针/键盘调整大小一样属于最终提交：
+            // 控制器报告钳制后的目标（0.5 被钳制到分割的有效范围）
+            // 与基准种类，因此宿主重建精确的基准，
+            // 而不是硬编码可能违反分割像素约束的 50/50 比例。
             var basis = ResolveCommittedBasis(splitId, message);
             var operation = string.Equals(
                 message.Mode,
@@ -121,18 +123,17 @@ public sealed partial class AtlasWorkspaceHost
                 ? ResizeSplitOperation.CreateKeyboard(splitId, basis)
                 : new ResizeSplitOperation(splitId, basis, message.BaseRevision);
 
-            // Queue the confirmation before executing: the Changed event fired
-            // inside ExecuteAsync schedules the commit's render, which a
-            // dispatcher may process while the await is in flight. OnAfterRenderAsync
-            // must always see the pending split so it confirms the clear after
-            // the render replaces the split's style attribute.
+            // 在执行前将确认排队：ExecuteAsync 内部触发的 Changed 事件
+            // 会调度提交的渲染，调度器可能在 await 进行中处理它。
+            // OnAfterRenderAsync 必须始终看到待处理的分割，
+            // 才能在渲染替换分割的 style 属性后确认清除。
             pendingSplitPreviewClears.Add(message.SplitId);
             var result = await activeWorkspace.ExecuteAsync(operation);
             if (result.Status != WorkspaceResultStatus.Success)
             {
-                // Rejected (stale, failure, or no-change): no render will
-                // come, so clear the preview immediately to revert to the
-                // committed ratio instead of freezing at the preview position.
+                // 被拒绝（过期、失败或无变化）：不会再有渲染到来，
+                // 因此立即清除预览，恢复到已提交的比例，
+                // 而不是停留在预览位置。
                 pendingSplitPreviewClears.Remove(message.SplitId);
                 await NotifySplitPreviewClearedAsync(message.SplitId);
             }
@@ -196,6 +197,8 @@ public sealed partial class AtlasWorkspaceHost
 
     private async Task ExecuteDockItemAsync(AtlasInteractionMessage message)
     {
+        // JS 消息不可信且可能重放：守卫链把消息限定为本宿主、当前工作区、
+        // 协议版本 1 的未消费会话，任何一项不满足都直接丢弃。
         if (activeWorkspace is null
             || message.ProtocolVersion != 1
             || !string.Equals(message.HostId, hostId, StringComparison.Ordinal)
@@ -257,6 +260,8 @@ public sealed partial class AtlasWorkspaceHost
                         return;
                     }
 
+                    // 同组内重排时移除源项会使后续索引前移一位，
+                    // 落点索引需按源项位置修正，否则会偏移一位。
                     var targetIndex = insertionIndex > sourceIndex
                         ? insertionIndex - 1
                         : insertionIndex;
@@ -388,6 +393,8 @@ public sealed partial class AtlasWorkspaceHost
                     return;
                 }
 
+                // 工具栏线索引基于工具栏顺序，而重排针对面板内顺序：
+                // 先按目标项在面板中的位置换算落点，再修正移除源项的索引前移。
                 var wireIndex = toolbarWireIndex == targetToolBarIndex
                     ? targetItemIndex
                     : targetItemIndex + 1;
@@ -411,6 +418,8 @@ public sealed partial class AtlasWorkspaceHost
             }
         }
 
+        // 会话在此一次性消费：消息可能被 JS 重复投递，
+        // 第二次 Add 返回 false 即被丢弃，保证一次拖拽至多提交一个操作。
         if (operation is null || !consumedDragSessions.Add(message.SessionId))
         {
             return;
@@ -429,6 +438,8 @@ public sealed partial class AtlasWorkspaceHost
             return;
         }
 
+        // focus-* 命令只依赖目标组，不要求活动文档；
+        // 必须先于活动项解析分流，否则无选中文档时会提前返回。
         if (command.StartsWith("focus-", StringComparison.Ordinal))
         {
             await FocusToolGroupAsync(targetGroupId);
@@ -444,6 +455,8 @@ public sealed partial class AtlasWorkspaceHost
             ? null
             : documentGroups.FirstOrDefault(
                 group => group.Id == new LayoutNodeId(sourceGroupId!));
+        // 消息携带的源组可能已随快照过期（组被移除或重排），
+        // 退回任一有选中项的文档组作为命令目标。
         activeGroup ??= documentGroups.FirstOrDefault(
             group => group.SelectedItemId is not null);
         if (activeGroup?.SelectedItemId is not DockItemId activeItemId)

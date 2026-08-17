@@ -5,22 +5,55 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     工作区引擎实现：以不可变快照为状态载体原子提交操作，
+///     维护撤销/重做历史，并在提交后派发变更事件。
+/// </summary>
 internal sealed class AtlasWorkspace : IAtlasWorkspace
 {
+    // 历史容量缺省值：撤销栈最多保留 100 条补丁。
     private const int DefaultMaxHistoryEntries = 100;
+
+    // 事务锁：串行化“重验修订→应用补丁→写历史”的提交段，防止并发覆盖。
     private readonly object transactionGate = new();
+
+    // 生命周期锁：保护释放标记与在途操作计数；与事务锁分离，避免持事务锁等待释放。
     private readonly object lifecycleGate = new();
+
+    // 操作规划器：把快照与操作规划为提交计划，构造后不变。
     private readonly IWorkspaceOperationPlanner planner;
+
+    // 变更派发器：提交后在锁外异步派发 Changed 事件与域事件。
     private readonly WorkspaceEventDispatcher eventDispatcher = new();
+
+    // 域事件聚合器：随提交发布强类型域事件，与 Changed 共用派发队列。
     private readonly AtlasWorkspaceDomainEvents domainEvents = new();
+
+    // 撤销历史容量上限；超限时 AppendBounded 丢弃最旧补丁。
     private readonly int maxHistoryEntries;
+
+    // 键盘微调分割的合并时间窗；窗口内的同键补丁并入上一条历史。
     private readonly TimeSpan resizeCoalescingWindow;
+
+    // 时钟提供者：提交时间戳与合并窗口判定用，测试可注入固定时钟。
     private readonly Func<DateTimeOffset> utcNow;
+
+    // 引擎状态槽：当前快照 + 撤销/重做栈，整体替换，读写经 Volatile 保证可见性。
     private WorkspaceStoreState state;
+
+    // 上次提交的 resize 合并键；与当前键相同且落在窗口内时合并历史。
     private ResizeHistoryKey? lastResizeHistoryKey;
+
+    // 上次 resize 提交时刻；与合并键共同判定是否仍在合并窗口内。
     private DateTimeOffset lastResizeCommittedAt;
+
+    // 排空信号：置释放标记后在途操作清零时置位，DisposeAsync 等待它。
     private TaskCompletionSource<object?>? operationsDrained;
+
+    // 在途操作计数：BeginOperation/EndOperation 在生命周期锁内增减。
     private int activeOperations;
+
+    // 释放标记：置位后新操作抛 ObjectDisposedException，并触发在途操作排空等待。
     private volatile bool disposed;
 
     internal AtlasWorkspace(
@@ -70,10 +103,21 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
     public event EventHandler<WorkspaceChangedEventArgs>? Changed;
 
+    /// <summary>
+    ///     原子地执行一个操作：规划在锁外基于捕获快照执行，提交在事务锁内完成，
+    ///     锁内重验修订号实现乐观并发，过期操作返回 Stale 而不是覆盖他人提交。
+    /// </summary>
+    /// <param name="operation">不可变操作请求。</param>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的变更、无变更结果或预期失败。
+    /// </returns>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ExecuteAsync(
         LayoutOperation operation,
         CancellationToken cancellationToken = default)
     {
+        // 规划在锁外基于捕获的快照进行（可能异步耗时），提交则在事务锁内完成：
+        // 锁内重验修订号实现乐观并发，过期操作返回 Stale 而不是覆盖他人的提交。
         ArgumentNullException.ThrowIfNull(operation);
         BeginOperation();
         try
@@ -103,6 +147,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
             var candidate = plan.Candidate
                 ?? throw new InvalidOperationException("A commit plan must provide a candidate snapshot.");
+            // 提交段必须原子完成：重验修订号 → 应用补丁 → 校验不变式 → 写历史；
+            // 新提交使重做分支失效（redo 清空），历史边界操作（Restore）同时清空撤销栈。
             LayoutChangeSet changeSet;
             WorkspaceSnapshot committedSnapshot;
             lock (transactionGate)
@@ -144,6 +190,7 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                 }
             }
 
+            // 事件在提交锁外派发：订阅者回调可能重入 ExecuteAsync，持锁调用会死锁。
             eventDispatcher.Enqueue(
                 Changed,
                 domainEvents,
@@ -159,12 +206,26 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         }
     }
 
+    /// <summary>
+    ///     沿已提交历史向后移动一步：从撤销栈弹出补丁反向应用并派发事件。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的撤销变更、无变更结果或预期失败。
+    /// </returns>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> UndoAsync(
         CancellationToken cancellationToken = default)
     {
         return TraverseHistoryAsync(undo: true, cancellationToken);
     }
 
+    /// <summary>
+    ///     沿先前已撤销的历史向前移动一步：从重做栈弹出补丁正向应用并派发事件。
+    /// </summary>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     已提交的重做变更、无变更结果或预期失败。
+    /// </returns>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> RedoAsync(
         CancellationToken cancellationToken = default)
     {
@@ -202,6 +263,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         bool undo,
         CancellationToken cancellationToken)
     {
+        // 撤销从 Undo 栈弹补丁反向应用、重做从 Redo 栈正向应用，补丁在两栈间移动形成可来回遍历的历史；
+        // 修订号始终递增（反向/正向应用都 +1），历史回退不回卷修订计数。
         BeginOperation();
         try
         {
@@ -239,6 +302,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                         undo
                             ? new WorkspaceStoreState(committed, remaining, destination)
                             : new WorkspaceStoreState(committed, destination, remaining));
+                    // 撤销/重做后清空 resize 合并键：合并窗口只适用于连续键盘微调，
+                    // 不能跨历史遍历把补丁合并在一起。
                     lastResizeHistoryKey = null;
                 }
             }
@@ -364,6 +429,14 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         LayoutNodeId SplitId,
         ResizeSplitInputKind InputKind)
     {
+        /// <summary>
+        ///     从操作中提取分屏调整的历史合并键：仅键盘输入类调整参与合并，
+        ///     其余操作返回 <see langword="null"/>。
+        /// </summary>
+        /// <param name="operation">待提取合并键的布局操作。</param>
+        /// <returns>
+        ///     键盘调整的合并键；其余操作返回 <see langword="null"/>。
+        /// </returns>
         internal static ResizeHistoryKey? For(LayoutOperation operation)
         {
             return operation is ResizeSplitOperation

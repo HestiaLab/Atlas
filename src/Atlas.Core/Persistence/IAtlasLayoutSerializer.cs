@@ -2,19 +2,28 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Serializes and validates persisted Atlas workspace documents.</summary>
+/// <summary>
+///     序列化并验证持久化的 Atlas 工作区文档。
+/// </summary>
 public interface IAtlasLayoutSerializer
 {
-    /// <summary>Serializes one immutable snapshot as canonical V2 XML.</summary>
+    /// <summary>
+    ///     将一个不可变快照序列化为规范的 V2 XML。
+    /// </summary>
     string Serialize(WorkspaceSnapshot snapshot);
 
-    /// <summary>Parses an untrusted V1 or V2 document into a validated restore candidate.</summary>
+    /// <summary>
+    ///     将不受信任的 V1 或 V2 文档解析为经过验证的恢复候选项。
+    /// </summary>
     WorkspaceResult<LayoutRestoreDocument> Deserialize(
         string xml,
         WorkspaceId targetWorkspaceId,
         LayoutPersistenceLimits? limits = null);
 
-    /// <summary>Parses with explicit content and identity restore policies.</summary>
+    /// <summary>
+    ///     按显式恢复选项解析：以选项中的资源限制解析文档，再应用内容注册判定、
+    ///     缺失内容策略与保留标识重映射，输出处理后的恢复候选项。
+    /// </summary>
     WorkspaceResult<LayoutRestoreDocument> DeserializeWithOptions(
         string xml,
         WorkspaceId targetWorkspaceId,

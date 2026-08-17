@@ -1,9 +1,14 @@
 namespace Atlas.Core.Persistence;
 
-/// <summary>Bounds untrusted persistence input before it becomes domain state.</summary>
+/// <summary>
+///     在不受信任的持久化输入进入领域状态前施加的资源上限：
+///     文档字节数、嵌套深度、节点与项数量、字符串长度与旧版迁移步数。
+/// </summary>
 public sealed class LayoutPersistenceLimits
 {
-    /// <summary>Initializes persistence resource limits.</summary>
+    /// <summary>
+    ///     构造资源限制；所有上限都必须为正。
+    /// </summary>
     public LayoutPersistenceLimits(
         int maxDocumentBytes = 1024 * 1024,
         int maxDepth = 64,
@@ -22,25 +27,39 @@ public sealed class LayoutPersistenceLimits
         MaxMigrationSteps = RequirePositive(maxMigrationSteps, nameof(maxMigrationSteps));
     }
 
-    /// <summary>Gets the maximum UTF-8 document size.</summary>
+    /// <summary>
+    ///     获取最大的 UTF-8 文档大小。
+    /// </summary>
     public int MaxDocumentBytes { get; }
 
-    /// <summary>Gets the maximum XML/layout nesting depth.</summary>
+    /// <summary>
+    ///     获取最大的 XML/布局嵌套深度。
+    /// </summary>
     public int MaxDepth { get; }
 
-    /// <summary>Gets the maximum layout node count.</summary>
+    /// <summary>
+    ///     获取最大的布局节点数量。
+    /// </summary>
     public int MaxNodeCount { get; }
 
-    /// <summary>Gets the maximum dock item count.</summary>
+    /// <summary>
+    ///     获取最大的停靠项数量。
+    /// </summary>
     public int MaxItemCount { get; }
 
-    /// <summary>Gets the maximum item references in one group.</summary>
+    /// <summary>
+    ///     获取单个组中最大的项引用数量。
+    /// </summary>
     public int MaxItemsPerGroup { get; }
 
-    /// <summary>Gets the maximum persisted string length.</summary>
+    /// <summary>
+    ///     获取最大的持久化字符串长度。
+    /// </summary>
     public int MaxStringLength { get; }
 
-    /// <summary>Gets the maximum legacy migration steps.</summary>
+    /// <summary>
+    ///     获取最大的旧版迁移步数。
+    /// </summary>
     public int MaxMigrationSteps { get; }
 
     private static int RequirePositive(int value, string parameterName)

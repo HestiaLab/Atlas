@@ -1,5 +1,8 @@
 namespace Atlas.Core.Validation;
 
+/// <summary>
+///     标识工作区不变式违规的分类。
+/// </summary>
 internal enum InvariantViolationCode
 {
     EmptyRootHasNodes,

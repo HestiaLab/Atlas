@@ -1,7 +1,15 @@
 namespace Atlas.Core.Validation;
 
+/// <summary>
+///     校验快照索引字典与条目身份的一致性。
+/// </summary>
 internal static class IndexInvariantRules
 {
+    /// <summary>
+    ///     检查节点与项索引的键值一致性：键必须非默认且等于条目自身的标识。
+    /// </summary>
+    /// <param name="snapshot">待校验的工作区快照。</param>
+    /// <param name="violations">收集违规项的目标集合。</param>
     internal static void Validate(
         WorkspaceSnapshot snapshot,
         ICollection<InvariantViolation> violations)

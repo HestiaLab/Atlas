@@ -2,35 +2,55 @@ using Atlas.Core;
 
 namespace Atlas.Blazor.Components;
 
-/// <summary>Identifies a safe Blazor host diagnostic.</summary>
+/// <summary>
+///     标识安全的 Blazor 宿主诊断。
+/// </summary>
 public enum AtlasHostErrorCode
 {
-    /// <summary>Programmatic and declarative authoritative inputs were supplied together.</summary>
+    /// <summary>
+    ///     编程式与声明式权威输入同时提供。
+    /// </summary>
     InitializationModeConflict = 1,
 
-    /// <summary>The declarative definition is incomplete or invalid.</summary>
+    /// <summary>
+    ///     声明式定义不完整或无效。
+    /// </summary>
     DefinitionInvalid = 2,
 
-    /// <summary>A content renderer is not registered.</summary>
+    /// <summary>
+    ///     内容渲染器未注册。
+    /// </summary>
     ContentNotRegistered = 3,
 
-    /// <summary>A content renderer failed while rendering.</summary>
+    /// <summary>
+    ///     内容渲染器渲染时失败。
+    /// </summary>
     ContentRenderFailed = 4,
 
-    /// <summary>A requested focus effect could not be completed.</summary>
+    /// <summary>
+    ///     请求的焦点效果无法完成。
+    /// </summary>
     FocusFailed = 5,
 
-    /// <summary>An unexpected host failure was isolated.</summary>
+    /// <summary>
+    ///     意外的宿主故障已被隔离。
+    /// </summary>
     Unexpected = 6,
 
-    /// <summary>A Host-local Route/Map ownership collision invalidated one Kind.</summary>
+    /// <summary>
+    ///     宿主本地 Route/Map 所有权冲突使某个 Kind 失效。
+    /// </summary>
     ContentRegistrationConflict = 7,
 }
 
-/// <summary>Provides safe diagnostic data without exposing exception details.</summary>
+/// <summary>
+///     提供安全诊断数据，不暴露异常细节。
+/// </summary>
 public sealed class AtlasHostError
 {
-    /// <summary>Initializes a safe host diagnostic.</summary>
+    /// <summary>
+    ///     初始化安全宿主诊断。
+    /// </summary>
     public AtlasHostError(
         AtlasHostErrorCode code,
         string diagnosticId,
@@ -53,22 +73,34 @@ public sealed class AtlasHostError
         NodeId = nodeId;
     }
 
-    /// <summary>Gets the stable host error code.</summary>
+    /// <summary>
+    ///     获取稳定的宿主错误码。
+    /// </summary>
     public AtlasHostErrorCode Code { get; }
 
-    /// <summary>Gets the non-sensitive diagnostic correlation identifier.</summary>
+    /// <summary>
+    ///     获取非敏感的诊断关联标识。
+    /// </summary>
     public string DiagnosticId { get; }
 
-    /// <summary>Gets the localization message key.</summary>
+    /// <summary>
+    ///     获取本地化消息键。
+    /// </summary>
     public string MessageKey { get; }
 
-    /// <summary>Gets the related workspace identity when available.</summary>
+    /// <summary>
+    ///     获取相关的工作区标识（如可用）。
+    /// </summary>
     public WorkspaceId? WorkspaceId { get; }
 
-    /// <summary>Gets the related item identity when available.</summary>
+    /// <summary>
+    ///     获取相关的项标识（如可用）。
+    /// </summary>
     public DockItemId? ItemId { get; }
 
-    /// <summary>Gets the related node identity when available.</summary>
+    /// <summary>
+    ///     获取相关的节点标识（如可用）。
+    /// </summary>
     public LayoutNodeId? NodeId { get; }
 
     private static string RequireText(string value, string parameterName)

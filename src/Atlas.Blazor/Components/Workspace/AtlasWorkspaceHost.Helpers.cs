@@ -17,7 +17,10 @@ using System.Globalization;
 
 namespace Atlas.Blazor.Components;
 
-/// <summary>Helpers members of <see cref="AtlasWorkspaceHost"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasWorkspaceHost"/> 的渲染辅助逻辑（partial）：
+///     分割条呈现解析、子树隐藏判定与 CSS 样式派生。
+/// </summary>
 public sealed partial class AtlasWorkspaceHost
 {
     private AtlasSplitterPresentation ResolveSplitterPresentation(LayoutNodeId splitId)
