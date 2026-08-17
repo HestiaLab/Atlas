@@ -5,15 +5,15 @@
 > 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
 
 
-- 日期：2026-08-03
-- 基线：ADR-0014；150 = REQ-F 142 + REQ-NF 8
+- 日期：2026-08-03（2026-08-06 更新基线：ADR-0023 新增 REQ-NF-009 后计数为 151）
+- 基线：ADR-0014；151 = REQ-F 142 + REQ-NF 9
 - 规则：每个正式需求恰好一行；状态是实现状态，不继承 HLD 的 Designed。
 
 ## Five-dimension consistency audit
 
 | 维度 | 结论 | 证据/缺口 |
 |---|---|---|
-| Requirement correctness | Pass | ADR-0014 与 RequirementsBaselineTests 固定正文/索引同一 150 项集合。 |
+| Requirement correctness | Pass | ADR-0014 与 RequirementsBaselineTests 固定正文/索引同一 151 项集合。 |
 | Architecture boundary | Pass | Atlas.Core architecture test 禁止 Blazor、JS interop 与 Atlas.Blazor 引用；双包边界保持。 |
 | Domain model | Partial | identity、snapshot、layout、placement、sizing、persistence 模型存在；Auto-hide runtime、Reset 等行为仍缺。 |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 纵向切片存在；Overflow Menu/Wrap、Context Menu、部分修复策略未实现。 |

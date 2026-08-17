@@ -67,3 +67,10 @@ statistics, index, HLD, and traceability matrix synced.
 
 None. Changing the formal-requirement definition or restoring historical IDs
 requires a superseding ADR.
+
+> Baseline update (2026-08-06): REQ-NF-009 "Style Customization via CSS
+> Variables" was added as a new formal requirement via ADR-0023, updating the
+> fixed baseline count to 151 = F142 + NF9. The definition of a formal
+> requirement and the ID disposition rules in this ADR are unchanged; the
+> `RequirementsBaselineTests` assertion and Appendix A were updated
+> accordingly.

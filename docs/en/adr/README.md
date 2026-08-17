@@ -33,7 +33,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0011](./0011-p6-persistence-public-api.md) | Accepted | Core XML codec, restore operation, Preset store/service, and auto-persistence public boundary |
 | [ADR-0012](./0012-content-lifetime-and-state-preservation.md) | Accepted | business-state preservation, Default and bounded KeepAliveWithinGroup lifetime contracts |
 | [ADR-0013](./0013-content-trust-and-sandboxed-frame.md) | Accepted | TrustedComponent non-security sandbox and SandboxedFrame deny-by-default security boundary |
-| [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | 150 formal requirement baseline, historical deleted IDs, and non-normative boundary-scenario disposition |
+| [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | Formal requirement baseline (151 = F142 + NF9 after REQ-NF-009/ADR-0023), historical deleted IDs, and non-normative boundary-scenario disposition |
 | [ADR-0015](./0015-rider-style-example-application.md) | Superseded | standalone Rider-style example; deleted by ADR-0016 |
 | [ADR-0016](./0016-remove-application-projects.md) | Accepted | delete Atlas.Demo and Atlas.Examples.Rider; keep only two packages, tests, and static fixtures |
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | add independent NuGet consumer sample; supersedes ADR-0016's long-term application-project ban |

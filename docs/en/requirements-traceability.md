@@ -8,21 +8,22 @@ implementation and verification. The normative source for design mapping is
 
 ## Baseline
 
-- Baseline date: 2026-07-31
-- Formal requirement blocks: 150 (REQ-F 142 + REQ-NF 8)
+- Baseline date: 2026-07-31; baseline count updated to 151 = REQ-F 142 +
+  REQ-NF 9 on 2026-08-06 when REQ-NF-009 was added via ADR-0023
+- Formal requirement blocks: 151 (REQ-F 142 + REQ-NF 9)
 - Current functional implementation status: see the P8 item-by-item audit;
-  Verified 47, Implemented 17, In Progress 79, Not Started 5, Deferred 2
+  Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
 - Completed engineering work: P0~P8 Verified; DEV-GATE-001~007 Closed
 - Excluded from formal coverage: the 5 historical deleted IDs and 9
   non-normative boundary IDs listed in ADR-0014
 
-Before the first functional work package is merged, all 150 formal
+Before the first functional work package is merged, all 151 formal
 requirements default to `Not Started`. After implementation begins, only the
 Requirements whose status changes are recorded below; a Requirement without an
 explicit record remains `Not Started`.
 
 The P8 item-by-item audit is in the
-[150 formal requirement status table](./evidence/p8-requirement-audit.md).
+[151 formal requirement status table](./evidence/p8-requirement-audit.md).
 That table has exactly one row per formal ID and explicitly keeps Partial,
 Not Started, and Deferred gaps.
 
@@ -48,7 +49,7 @@ converted directly to `Implemented` or `Verified`.
 | DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`: cross-Group remount/dispose, ResourceId external business-state restoration |
 | DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model; real-browser security evidence completed at the P7 Phase Exit |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](../zh/adr/0010-persistence-schema-and-v1-compatibility.md) Accepted; strict V2 XSD, V2 golden, and no-sample V1 narrow-compatibility goldens frozen |
-| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](../zh/adr/0014-formal-requirement-baseline.md) Accepted; `RequirementsBaselineTests` verifies 150 = F142 + NF8 and identical appendix/body sets |
+| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](../zh/adr/0014-formal-requirement-baseline.md) Accepted; `RequirementsBaselineTests` verifies 151 = F142 + NF9 and identical appendix/body sets |
 | DEV-GATE-007 Unified Content Catalog | Closed | [ADR-0018](./adr/0018-unified-content-catalog-and-runtime-binding.md) Accepted; SRS/HLD contract frozen, implementation evidence remains tracked separately as In Progress |
 
 ## Implementation Status Changes
@@ -114,7 +115,7 @@ converted directly to `Implemented` or `Verified`.
 | REQ-F-022、REQ-F-035、REQ-F-116~118、REQ-NF-003、REQ-NF-007 | DES-INT-007~008、DES-NFR-003、DES-RND-006、DES-RND-009 | P8 | `Atlas.Blazor/Components/Workspace`、`wwwroot/atlas-v2/atlas.css` | `Interactive_chrome_exposes_named_aria_relationships_and_roving_focus`; DOM metadata golden: named region/tablist, tab↔tabpanel, roving tabindex, heading, splitter label, focus-visible | Implemented | P8-WP-03 completes semantic relationships of the existing chrome; Overflow/Context Menu and Auto-hide Flyout are not implemented, so related requirements are not upgraded |
 | REQ-F-024、REQ-NF-008 | DES-INT-008、DES-NFR-002、DES-PRJ-002 | P8 | `Atlas.Blazor/ClientScripts/controller.ts`、`atlas.css` | Node + real browser: media query initial value, runtime change, listener inactive after dispose; CSS media fallback + Host data projection | Verified | NF-008 AC passed; REQ-F-024 RTL stays Deferred per SRS/HLD, only the existing logical keyboard mapping is kept |
 | REQ-NF-004~005 | DES-INT-004、DES-INT-006~007、DES-PRJ-003 | P8 | historical `Atlas.Demo/Pages/P8Performance.razor`、`tests/browser/p8-hardening-fixture.html` | Real browser: drag 75.543 FPS; Splitter 121.427 FPS; 20-Panel first projection 192.700ms/169.900ms/113.000ms; [P8 evidence](../zh/evidence/p8-system-hardening.md) | Verified | P8-WP-05 historical evidence remains valid; the 20-Panel Demo measurement entry was deleted per ADR-0016, the static Splitter fixture is kept |
-| — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests; Chromium a11y/reduced-motion/performance; restore/build/test/format; Core/Blazor Release pack; [P8 evidence](../zh/evidence/p8-system-hardening.md) and [150-item audit](../zh/evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate historical evidence remains valid; Demo deleted per ADR-0016; REQ-NF-002/003/007 still do not claim full coverage |
+| — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests; Chromium a11y/reduced-motion/performance; restore/build/test/format; Core/Blazor Release pack; [P8 evidence](../zh/evidence/p8-system-hardening.md) and [151-item audit](../zh/evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate historical evidence remains valid; Demo deleted per ADR-0016; REQ-NF-002/003/007 still do not claim full coverage |
 | REQ-F-001~005、REQ-F-009~026、REQ-F-035、REQ-F-050~071、REQ-F-073~082、REQ-F-140~156、REQ-NF-003~005、REQ-NF-007~008 | DES-ARCH-001~004、DES-DOM-003、DES-DOM-008、DES-INT-001~008、DES-NFR-001~003、DES-PRJ-001~003、DES-RND-005~009 | Consumer Demo (historical) | historical `samples/Atlas.Demo`, now `wubing7755/DbcView`; in-repo teaching demo `samples/Atlas.Showcase` | 9 bUnit/consumer-boundary tests; six Tool Groups, one Document Group, six Splitters, six LogicalRegions, fixed chrome, LT/RT, three Tabs/ARIA; independent and repository-external restore/build/test/run; real browser Panel/ToolBar/Tab/Splitter/cancel/Undo/Redo/cross-Host/responsive/37.94 FPS/zero console issue; the live demo on GitHub Pages validates the published package | Verified | ADR-0017 accepted and does not change the Atlas public API/protocol/schema; the consumer showcase moved to the standalone DbcView repository (same boundary tests preserved there); the in-repo Atlas.Showcase teaching demo replaced the business sample and is covered by the main solution gates; historical evidence is maintained separately and does not replace or rewrite historical P7/P8 evidence; Escape/pointercancel/lost-capture/stale mid-gesture events that an atomic browser driver cannot inject are covered by Node/Blazor automation and explicitly layered in the evidence |
 | REQ-NF-009 | DES-NFR-005 | P9 | `wwwroot/atlas-v2/atlas.css`、`docs/en/theming.md` | ADR-0023 variable contract; real browser: default `--atlas-*` values resolve, drop-zone highlight and drag-preview border follow an `--atlas-accent: #d33` override without `!important`, no hard-coded theme values outside the variable block | Implemented | ADR-0023 accepted; atlas.css tokenized (defaults pixel-identical), theming guide published; full build/test/format green |
 

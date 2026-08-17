@@ -2483,7 +2483,7 @@ the user's behalf through default values, skipped tests, or documentation wordin
 | DEV-GATE-003 Content Lifetime | **Closed**: ADR-0012; cross-Group remount/dispose + external business state restore Spike | Cross-Group instance-preservation claims and Workspace-wide keep-alive | Blazor Spike + Accepted ADR clarifying the business state contract | Default, KeepAliveWithinGroup, external state restore |
 | DEV-GATE-004 Content Trust | **Closed**: ADR-0013; [threat model](../zh/security/content-threat-model.md) | External security commitments, SandboxedFrame public API, threat model E2E | Product decision + threat model + Accepted ADR; browser E2E remains a P7 Exit condition | TrustedComponent + ErrorBoundary, but must not claim a security sandbox |
 | DEV-GATE-005 Persistence Schema | **Closed**: ADR-0010 Accepted; namespace/version/order/default/limits/unknown policy and V1 narrow compatibility are frozen | V2 Serializer, V1 importer, Preset compatibility | Schema ADR, XSD, V1/V2 golden files, schema validation tests | DTO/validator interfaces and adversarial parser tests |
-| DEV-GATE-006 Traceability Baseline | **Closed**: ADR-0014; 150 = F142 + NF8 | Automated coverage statistics and "all requirements complete" claims | SRS/appendix set consistency tests; historical removals and non-canonical IDs already have an explicit disposition | Maintain the matrix with the 150 formal requirement blocks |
+| DEV-GATE-006 Traceability Baseline | **Closed**: ADR-0014; 151 = F142 + NF9 (baseline count updated by REQ-NF-009/ADR-0023) | Automated coverage statistics and "all requirements complete" claims | SRS/appendix set consistency tests; historical removals and non-canonical IDs already have an explicit disposition | Maintain the matrix with the 151 formal requirement blocks |
 | DEV-GATE-007 Unified Content Catalog | **Closed**: ADR-0018; startup DI, Host-local Route, and immutable Host-local Map contribute to one strict Catalog | Removal of the legacy host-wide template API, public Route/Map API, and cross-Panel coordination sample | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | TDD implementation and package/browser evidence under the frozen contract |
 
 Gates only block the scope listed in the table; they do not block modules without
@@ -2837,7 +2837,7 @@ upstream to "unify later".
 | P5 Drag & Dock | Tab drag, Panel drag, target resolver, preview, cancel, undo | P4 + DEV-GATE-002 Closed | Resolver matrix, all terminal paths, cross-instance, stale, 30fps profile pass |
 | P6 Persistence | V2 XML, restore, Preset, V1 migration, repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests pass |
 | P7 Content Lifetime & Security | Keep-alive policy, SandboxedFrame, threat model | P3 + DEV-GATE-003/004 Closed | Lifecycle/heap/browser/security E2E pass; public claims match actual boundaries |
-| P8 System Hardening | Full traceability, a11y, RTL deferred guard, performance, packaging, demo | P3~P7 | Each of the 150 formal requirements has an implementation status and test evidence; Open/Deferred are not disguised as complete |
+| P8 System Hardening | Full traceability, a11y, RTL deferred guard, performance, packaging, demo | P3~P7 | Each of the 151 formal requirements has an implementation status and test evidence; Open/Deferred are not disguised as complete |
 | Consumer Demo | Portable SRS §3.1 IDE workspace, consumer boundary, and real-browser re-verification | P8 + ADR-0017 Accepted | Dual-package Release pack; standalone solution restore/build/test/format; out-of-repo restore/build/test/run; current-browser evidence recorded separately and not replacing P7/P8 historical evidence |
 
 P5 and P6 may run in parallel after P2/P4 stabilize, but the shared ID, Result,
@@ -3071,7 +3071,7 @@ The Panel Drag Session only manages transient interaction state; only the succes
 
 ## Appendix D: SRS-HLD Full Traceability Matrix
 
-This matrix covers the 150 formal requirement blocks in the SRS body. Consecutive
+This matrix covers the 151 formal requirement blocks in the SRS body. Consecutive
 requirements that share the same design responsibility and status are merged into one
 row; the `Source` field and this matrix are validated by the same ID-expansion rule. IDs
 that appear only in the SRS index/change log, without a formal requirement block and

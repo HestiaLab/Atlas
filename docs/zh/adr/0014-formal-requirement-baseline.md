@@ -50,3 +50,7 @@ HLD 和追踪矩阵。
 ## Supersession
 
 无。改变正式需求判定规则或恢复历史编号需要 superseding ADR。
+
+> 基线更新（2026-08-06）：ADR-0023 新增正式需求 REQ-NF-009 "Style Customization via CSS
+> Variables"，固定基线计数更新为 151 = F142 + NF9。本 ADR 对正式需求的定义及编号处置规则不变；
+> `RequirementsBaselineTests` 断言与附录 A 已相应更新。
