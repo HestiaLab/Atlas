@@ -7,7 +7,8 @@ using Atlas.Core.Placement;
 namespace Atlas.Core;
 
 /// <summary>
-/// Represents the immutable committed state of one Atlas workspace.
+///     工作区的不可变已提交快照：布局节点、项、工具栏与自动隐藏放置
+///     全部按标识索引；构造时经 GroupVisibilityInvariant 规范化工具组可见性。
 /// </summary>
 public sealed class WorkspaceSnapshot
 {
@@ -39,9 +40,9 @@ public sealed class WorkspaceSnapshot
         Id = id;
         Revision = revision;
         RootNodeId = rootNodeId;
-        // Normalize tool-group visibility so every committed snapshot
-        // satisfies REQ-F-154 (empty Persistent tool groups are collapsed,
-        // non-empty tool groups are expanded). See GroupVisibilityInvariant.
+        // 规范化工具组可见性，使每个已提交的快照都满足 REQ-F-154
+        // （空的 Persistent 工具组折叠，非空的工具组展开）。
+        // 参见 GroupVisibilityInvariant。
         Nodes = GroupVisibilityInvariant.Normalize(Copy(nodes, nameof(nodes)));
         Items = Copy(items, nameof(items));
         ToolBars = Copy(toolBars, nameof(toolBars));
@@ -50,45 +51,53 @@ public sealed class WorkspaceSnapshot
     }
 
     /// <summary>
-    /// Gets the workspace identity.
+    ///     工作区标识。
     /// </summary>
     public WorkspaceId Id { get; }
 
     /// <summary>
-    /// Gets the monotonically increasing concurrency revision.
+    ///     单调递增的修订号：每次提交递增，同时作为乐观并发的基线——
+    ///     操作携带 BaseRevision，与当前修订不符时以预期失败拒绝。
     /// </summary>
     public long Revision { get; }
 
     /// <summary>
-    /// Gets the layout tree root, or null for the unique empty-layout representation.
+    ///     布局树根节点标识；<see langword="null"/> 表示唯一的空布局。
     /// </summary>
     public LayoutNodeId? RootNodeId { get; }
 
     /// <summary>
-    /// Gets layout nodes indexed by identity.
+    ///     按节点标识索引的布局树节点（只读）。
     /// </summary>
     public IReadOnlyDictionary<LayoutNodeId, LayoutNode> Nodes { get; }
 
     /// <summary>
-    /// Gets open dock items indexed by identity.
+    ///     按项标识索引的已打开停靠项（只读）。
     /// </summary>
     public IReadOnlyDictionary<DockItemId, DockItem> Items { get; }
 
     /// <summary>
-    /// Gets committed toolbar state by logical side.
+    ///     按逻辑侧索引的已提交工具栏状态（只读）。
     /// </summary>
     public IReadOnlyDictionary<LogicalSide, ToolBarState> ToolBars { get; }
 
     /// <summary>
-    /// Gets toolbar-only ordering by logical region.
+    ///     按逻辑区域索引的仅工具栏排序（只读）。
     /// </summary>
     public IReadOnlyDictionary<LogicalRegion, ToolBarOrderState> ToolBarOrders { get; }
 
     /// <summary>
-    /// Gets auto-hide placement by workspace edge.
+    ///     按工作区边缘索引的自动隐藏放置（只读）。
     /// </summary>
     public IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> AutoHideStrips { get; }
 
+    /// <summary>
+    ///     创建指定工作区的空快照：修订为 0 且无任何内容。
+    /// </summary>
+    /// <param name="id">工作区标识。</param>
+    /// <returns>
+    ///     修订为 0 且无任何内容的空快照。
+    /// </returns>
     internal static WorkspaceSnapshot Empty(WorkspaceId id)
     {
         return new WorkspaceSnapshot(
@@ -102,6 +111,13 @@ public sealed class WorkspaceSnapshot
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
     }
 
+    /// <summary>
+    ///     复制快照并仅替换修订号；其余集合直接共享引用（快照不可变，共享安全）。
+    /// </summary>
+    /// <param name="revision">新修订号。</param>
+    /// <returns>
+    ///     与当前快照等价但修订号已替换的副本。
+    /// </returns>
     internal WorkspaceSnapshot WithRevision(long revision)
     {
         return new WorkspaceSnapshot(

@@ -4,21 +4,23 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Represents an ordered tool or document group in the layout tree.
+///     布局树中的叶子节点：承载一组有序项。
+///     文档组受文档行为状态约束且不可折叠；工具组必须挂靠语义工具栏区域。
 /// </summary>
 public sealed class GroupNode : LayoutNode
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="GroupNode"/> class.
+    ///     构造组节点并校验组合约束：文档组不可折叠、工具组不可携带编辑器状态且必须声明逻辑区域、
+    ///     项列表非空时必须有选中项且选中项属于该组、空组只允许 Persistent 保留策略。
     /// </summary>
-    /// <param name="id">The workspace-scoped node identity.</param>
-    /// <param name="kind">The item kind accepted by the group.</param>
-    /// <param name="retentionPolicy">The empty-group retention policy.</param>
-    /// <param name="visibility">The committed group visibility.</param>
-    /// <param name="itemIds">The ordered item identities.</param>
-    /// <param name="selectedItemId">The selected item identity, or null for an empty group.</param>
-    /// <param name="editorState">Optional document-group behavior state.</param>
-    /// <param name="logicalRegion">The semantic toolbar region for a tool group.</param>
+    /// <param name="id">工作区作用域内的节点标识。</param>
+    /// <param name="kind">组接受的项种类。</param>
+    /// <param name="retentionPolicy">空组保留策略。</param>
+    /// <param name="visibility">已提交的组可见性。</param>
+    /// <param name="itemIds">有序的项标识。</param>
+    /// <param name="selectedItemId">选中的项标识；空组时为 null。</param>
+    /// <param name="editorState">仅文档组可携带的行为状态；缺省时使用默认值。</param>
+    /// <param name="logicalRegion">仅工具组必须携带的语义工具栏区域。</param>
     public GroupNode(
         LayoutNodeId id,
         DockItemKind kind,
@@ -81,37 +83,37 @@ public sealed class GroupNode : LayoutNode
     }
 
     /// <summary>
-    /// Gets the item kind accepted by the group.
+    ///     组接受的项种类。
     /// </summary>
     public DockItemKind Kind { get; }
 
     /// <summary>
-    /// Gets the empty-group retention policy.
+    ///     组内最后一项离开后的处理策略。
     /// </summary>
     public GroupRetentionPolicy RetentionPolicy { get; }
 
     /// <summary>
-    /// Gets the committed group visibility.
+    ///     已提交的组可见性。
     /// </summary>
     public GroupVisibility Visibility { get; }
 
     /// <summary>
-    /// Gets the ordered item identities.
+    ///     按显示顺序排列的项标识（只读）。
     /// </summary>
     public IReadOnlyList<DockItemId> ItemIds { get; }
 
     /// <summary>
-    /// Gets the selected item identity, or null for an empty group.
+    ///     当前选中项的标识；空组为 null，非空组必有一个选中项（构造校验）。
     /// </summary>
     public DockItemId? SelectedItemId { get; }
 
     /// <summary>
-    /// Gets document-group behavior state, or null for a tool group.
+    ///     文档组的编辑器行为状态；工具组恒为 <see langword="null"/>（构造校验）。
     /// </summary>
     public EditorGroupState? EditorState { get; }
 
     /// <summary>
-    /// Gets the semantic toolbar region for a tool group, or null for a document group.
+    ///     工具组挂靠的语义工具栏区域；文档组恒为 <see langword="null"/>。
     /// </summary>
     public LogicalRegion? LogicalRegion { get; }
 

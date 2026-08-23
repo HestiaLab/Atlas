@@ -9,17 +9,18 @@
 
 ## Baseline
 
-- 基线日期：2026-07-31
-- 正式需求块：150（REQ-F 142 + REQ-NF 8）
-- 当前功能实施状态：见 P8 逐项审计；Verified 47、Implemented 17、In Progress 79、
+- 基线日期：2026-07-31；2026-08-06 经 ADR-0023 新增 REQ-NF-009 后，基线计数更新为
+  151 = REQ-F 142 + REQ-NF 9
+- 正式需求块：151（REQ-F 142 + REQ-NF 9）
+- 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 18、In Progress 80、
   Not Started 5、Deferred 2
 - 已完成工程工作：P0~P8 Verified；DEV-GATE-001~007 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
-在首个功能 work package 合并前，所有 150 个正式需求默认继承 `Not Started`。开始实施后，只在
+在首个功能 work package 合并前，所有 151 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
 
-P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-audit.md)。该表每个正式 ID
+P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-audit.md)。该表每个正式 ID
 恰好一行，并明确保留 Partial、Not Started 与 Deferred 缺口。
 
 ## 状态
@@ -43,7 +44,7 @@ P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-a
 | DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`：跨 Group remount/dispose，ResourceId 外置业务状态恢复 |
 | DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据已在 P7 Phase Exit 补齐 |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
-| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 150 = F142 + NF8 且附录与正文集合相同 |
+| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 151 = F142 + NF9 且附录与正文集合相同 |
 | DEV-GATE-007 Unified Content Catalog | Closed | [ADR-0018](./adr/0018-unified-content-catalog-and-runtime-binding.md) Accepted；SRS/HLD 合同已冻结，实施证据仍作为 In Progress 单独跟踪 |
 
 ## 实施状态变更
@@ -109,8 +110,8 @@ P8 的逐项审计见 [150 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-022、REQ-F-035、REQ-F-116~118、REQ-NF-003、REQ-NF-007 | DES-INT-007~008、DES-NFR-003、DES-RND-006、DES-RND-009 | P8 | `Atlas.Blazor/Components/Workspace`、`wwwroot/atlas-v2/atlas.css` | `Interactive_chrome_exposes_named_aria_relationships_and_roving_focus`；DOM metadata golden：named region/tablist、tab↔tabpanel、roving tabindex、heading、splitter label、focus-visible | Implemented | P8-WP-03 补齐现有 chrome 的语义关系；Overflow/Context Menu 和 Auto-hide Flyout 尚未实现，因此相关需求不升级 |
 | REQ-F-024、REQ-NF-008 | DES-INT-008、DES-NFR-002、DES-PRJ-002 | P8 | `Atlas.Blazor/ClientScripts/controller.ts`、`atlas.css` | Node + 真实浏览器：media query 初值、运行时 change、dispose 后 listener 无效；CSS media fallback + Host data projection | Verified | NF-008 AC 已通过；REQ-F-024 RTL 仍按 SRS/HLD 保持 Deferred，仅保留既有 logical keyboard mapping |
 | REQ-NF-004~005 | DES-INT-004、DES-INT-006~007、DES-PRJ-003 | P8 | historical `Atlas.Demo/Pages/P8Performance.razor`、`tests/browser/p8-hardening-fixture.html` | 真实浏览器：drag 75.543 FPS；Splitter 121.427 FPS；20 Panel first projection 192.700ms/169.900ms/113.000ms；[P8 evidence](./evidence/p8-system-hardening.md) | Verified | P8-WP-05 历史证据保持有效；20 Panel Demo 测量入口已按 ADR-0016 删除，静态 Splitter fixture 保留 |
-| — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests；Chromium a11y/reduced-motion/performance；restore/build/test/format；Core/Blazor Release pack；[P8 evidence](./evidence/p8-system-hardening.md) 与 [150 条审计](./evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate 的历史证据保持有效；Demo 已按 ADR-0016 删除；REQ-NF-002/003/007 仍不宣称完整覆盖 |
-| REQ-F-001~005、REQ-F-009~026、REQ-F-035、REQ-F-050~071、REQ-F-073~082、REQ-F-140~156、REQ-NF-003~005、REQ-NF-007~008 | DES-ARCH-001~004、DES-DOM-003、DES-DOM-008、DES-INT-001~008、DES-NFR-001~003、DES-PRJ-001~003、DES-RND-005~009 | Consumer Demo (historical) | historical `samples/Atlas.Demo`，现为 `HestiaLab/DbcView` | 9 bUnit/consumer-boundary tests；六 Tool Group、一个 Document Group、六 Splitter、六 LogicalRegion、固定 chrome、LT/RT、三 Tab/ARIA；独立及仓库外 restore/build/test/run；真实浏览器 Panel/ToolBar/Tab/Splitter/cancel/Undo/Redo/cross-Host/响应式/37.94 FPS/零 console issue；GitHub Pages 在线演示验证已发布包 | Verified | ADR-0017 已接受且未改变 Atlas public API/protocol/schema；consumer showcase 已迁移到独立的 DbcView 仓库（相同的 boundary tests 在那里保留）；历史证据单独维护，不替代或改写历史 P7/P8 证据；原子浏览器驱动不能注入的 Escape/pointercancel/lost capture/stale 中途事件由 Node/Blazor 自动化覆盖并在证据中明确分层 |
+| — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests；Chromium a11y/reduced-motion/performance；restore/build/test/format；Core/Blazor Release pack；[P8 evidence](./evidence/p8-system-hardening.md) 与 [151 条审计](./evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate 的历史证据保持有效；Demo 已按 ADR-0016 删除；REQ-NF-002/003/007 仍不宣称完整覆盖 |
+| REQ-F-001~005、REQ-F-009~026、REQ-F-035、REQ-F-050~071、REQ-F-073~082、REQ-F-140~156、REQ-NF-003~005、REQ-NF-007~008 | DES-ARCH-001~004、DES-DOM-003、DES-DOM-008、DES-INT-001~008、DES-NFR-001~003、DES-PRJ-001~003、DES-RND-005~009 | Consumer Demo (historical) | historical `samples/Atlas.Demo`，现为 `HestiaLab/DbcView`；仓内教学演示 `samples/Atlas.Showcase` | 9 bUnit/consumer-boundary tests；六 Tool Group、一个 Document Group、六 Splitter、六 LogicalRegion、固定 chrome、LT/RT、三 Tab/ARIA；独立及仓库外 restore/build/test/run；真实浏览器 Panel/ToolBar/Tab/Splitter/cancel/Undo/Redo/cross-Host/响应式/37.94 FPS/零 console issue；GitHub Pages 在线演示验证已发布包 | Verified | ADR-0017 已接受且未改变 Atlas public API/protocol/schema；consumer showcase 已迁移到独立的 DbcView 仓库（相同的 boundary tests 在那里保留）；仓内 Atlas.Showcase 教学演示取代了业务示例并由主 solution 门禁覆盖；历史证据单独维护，不替代或改写历史 P7/P8 证据；原子浏览器驱动不能注入的 Escape/pointercancel/lost capture/stale 中途事件由 Node/Blazor 自动化覆盖并在证据中明确分层 |
 | REQ-NF-009 | DES-NFR-005 | P9 | `wwwroot/atlas-v2/atlas.css`、`docs/en/theming.md` | ADR-0023 变量契约；真实浏览器：默认 `--atlas-*` 变量解析正确、放置区域高亮与拖拽预览边框在 `--atlas-accent: #d33` 覆盖下生效且无需 `!important`、变量块之外无硬编码主题值 | Implemented | ADR-0023 已接受；atlas.css 已 token 化（默认值逐像素一致），主题指南已发布；build/test/format 全绿 |
 
 ## 更新规则

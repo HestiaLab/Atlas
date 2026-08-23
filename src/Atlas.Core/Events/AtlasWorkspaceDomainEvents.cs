@@ -5,6 +5,9 @@ using Atlas.Core.Layout;
 
 namespace Atlas.Core.Events;
 
+/// <summary>
+///     根据已提交的变更集派生并发布强类型工作区领域事件。
+/// </summary>
 internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
 {
     public event EventHandler<ItemOpenedEventArgs>? ItemOpened;
@@ -19,6 +22,13 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
 
     public event EventHandler<WorkspaceRestoredEventArgs>? WorkspaceRestored;
 
+    /// <summary>
+    ///     按确定顺序发布与变更集对应的全部领域事件。
+    /// </summary>
+    /// <param name="sender">工作区事件源。</param>
+    /// <param name="before">变更前的快照。</param>
+    /// <param name="after">变更后的快照。</param>
+    /// <param name="changeSet">本次提交的变更集。</param>
     internal void Publish(
         object sender,
         WorkspaceSnapshot before,
@@ -85,6 +95,8 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
         WorkspaceSnapshot after,
         LayoutChangeSet changeSet)
     {
+        // 激活判定：同一组在 before/after 中的选中项发生变化才算一次激活；
+        // 同一项在多个组同时变为选中时只发布一次事件。
         var activations = after.Nodes.Values
             .OfType<GroupNode>()
             .Where(group => group.SelectedItemId is not null)
@@ -104,10 +116,12 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
             .Where(activation => activation.PreviousItemId != activation.ItemId)
             .GroupBy(activation => activation.ItemId)
             .Select(group => group.First())
+            // 按项 ID 排序，保证事件发布顺序确定，订阅方可以依赖稳定顺序。
             .OrderBy(activation => activation.ItemId.Value, StringComparer.Ordinal);
 
         foreach (var activation in activations)
         {
+            // 事件同时携带迁移前后的位置，订阅方可用于定位动画或导航。
             InvokeSafely(
                 ItemActivated,
                 sender,
@@ -192,6 +206,8 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
         WorkspaceSnapshot snapshot,
         DockItemId itemId)
     {
+        // 按确定性顺序查找：先组（按 ID 序）后自动隐藏条（按边序），
+        // 保证同一快照总是解析出相同位置；项不处于任何容器时返回 null。
         foreach (var group in snapshot.Nodes.Values
             .OfType<GroupNode>()
             .OrderBy(group => group.Id.Value, StringComparer.Ordinal))

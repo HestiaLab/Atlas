@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Defines how a document group chooses a fallback selection.
+///     当前选中项被关闭后，文档组选择回退激活项的策略。
 /// </summary>
 public enum EditorActivationPolicy
 {
     /// <summary>
-    /// Prefer the adjacent tab at the closed tab's index.
+    ///     选择被关闭项原索引位置的剩余项；原索引越界时取最后一项。
     /// </summary>
     Adjacent = 0,
 
     /// <summary>
-    /// Prefer the most recently visited remaining tab.
+    ///     选择最近访问列表中仍存留的最靠前项。
     /// </summary>
     MostRecentlyVisited = 1,
 }

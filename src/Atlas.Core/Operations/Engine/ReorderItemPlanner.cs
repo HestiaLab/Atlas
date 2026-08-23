@@ -5,12 +5,25 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     组内项重排规划器：保持固定文档前缀与工具栏顺序同步。
+/// </summary>
 internal static class ReorderItemPlanner
 {
+    /// <summary>
+    ///     规划组内项重排；索引未变化时不产生修订，破坏固定前缀或越界的请求被拒绝。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">重排操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan Plan(
         WorkspaceSnapshot snapshot,
         ReorderItemOperation operation)
     {
+        // 组内重排只关心"可移动"能力与目标索引合法性；索引未变化是幂等情形，
+        // 直接返回 NoChange 避免产生空修订。
         if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
         {
             return Failure(
@@ -58,6 +71,9 @@ internal static class ReorderItemPlanner
             return WorkspacePlan.NoChange();
         }
 
+        // 重排后的顺序必须同时满足两个不变量：固定文档前缀不被破坏，
+        // 且组顺序与所属逻辑区域的工具栏顺序同步更新——
+        // 两个视图必须一起写，否则提交校验会报顺序不一致。
         var reordered = group.ItemIds.ToList();
         reordered.RemoveAt(currentIndex);
         reordered.Insert(operation.TargetIndex, item.Id);

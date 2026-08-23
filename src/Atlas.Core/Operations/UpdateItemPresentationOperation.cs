@@ -1,9 +1,13 @@
 namespace Atlas.Core.Operations;
 
-/// <summary>Updates UI-independent title and icon metadata for an item.</summary>
+/// <summary>
+///     更新项的呈现元数据：标题与图标标识，与 UI 无关。
+/// </summary>
 public sealed class UpdateItemPresentationOperation : LayoutOperation
 {
-    /// <summary>Initializes an item presentation operation.</summary>
+    /// <summary>
+    ///     初始化项呈现操作。
+    /// </summary>
     public UpdateItemPresentationOperation(
         DockItemId itemId,
         string? title,
@@ -37,12 +41,18 @@ public sealed class UpdateItemPresentationOperation : LayoutOperation
         IconKey = iconKey;
     }
 
-    /// <summary>Gets the item to update.</summary>
+    /// <summary>
+    ///     获取要更新的项。
+    /// </summary>
     public DockItemId ItemId { get; }
 
-    /// <summary>Gets the requested title, or null to restore the identity default.</summary>
+    /// <summary>
+    ///     获取请求的标题；为 null 时恢复标识默认值。
+    /// </summary>
     public string? Title { get; }
 
-    /// <summary>Gets the requested icon key, or null to clear it.</summary>
+    /// <summary>
+    ///     获取请求的图标标识；为 null 时清除它。
+    /// </summary>
     public string? IconKey { get; }
 }

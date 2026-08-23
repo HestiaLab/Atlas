@@ -1,0 +1,15 @@
+@namespace Atlas.Showcase.Components
+
+<footer class="showcase-statusbar" data-testid="showcase-status-bar">
+    <span class="showcase-ok">●</span>
+    <span>@OperationStatus</span>
+    <span class="showcase-status-spacer"></span>
+    <span>LF</span>
+    <span>UTF-8</span>
+    <span>Atlas v2</span>
+</footer>
+
+@code {
+    [Parameter]
+    public string OperationStatus { get; set; } = "就绪";
+}

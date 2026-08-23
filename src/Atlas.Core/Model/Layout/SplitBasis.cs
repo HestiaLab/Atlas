@@ -1,13 +1,21 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Stores the committed sizing basis for a two-child split.
+///     分割的已提交尺寸基准：锚定一个子项为固定像素，或按比例分配；
+///     解析器据此求首选尺寸，解析过程不修改基准。
 /// </summary>
 public readonly struct SplitBasis : IEquatable<SplitBasis>
 {
+    // 基准种类：FixedPixels 或 Proportional。
     private readonly SplitBasisKind _kind;
+
+    // 基准数值：固定像素时为锚定子项尺寸，比例为第一子项占比。
     private readonly double _value;
+
+    // 固定像素基准锚定的子项；比例基准恒为 null。
     private readonly SplitAnchor? _anchor;
+
+    // 是否经工厂方法构造；default 实例为 false，属性访问抛异常。
     private readonly bool _isInitialized;
 
     private SplitBasis(SplitBasisKind kind, double value, SplitAnchor? anchor)
@@ -19,10 +27,10 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Gets the basis kind.
+    ///     基准种类（FixedPixels 或 Proportional）；default 实例不持有数据，访问抛异常。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     实例为默认的未初始化值。
     /// </exception>
     public SplitBasisKind Kind
     {
@@ -34,10 +42,10 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Gets the fixed extent or first-child proportion represented by this basis.
+    ///     基准数值：FixedPixels 时为锚定子项的像素尺寸，Proportional 时为第一个子项的占比。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     实例为默认的未初始化值。
     /// </exception>
     public double Value
     {
@@ -49,10 +57,10 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Gets the fixed child, or <see langword="null"/> for a proportional basis.
+    ///     FixedPixels 基准锚定的子项；Proportional 基准为 <see langword="null"/>。
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The instance is the default, uninitialized value.
+    ///     实例为默认的未初始化值。
     /// </exception>
     public SplitAnchor? Anchor
     {
@@ -66,11 +74,14 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     internal bool IsDefault => !_isInitialized;
 
     /// <summary>
-    /// Creates a basis that fixes one child to an extent measured in CSS pixels.
+    ///     创建固定像素基准：锚定子项占用 pixels（CSS 像素），另一子项占据剩余空间；
+    ///     pixels 必须有限非负，anchor 必须是已知值。
     /// </summary>
-    /// <param name="pixels">The finite, non-negative child extent.</param>
-    /// <param name="anchor">The child whose extent is fixed.</param>
-    /// <returns>The validated split basis.</returns>
+    /// <param name="pixels">有限且非负的子项尺寸。</param>
+    /// <param name="anchor">尺寸被固定的子项。</param>
+    /// <returns>
+    ///     构造完成的 SplitBasis 实例。
+    /// </returns>
     public static SplitBasis FixedPixels(double pixels, SplitAnchor anchor)
     {
         ValidateFiniteNonNegative(pixels, nameof(pixels));
@@ -80,10 +91,13 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Creates a basis in which the first child occupies the specified proportion.
+    ///     创建比例基准：第一个子项占 firstRatio，第二个子项占剩余 (1 - firstRatio)；
+    ///     比例必须严格在 (0, 1) 开区间内。
     /// </summary>
-    /// <param name="firstRatio">A finite ratio greater than zero and less than one.</param>
-    /// <returns>The validated split basis.</returns>
+    /// <param name="firstRatio">大于零且小于一的有限比例。</param>
+    /// <returns>
+    ///     构造完成的 SplitBasis 实例。
+    /// </returns>
     public static SplitBasis Proportional(double firstRatio)
     {
         if (!double.IsFinite(firstRatio) || firstRatio <= 0d || firstRatio >= 1d)
@@ -119,7 +133,7 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Determines whether two split bases are equal.
+    ///     按种类、数值、锚点与初始化状态逐一比较两个分割基准是否相等。
     /// </summary>
     public static bool operator ==(SplitBasis left, SplitBasis right)
     {
@@ -127,7 +141,7 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
     }
 
     /// <summary>
-    /// Determines whether two split bases are not equal.
+    ///     按种类、数值、锚点与初始化状态逐一比较两个分割基准是否不等。
     /// </summary>
     public static bool operator !=(SplitBasis left, SplitBasis right)
     {

@@ -14,7 +14,9 @@ using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
-/// <summary>Read members of <see cref="AtlasXmlLayoutSerializer"/> (partial).</summary>
+/// <summary>
+///     <see cref="AtlasXmlLayoutSerializer"/> 的读取成员（partial）。
+/// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {
     private static XDocument LoadSecure(string xml, LayoutPersistenceLimits limits)
@@ -46,10 +48,13 @@ public sealed partial class AtlasXmlLayoutSerializer
 
     private static void ValidateLimits(XElement root, LayoutPersistenceLimits limits)
     {
+        // 构建对象前对整棵 XML 做一次线性规模扫描：深度、节点/项数量与字符串长度
+        // 全部受 limits 约束，防止深嵌套或超量元素拖垮后续的递归解析（DoS 防护）。
         var nodes = 0;
         var items = 0;
         foreach (var element in root.DescendantsAndSelf())
         {
+            // XDocument 不直接暴露深度，逐元素沿祖先链计数；该上限保护递归解析的栈深度。
             var depth = 0;
             for (var current = element.Parent; current is not null; current = current.Parent)
             {
@@ -88,6 +93,8 @@ public sealed partial class AtlasXmlLayoutSerializer
         WorkspaceId workspaceId,
         LayoutPersistenceLimits limits)
     {
+        // 按节还原快照：项、布局、工具栏与自动隐藏彼此独立；
+        // Layout 根元素允许缺失，以支持保存空工作区（无根布局）。
         var items = root.Element(Namespace + "Items")!
             .Elements(Namespace + "Item")
             .Select(ReadItem)
@@ -118,6 +125,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             .Select(ReadStrip)
             .ToDictionary(value => value.Edge);
 
+        // 恢复快照的修订号固定为 0，由恢复操作在提交时按当前工作区修订推进。
         return new WorkspaceSnapshot(
             workspaceId,
             revision: 0,
@@ -156,6 +164,8 @@ public sealed partial class AtlasXmlLayoutSerializer
         IDictionary<LayoutNodeId, LayoutNode> nodes,
         LayoutPersistenceLimits limits)
     {
+        // 递归下降重建布局树，与 WriteNode 的前序写出对称；
+        // 深度已由 ValidateLimits 的 MaxDepth 上限约束，可安全递归。
         var id = new LayoutNodeId(Required(element, "id"));
         LayoutNode node;
         if (element.Name == Namespace + "Group")
@@ -163,6 +173,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             var itemIds = element.Elements(Namespace + "ItemRef")
                 .Select(value => new DockItemId(Required(value, "id")))
                 .ToArray();
+            // 组级上限独立于全局项数：单个组塞入超量项不会触发全局限制，必须在此单独拦截。
             if (itemIds.Length > limits.MaxItemsPerGroup)
             {
                 throw new XmlException("A group exceeds the item limit.");
@@ -198,6 +209,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             var secondId = ReadNode(secondElement, nodes, limits);
             var basisKind = ParseEnum<SplitBasisKind>(Required(element, "basisKind"));
             var basisValue = ParseFinite(Required(element, "basisValue"));
+            // 锚点属性只对固定像素基准有意义，故仅在该分支读取。
             var basis = basisKind == SplitBasisKind.FixedPixels
                 ? SplitBasis.FixedPixels(
                     basisValue,

@@ -1,17 +1,21 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-/// Resolves committed split sizing data into deterministic child extents.
+///     分割布局的纯解析器：把容器尺寸、已提交基准与约束解析为确定性结果，不改动基准。
 /// </summary>
 public static class SplitLayoutResolver
 {
     /// <summary>
-    /// Resolves a two-child split without mutating its committed basis.
+    ///     解析双子项分割：先按基准求首选尺寸（比例=占比、固定=锚定值），
+    ///     再把首选值钳制到由双方约束互相推导的可行区间；
+    ///     双方最小之和超出容器或最大之和不足容器时无可行解，直接返回边界值并标记钳制。
     /// </summary>
-    /// <param name="availableExtent">The finite, non-negative container extent.</param>
-    /// <param name="basis">The committed split basis.</param>
-    /// <param name="constraints">The child extent constraints.</param>
-    /// <returns>The resolved child extents and clamp state.</returns>
+    /// <param name="availableExtent">有限且非负的容器尺寸。</param>
+    /// <param name="basis">已提交的分割基准。</param>
+    /// <param name="constraints">子项尺寸约束；参与可行区间推导。</param>
+    /// <returns>
+    ///     已解析的子项尺寸与钳制状态。
+    /// </returns>
     public static ResolvedSplitLayout Resolve(
         double availableExtent,
         SplitBasis basis,
@@ -27,6 +31,8 @@ public static class SplitLayoutResolver
         var minimumTotal = constraints.FirstMinimum + constraints.SecondMinimum;
         var maximumTotal = firstMaximum + secondMaximum;
 
+        // 先处理无可行解的两个极端：双方最小之和超出容器、双方最大之和小于容器——
+        // 只能返回边界值并标记钳制，跳过偏好解析。
         if (minimumTotal > availableExtent)
         {
             return new ResolvedSplitLayout(
@@ -45,6 +51,9 @@ public static class SplitLayoutResolver
                 isClamped: true);
         }
 
+        // 可行区间由双方约束互相推导：下限取"自身最小"与"对方取最大后的剩余"的较大者，
+        // 上限取"自身最大"与"对方取最小后的剩余"的较小者——在此区间内钳制偏好值，
+        // 保证两个子项同时满足约束。
         var feasibleFirstMinimum = Math.Max(
             constraints.FirstMinimum,
             availableExtent - secondMaximum);
@@ -58,6 +67,7 @@ public static class SplitLayoutResolver
             feasibleFirstMaximum);
         var resolvedSecond = availableExtent - resolvedFirst;
 
+        // isClamped 供调用方区分"严格按偏好渲染"与"被约束修正"两种结果（UI 可提示约束生效）。
         return new ResolvedSplitLayout(
             resolvedFirst,
             resolvedSecond,

@@ -33,7 +33,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0011](./0011-p6-persistence-public-api.md) | Accepted | Core XML codec、restore operation、Preset store/service 与 auto-persistence 公共边界 |
 | [ADR-0012](./0012-content-lifetime-and-state-preservation.md) | Accepted | 业务状态保持、Default 与 bounded KeepAliveWithinGroup 生命周期合同 |
 | [ADR-0013](./0013-content-trust-and-sandboxed-frame.md) | Accepted | TrustedComponent 非安全沙箱与 SandboxedFrame deny-by-default 安全边界 |
-| [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | 150 条正式需求基线、历史删除编号与非规范性边界场景处置 |
+| [ADR-0014](./0014-formal-requirement-baseline.md) | Accepted | 正式需求基线（REQ-NF-009/ADR-0023 后为 151 = F142 + NF9）、历史删除编号与非规范性边界场景处置 |
 | [ADR-0015](./0015-rider-style-example-application.md) | Superseded | 独立 Rider 风格示例；由 ADR-0016 删除 |
 | [ADR-0016](./0016-remove-application-projects.md) | Accepted | 删除 Atlas.Demo 与 Atlas.Examples.Rider，只保留双包、测试和静态 fixtures |
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | 新增独立 NuGet consumer sample；取代 ADR-0016 的长期应用项目禁令 |

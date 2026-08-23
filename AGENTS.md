@@ -49,13 +49,15 @@ src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazo
 tests/Atlas.Core.Tests/   Core xUnit tests
 tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
 tests/browser/            Static real-browser verification fixtures
+samples/Atlas.Showcase/   Teaching demo (in Atlas.sln, source references)
 docs/                     SRS, HLD, traceability and ADRs
 ```
 
-The NuGet consumer showcase (the DBC viewer application) moved to the
-standalone repository [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView);
-Atlas itself keeps no application projects. A framework-focused demo may later
-occupy `samples/`.
+The NuGet consumer showcase (the DBC viewer application) lives in the
+standalone repository [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
+and is not part of `Atlas.sln`. The in-repo `samples/Atlas.Showcase` is a
+teaching demo of the framework's public API; unlike DbcView it references
+Atlas source projects so CI covers it with the main solution.
 
 ## Build And Verification
 
@@ -93,9 +95,10 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-re
   against `docs/en/SRS.md`.
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
-- `samples/` is reserved for a future framework-focused demo; the business
-  DBC viewer showcase lives in the standalone `HestiaLab/DbcView` repository
-  and is not part of `Atlas.sln`.
+- `samples/Atlas.Showcase` is the in-repo teaching demo; it references Atlas
+  source projects and is part of `Atlas.sln`. The business DBC viewer
+  showcase lives in the standalone `HestiaLab/DbcView` repository and is not
+  part of `Atlas.sln`.
 - `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
 - Tests should cover behaviour, not accidental implementation details.
 - Keep NuGet dependency graph narrow — prefer framework types over third-party packages.

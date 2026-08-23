@@ -1,0 +1,89 @@
+@namespace Atlas.Showcase.Components
+@implements IAsyncDisposable
+@using Atlas.Blazor.Components
+@using Atlas.Blazor.Content
+@using Atlas.Core
+@using Atlas.Core.Changes
+@using Atlas.Core.Items
+@using Atlas.Core.Operations
+@using Atlas.Showcase.Components
+
+<section class="showcase-shell" aria-label="Atlas Showcase teaching workspace">
+    @if (workspace is null)
+    {
+        <div class="showcase-loading" role="status">Preparing Atlas Showcase…</div>
+    }
+    else
+    {
+        <AtlasWorkspaceHost Workspace="@workspace"
+                            WorkspaceOwnership="WorkspaceOwnership.External"
+                            EnableInteractions="true">
+            <TopToolbarContent>
+                <ShowcaseTopToolbar CanUndo="@(workspace?.CanUndo == true)"
+                                    CanRedo="@(workspace?.CanRedo == true)"
+                                    Panels="@Panels"
+                                    IsPanelVisible="@IsPanelVisible"
+                                    OnTogglePanel="TogglePanelAsync"
+                                    OnMovePanel="MovePanelAsync"
+                                    OnUndo="UndoAsync"
+                                    OnRedo="RedoAsync" />
+            </TopToolbarContent>
+            <StatusBarContent>
+                <ShowcaseStatusBar OperationStatus="@operationStatus" />
+            </StatusBarContent>
+            <ContentRoutes>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Catalog">
+                    <ChildContent Context="content">
+                        <TeachingCatalogPanel Items="@CatalogItems" />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Layout">
+                    <ChildContent Context="content">
+                        <LayoutPanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Content">
+                    <ChildContent Context="content">
+                        <ContentPanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.DragDrop">
+                    <ChildContent Context="content">
+                        <DragDropPanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Keyboard">
+                    <ChildContent Context="content">
+                        <KeyboardPanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Splitter">
+                    <ChildContent Context="content">
+                        <SplitterPanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Theme">
+                    <ChildContent Context="content">
+                        <ThemePanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Persistence">
+                    <ChildContent Context="content">
+                        <PersistencePanel CaptureLayout="CaptureLayoutAsync"
+                                          RestoreLayout="RestoreLayoutAsync"
+                                          LastEvent="@persistenceEvent" />
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="@ShowcaseContentKinds.Guide">
+                    <ChildContent Context="content">
+                        <GuidePanel />
+                    </ChildContent>
+                </AtlasContentRoute>
+            </ContentRoutes>
+
+            <ErrorTemplate Context="content">
+                @content.Code
+            </ErrorTemplate>
+        </AtlasWorkspaceHost>
+    }
+</section>

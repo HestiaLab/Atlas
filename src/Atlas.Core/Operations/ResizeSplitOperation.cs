@@ -2,10 +2,14 @@ using Atlas.Core.Layout;
 
 namespace Atlas.Core.Operations;
 
-/// <summary>Commits a resolved sizing basis for an existing split.</summary>
+/// <summary>
+///     为现有分屏提交已解析的尺寸基准。
+/// </summary>
 public sealed class ResizeSplitOperation : LayoutOperation
 {
-    /// <summary>Initializes a split resize operation.</summary>
+    /// <summary>
+    ///     初始化分屏尺寸调整操作。
+    /// </summary>
     public ResizeSplitOperation(
         LayoutNodeId splitId,
         SplitBasis basis,
@@ -14,7 +18,9 @@ public sealed class ResizeSplitOperation : LayoutOperation
     {
     }
 
-    /// <summary>Creates one keyboard resize step for history coalescing.</summary>
+    /// <summary>
+    ///     为历史合并创建一个键盘尺寸调整步骤。
+    /// </summary>
     public static ResizeSplitOperation CreateKeyboard(
         LayoutNodeId splitId,
         SplitBasis basis)
@@ -57,12 +63,18 @@ public sealed class ResizeSplitOperation : LayoutOperation
         InputKind = inputKind;
     }
 
-    /// <summary>Gets the split to resize.</summary>
+    /// <summary>
+    ///     获取要调整尺寸的分屏。
+    /// </summary>
     public LayoutNodeId SplitId { get; }
 
-    /// <summary>Gets the resolved basis to commit.</summary>
+    /// <summary>
+    ///     获取要提交的已解析基准。
+    /// </summary>
     public SplitBasis Basis { get; }
 
-    /// <summary>Gets the input source used for history coalescing.</summary>
+    /// <summary>
+    ///     获取输入来源；键盘调整参与撤销历史合并，指针调整不参与。
+    /// </summary>
     public ResizeSplitInputKind InputKind { get; }
 }

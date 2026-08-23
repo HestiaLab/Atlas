@@ -3,7 +3,7 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Changes;
 
 /// <summary>
-/// Describes precise renderer invalidations for one committed revision.
+///     描述一次已提交修订产生的精确渲染失效范围。
 /// </summary>
 public sealed class LayoutChangeSet
 {
@@ -43,42 +43,74 @@ public sealed class LayoutChangeSet
         UpdatedAutoHideStrips = CopyDistinct(updatedAutoHideStrips);
     }
 
-    /// <summary>Gets the revision observed before the change.</summary>
+    /// <summary>
+    ///     获取变更前观察到的修订。
+    /// </summary>
     public long BeforeRevision { get; }
 
-    /// <summary>Gets the revision produced by the change.</summary>
+    /// <summary>
+    ///     获取变更产生的修订。
+    /// </summary>
     public long AfterRevision { get; }
 
-    /// <summary>Gets the semantic source of the change.</summary>
+    /// <summary>
+    ///     获取变更的语义来源。
+    /// </summary>
     public LayoutChangeKind ChangeKind { get; }
 
-    /// <summary>Gets the layout nodes added by the change.</summary>
+    /// <summary>
+    ///     获取变更新增的布局节点。
+    /// </summary>
     public IReadOnlyList<LayoutNodeId> AddedNodes { get; }
 
-    /// <summary>Gets the layout nodes removed by the change.</summary>
+    /// <summary>
+    ///     获取变更移除的布局节点。
+    /// </summary>
     public IReadOnlyList<LayoutNodeId> RemovedNodes { get; }
 
-    /// <summary>Gets the layout nodes whose state changed.</summary>
+    /// <summary>
+    ///     获取状态已更改的布局节点。
+    /// </summary>
     public IReadOnlyList<LayoutNodeId> UpdatedNodes { get; }
 
-    /// <summary>Gets the dock items added by the change.</summary>
+    /// <summary>
+    ///     获取变更新增的停靠项。
+    /// </summary>
     public IReadOnlyList<DockItemId> AddedItems { get; }
 
-    /// <summary>Gets the dock items removed by the change.</summary>
+    /// <summary>
+    ///     获取变更移除的停靠项。
+    /// </summary>
     public IReadOnlyList<DockItemId> RemovedItems { get; }
 
-    /// <summary>Gets the dock items whose state changed.</summary>
+    /// <summary>
+    ///     获取状态已更改的停靠项。
+    /// </summary>
     public IReadOnlyList<DockItemId> UpdatedItems { get; }
 
-    /// <summary>Gets the logical sides whose toolbar visibility changed.</summary>
+    /// <summary>
+    ///     获取工具栏可见性发生更改的逻辑侧。
+    /// </summary>
     public IReadOnlyList<LogicalSide> UpdatedToolBars { get; }
 
-    /// <summary>Gets the logical regions whose toolbar ordering changed.</summary>
+    /// <summary>
+    ///     获取工具栏排序发生更改的逻辑区域。
+    /// </summary>
     public IReadOnlyList<LogicalRegion> UpdatedToolBarOrders { get; }
 
-    /// <summary>Gets the auto-hide strips whose state changed.</summary>
+    /// <summary>
+    ///     获取状态发生更改的自动隐藏条。
+    /// </summary>
     public IReadOnlyList<WorkspaceEdge> UpdatedAutoHideStrips { get; }
 
+    /// <summary>
+    ///     创建无任何元素变更的空变更集。
+    /// </summary>
+    /// <param name="revision">变更前后一致的修订号。</param>
+    /// <param name="kind">变更的语义来源。</param>
+    /// <returns>
+    ///     无任何元素变更的空变更集。
+    /// </returns>
     internal static LayoutChangeSet Empty(long revision, LayoutChangeKind kind)
     {
         return new LayoutChangeSet(revision, revision, kind);

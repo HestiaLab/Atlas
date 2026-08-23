@@ -4,28 +4,34 @@ using Atlas.Core.Layout;
 namespace Atlas.Core.Operations.Engine;
 
 /// <summary>
-/// Enforces the tool-group visibility invariant (REQ-F-154) at the snapshot
-/// boundary: an empty Persistent tool group must be Collapsed so it stops
-/// occupying layout space. A non-empty group may stay Collapsed when the user
-/// explicitly collapses it (splitter collapse / SetGroupVisibilityOperation);
-/// re-expansion on content entry is a planner concern (MoveToolPlanner,
-/// SelectItemPlanner, OpenItemPlanner).
+///     在快照边界强制执行工具组可见性不变式（REQ-F-154）：
+///     空的 Persistent 工具组必须为 Collapsed，使其停止占用布局空间。
+///     非空组在用户显式折叠时可以保持 Collapsed（分割条折叠 / SetGroupVisibilityOperation）；
+///     内容进入时的重新展开是规划器的职责（MoveToolPlanner、SelectItemPlanner、OpenItemPlanner）。
 /// </summary>
 /// <remarks>
-/// Every <see cref="WorkspaceSnapshot"/> construction normalizes the layout
-/// tree through this class, so operation planners do not each need to remember
-/// the collapse rule. The operation is idempotent: when no group violates the
-/// invariant the original dictionary instance is returned, so committed
-/// snapshots that are already compliant pay no allocation cost.
-/// Dynamic groups are intentionally not handled here: an empty Dynamic group
-/// is removed structurally by <see cref="LayoutTreeEditor.RemoveDynamicGroup"/>
-/// and must never appear in a committed tree.
+///     每次构造 <see cref="WorkspaceSnapshot"/> 都通过此类规范化布局树，
+///     因此操作规划器无需各自记住折叠规则。
+///     该操作是幂等的：当没有组违反不变式时返回原始字典实例，
+///     因此已合规的已提交快照不产生分配开销。
+///     动态组有意不在此处理：空的 Dynamic 组由 <see cref="LayoutTreeEditor.RemoveDynamicGroup"/> 结构性移除，
+///     且绝不允许出现在已提交的树中。
 /// </remarks>
 internal static class GroupVisibilityInvariant
 {
+    /// <summary>
+    ///     规范化工具组可见性：空的 Persistent 工具组强制为折叠状态，
+    ///     全部合规时原样返回传入字典（零分配）。
+    /// </summary>
+    /// <param name="nodes">待规范化的布局节点字典。</param>
+    /// <returns>
+    ///     规范化后的节点字典；无违规时返回原实例。
+    /// </returns>
     internal static IReadOnlyDictionary<LayoutNodeId, LayoutNode> Normalize(
         IReadOnlyDictionary<LayoutNodeId, LayoutNode> nodes)
     {
+        // 快照边界高频调用，必须幂等：全部合规时原样返回传入字典（零分配），
+        // 只有发现违规才惰性复制并修正可见性。
         Dictionary<LayoutNodeId, LayoutNode>? mutable = null;
         foreach (var pair in nodes)
         {

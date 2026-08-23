@@ -1,12 +1,13 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-/// Provides the capability combinations defined by the Atlas domain model.
+///     领域模型内置的能力组合预设：工具项、常驻工具项、文档项、
+///     预览文档项与占位项的默认能力集。
 /// </summary>
 public static class DockItemCapabilityPresets
 {
     /// <summary>
-    /// Gets the default capabilities for a tool item.
+    ///     标准工具项：可关闭、可移动、可自动隐藏。
     /// </summary>
     public static DockItemCapabilities Tool =>
         DockItemCapabilities.CanClose
@@ -14,14 +15,14 @@ public static class DockItemCapabilityPresets
         | DockItemCapabilities.CanAutoHide;
 
     /// <summary>
-    /// Gets the capabilities for a permanent tool item.
+    ///     常驻工具项：不可关闭，仅可移动、可自动隐藏。
     /// </summary>
     public static DockItemCapabilities PermanentTool =>
         DockItemCapabilities.CanMove
         | DockItemCapabilities.CanAutoHide;
 
     /// <summary>
-    /// Gets the default capabilities for a document item.
+    ///     标准文档项：可关闭、可移动、可拆分、可固定。
     /// </summary>
     public static DockItemCapabilities Document =>
         DockItemCapabilities.CanClose
@@ -30,14 +31,14 @@ public static class DockItemCapabilityPresets
         | DockItemCapabilities.CanPinDocument;
 
     /// <summary>
-    /// Gets the capabilities for a preview document item.
+    ///     预览文档项：可关闭、可移动，不可拆分或固定。
     /// </summary>
     public static DockItemCapabilities PreviewDocument =>
         DockItemCapabilities.CanClose
         | DockItemCapabilities.CanMove;
 
     /// <summary>
-    /// Gets the conservative capabilities used by unresolved content.
+    ///     占位项：未解析内容使用的保守能力，不暴露任何操作。
     /// </summary>
     public static DockItemCapabilities Placeholder => DockItemCapabilities.None;
 }

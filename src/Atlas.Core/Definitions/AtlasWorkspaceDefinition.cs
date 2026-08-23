@@ -5,10 +5,14 @@ using Atlas.Core.Placement;
 
 namespace Atlas.Core.Definitions;
 
-/// <summary>Defines the immutable initial committed state for a workspace.</summary>
+/// <summary>
+///     定义工作区的不可变初始已提交状态。
+/// </summary>
 public sealed class AtlasWorkspaceDefinition
 {
-    /// <summary>Initializes a workspace definition.</summary>
+    /// <summary>
+    ///     构造不可变定义；工作区标识必须非默认，各集合立即复制为只读列表。
+    /// </summary>
     public AtlasWorkspaceDefinition(
         WorkspaceId workspaceId,
         LayoutNodeId? rootNodeId,
@@ -38,25 +42,39 @@ public sealed class AtlasWorkspaceDefinition
             nameof(autoHideStrips));
     }
 
-    /// <summary>Gets the stable workspace identity.</summary>
+    /// <summary>
+    ///     获取稳定的工作区标识。
+    /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
-    /// <summary>Gets the layout root identity, or null for an empty definition.</summary>
+    /// <summary>
+    ///     获取布局根标识；空定义时为 null。
+    /// </summary>
     public LayoutNodeId? RootNodeId { get; }
 
-    /// <summary>Gets the declared layout nodes.</summary>
+    /// <summary>
+    ///     获取声明的布局节点。
+    /// </summary>
     public IReadOnlyList<LayoutNode> Nodes { get; }
 
-    /// <summary>Gets the declared dock items.</summary>
+    /// <summary>
+    ///     获取声明的停靠项。
+    /// </summary>
     public IReadOnlyList<DockItem> Items { get; }
 
-    /// <summary>Gets the declared toolbar states.</summary>
+    /// <summary>
+    ///     获取声明的工具栏状态。
+    /// </summary>
     public IReadOnlyList<ToolBarState> ToolBars { get; }
 
-    /// <summary>Gets the declared toolbar order states.</summary>
+    /// <summary>
+    ///     获取声明的工具栏顺序状态。
+    /// </summary>
     public IReadOnlyList<ToolBarOrderState> ToolBarOrders { get; }
 
-    /// <summary>Gets the declared auto-hide strips.</summary>
+    /// <summary>
+    ///     获取声明的自动隐藏条。
+    /// </summary>
     public IReadOnlyList<AutoHideStripState> AutoHideStrips { get; }
 
     private static IReadOnlyList<T> Copy<T>(

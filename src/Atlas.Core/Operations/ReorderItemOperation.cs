@@ -1,9 +1,13 @@
 namespace Atlas.Core.Operations;
 
-/// <summary>Reorders an item within its current group.</summary>
+/// <summary>
+///     在其当前组内对项重新排序。
+/// </summary>
 public sealed class ReorderItemOperation : LayoutOperation
 {
-    /// <summary>Initializes an item reorder operation.</summary>
+    /// <summary>
+    ///     初始化项重排序操作。
+    /// </summary>
     public ReorderItemOperation(
         DockItemId itemId,
         LayoutNodeId groupId,
@@ -38,12 +42,18 @@ public sealed class ReorderItemOperation : LayoutOperation
         TargetIndex = targetIndex;
     }
 
-    /// <summary>Gets the item to reorder.</summary>
+    /// <summary>
+    ///     获取要重排序的项。
+    /// </summary>
     public DockItemId ItemId { get; }
 
-    /// <summary>Gets the group that currently owns the item.</summary>
+    /// <summary>
+    ///     获取当前拥有该项的组。
+    /// </summary>
     public LayoutNodeId GroupId { get; }
 
-    /// <summary>Gets the target index.</summary>
+    /// <summary>
+    ///     获取目标索引。
+    /// </summary>
     public int TargetIndex { get; }
 }

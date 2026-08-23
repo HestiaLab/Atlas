@@ -2,7 +2,9 @@ using Atlas.Core.Changes;
 
 namespace Atlas.Core.Events;
 
-/// <summary>Provides data for an item-activated event.</summary>
+/// <summary>
+///     为项激活事件提供数据。
+/// </summary>
 public sealed class ItemActivatedEventArgs : WorkspaceItemEventArgs
 {
     internal ItemActivatedEventArgs(
@@ -26,6 +28,8 @@ public sealed class ItemActivatedEventArgs : WorkspaceItemEventArgs
         PreviousItemId = previousItemId;
     }
 
-    /// <summary>Gets the previously selected item identity, when present.</summary>
+    /// <summary>
+    ///     获取先前选中的项标识；无先前选中项时为 <see langword="null"/>。
+    /// </summary>
     public DockItemId? PreviousItemId { get; }
 }

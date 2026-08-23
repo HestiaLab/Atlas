@@ -11,12 +11,12 @@ using Xunit;
 namespace Atlas.Core.Tests.Operations;
 
 /// <summary>
-/// Locks the REQ-F-154 tool-group visibility invariant across every operation
-/// path: an empty Persistent tool group must collapse (so it stops occupying
-/// layout space) and a collapsed group must expand when content enters it.
-/// The invariant is enforced once at the WorkspaceSnapshot boundary by
-/// GroupVisibilityInvariant; these tests prove each planner path produces a
-/// compliant committed state without needing its own collapse/expand logic.
+///     锁定 REQ-F-154 工具组可见性不变式，覆盖每一条操作路径：
+///     空的 Persistent 工具组必须折叠（从而不再占据布局空间），
+///     折叠的组在内容进入时必须展开。
+///     该不变式由 GroupVisibilityInvariant 在 WorkspaceSnapshot 边界统一强制执行；
+///     这些测试证明每条规划器路径都能产生合规的已提交状态，
+///     而无需自身的折叠/展开逻辑。
 /// </summary>
 public sealed class GroupVisibilityInvariantTests
 {
@@ -89,7 +89,7 @@ public sealed class GroupVisibilityInvariantTests
         var targetAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
         Assert.Equal(GroupVisibility.Expanded, targetAfter.Visibility);
         Assert.Equal(new[] { targetItem.Id, moved.Id }, targetAfter.ItemIds);
-        // The emptied source collapses through the same invariant.
+        // 被清空的源组通过相同的不变式折叠。
         var sourceAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]);
         Assert.Equal(GroupVisibility.Collapsed, sourceAfter.Visibility);
     }
@@ -140,9 +140,8 @@ public sealed class GroupVisibilityInvariantTests
     [Fact]
     public async Task Materializing_an_empty_persistent_group_collapses_it()
     {
-        // A definition may declare an empty Persistent tool group as Expanded
-        // (the developer keeps the slot); the invariant collapses it on the
-        // first committed snapshot so it never renders at full extent.
+        // 定义可以将空的 Persistent 工具组声明为 Expanded（开发者保留该槽位）；
+        // 不变式会在第一个已提交快照上将其折叠，从而永远不会以完整尺寸渲染。
         var group = new GroupNode(
             new LayoutNodeId("tools"),
             DockItemKind.Tool,

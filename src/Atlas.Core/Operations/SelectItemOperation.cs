@@ -1,9 +1,13 @@
 namespace Atlas.Core.Operations;
 
-/// <summary>Selects and activates an existing workspace item.</summary>
+/// <summary>
+///     选择并激活现有工作区项。
+/// </summary>
 public sealed class SelectItemOperation : LayoutOperation
 {
-    /// <summary>Initializes a select operation.</summary>
+    /// <summary>
+    ///     初始化选择操作。
+    /// </summary>
     public SelectItemOperation(DockItemId itemId, long? baseRevision = null)
         : base(LayoutOperationKind.SelectItem, baseRevision)
     {
@@ -17,6 +21,8 @@ public sealed class SelectItemOperation : LayoutOperation
         ItemId = itemId;
     }
 
-    /// <summary>Gets the item to select.</summary>
+    /// <summary>
+    ///     获取要选择的项。
+    /// </summary>
     public DockItemId ItemId { get; }
 }

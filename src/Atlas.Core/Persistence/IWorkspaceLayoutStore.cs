@@ -1,14 +1,20 @@
 namespace Atlas.Core.Persistence;
 
-/// <summary>Stores the reserved automatic layout document for one workspace.</summary>
+/// <summary>
+///     为一个工作区存储保留的自动布局文档。
+/// </summary>
 public interface IWorkspaceLayoutStore
 {
-    /// <summary>Saves or overwrites the automatic document.</summary>
+    /// <summary>
+    ///     保存或覆盖自动布局文档。
+    /// </summary>
     ValueTask SaveAsync(
         WorkspaceLayoutDocument document,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Loads the automatic document, or null when none exists.</summary>
+    /// <summary>
+    ///     加载自动布局文档，不存在时返回 null。
+    /// </summary>
     ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
         CancellationToken cancellationToken = default);
 }

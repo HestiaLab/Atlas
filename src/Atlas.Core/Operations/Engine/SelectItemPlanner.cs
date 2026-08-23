@@ -4,12 +4,25 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     项选中规划器：联动更新组选中项、最近访问顺序与工具组可见性。
+/// </summary>
 internal static class SelectItemPlanner
 {
+    /// <summary>
+    ///     规划项选中；选中项、可见性与最近访问顺序均未变化时不产生修订。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">选中操作。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     internal static WorkspacePlan Plan(
         WorkspaceSnapshot snapshot,
         SelectItemOperation operation)
     {
+        // 选择联动三个状态：组选中项、最近访问顺序（MRU），以及工具组可见性——
+        // 选中被折叠的工具组会把它唤起（展开）；三者都未变化时返回 NoChange 避免空修订。
         if (!snapshot.Items.ContainsKey(operation.ItemId))
         {
             return WorkspacePlan.Failure(

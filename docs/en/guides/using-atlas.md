@@ -6,8 +6,8 @@ This guide shows you how to build a real IDE-style workspace with Atlas,
 step by step. It complements the [architecture overview](./architecture-overview.md)
 and the [development guide](./development-guide.md): where those explain how
 Atlas works, this guide shows what a consumer writes. The example follows the
-[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) consumer; every
-snippet below comes from code that runs.
+[`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) teaching demo;
+every snippet below comes from code that runs.
 
 ## 1. Reference The Package
 
@@ -399,7 +399,7 @@ for the same key.
 
 ## Where To Go Next
 
-- The full runnable example: [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
+- The full runnable example: [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)
 - Product behavior: [SRS](../SRS.md)
 - Public API surface: [HLD §10.2](../HLD.md#102-normative-public-api-surface-manifest)
 - Accepted decisions: [ADR index](../adr/README.md)

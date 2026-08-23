@@ -2115,6 +2115,25 @@ NF-006 的恶意脚本隔离仅适用于 SandboxedFrame。Frame 使用固定 den
 
 ---
 
+```
+DES-NFR-005
+通过 CSS 变量进行样式定制
+Atlas 通过带 `--atlas-` 前缀的、已文档化的 CSS 自定义属性（变量）暴露视觉样式（REQ-NF-009，ADR-0023）。默认主题完全由 `.atlas-v2-workspace` 根元素上的这些变量定义；组件不得在变量块之外硬编码相互冲突的颜色、尺寸、圆角或透明度值。consumer 通过在 workspace 容器或其祖先上覆盖变量来定制外观——无需 `!important`，也无需使用 Atlas 内部选择器。
+
+token 集合是公开的、只增不减（additive）的契约。变量按用途分组：
+
+- **颜色（Colors）**：accent、surface、text、chrome、tab、splitter 与 drag-preview token。系统颜色默认值（`Highlight`、`Canvas`、`CanvasText`）通过 CSS `color-scheme` 调色板解析；`currentColor` 文本/边框值有意不 token 化，跟随宿主应用的文本颜色。
+- **尺寸（Sizing）**：splitter 粗细与命中区域、chrome 高度、间距、内边距、圆角、边框宽度、focus-ring 宽度与 drag-preview 上限。
+- **层级（Layering）**：根作用域 z-index token（`--atlas-layer-*`），与 DES-PRJ-003 中的层级表一致；组件不得单独硬编码 z-index 值。
+- **透明度（Opacity）**：splitter 空闲/悬停/聚焦/禁用、drop-highlight 混合比例、toolbar 分隔线与 drag-preview 透明度。
+
+完整 token 目录、默认值与实操示例见 `docs/zh/theming.md`。未来版本可以新增变量或调整默认值，但不得移除变量；移除变量属于破坏性变更。
+
+来源：NF-009
+```
+
+---
+
 ## 9 项目结构
 
 ```
@@ -2264,7 +2283,7 @@ preservation 与 component instance preservation，不能合并为一个模糊�
 | DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
 | DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
-| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；150 = F142 + NF8 | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 150 个正式需求块维护矩阵 |
+| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；151 = F142 + NF9（基线计数由 REQ-NF-009/ADR-0023 更新） | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 151 个正式需求块维护矩阵 |
 | DEV-GATE-007 Unified Content Catalog | **Closed**：ADR-0018；启动期 DI、Host-local Route 与 immutable Host-local Map 进入一个 strict Catalog | 删除旧的 Host-wide Template API、公开 Route/Map API 与跨 Panel 协作示例 | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | 在冻结合同下执行 TDD 实施和 package/browser 验证 |
 
 闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、
@@ -2568,7 +2587,7 @@ DOM contract tests 至少验证：
 | P5 Drag & Dock | Tab drag、Panel drag、target resolver、preview、cancel、undo | P4 + DEV-GATE-002 Closed | resolver matrix、全部 terminal path、跨实例、stale、30fps profile 通过 |
 | P6 Persistence | V2 XML、restore、Preset、V1 migration、repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests 通过 |
 | P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame、threat model | P3 + DEV-GATE-003/004 Closed | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
-| P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 150 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
+| P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 151 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
 | Consumer Demo | 可迁移的 SRS §3.1 IDE 工作区、consumer boundary 与真实浏览器复验 | P8 + ADR-0017 Accepted | 双包 Release pack；独立 solution restore/build/test/format；仓库外 restore/build/test/run；当前浏览器证据单独记录且不替代 P7/P8 历史证据 |
 
 P5 与 P6 可以在 P2/P4 稳定后并行，但共享的 ID、Result、Revision、protocol enum 和 public API
@@ -2782,6 +2801,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA 语义与焦点合同 | F-022, F-035, F-116~118, NF-003, NF-007 |
 | DES-NFR-004 | 内容信任模式与安全隔离 | F-120, F-128, NF-006 |
+| DES-NFR-005 | 通过 CSS 变量进行样式定制 | NF-009 |
 | DES-PRJ-001 | 模块划分与依赖方向 | F-109, NF-002 |
 | DES-PRJ-002 | TypeScript 模块划分 | NF-003~004, NF-006, NF-008 |
 | DES-PRJ-003 | ToolBar 与 Panel 拖拽验证矩阵 | F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007 |
@@ -2790,7 +2810,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 
 ## 附录 D：SRS—HLD 完整设计追溯矩阵
 
-本矩阵覆盖 SRS 正文中的 150 个正式需求块。连续且具有相同设计责任和状态的需求合并为一行；
+本矩阵覆盖 SRS 正文中的 151 个正式需求块。连续且具有相同设计责任和状态的需求合并为一行；
 `来源` 字段与本矩阵由同一编号展开规则校验。仅出现在 SRS 索引/变更记录、没有正式需求块和 AC 的
 编号不计入覆盖率。
 
@@ -2833,6 +2853,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-005 | DES-INT-004、DES-INT-006、DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Designed，OI-006 已由 ADR-0013 关闭 |
 | REQ-NF-007 | DES-NFR-003、DES-RND-006、DES-RND-009 | Blazor/E2E | Designed |
+| REQ-NF-009 | DES-NFR-005 | Blazor/CSS | Designed；ADR-0023 已接受，主题指南已发布 |
 
 ### D.2 完整需求映射
 
@@ -2927,3 +2948,4 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002、DES-RND-001 | Designed |
 | REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |
+| REQ-NF-009 | DES-NFR-005 | Designed |

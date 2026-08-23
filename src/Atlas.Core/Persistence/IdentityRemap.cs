@@ -1,9 +1,13 @@
 namespace Atlas.Core.Persistence;
 
-/// <summary>Maps one persisted item identity to its restored identity.</summary>
+/// <summary>
+///     将一个持久化的项标识映射到其恢复后的标识。
+/// </summary>
 public sealed class IdentityRemap
 {
-    /// <summary>Initializes an identity remap entry.</summary>
+    /// <summary>
+    ///     构造重映射条目；两个标识必须非默认且互不相同，原因必须为已定义枚举值。
+    /// </summary>
     public IdentityRemap(
         DockItemId oldItemId,
         DockItemId newItemId,
@@ -24,12 +28,18 @@ public sealed class IdentityRemap
         Reason = reason;
     }
 
-    /// <summary>Gets the persisted identity.</summary>
+    /// <summary>
+    ///     获取持久化的标识。
+    /// </summary>
     public DockItemId OldItemId { get; }
 
-    /// <summary>Gets the restored identity.</summary>
+    /// <summary>
+    ///     获取恢复后的标识。
+    /// </summary>
     public DockItemId NewItemId { get; }
 
-    /// <summary>Gets the remap reason.</summary>
+    /// <summary>
+    ///     获取重映射原因。
+    /// </summary>
     public IdentityRemapReason Reason { get; }
 }

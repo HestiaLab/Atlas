@@ -1,17 +1,25 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-/// Stores the preferred group placement for restoring an auto-hidden item.
+///     自动隐藏项恢复（dock-back）的书签：优先回到原组与索引，
+///     原组不存在时回退到边缘。
 /// </summary>
 public readonly struct DockBack : IEquatable<DockBack>
 {
+    // 恢复时优先回归的组；原组不存在时回退到边缘。
     private readonly LayoutNodeId _preferredGroupId;
+
+    // 组内恢复插入的位置索引，构造时校验非负。
     private readonly int _preferredIndex;
+
+    // 优先组缺失时的回退放置边缘。
     private readonly WorkspaceEdge _fallbackEdge;
+
+    // 是否经构造器初始化；default 实例为 false，属性访问抛异常。
     private readonly bool _isInitialized;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DockBack"/> struct.
+    ///     构造书签；优先组标识不得为默认值、索引不得为负、回退边缘必须已知。
     /// </summary>
     public DockBack(
         LayoutNodeId preferredGroupId,
@@ -42,7 +50,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    /// Gets the preferred group identity.
+    ///     恢复时优先回归的组。
     /// </summary>
     public LayoutNodeId PreferredGroupId
     {
@@ -54,7 +62,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    /// Gets the preferred insertion index.
+    ///     组内恢复插入的索引（非负）。
     /// </summary>
     public int PreferredIndex
     {
@@ -66,7 +74,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    /// Gets the edge used when the preferred group no longer exists.
+    ///     优先组缺失时的回退放置边缘。
     /// </summary>
     public WorkspaceEdge FallbackEdge
     {
@@ -105,7 +113,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    /// Determines whether two dock-back bookmarks are equal.
+    ///     确定两个 dock-back 书签是否相等。
     /// </summary>
     public static bool operator ==(DockBack left, DockBack right)
     {
@@ -113,7 +121,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    /// Determines whether two dock-back bookmarks are not equal.
+    ///     确定两个 dock-back 书签是否不相等。
     /// </summary>
     public static bool operator !=(DockBack left, DockBack right)
     {

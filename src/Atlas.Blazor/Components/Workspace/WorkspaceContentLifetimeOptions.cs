@@ -1,27 +1,31 @@
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-/// Selects how inactive content instances are retained by a workspace host.
+///     选择工作区宿主如何保留非活动内容实例。
 /// </summary>
 public enum AtlasContentLifetimeMode
 {
-    /// <summary>Unmount inactive content.</summary>
+    /// <summary>
+    ///     卸载非活动内容。
+    /// </summary>
     Default = 0,
 
-    /// <summary>Retain recently active content while it remains in the same group.</summary>
+    /// <summary>
+    ///     在内容仍位于同一组时保留近期活动的内容。
+    /// </summary>
     KeepAliveWithinGroup = 1,
 }
 
 /// <summary>
-/// Configures the bounded content-instance cache owned by each rendered group.
+///     配置每个已渲染组所拥有的有界内容实例缓存。
 /// </summary>
 public sealed class WorkspaceContentLifetimeOptions
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="WorkspaceContentLifetimeOptions"/> class.
+    ///     配置有界内容缓存；每组缓存上限必须至少为 1。
     /// </summary>
-    /// <param name="mode">The lifetime mode.</param>
-    /// <param name="maxCachedItems">The maximum number of mounted items per group.</param>
+    /// <param name="mode">生命周期模式。</param>
+    /// <param name="maxCachedItems">每组最多挂载的项数。</param>
     public WorkspaceContentLifetimeOptions(
         AtlasContentLifetimeMode mode = AtlasContentLifetimeMode.Default,
         int maxCachedItems = 20)
@@ -40,9 +44,13 @@ public sealed class WorkspaceContentLifetimeOptions
         MaxCachedItems = maxCachedItems;
     }
 
-    /// <summary>Gets the lifetime mode.</summary>
+    /// <summary>
+    ///     获取生命周期模式。
+    /// </summary>
     public AtlasContentLifetimeMode Mode { get; }
 
-    /// <summary>Gets the maximum number of mounted items per group.</summary>
+    /// <summary>
+    ///     获取每组最多挂载的项数。
+    /// </summary>
     public int MaxCachedItems { get; }
 }

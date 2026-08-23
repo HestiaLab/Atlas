@@ -1,9 +1,13 @@
 namespace Atlas.Blazor.Components;
 
-/// <summary>Configures browser-side splitter interaction.</summary>
+/// <summary>
+///     配置浏览器端分割条交互。
+/// </summary>
 public sealed class AtlasSplitterOptions
 {
-    /// <summary>Initializes splitter interaction options.</summary>
+    /// <summary>
+    ///     初始化分割条交互选项；方向键步进必须为正且有限，提交延迟不能为负。
+    /// </summary>
     public AtlasSplitterOptions(
         double keyboardStepPixels = 10d,
         int keyboardCommitDelayMilliseconds = 500)
@@ -23,17 +27,25 @@ public sealed class AtlasSplitterOptions
         KeyboardCommitDelayMilliseconds = keyboardCommitDelayMilliseconds;
     }
 
-    /// <summary>Gets the CSS-pixel change for one splitter arrow-key step.</summary>
+    /// <summary>
+    ///     获取分割条单次方向键步进的 CSS 像素变化量。
+    /// </summary>
     public double KeyboardStepPixels { get; }
 
-    /// <summary>Gets the debounce delay that terminates a keyboard resize burst.</summary>
+    /// <summary>
+    ///     获取终止键盘调整连发的防抖延迟。
+    /// </summary>
     public int KeyboardCommitDelayMilliseconds { get; }
 }
 
-/// <summary>Describes transient presentation and allowed actions for one splitter.</summary>
+/// <summary>
+///     描述单个分割条的瞬态呈现与允许的操作。
+/// </summary>
 public sealed class AtlasSplitterPresentation
 {
-    /// <summary>Initializes splitter presentation.</summary>
+    /// <summary>
+    ///     初始化分割条呈现；CSS 类仅接受类名令牌，非法字符抛异常。
+    /// </summary>
     public AtlasSplitterPresentation(
         bool isLocked = false,
         string? cssClass = null,
@@ -46,16 +58,24 @@ public sealed class AtlasSplitterPresentation
         CanCollapseSecond = canCollapseSecond;
     }
 
-    /// <summary>Gets whether user interaction is disabled.</summary>
+    /// <summary>
+    ///     获取是否禁用用户交互。
+    /// </summary>
     public bool IsLocked { get; }
 
-    /// <summary>Gets optional safe CSS class tokens.</summary>
+    /// <summary>
+    ///     获取可选的安全 CSS 类令牌。
+    /// </summary>
     public string? CssClass { get; }
 
-    /// <summary>Gets whether the first child exposes collapse affordance.</summary>
+    /// <summary>
+    ///     获取第一个子项是否提供折叠操作入口。
+    /// </summary>
     public bool CanCollapseFirst { get; }
 
-    /// <summary>Gets whether the second child exposes collapse affordance.</summary>
+    /// <summary>
+    ///     获取第二个子项是否提供折叠操作入口。
+    /// </summary>
     public bool CanCollapseSecond { get; }
 
     private static string? ValidateCssClass(string? value)

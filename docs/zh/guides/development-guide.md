@@ -95,9 +95,9 @@ Blazor 组件从 immutable snapshot 派生 UI，不在 component local state 保
 - `tests/fixtures`：跨 C#/TypeScript 的 protocol fixtures。
 - `tests/browser`：真实浏览器静态 fixtures；用于 bUnit/Node 无法证明的 DOM、pointer、sandbox 和 hardening 行为。
 
-### Consumer showcase（`HestiaLab/DbcView`）
+### 教学演示（`samples/Atlas.Showcase`）
 
-NuGet consumer showcase（DBC 文件查看器）位于独立的 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库，不在 `Atlas.sln` 中。它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该仓库验证。
+仓内教学演示位于 `samples/Atlas.Showcase`，属于 `Atlas.sln`，引用 Atlas 源码项目（因此 CI 会覆盖它）。其面板演示公共 API 并展示真实代码片段。独立的 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库是 NuGet consumer showcase；它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该仓库验证。
 
 ## 4. 按改动类型工作
 

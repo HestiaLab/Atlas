@@ -6,11 +6,22 @@ using Atlas.Core.Results;
 
 namespace Atlas.Core.Operations.Engine;
 
+/// <summary>
+///     默认操作规划器：按操作种类将快照与操作分派给对应的专用规划器，
+///     并承载关闭操作的守卫决策记忆化。
+/// </summary>
 internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlanner
 {
+    // 关闭守卫决策记忆表：同一 CloseItemOperation 重试时复用守卫结果，不重复询问用户。
     private readonly ConditionalWeakTable<CloseItemOperation, GuardDecision> guardDecisions = new();
+
+    // 守卫决策表访问锁；记忆表工厂（异步守卫调用）也在锁内发起。
     private readonly object guardGate = new();
+
+    // 关闭守卫解析器；null 表示未配置守卫，关闭操作不征询。
     private readonly IDockItemCloseGuardResolver? closeGuardResolver;
+
+    // 内容等价判定策略：供打开操作的去重路径使用。
     private readonly IContentIdentityPolicy contentIdentityPolicy;
 
     internal DefaultWorkspaceOperationPlanner(IDockItemCloseGuard? closeGuard = null)
@@ -36,6 +47,15 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             ?? DefaultContentIdentityPolicy.Instance;
     }
 
+    /// <summary>
+    ///     为指定快照上的操作生成提交计划，按操作种类分派给对应规划器。
+    /// </summary>
+    /// <param name="snapshot">操作所基于的已提交快照。</param>
+    /// <param name="operation">待规划的操作。</param>
+    /// <param name="cancellationToken">用于取消挂起异步工作的令牌。</param>
+    /// <returns>
+    ///     提交、无变更或失败的规划结果。
+    /// </returns>
     public async ValueTask<WorkspacePlan> PlanAsync(
         WorkspaceSnapshot snapshot,
         LayoutOperation operation,
@@ -84,6 +104,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
         CloseItemOperation operation,
         CancellationToken cancellationToken)
     {
+        // 守卫决策按操作实例记忆化：同一 CloseItemOperation 重试时复用结果、不重复询问用户；
+        // 用 ConditionalWeakTable 让决策随操作实例一起被回收，lock 保护并发访问。
         if (!snapshot.Items.TryGetValue(operation.ItemId, out var item))
         {
             return MissingItem(operation);
@@ -133,6 +155,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
         CloseItemOperation operation,
         DockItem item)
     {
+        // 关闭要清除项的所有放置痕迹：组、自动隐藏条、工具栏顺序表；
+        // 空出的 Dynamic 组从树中摘除（Persistent 组保留空壳），最后从 Items 移除项本体。
         var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
         var items = snapshot.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
         var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -256,6 +280,7 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
 
     private sealed class FixedCloseGuardResolver : IDockItemCloseGuardResolver
     {
+        // 固定的关闭守卫实例，所有项共用同一守卫。
         private readonly IDockItemCloseGuard guard;
 
         internal FixedCloseGuardResolver(IDockItemCloseGuard guard)
@@ -263,6 +288,13 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             this.guard = guard;
         }
 
+        /// <summary>
+        ///     返回固定的关闭守卫实例，所有项共用同一个守卫。
+        /// </summary>
+        /// <param name="item">待检查的停靠项。</param>
+        /// <returns>
+        ///     固定守卫实例。
+        /// </returns>
         public IDockItemCloseGuard? Resolve(DockItem item)
         {
             return guard;

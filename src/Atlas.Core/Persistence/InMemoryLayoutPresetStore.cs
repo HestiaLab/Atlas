@@ -1,9 +1,14 @@
 namespace Atlas.Core.Persistence;
 
-/// <summary>Provides an isolated in-memory ordinal preset store.</summary>
+/// <summary>
+///     提供隔离的内存序号预设存储。
+/// </summary>
 public sealed class InMemoryLayoutPresetStore : ILayoutPresetStore
 {
+    // 文档字典的互斥锁。
     private readonly object gate = new();
+
+    // 预设名（序数比较）→ 预设文档的内存字典。
     private readonly Dictionary<string, LayoutPresetDocument> documents =
         new(StringComparer.Ordinal);
 
