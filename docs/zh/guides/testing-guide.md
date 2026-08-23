@@ -14,7 +14,7 @@ Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet c
 | Blazor component | `tests/Atlas.Blazor.Tests` | Host、projection、content、lifecycle、ARIA/metadata 合同 | 真实浏览器 diff、layout geometry、native pointer |
 | TypeScript | `src/Atlas.Blazor/tests` | protocol、controller 的可测试逻辑和 wire behavior | C# commit、Blazor lifecycle、完整浏览器集成 |
 | Browser fixture | `tests/browser` | 真实 DOM、pointer、sandbox、hardening 和跨层行为 | NuGet 包边界、consumer restore |
-| NuGet consumer | `wubing7755/DbcView`（独立仓库） | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
+| NuGet consumer | `HestiaLab/DbcView`（独立仓库） | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
 | 教学演示 | `samples/Atlas.Showcase`（在 `Atlas.sln` 内） | public API 用法、渲染、交互 | NuGet 包边界 |
 | Build/format/pack | solution、CI | 编译、analyzer、style、包内容 | 用户交互行为本身 |
 
@@ -146,7 +146,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory .
 
 ## 6. NuGet consumer 验证
 
-涉及以下内容时运行独立的 consumer showcase（`wubing7755/DbcView`）：
+涉及以下内容时运行独立的 consumer showcase（`HestiaLab/DbcView`）：
 
 - public API；
 - package metadata/dependencies；
@@ -171,7 +171,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
 sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-在 `wubing7755/DbcView` 仓库中：
+在 `HestiaLab/DbcView` 仓库中：
 
 ```sh
 dotnet restore DbcView.sln --configfile NuGet.Config --force --no-cache

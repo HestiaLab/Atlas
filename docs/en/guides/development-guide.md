@@ -126,7 +126,7 @@ Must follow:
 The in-repo teaching demo lives in `samples/Atlas.Showcase`, is part of
 `Atlas.sln`, and references Atlas source projects (so CI covers it). Its
 panels demonstrate the public API and show real code snippets. The standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository is the
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository is the
 independent NuGet consumer showcase; it cannot reference Atlas source
 projects, internal APIs, linked source, or test helpers. After changing
 package content, RCL assets, or consumer-facing APIs, repack and verify
@@ -205,7 +205,7 @@ require an ADR.
 3. Add a compile-time or behavioral contract test.
 4. Update the genuinely affected SRS/HLD/ADR/traceability sections.
 5. Pack the NuGet package and verify with the consumer showcase
-   (`wubing7755/DbcView`).
+   (`HestiaLab/DbcView`).
 
 Do not make API checks pass by deleting baselines, weakening analyzers, or
 hiding warnings.
@@ -255,7 +255,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
 sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-The NuGet consumer showcase (`wubing7755/DbcView`) verifies the packed package
+The NuGet consumer showcase (`HestiaLab/DbcView`) verifies the packed package
 against its own restore/build/test/format flow. Record the new nupkg SHA-256
 values before restore to prove which artifact that verification used. Browsers
 may also cache old RCL JavaScript/CSS; hard-refresh or change the port for real

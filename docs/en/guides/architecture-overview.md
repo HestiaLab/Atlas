@@ -21,7 +21,7 @@ packages:
 The in-repo teaching demo [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)
 demonstrates the framework's public API with runnable panels. The NuGet
 consumer showcase (a DBC file viewer) lives in the standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository. Neither
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository. Neither
 is part of the main solution's packaging layer; DbcView must not reference
 Atlas source projects.
 

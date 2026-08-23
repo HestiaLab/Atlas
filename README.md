@@ -11,8 +11,8 @@ interaction are separated into layers, so the UI never keeps a second copy of
 layout state.
 
 > **Packages:** [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
-> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
-> [Releases](https://github.com/wubing7755/Atlas/releases)
+> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/HestiaLab/Atlas/releases)
 
 ## Features
 
@@ -67,8 +67,8 @@ workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
 ## Samples
 
 - [`samples/Atlas.Showcase`](samples/Atlas.Showcase/) — in-repo teaching demo of the public API; every panel shows the real API code behind it.
-- [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) — a DBC file viewer consuming the published `Atlas.Blazor` package.
-- [`wubing7755/Penelopa`](https://github.com/wubing7755/Penelopa) — a Blazor WebAssembly primitive alignment editor (SkiaSharp canvas in a six-region dock), [live demo](https://wubing7755.github.io/Penelopa/).
+- [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) — a DBC file viewer consuming the published `Atlas.Blazor` package.
+- [`HestiaLab/Penelopa`](https://github.com/HestiaLab/Penelopa) — a Blazor WebAssembly primitive alignment editor (SkiaSharp canvas in a six-region dock), [live demo](https://HestiaLab.github.io/Penelopa/).
 
 ## Documentation
 

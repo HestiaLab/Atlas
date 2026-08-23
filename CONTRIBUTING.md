@@ -90,7 +90,7 @@ maintenance requests.
 - `samples/Atlas.Showcase` is the in-repo teaching demo of the public API; it
   references Atlas source projects and is part of `Atlas.sln`.
 - The NuGet consumer showcase lives in the standalone
-  [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository
+  [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository
   (ADR-0017 boundary); it is not part of `Atlas.sln`.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
@@ -101,7 +101,7 @@ maintenance requests.
 
 Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
 NuGet.org and GitHub Packages. The NuGet consumer showcase lives in the
-standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+standalone [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 repository, which consumes the published package from nuget.org and verifies
 the consumer boundary independently. The in-repo `samples/Atlas.Showcase`
 teaching demo is covered by the main solution's build/test/format gates.

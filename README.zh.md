@@ -7,8 +7,8 @@
 Atlas 为 IDE、设计器、管理后台等复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。布局领域模型、Blazor 渲染与浏览器交互分层，UI 层不维护第二份布局状态。
 
 > **NuGet 包：** [NuGet.org 上的 Atlas.Blazor](https://www.nuget.org/packages/Atlas.Blazor)
-> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
-> [Releases](https://github.com/wubing7755/Atlas/releases)
+> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/HestiaLab/Atlas/releases)
 
 ## 核心能力
 
@@ -60,8 +60,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 ## 示例项目
 
 - [`samples/Atlas.Showcase`](samples/Atlas.Showcase/)——仓库内教学演示，展示公共 API 用法，每个面板附真实 API 代码。
-- [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)——基于 Atlas 的 DBC 文件查看器，消费已发布的 `Atlas.Blazor` 包。
-- [`wubing7755/Penelopa`](https://github.com/wubing7755/Penelopa)——Blazor WebAssembly 图元对齐编辑器（六区域停靠工作区 + SkiaSharp 画布），[在线演示](https://wubing7755.github.io/Penelopa/)。
+- [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)——基于 Atlas 的 DBC 文件查看器，消费已发布的 `Atlas.Blazor` 包。
+- [`HestiaLab/Penelopa`](https://github.com/HestiaLab/Penelopa)——Blazor WebAssembly 图元对齐编辑器（六区域停靠工作区 + SkiaSharp 画布），[在线演示](https://HestiaLab.github.io/Penelopa/)。
 
 ## 文档
 

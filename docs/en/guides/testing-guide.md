@@ -15,7 +15,7 @@ change.
 | Blazor component | `tests/Atlas.Blazor.Tests` | Host, projection, content, lifecycle, ARIA/metadata contracts | real-browser diff, layout geometry, native pointer |
 | TypeScript | `src/Atlas.Blazor/tests` | protocol, testable controller logic, and wire behavior | C# commit, Blazor lifecycle, full browser integration |
 | Browser fixture | `tests/browser` | real DOM, pointer, sandbox, hardening, and cross-layer behavior | NuGet package boundary, consumer restore |
-| NuGet consumer | `wubing7755/DbcView` (standalone repo) | PackageReference, RCL assets, public API, portability | all framework-internal boundary cases |
+| NuGet consumer | `HestiaLab/DbcView` (standalone repo) | PackageReference, RCL assets, public API, portability | all framework-internal boundary cases |
 | Teaching demo | `samples/Atlas.Showcase` (in `Atlas.sln`) | public API usage, rendering, interactions | NuGet package boundary |
 | Build/format/pack | solution, CI | compilation, analyzers, style, package content | user interaction behavior itself |
 
@@ -171,7 +171,7 @@ replace current re-verification.
 
 ## 6. NuGet Consumer Verification
 
-Run the standalone consumer showcase (`wubing7755/DbcView`) when touching:
+Run the standalone consumer showcase (`HestiaLab/DbcView`) when touching:
 
 - public API;
 - package metadata/dependencies;
@@ -198,7 +198,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
 sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-In the `wubing7755/DbcView` repository:
+In the `HestiaLab/DbcView` repository:
 
 ```sh
 dotnet restore DbcView.sln --configfile NuGet.Config --force --no-cache

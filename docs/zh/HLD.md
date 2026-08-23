@@ -2168,7 +2168,7 @@ DES-PRJ-001
     browser/                 ← 静态真实浏览器验证 fixtures
 
 依赖方向：Atlas.Core ← Atlas.Blazor；测试项目只依赖被测产物。禁止反向依赖。
-NuGet consumer showcase（DBC 文件查看器）位于独立的 `wubing7755/DbcView` 仓库：
+NuGet consumer showcase（DBC 文件查看器）位于独立的 `HestiaLab/DbcView` 仓库：
 不加入 `Atlas.sln`，不属于 Atlas 实现层，不引用源码项目；它只从 Release pack feed
 消费 `Atlas.Core` / `Atlas.Blazor`，因此主 solution 的干净恢复不依赖本地预生成包。详见 ADR-0017。
 

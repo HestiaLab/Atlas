@@ -44,7 +44,7 @@ Declare the layout inside the host with the definition components:
 
 The host collects the declarations, builds the workspace, and reconciles it atomically. You can also build the layout programmatically with `IAtlasWorkspaceFactory.Create(...)`. Content registered through `AtlasContentRoute` components (or the content map) is rendered inside tool panels and editor tabs.
 
-A complete runnable example lives in the [Atlas.Showcase demo](https://github.com/wubing7755/Atlas/tree/main/samples/Atlas.Showcase), and the [Using Atlas guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md) walks through both styles in depth. An independent NuGet consumer sample lives in the [DbcView showcase](https://github.com/wubing7755/DbcView).
+A complete runnable example lives in the [Atlas.Showcase demo](https://github.com/HestiaLab/Atlas/tree/main/samples/Atlas.Showcase), and the [Using Atlas guide](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/using-atlas.md) walks through both styles in depth. An independent NuGet consumer sample lives in the [DbcView showcase](https://github.com/HestiaLab/DbcView).
 
 ## Theme Customization
 
@@ -58,7 +58,7 @@ Atlas exposes its visual style through documented `--atlas-*` CSS variables (col
 }
 ```
 
-See the [theming guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/theming.md) for the full variable contract.
+See the [theming guide](https://github.com/HestiaLab/Atlas/blob/main/docs/en/theming.md) for the full variable contract.
 
 ## Core Capabilities
 
@@ -75,13 +75,13 @@ See the [theming guide](https://github.com/wubing7755/Atlas/blob/main/docs/en/th
 
 ## Documentation
 
-- [Atlas repository](https://github.com/wubing7755/Atlas)
-- [Using Atlas (worked example)](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/using-atlas.md)
-- [Styling and theming](https://github.com/wubing7755/Atlas/blob/main/docs/en/theming.md)
-- [Software Requirements Specification](https://github.com/wubing7755/Atlas/blob/main/docs/en/SRS.md)
-- [Architecture Overview](https://github.com/wubing7755/Atlas/blob/main/docs/en/guides/architecture-overview.md)
-- [ADR index](https://github.com/wubing7755/Atlas/blob/main/docs/en/adr/README.md)
+- [Atlas repository](https://github.com/HestiaLab/Atlas)
+- [Using Atlas (worked example)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/using-atlas.md)
+- [Styling and theming](https://github.com/HestiaLab/Atlas/blob/main/docs/en/theming.md)
+- [Software Requirements Specification](https://github.com/HestiaLab/Atlas/blob/main/docs/en/SRS.md)
+- [Architecture Overview](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/architecture-overview.md)
+- [ADR index](https://github.com/HestiaLab/Atlas/blob/main/docs/en/adr/README.md)
 
 ## License
 
-Atlas is released under the [MIT License](https://github.com/wubing7755/Atlas/blob/main/LICENSE).
+Atlas is released under the [MIT License](https://github.com/HestiaLab/Atlas/blob/main/LICENSE).
