@@ -121,10 +121,10 @@ Must follow:
 - `tests/browser`: real-browser static fixtures for DOM, pointer, sandbox, and
   hardening behavior that bUnit/Node cannot prove.
 
-### Consumer showcase (`wubing7755/DbcView`)
+### Consumer showcase (`HestiaLab/DbcView`)
 
 The NuGet consumer showcase (a DBC file viewer) lives in the standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository and is
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository and is
 not in `Atlas.sln`. It cannot reference Atlas source projects, internal APIs,
 linked source, or test helpers. After changing package content, RCL assets, or
 consumer-facing APIs, repack and verify through that repository.
@@ -202,7 +202,7 @@ require an ADR.
 3. Add a compile-time or behavioral contract test.
 4. Update the genuinely affected SRS/HLD/ADR/traceability sections.
 5. Pack the NuGet package and verify with the consumer showcase
-   (`wubing7755/DbcView`).
+   (`HestiaLab/DbcView`).
 
 Do not make API checks pass by deleting baselines, weakening analyzers, or
 hiding warnings.
@@ -252,7 +252,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
 sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-The NuGet consumer showcase (`wubing7755/DbcView`) verifies the packed package
+The NuGet consumer showcase (`HestiaLab/DbcView`) verifies the packed package
 against its own restore/build/test/format flow. Record the new nupkg SHA-256
 values before restore to prove which artifact that verification used. Browsers
 may also cache old RCL JavaScript/CSS; hard-refresh or change the port for real

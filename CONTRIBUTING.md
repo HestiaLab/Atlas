@@ -88,7 +88,7 @@ maintenance requests.
 - Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
 - Browser verification fixtures belong in `tests/browser`.
 - The NuGet consumer showcase moved to the standalone
-  [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository
+  [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository
   (ADR-0017 boundary); Atlas itself keeps no application projects.
 - Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
 - Avoid adding abstractions until repeated use justifies them.
@@ -99,7 +99,7 @@ maintenance requests.
 
 Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
 NuGet.org and GitHub Packages. The NuGet consumer showcase lives in the
-standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+standalone [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 repository, which consumes the published package from nuget.org and verifies
 the consumer boundary independently.
 

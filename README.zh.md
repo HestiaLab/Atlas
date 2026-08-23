@@ -6,12 +6,12 @@
 
 Atlas 为 IDE、设计器、管理后台和其他复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。项目将布局领域模型、Blazor 渲染和浏览器交互分层，避免 UI 层维护第二份布局状态。
 
-> **Consumer showcase：** [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+> **Consumer showcase：** [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 > （一个基于 Atlas 的 DBC 文件查看器）·
 >
 > **NuGet 包：** [NuGet.org 上的 Atlas.Blazor](https://www.nuget.org/packages/Atlas.Blazor)
-> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
-> [Releases](https://github.com/wubing7755/Atlas/releases)
+> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/orgs/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/HestiaLab/Atlas/releases)
 
 ## 核心能力
 
@@ -68,7 +68,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 示例项目
 
-NuGet consumer showcase——一个基于 Atlas 的 DBC 文件查看器——位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库。它从 nuget.org 消费已发布的 `Atlas.Blazor` 包，不引用 Atlas 源码项目。
+NuGet consumer showcase——一个基于 Atlas 的 DBC 文件查看器——位于独立的 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库。它从 nuget.org 消费已发布的 `Atlas.Blazor` 包，不引用 Atlas 源码项目。
 
 ## 文档
 

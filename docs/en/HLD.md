@@ -2347,7 +2347,7 @@ Project structure:
 Dependency direction: Atlas.Core ← Atlas.Blazor; test projects depend only
 on the artifact under test. Reverse dependencies are forbidden. The NuGet
 consumer showcase (a DBC file viewer) lives in the standalone
-`wubing7755/DbcView` repository: it is not part of `Atlas.sln`, does not
+`HestiaLab/DbcView` repository: it is not part of `Atlas.sln`, does not
 belong to the Atlas implementation layer, and does not reference source
 projects; it only consumes `Atlas.Core` / `Atlas.Blazor` from the Release
 pack feed, so a clean restore of the main solution does not depend on

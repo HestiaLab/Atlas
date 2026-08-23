@@ -53,7 +53,7 @@ docs/                     SRS, HLD, traceability and ADRs
 ```
 
 The NuGet consumer showcase (the DBC viewer application) moved to the
-standalone repository [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView);
+standalone repository [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView);
 Atlas itself keeps no application projects. A framework-focused demo may later
 occupy `samples/`.
 
@@ -83,7 +83,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 # Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 
-# The NuGet consumer showcase lives in the standalone wubing7755/DbcView
+# The NuGet consumer showcase lives in the standalone HestiaLab/DbcView
 # repository; it consumes the published package and verifies itself.
 ```
 
@@ -94,7 +94,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-re
 - Domain models and operations belong in `src/Atlas.Core/`.
 - Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
 - `samples/` is reserved for a future framework-focused demo; the business
-  DBC viewer showcase lives in the standalone `wubing7755/DbcView` repository
+  DBC viewer showcase lives in the standalone `HestiaLab/DbcView` repository
   and is not part of `Atlas.sln`.
 - `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
 - Tests should cover behaviour, not accidental implementation details.

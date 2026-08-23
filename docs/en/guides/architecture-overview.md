@@ -19,7 +19,7 @@ packages:
   interaction; depends on `Atlas.Core`.
 
 The NuGet consumer showcase (a DBC file viewer) lives in the standalone
-[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) repository. It is
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository. It is
 not part of the main solution and must not reference Atlas source projects.
 
 ## 2. Three Runtime Layers

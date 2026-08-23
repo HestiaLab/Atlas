@@ -6,8 +6,8 @@
     <PackageId>Atlas.Blazor</PackageId>
     <Description>Dockable workspace component library for Blazor: tool panels, editor tabs, split views, drag-and-drop, and layout persistence.</Description>
     <PackageTags>blazor;dock;layout;workspace;ide;splitter;drag-drop</PackageTags>
-    <Authors>wubing7755</Authors>
-    <RepositoryUrl>https://github.com/wubing7755/Atlas</RepositoryUrl>
+    <Authors>HestiaLab</Authors>
+    <RepositoryUrl>https://github.com/HestiaLab/Atlas</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>package-readme.md</PackageReadmeFile>

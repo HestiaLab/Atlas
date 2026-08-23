@@ -28,7 +28,7 @@ Atlas 强制分层所有权：
 
 - `Atlas.Core` — 领域模型、操作、不变量、持久化。无 Blazor、无 JS。
 - `Atlas.Blazor` — 渲染、内容承载、CSS、JS interop。依赖 Core。
-- `wubing7755/DbcView` — 独立的 NuGet consumer showcase，框架从不引用它。
+- `HestiaLab/DbcView` — 独立的 NuGet consumer showcase，框架从不引用它。
 
 关闭/选择的行为改动属于 `Atlas.Core`。planner 位于 `src/Atlas.Core/Operations/Engine/`，操作请求对象位于 `src/Atlas.Core/Operations/`。
 
@@ -119,7 +119,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 ```
 
-独立的 `wubing7755/DbcView` 仓库随后对打包的包（或已发布的 nuget.org 版本）执行 restore/build/test/format。
+独立的 `HestiaLab/DbcView` 仓库随后对打包的包（或已发布的 nuget.org 版本）执行 restore/build/test/format。
 
 ## 9. 用 Conventional Commits 提交
 

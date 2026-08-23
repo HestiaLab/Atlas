@@ -10,11 +10,11 @@ applications. The project separates the layout domain model, Blazor rendering,
 and browser interaction into layers so that the UI layer never maintains a
 second copy of layout state.
 
-> **Consumer showcase:** [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+> **Consumer showcase:** [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 > (a DBC file viewer built on Atlas) · **Packages:**
 > [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
-> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/wubing7755/packages/nuget/package/Atlas.Blazor) ·
-> [Releases](https://github.com/wubing7755/Atlas/releases)
+> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/orgs/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
+> [Releases](https://github.com/HestiaLab/Atlas/releases)
 
 ## Core Capabilities
 
@@ -75,7 +75,7 @@ workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
 ## Sample Project
 
 The NuGet consumer showcase — a DBC file viewer built on Atlas — lives in the
-standalone [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+standalone [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 repository. It consumes the published `Atlas.Blazor` package from nuget.org
 and does not reference Atlas source projects.
 

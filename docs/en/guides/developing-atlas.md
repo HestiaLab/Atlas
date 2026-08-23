@@ -38,7 +38,7 @@ Atlas enforces a layered ownership:
   Blazor, no JS.
 - `Atlas.Blazor` — rendering, content hosting, CSS, JS interop. Depends on
   Core.
-- `wubing7755/DbcView` — the standalone NuGet consumer showcase, never
+- `HestiaLab/DbcView` — the standalone NuGet consumer showcase, never
   referenced by the framework.
 
 A behavior change to close/selection belongs in `Atlas.Core`. The planner
@@ -141,7 +141,7 @@ If you add or change a public symbol:
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 ```
 
-The standalone `wubing7755/DbcView` repository then restores, builds, tests,
+The standalone `HestiaLab/DbcView` repository then restores, builds, tests,
 and formats against the packed package (or the published nuget.org version).
 
 ## 9. Commit With Conventional Commits

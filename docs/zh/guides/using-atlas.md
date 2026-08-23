@@ -4,7 +4,7 @@
 >
 > 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
 
-本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例取自 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) consumer；下面的每一段代码都来自真实运行的程序。
+本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例取自 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) consumer；下面的每一段代码都来自真实运行的程序。
 
 ## 1. 引用包
 
@@ -303,7 +303,7 @@ var list = await presets.ListAsync();
 
 ## 接下来去哪里
 
-- 完整可运行示例：[`wubing7755/DbcView`](https://github.com/wubing7755/DbcView)
+- 完整可运行示例：[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
 - 产品行为：[SRS](../SRS.md)
 - 公共 API surface：[HLD §10.2](../HLD.md#102-规范性公共-api-surface-manifest)
 - 已接受决策：[ADR 索引](../adr/README.md)

@@ -95,9 +95,9 @@ Blazor 组件从 immutable snapshot 派生 UI，不在 component local state 保
 - `tests/fixtures`：跨 C#/TypeScript 的 protocol fixtures。
 - `tests/browser`：真实浏览器静态 fixtures；用于 bUnit/Node 无法证明的 DOM、pointer、sandbox 和 hardening 行为。
 
-### Consumer showcase（`wubing7755/DbcView`）
+### Consumer showcase（`HestiaLab/DbcView`）
 
-NuGet consumer showcase（DBC 文件查看器）位于独立的 [`wubing7755/DbcView`](https://github.com/wubing7755/DbcView) 仓库，不在 `Atlas.sln` 中。它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该仓库验证。
+NuGet consumer showcase（DBC 文件查看器）位于独立的 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库，不在 `Atlas.sln` 中。它不能引用 Atlas source project、internal API、linked source 或测试 helper。修改包内容、RCL 资产或 consumer-facing API 后，需要重新 pack 并通过该仓库验证。
 
 ## 4. 按改动类型工作
 
@@ -207,7 +207,7 @@ dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj \
 sha256sum artifacts/packages/Atlas.Blazor.*.nupkg
 ```
 
-NuGet consumer showcase（`wubing7755/DbcView`）通过自己的 restore/build/test/format 流程验证打包的包。记录新 nupkg 的 SHA-256 后再 restore，可以证明本次验证使用的 artifact 身份。浏览器还可能缓存旧 RCL JavaScript/CSS，真实复测时应硬刷新或更换端口。
+NuGet consumer showcase（`HestiaLab/DbcView`）通过自己的 restore/build/test/format 流程验证打包的包。记录新 nupkg 的 SHA-256 后再 restore，可以证明本次验证使用的 artifact 身份。浏览器还可能缓存旧 RCL JavaScript/CSS，真实复测时应硬刷新或更换端口。
 
 ## 6. 文档和 PR 同步
 
