@@ -54,8 +54,7 @@ jobs:
         run: |
           dotnet publish samples/Atlas.Showcase/Atlas.Showcase.csproj \
             --configuration Release \
-            --output publish/showcase \
-            --source https://api.nuget.org/v3/index.json
+            --output publish/showcase
 
       - name: Verify bundle is present in publish output
         run: |
@@ -70,6 +69,8 @@ jobs:
       - name: Rewrite base href for the /Atlas/ subpath
         run: |
           sed -i 's|<base href="/" />|<base href="/Atlas/" />|' publish/showcase/wwwroot/index.html
+          grep -q '<base href="/Atlas/" />' publish/showcase/wwwroot/index.html \
+            && echo "base href rewritten to /Atlas/"
 
       - name: Stage site (artifact root maps to /Atlas/)
         run: |
