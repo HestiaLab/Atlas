@@ -19,6 +19,11 @@ export function attachAtlasController(
 
   const previous = controllers.get(identity.hostId);
   if (previous !== undefined) {
+    // ADR-0005 records the registry as "reject duplicate attachment of the
+    // same workspace". The implementation replaces the previous controller
+    // instead so rebind/retry flows can re-attach deterministically;
+    // replacing disposes the old listeners first, so at most one live
+    // controller per Host exists at any time.
     disposeAtlasController(previous);
   }
 
@@ -51,6 +56,10 @@ function resolveHostElement(root: HTMLElement, hostId: string): HTMLElement {
     return host;
   }
 
+  // This message text is an internal attach diagnostic, not part of the
+  // frozen interaction protocol: the C# Host matches it to distinguish the
+  // transient retry case from a real attach failure. Keep the two sides in
+  // sync when changing it.
   throw new Error("ATLAS-INTERACTION-ATTACH-RETRY");
 }
 

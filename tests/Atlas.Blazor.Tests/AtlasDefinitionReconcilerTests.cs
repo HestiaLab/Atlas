@@ -1,3 +1,4 @@
+using System.Globalization;
 using Atlas.Blazor.Components;
 using Atlas.Core;
 using Atlas.Core.Definitions;
@@ -57,6 +58,41 @@ public sealed class AtlasDefinitionReconcilerTests
     }
 
     [Fact]
+    public void Fingerprint_detects_split_constraint_changes()
+    {
+        var definition = CreateSplitDefinition(
+            new SplitConstraints(firstMinimum: 40d, secondMinimum: 40d));
+        var changed = CreateSplitDefinition(
+            new SplitConstraints(
+                firstMinimum: 40d,
+                firstMaximum: 320d,
+                secondMinimum: 40d));
+
+        Assert.NotEqual(
+            AtlasDefinitionReconciler.Fingerprint(definition),
+            AtlasDefinitionReconciler.Fingerprint(changed));
+    }
+
+    [Fact]
+    public void Fingerprint_detects_document_group_editor_state_changes()
+    {
+        var definition = CreateDefinition(
+            CreateDocument("d1", "Title"),
+            new EditorGroupState(
+                EditorOverflowMode.Scroll,
+                EditorActivationPolicy.Adjacent));
+        var changed = CreateDefinition(
+            CreateDocument("d1", "Title"),
+            new EditorGroupState(
+                EditorOverflowMode.Wrap,
+                EditorActivationPolicy.MostRecentlyVisited));
+
+        Assert.NotEqual(
+            AtlasDefinitionReconciler.Fingerprint(definition),
+            AtlasDefinitionReconciler.Fingerprint(changed));
+    }
+
+    [Fact]
     public void Merge_rejects_runtime_item_placed_in_unknown_group()
     {
         var declared = CreateDocument("declared", "Declared");
@@ -83,18 +119,57 @@ public sealed class AtlasDefinitionReconcilerTests
 
     private static AtlasWorkspaceDefinition CreateDefinition(DockItem item)
     {
+        return CreateDefinition(item, new EditorGroupState());
+    }
+
+    private static AtlasWorkspaceDefinition CreateDefinition(
+        DockItem item,
+        EditorGroupState editorState)
+    {
         var group = new GroupNode(
             new LayoutNodeId("documents"),
             DockItemKind.Document,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
             new[] { item.Id },
-            item.Id);
+            item.Id,
+            editorState);
         return new AtlasWorkspaceDefinition(
             new WorkspaceId("workspace"),
             group.Id,
             new LayoutNode[] { group },
             new[] { item });
+    }
+
+    private static AtlasWorkspaceDefinition CreateSplitDefinition(
+        SplitConstraints constraints)
+    {
+        var first = new GroupNode(
+            new LayoutNodeId("first"),
+            DockItemKind.Document,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            null);
+        var second = new GroupNode(
+            new LayoutNodeId("second"),
+            DockItemKind.Document,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            null);
+        var split = new SplitNode(
+            new LayoutNodeId("split"),
+            SplitAxis.InlineChildren,
+            SplitBasis.Proportional(0.5d),
+            constraints,
+            first.Id,
+            second.Id);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("workspace"),
+            split.Id,
+            new LayoutNode[] { split, first, second },
+            Array.Empty<DockItem>());
     }
 
     private static WorkspaceSnapshot CreateSnapshot(
@@ -120,5 +195,56 @@ public sealed class AtlasDefinitionReconcilerTests
             new ContentReference("document", id),
             DockItemCapabilityPresets.Document,
             title);
+    }
+}
+
+public sealed class AtlasDefinitionReconcilerCultureTests
+{
+    [Fact]
+    public void Fingerprint_is_stable_across_non_invariant_cultures()
+    {
+        var previous = CultureInfo.CurrentCulture;
+        try
+        {
+            var first = new GroupNode(
+                new LayoutNodeId("first"),
+                DockItemKind.Document,
+                GroupRetentionPolicy.Persistent,
+                GroupVisibility.Expanded,
+                Array.Empty<DockItemId>(),
+                null);
+            var second = new GroupNode(
+                new LayoutNodeId("second"),
+                DockItemKind.Document,
+                GroupRetentionPolicy.Persistent,
+                GroupVisibility.Expanded,
+                Array.Empty<DockItemId>(),
+                null);
+            var split = new SplitNode(
+                new LayoutNodeId("split"),
+                SplitAxis.InlineChildren,
+                SplitBasis.Proportional(0.5d),
+                new SplitConstraints(firstMinimum: 40d, secondMinimum: 40d),
+                first.Id,
+                second.Id);
+            var definition = new AtlasWorkspaceDefinition(
+                new WorkspaceId("workspace"),
+                split.Id,
+                new LayoutNode[] { split, first, second },
+                Array.Empty<DockItem>());
+
+            // de-DE formats 0.5 as "0,5"; a culture-sensitive fingerprint
+            // would make the declaration look changed on every render.
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            var invariantFingerprint = AtlasDefinitionReconciler.Fingerprint(definition);
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            var germanFingerprint = AtlasDefinitionReconciler.Fingerprint(definition);
+
+            Assert.Equal(invariantFingerprint, germanFingerprint);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 }

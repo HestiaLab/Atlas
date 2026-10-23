@@ -2,12 +2,17 @@
 
 > English (canonical) | [简体中文](../../zh/adr/0020-content-developer-experience.md)
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-05
-- Decision maker: Atlas Maintainer (pending)
+- Decision maker: Atlas Maintainer (approved 2026-10-24)
 - Maintainer decisions on 2026-08-05: track-scoped adoption accepted —
   D1+D4 implemented first (Track B Phase B2), D2 reviewed separately after
   D1 lands, D3 deferred, D5 rejected
+- Maintainer decision on 2026-10-24: the ADR is Accepted with the
+  track-scoped adoption recorded in the Adoption Order section; the shipped
+  D1+D4 surface (`IAtlasContentStateScope` +
+  `AtlasContentContext.GetState/GetOrCreateState`) entered the PublicAPI
+  Shipped baseline with this acceptance
 - Related: ADR-0012, ADR-0013, ADR-0017, ADR-0018,
   REQ-F-006~008, REQ-F-070,
   FR-01/FR-02/FR-04/FR-07 from the independent consumer sample review
@@ -54,7 +59,7 @@ Relevant SRS contracts:
   ResourceId; each keeps its own `DockItemId` as the concrete view identity;
   the Catalog does not store component instances or business resource state.
 
-## Decision (Proposed)
+## Decision
 
 This ADR bundles the four mutually related content contract changes, following
 the ADR-0018 bundling precedent. The exact API shapes below are
@@ -98,12 +103,13 @@ alternative was a `ContentStateFactory` Host parameter, which couples state
 resolution to the Host declaration site and cannot be unit-tested or
 reused across Hosts as cleanly.
 
-Lifecycle: the state container is owned by the Host; it releases all state
-objects on Host disposal. Item close does not release business state. Resource
+Lifecycle: the state container is owned by the Host; state objects live as
+long as the scope instance is reachable — Atlas never disposes them
+automatically. Item close does not release business state. Resource
 deletion is an application concept; the application releases its own state
-through an explicit API or accepts Host-disposal release. The framework never
-persists state objects (SRS line 729 keeps them application-owned; Atlas only
-provides the keyed resolution container).
+through an explicit API. The framework never persists state objects (SRS
+line 729 keeps them application-owned; Atlas only provides the keyed
+resolution container).
 
 ### D2: Content-to-workspace channel (FR-02) — least privilege
 
@@ -276,8 +282,8 @@ consumer and will be repeated by every Atlas consumer.
 
 - Unit tests: the state factory resolves and reuses one object per
   `ContentReference`, yields independent objects for distinct ResourceIds,
-  preserves business state across Item close, and releases all objects on
-  Host disposal.
+  preserves business state across Item close, and state objects stay
+  reachable for the scope's lifetime (no automatic disposal).
 - Architecture tests: content components cannot reach the full
   `IAtlasWorkspace`; sandboxed content receives no content commands or
   workspace channel; domain-event subscriptions are released on Item close

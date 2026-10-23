@@ -13,6 +13,8 @@ implementation and verification. The normative source for design mapping is
 - Formal requirement blocks: 151 (REQ-F 142 + REQ-NF 9)
 - Current functional implementation status: see the P8 item-by-item audit;
   Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
+  (2026-10-24 re-review after ADR-0024~0034: all 151 rows re-checked, no
+  status changes — see the P8 audit's re-review note)
 - Latest measured gate baseline (2026-10-23, branch
   `main`, after Phase 0 correctness fixes and the
   Phase 1 structural-refactor slice and ADR-0024~0034 implementation):
@@ -20,9 +22,11 @@ implementation and verification. The normative source for design mapping is
   build/test and format pass; Core line coverage 91.25% / branch 81.07%.
   The TypeScript typecheck and 51 JS tests (50 protocol + 1 split-geometry
   fixture parity) pass; `build:js` regenerates the committed bundle. Release
-  build/test and Release pack also pass. The dual-Host
-  real-browser fixture was not re-run in this slice and remains recorded
-  from the pre-Phase-0 baseline. The P8 historical baseline
+  build/test and Release pack also pass. On 2026-10-24 the dual-Host
+  real-browser fixtures (P5/P7/P8) were re-run against the committed
+  atlas.js via a local static server: P5 same-host/cross-Host terminal
+  intents and toolbar-insertion, P7 sandbox boundary, and P8 reduced-motion/
+  splitter-FPS/dispose checks passed with no console errors. The P8 historical baseline
   (264 Core + 43 Blazor + 17 Node) is retained in its row below; the
   pre-refactor measurement was 275 Core + 114 Blazor + 43 JS
 - Completed engineering work: P0~P8 Verified; DEV-GATE-001~007 Closed
@@ -138,6 +142,8 @@ converted directly to `Implemented` or `Verified`.
 | — | DES-ARCH-001~004、DES-DOM-002~003、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 1 | `Atlas.Core` | 310 Core + 129 Blazor tests; `WorkspaceSnapshotTests` (`WithRevision` shares read-only indexes), planner suites, `PlannerMutationCharacterizationTests`, `InMemoryStoreTests`, `DockItemPlacementSnapshotTests`; Debug build/test/format | In Progress | 2026-10-23 Phase 1 structural-refactor slice: trusted revision constructor and out-of-lock candidate validation/patch/change-set; `GroupVisibilityInvariant`, `LayoutTreeEditor`, `GroupItemEditor` and `AutoHideBookmarkEditor` moved to `Model/Layout` (Persistence/Model no longer import `Operations.Engine`); `WorkspaceMutation` gained ToolBar editing and `RemoveItemEverywhere`, and is used by Select/GroupVisibility/ItemPresentation/Resize/Equalize/ToolBar planners plus the Close path; `DropItems` reuses `GroupItemEditor.RemoveItems`; `OpenItemPlanner.ActivateExisting`, `MoveToolPlanner.Plan`, `DockDocumentPlanner.Plan` and the V1 `ReadLegacy` importer were split into focused helpers; `GroupItemEditor` owns the MRU/adjacent/first selection-after-removal policy; `InvariantViolation` carries structured NodeId/ItemId and `EnsureValid` reports all violations; persistence distinguishes limit/schema/invalid diagnostics; repeated item/definition/persistence diagnostic IDs and message keys are centralized in `WorkspaceDiagnostics`; `WorkspaceSnapshot.WithState` now owns state replacement for Restore/Drop/WorkspaceMutation; low-coverage public persistence paths and failure modes now have tests. Layout-state behavior is preserved and diagnostic text/IDs were refined; no public C# API, JS protocol, DOM metadata or XML schema shape change. Remaining: boundary decisions (the full diagnostic catalog and subscriber fault sink were completed in the Phase 2 batch below) |
 | REQ-F-050~071、REQ-F-140、REQ-F-156 | DES-OP-001~009、DES-ARCH-001~004 | P9 / Phase 2 | `Atlas.Core`、`Atlas.Blazor` | 341 Core + 130 Blazor tests; `Core_workspace_factory_is_public_and_sealed`, MoveTool toolbar-anchor tests; PublicAPI factory entry; ADR-0024~0034 Accepted | In Progress | 2026-10-23 ADR implementation batch: public `AtlasWorkspaceFactory` (ADR-0024); group-neighbor toolbar insertion (ADR-0025); comment-language policy (ADR-0026); subscriber fault sink (ADR-0027); history truncation outcome/barrier flags on `LayoutChangeSet` and oversized-entry barrier (ADR-0028); supported/reserved operation documentation, `Persistence`/`Factory`/`History` error contexts and command mappings (ADR-0029); uniform value-type `IsDefault` and `GroupNode.ToolbarRegion` rename (ADR-0030); `LayoutSchemaVersion.Current`, strict version registry and schema hard-cap clamping (ADR-0031); `ToolSizingDefinition` ratio fix and removal of three producer-less error codes (ADR-0032); shared C#/TS split-geometry golden fixtures (ADR-0033); one-way layering test and dangling auto-hide bookmark cleanup (ADR-0034). Public API changes are additive except the pre-1.0 `GroupNode.ToolbarRegion` rename and the three removed error codes; JS bundle regenerated; no XML schema shape change; requirement statuses unchanged |
 | — | DES-ARCH-001~004、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 2 | `Atlas.Core` | 326 Core + 130 Blazor tests; full `WorkspaceDiagnostics` catalog (60 IDs/36 message keys), dispatcher per-notification guard and optional `SubscriberFaultSink` (ADR-0027), capability-mask unification, snapshot comment fix, serializer partial responsibility/using cleanup, persistence boundary tests, preset writer reclamation, deterministic duplicate activation, English XML documentation for the Core public API (factory, operations, model, events, persistence, results, options and queries), persistence contract boundary tests | In Progress | 2026-10-23 diagnostic/P3 and documentation cleanup; public API addition is limited to `AtlasWorkspaceOptions.SubscriberFaultSink` (ADR-0027); no JS protocol, DOM metadata or XML schema shape change; remaining: P3-02/P3-05/P3-06 resolved by ADR-0030/0029 in the row above |
+
+| REQ-F-015~016、REQ-F-038~040、REQ-F-100、REQ-F-128、REQ-NF-007 | DES-OP-008、DES-RND-008、DES-NFR-003 | P9 / Phase 0 (Blazor) | `Atlas.Blazor/Components/Workspace`、`tests/Atlas.Blazor.Tests` | `AtlasDefinitionReconcilerTests`（跨文化指纹稳定、约束变化、编辑状态变化）、`ContentErrorDiagnosticTests`（日志详情与 DiagnosticId 关联）；341 Core + 134 Blazor + 51 JS；build/test/format/typecheck/bundle 全绿 | In Progress | 2026-10-24 Blazor 审计 Phase 0 正确性修复：声明指纹文化不敏感并纳入 `SplitConstraints`/`EditorGroupState`（BLAZOR-03/17，修复约束与溢出模式声明被静默丢弃）、内容渲染失败日志携带异常类型与消息并与 DiagnosticId 关联（F-128 AC2，BLAZOR-04）、FixedPixels 分割条由恒 50 的 `aria-valuenow` 改为锚点感知 `aria-valuetext`（BLAZOR-08）、状态作用域文档如实化（BLAZOR-05）与指南对齐（BLAZOR-06）；公共 C# API、JS 协议、DOM metadata 与 XML schema 形态未变；需求状态不升级 |
 
 ## Update Rules
 

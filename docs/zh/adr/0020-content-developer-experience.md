@@ -4,10 +4,11 @@
 >
 > 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
 
-- 状态: Proposed
+- 状态: Accepted
 - 日期: 2026-08-05
-- 决策人: Atlas Maintainer（待批准）
+- 决策人: Atlas Maintainer（2026-10-24 批准）
 - 维护者 2026-08-05 决策: 接受按轨道分批采纳——D1+D4 先实施（轨道 B Phase B2）、D2 在 D1 落地后独立评审、D3 推迟、D5 拒绝
+- 维护者 2026-10-24 决策: 本 ADR 按"采纳顺序"一节记录的轨道化范围批准为 Accepted；已发布的 D1+D4 表面（`IAtlasContentStateScope` + `AtlasContentContext.GetState/GetOrCreateState`）随此批准进入 PublicAPI Shipped 基线
 - 相关: ADR-0012、ADR-0013、ADR-0017、ADR-0018、
   REQ-F-006~008、REQ-F-070、
   独立消费者样例评审中的 FR-01/FR-02/FR-04/FR-07
@@ -29,7 +30,7 @@ A3 的 Demo 改动（消费 `AtlasContentContext`、通过 `UpdatePresentationAs
 - SRS line 3073（REQ-F-070）：业务状态由应用通过 `ContentReference.ResourceId` 外部化，视图状态通过 `DockItemId` 外部化；跨 Group 移动可能重挂载内容组件，组件实例身份不保证。
 - SRS line 696（REQ-F-006 AC2）：两个 Item 可以持有相同的 Kind 和 ResourceId；每个 Item 保持自己的 `DockItemId` 作为具体视图身份；Catalog 不存储组件实例或业务资源状态。
 
-## Decision (Proposed)
+## Decision
 
 本 ADR 打包四个相互关联的内容契约变更，遵循 ADR-0018 统一打包先例。以下 API 形状是建议；最终公共 API 由维护者批准。
 
@@ -55,7 +56,7 @@ public TState? GetState<TState>() where TState : class;
 
 `AtlasWorkspaceHost` 解析并拥有一个 `IAtlasContentStateScope`（使用 DI 注册的实例，或未注册时使用 Host-local 实例）。Outlet 通过 scope 按 `Content.Reference` 解析每个 Item 的状态对象，对同一资源的每个视图复用；类型化访问器 `AtlasContentContext.GetState<TState>()` 将其暴露给内容。`Func<TState>` 工厂在 scope 生命周期内每个 `ContentReference` 至多运行一次；后续调用返回缓存的实例。已拒绝的备选是 `ContentStateFactory` Host 参数——它把状态解析耦合到 Host 声明点，无法像服务那样独立单元测试或跨 Host 复用。
 
-生命周期：状态容器由 Host 拥有；Host 卸载时释放全部状态对象。Item 关闭不释放业务状态。资源删除是应用概念；应用通过显式 API 释放自己的状态，或接受 Host 卸载时释放。框架从不持久化状态对象（SRS line 729 保持其应用所有；Atlas 只提供键控解析容器）。
+生命周期：状态容器由 Host 拥有；状态对象在 scope 实例可达期间存续——Atlas 从不自动释放它们。Item 关闭不释放业务状态。资源删除是应用概念；应用通过显式 API 释放自己的状态。框架从不持久化状态对象（SRS line 729 保持其应用所有；Atlas 只提供键控解析容器）。
 
 ### D2: 内容到工作区通道（FR-02）——最小权限
 
@@ -164,7 +165,7 @@ public abstract class AtlasModelContentComponent<TModel>
 
 ## Verification
 
-- 单元测试：状态工厂按 `ContentReference` 解析并复用一个对象、为不同 ResourceId 产出独立对象、跨 Item 关闭保持业务状态、Host 卸载时释放全部对象。
+- 单元测试：状态工厂按 `ContentReference` 解析并复用一个对象、为不同 ResourceId 产出独立对象、跨 Item 关闭保持业务状态、状态对象在 scope 生命周期内保持可达（无自动释放）。
 - 架构测试：内容组件无法触达完整 `IAtlasWorkspace`；沙箱内容不获得任何内容命令或工作区通道；域事件订阅在 Item 关闭和 outlet 卸载时释放。
 - Demo bUnit 测试：两个同 Kind 打开的文档不共享状态（Phase B2）。
 - Demo bUnit/浏览器测试：由工作区域事件驱动的跨面板流（Phase A5）。

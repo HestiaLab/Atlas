@@ -140,7 +140,11 @@ npm run build:js
 cd ../..
 ```
 
-`atlas.js` 和 source map 是忽略的生成物，`Atlas.Blazor.csproj` 不会在普通 `dotnet build` 前自动调用 npm。修改 `ClientScripts/*.ts` 后，必须在 pack 或运行 Demo 前显式执行 `npm run build:js`，否则包中可能包含本地旧 bundle 或缺失 bundle。
+`atlas.js` 和 source map 是 gitignore 的生成物。`Atlas.Blazor.csproj` 的
+`EnsureAtlasJsBundle` 目标会在 TypeScript 源比产物新时于普通 `dotnet build`
+前增量重建 bundle，但 npm 失败只会告警（可用 `AtlasSkipJsBuild=true`
+跳过），因此修改 `ClientScripts/*.ts` 后仍必须在 pack 或运行 Demo 前显式
+执行 `npm run build:js`，否则包中可能包含旧 bundle 或缺失 bundle。
 
 ### 修改持久化
 

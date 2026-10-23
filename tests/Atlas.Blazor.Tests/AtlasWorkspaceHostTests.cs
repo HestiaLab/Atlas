@@ -861,6 +861,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         Assert.NotNull(splitter);
         Assert.Equal("true", root.GetAttribute("data-atlas-split-locked"));
         Assert.Equal("0.25", root.GetAttribute("data-atlas-split-ratio"));
+        Assert.Equal("25", splitter.GetAttribute("aria-valuenow"));
         Assert.Equal("separator", splitter!.GetAttribute("role"));
         Assert.Equal("vertical", splitter.GetAttribute("aria-orientation"));
         Assert.Equal("true", splitter.GetAttribute("aria-disabled"));
@@ -907,6 +908,75 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     cut.Find("[data-atlas-node-id='root']")
                         .GetAttribute("data-atlas-split-hidden"));
             });
+    }
+
+    [Fact]
+    public async Task Fixed_pixel_splitter_exposes_anchor_aware_aria_value()
+    {
+        // Regression: FixedPixels splits used to fabricate a 50% reading
+        // (aria-valuenow). The committed pixel extent of the anchored side is
+        // exposed as text instead, phrased for the split axis.
+        await using var workspace = CreateFixedPixelWorkspace();
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var splitter = cut.Find("[data-atlas-split-id='root']");
+        Assert.Null(splitter.GetAttribute("aria-valuenow"));
+        Assert.Equal(
+            "280 pixels on the inline-start side",
+            splitter.GetAttribute("aria-valuetext"));
+        Assert.Equal("0", splitter.GetAttribute("aria-valuemin"));
+        Assert.Equal("100", splitter.GetAttribute("aria-valuemax"));
+    }
+
+    private IAtlasWorkspace CreateFixedPixelWorkspace()
+    {
+        var first = new GroupNode(
+            new LayoutNodeId("first"),
+            DockItemKind.Document,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { new DockItemId("first-doc") },
+            new DockItemId("first-doc"));
+        var second = new GroupNode(
+            new LayoutNodeId("second"),
+            DockItemKind.Document,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { new DockItemId("second-doc") },
+            new DockItemId("second-doc"));
+        var split = new SplitNode(
+            new LayoutNodeId("root"),
+            SplitAxis.InlineChildren,
+            SplitBasis.FixedPixels(280d, SplitAnchor.First),
+            new SplitConstraints(),
+            first.Id,
+            second.Id);
+        var definition = new AtlasWorkspaceDefinition(
+            new WorkspaceId("fixed-pixels"),
+            split.Id,
+            new LayoutNode[] { split, first, second },
+            new[]
+            {
+                new DockItem(
+                    new DockItemId("first-doc"),
+                    DockItemKind.Document,
+                    new ContentReference("document", "first-resource"),
+                    DockItemCapabilityPresets.Document,
+                    "First"),
+                new DockItem(
+                    new DockItemId("second-doc"),
+                    DockItemKind.Document,
+                    new ContentReference("document", "second-resource"),
+                    DockItemCapabilityPresets.Document,
+                    "Second"),
+            });
+        var factory = Services.GetRequiredService<IAtlasWorkspaceFactory>();
+        var result = factory.Create(definition);
+        Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
+        return result.Value!;
     }
 
     [Fact]

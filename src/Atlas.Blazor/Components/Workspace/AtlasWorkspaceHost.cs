@@ -17,7 +17,7 @@ using System.Globalization;
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     将一个隔离的 Atlas 工作区投影到 Blazor 渲染树。
+///     Projects one isolated Atlas workspace into the Blazor render tree.
 /// </summary>
 public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 {
@@ -31,7 +31,11 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private readonly AtlasFocusCoordinator focusCoordinator = new();
 
     // 已消费的拖拽会话标识；JS 消息可重放，须一次性消费。
+    // 队列保留消费顺序，超过上限时修剪最旧会话；被修剪的旧会话重放
+    // 仍会被 BaseRevision 过期检查拒绝，因此窗口裁剪不削弱防重放保证。
     private readonly HashSet<string> consumedDragSessions = new(StringComparer.Ordinal);
+    private readonly Queue<string> consumedDragSessionOrder = new();
+    private const int MaxConsumedDragSessions = 256;
 
     // 待清除的分割预览会话；渲染后统一通知控制器清理。
     private readonly HashSet<string> pendingSplitPreviewClears = new(StringComparer.Ordinal);
@@ -106,159 +110,178 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private bool disposed;
 
     /// <summary>
-    ///     获取或设置编程式权威工作区。
-    ///     标识参数；更改它会移除旧绑定并添加新绑定。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the programmatic authoritative workspace.
+    ///     Identity parameter; changing it removes the old binding and adds a
+    ///     new one.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public IAtlasWorkspace? Workspace { get; set; }
 
     /// <summary>
-    ///     获取或设置声明式工作区标识。
-    ///     标识参数；更改它会创建新的宿主工作区。声明式模式下必需。
+    ///     Gets or sets the declarative workspace identifier.
+    ///     Identity parameter; changing it creates a new Host workspace.
+    ///     Required in declarative mode.
     /// </summary>
     [Parameter]
     public WorkspaceId? WorkspaceId { get; set; }
 
     /// <summary>
-    ///     获取或设置声明式创建时的工作区选项。
-    ///     定义参数，仅在实例化时生效；
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the workspace options used for declarative creation.
+    ///     Definition parameter, effective only at instantiation;
+    ///     defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public AtlasWorkspaceOptions? WorkspaceOptions { get; set; }
 
     /// <summary>
-    ///     获取或设置瞬态生命周期所有权选项。
-    ///     运行时更改转移释放责任而不改变工作区状态。
-    ///     默认为 <see cref="WorkspaceOwnership.Automatic"/>。
+    ///     Gets or sets the transient lifetime ownership option.
+    ///     Runtime changes transfer disposal responsibility without changing
+    ///     workspace state.
+    ///     Defaults to <see cref="WorkspaceOwnership.Automatic"/>.
     /// </summary>
     [Parameter]
     public WorkspaceOwnership WorkspaceOwnership { get; set; } = WorkspaceOwnership.Automatic;
 
     /// <summary>
-    ///     获取或设置声明式子定义。
-    ///     定义参数；每次更改的渲染批次都会原子地对账。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the declarative sub-definitions.
+    ///     Definition parameter; every changed render batch reconciles
+    ///     atomically.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
     /// <summary>
-    ///     获取或设置固定的顶部工具栏呈现。
-    ///     呈现参数；运行时更改不进入工作区历史。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the fixed top toolbar presentation.
+    ///     Presentation parameter; runtime changes do not enter workspace
+    ///     history.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public RenderFragment? TopToolbarContent { get; set; }
 
     /// <summary>
-    ///     获取或设置固定的状态栏呈现。
-    ///     呈现参数；运行时更改不进入工作区历史。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the fixed status bar presentation.
+    ///     Presentation parameter; runtime changes do not enter workspace
+    ///     history.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public RenderFragment? StatusBarContent { get; set; }
 
     /// <summary>
-    ///     获取或设置宿主本地声明式内容路由。
-    ///     模板参数；运行时更改会暂存新的宿主本地源生成，
-    ///     并在路由收集完成后原子提交。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the Host-local declarative content routes.
+    ///     Template parameter; runtime changes stage a new Host-local source
+    ///     generation that commits atomically after route collection.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public RenderFragment? ContentRoutes { get; set; }
 
     /// <summary>
-    ///     获取或设置不可变的宿主本地功能内容映射。
-    ///     配置参数；替换映射会暂存新的宿主本地源生成，
-    ///     与 <see cref="ContentRoutes"/> 原子提交。
-    ///     默认为 <see langword="null"/>。
+    ///     Gets or sets the immutable Host-local functional content map.
+    ///     Configuration parameter; replacing the map stages a new Host-local
+    ///     source generation committed atomically with
+    ///     <see cref="ContentRoutes"/>.
+    ///     Defaults to <see langword="null"/>.
     /// </summary>
     [Parameter]
     public AtlasContentMap? ContentMap { get; set; }
 
     /// <summary>
-    ///     获取或设置显式不可信内容解析器。
-    ///     非 null 结果渲染固定的沙箱 iframe，而非受信组件路径。
+    ///     Gets or sets the explicit untrusted content resolver.
+    ///     A non-null result renders the fixed sandbox iframe instead of the
+    ///     trusted component path.
     /// </summary>
     [Parameter]
     public Func<AtlasContentContext, AtlasSandboxedFrameOptions?>? SandboxedFrameResolver { get; set; }
 
     /// <summary>
-    ///     获取或设置瞬态内容生命周期策略。
-    ///     默认卸载非活动内容；运行时替换不进入工作区历史。
+    ///     Gets or sets the transient content lifetime policy.
+    ///     Defaults to unmounting inactive content; runtime replacement does
+    ///     not enter workspace history.
     /// </summary>
     [Parameter]
     public WorkspaceContentLifetimeOptions ContentLifetimeOptions { get; set; } = new();
 
     /// <summary>
-    ///     获取或设置工具组空状态模板。
-    ///     模板参数；默认为 <see langword="null"/>，运行时更改仅使投影失效。
+    ///     Gets or sets the tool group empty-state template.
+    ///     Template parameter; defaults to <see langword="null"/>, runtime
+    ///     changes only invalidate the projection.
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasEmptyStateContext>? ToolEmptyTemplate { get; set; }
 
     /// <summary>
-    ///     获取或设置文档组空状态模板。
-    ///     模板参数；默认为 <see langword="null"/>，运行时更改仅使投影失效。
+    ///     Gets or sets the document group empty-state template.
+    ///     Template parameter; defaults to <see langword="null"/>, runtime
+    ///     changes only invalidate the projection.
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasEmptyStateContext>? DocumentEmptyTemplate { get; set; }
 
     /// <summary>
-    ///     获取或设置工具头模板。
-    ///     模板参数；默认为 <see langword="null"/>，运行时更改仅使投影失效。
+    ///     Gets or sets the tool header template.
+    ///     Template parameter; defaults to <see langword="null"/>, runtime
+    ///     changes only invalidate the projection.
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasItemHeaderContext>? ToolHeaderTemplate { get; set; }
 
     /// <summary>
-    ///     获取或设置文档头模板。
-    ///     模板参数；默认为 <see langword="null"/>，运行时更改仅使投影失效。
+    ///     Gets or sets the document header template.
+    ///     Template parameter; defaults to <see langword="null"/>, runtime
+    ///     changes only invalidate the projection.
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasItemHeaderContext>? DocumentHeaderTemplate { get; set; }
 
     /// <summary>
-    ///     获取或设置安全宿主错误模板。
-    ///     模板参数；默认为 <see langword="null"/>，运行时更改仅使投影失效。
+    ///     Gets or sets the safe Host error template.
+    ///     Template parameter; defaults to <see langword="null"/>, runtime
+    ///     changes only invalidate the projection.
     /// </summary>
     [Parameter]
     public RenderFragment<AtlasHostError>? ErrorTemplate { get; set; }
 
     /// <summary>
-    ///     获取或设置安全宿主诊断回调。
-    ///     回调参数；它在 Core 工作区锁之外运行，可随运行时更改。
+    ///     Gets or sets the safe Host diagnostics callback.
+    ///     Callback parameter; it runs outside the Core workspace lock and can
+    ///     change at runtime.
     /// </summary>
     [Parameter]
     public EventCallback<AtlasHostError> OnError { get; set; }
 
     /// <summary>
-    ///     获取或设置是否启用浏览器交互。
-    ///     瞬态交互选项；运行时更改会挂接或释放此宿主的控制器。
-    ///     默认为 true。
+    ///     Gets or sets whether browser interaction is enabled.
+    ///     Transient interaction option; runtime changes attach or release
+    ///     this Host's controller.
+    ///     Defaults to true.
     /// </summary>
     [Parameter]
     public bool EnableInteractions { get; set; } = true;
 
     /// <summary>
-    ///     获取或设置分割条交互选项。
-    ///     瞬态交互选项；运行时替换更新现有控制器且不进入工作区历史。
+    ///     Gets or sets the splitter interaction options.
+    ///     Transient interaction option; runtime replacement updates the
+    ///     existing controller and does not enter workspace history.
     /// </summary>
     [Parameter]
     public AtlasSplitterOptions? SplitterOptions { get; set; }
 
     /// <summary>
-    ///     获取或设置工作区键盘命令映射。
-    ///     瞬态交互选项；运行时替换更新现有控制器且不进入工作区历史。
+    ///     Gets or sets the workspace keyboard command map.
+    ///     Transient interaction option; runtime replacement updates the
+    ///     existing controller and does not enter workspace history.
     /// </summary>
     [Parameter]
     public AtlasKeyboardCommandMap? KeyboardCommands { get; set; }
 
     /// <summary>
-    ///     获取或设置编程式模式的分割条呈现解析。
-    ///     呈现参数；运行时更改仅使派生投影失效。
+    ///     Gets or sets the programmatic-mode splitter presentation resolver.
+    ///     Presentation parameter; runtime changes only invalidate the derived
+    ///     projection.
     /// </summary>
     [Parameter]
     public Func<LayoutNodeId, AtlasSplitterPresentation?>? SplitterPresentation { get; set; }
@@ -398,7 +421,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 }
 
                 failedInteractionConfiguration = interactionConfiguration;
-                await ReportErrorAsync(
+                await SetErrorAsync(
                     new AtlasHostError(
                         AtlasHostErrorCode.Unexpected,
                         "ATLAS-INTERACTION-ATTACH-FAILED",
@@ -461,6 +484,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         ownsActiveWorkspace = ownsWorkspace;
         interactionGeneration++;
         consumedDragSessions.Clear();
+        consumedDragSessionOrder.Clear();
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }

@@ -69,23 +69,27 @@ internal sealed class AtlasContentRouteCollector
 }
 
 /// <summary>
-///     声明宿主本地内容路由。
-///     路由声明是无渲染的注册组件；
-///     其 <see cref="ChildContent"/> 仅在宿主解析出匹配的 <c>ContentReference.Kind</c> 后才渲染。
-///     空白的 <see cref="Kind"/> 或为 null 的 <see cref="ChildContent"/>
-///     会报告 <see cref="AtlasHostErrorCode.DefinitionInvalid"/>，且不贡献渲染器。
+///     Declares a Host-local content route. Route declarations are
+///     renderless registration components; their
+///     <see cref="ChildContent"/> only renders once the Host resolves a
+///     matching <c>ContentReference.Kind</c>. A blank <see cref="Kind"/> or a
+///     null <see cref="ChildContent"/> reports
+///     <see cref="AtlasHostErrorCode.DefinitionInvalid"/> and contributes no
+///     renderer.
 /// </summary>
 public sealed class AtlasContentRoute : ComponentBase
 {
     /// <summary>
-    ///     此路由拥有的内容种类；空白值使该声明无效。
+    ///     The content Kind owned by this route; a blank value invalidates
+    ///     the declaration.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public string Kind { get; set; } = null!;
 
     /// <summary>
-    ///     为匹配的 Kind 渲染的内容模板；为 null 时该声明无效。
+    ///     The content template rendered for the matching Kind; null
+    ///     invalidates the declaration.
     /// </summary>
     [Parameter]
     [EditorRequired]

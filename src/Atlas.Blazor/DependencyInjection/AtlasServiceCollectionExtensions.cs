@@ -6,14 +6,18 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Atlas.Blazor.DependencyInjection;
 
 /// <summary>
-///     Atlas Blazor 投影服务与内容目录的组合根注册扩展。
+///     Composition-root registration extensions for Atlas Blazor projection
+///     services and the content catalog.
 /// </summary>
 public static class AtlasServiceCollectionExtensions
 {
     /// <summary>
-    ///     注册无状态工作区工厂（单例）与生效内容目录（每 DI 作用域一个）。
-    ///     目录在作用域内首次解析时收集全部 AtlasContentRegistration 构建组合根，
-    ///     重复 Kind 在此时抛出而非静默覆盖；TryAdd 使重复调用不产生重复注册。
+    ///     Registers the stateless workspace factory (singleton) and the
+    ///     effective content catalog (one per DI scope). The catalog builds
+    ///     its composition root from all AtlasContentRegistration instances
+    ///     on first resolution within a scope; duplicate Kinds throw there
+    ///     instead of being silently overwritten. TryAdd keeps repeated calls
+    ///     from producing duplicate registrations.
     /// </summary>
     public static IServiceCollection AddAtlasWorkspace(this IServiceCollection services)
     {
@@ -26,9 +30,10 @@ public static class AtlasServiceCollectionExtensions
     }
 
     /// <summary>
-    ///     为一个序数 Kind 登记组件提供程序：注册一条 AtlasContentRegistration 单例，
-    ///     供 AddAtlasWorkspace 建立的作用域目录收集；
-    ///     同一 Kind 重复注册会在目录构建时抛异常。
+    ///     Registers a component provider for one ordinal Kind: adds a single
+    ///     AtlasContentRegistration collected by the scoped catalog built by
+    ///     AddAtlasWorkspace. Registering the same Kind twice throws when the
+    ///     catalog is built.
     /// </summary>
     public static IServiceCollection AddAtlasContent<TComponent>(
         this IServiceCollection services,

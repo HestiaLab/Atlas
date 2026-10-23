@@ -177,11 +177,13 @@ npm run build:js
 cd ../..
 ```
 
-`atlas.js` and its source map are ignored generated artifacts;
-`Atlas.Blazor.csproj` does not call npm automatically before a normal
-`dotnet build`. After modifying `ClientScripts/*.ts`, you must explicitly run
-`npm run build:js` before packing or running the Demo, or the package may
-contain a stale or missing bundle.
+`atlas.js` and its source map are gitignored generated artifacts. The
+`EnsureAtlasJsBundle` target in `Atlas.Blazor.csproj` rebuilds the bundle
+incrementally before a normal `dotnet build` when the TypeScript sources are
+newer, but npm failures only warn (and can be skipped with
+`AtlasSkipJsBuild=true`), so after modifying `ClientScripts/*.ts` you must
+still run `npm run build:js` explicitly before packing or running the Demo —
+otherwise the package may contain a stale or missing bundle.
 
 ### Modifying Persistence
 
@@ -201,7 +203,11 @@ require an ADR.
 ### Modifying the Public API
 
 1. Decide whether the change is additive, breaking, or internal-only.
-2. Update the matching Core/Blazor `PublicAPI.Unshipped.txt`.
+2. Add new entries to the matching Core/Blazor `PublicAPI.Unshipped.txt`.
+   The first stable baseline lives in `PublicAPI.Shipped.txt`; additive
+   changes go to Unshipped, while removals, renames, signature changes and
+   enum renumbering require a major version and a replacement ADR
+   (ADR-0029).
 3. Add a compile-time or behavioral contract test.
 4. Update the genuinely affected SRS/HLD/ADR/traceability sections.
 5. Pack the NuGet package and verify with the consumer showcase

@@ -65,13 +65,16 @@ internal sealed record AtlasContentMapEntry(
 }
 
 /// <summary>
-///     不可变的宿主本地功能内容配置。
-///     它是宿主配置而非运行时插件注册表：更改结构性注册需替换映射对象。
-///     值工厂闭包可捕获宿主本地状态，注册为单例会让状态跨宿主共享，因此不要单例化。
+///     Immutable Host-local functional content configuration. It is Host
+///     configuration rather than a runtime plugin registry: structural
+///     registration changes require replacing the map object. Value-factory
+///     closures may capture Host-local state, so the map must not be
+///     registered as a singleton (that would share state across Hosts).
 /// </summary>
 public sealed class AtlasContentMap
 {
-    // 不可变的功能映射条目；由创建期构建器快照而来。
+    // Immutable functional map entries; snapshotted by the creation-time
+    // builder.
     private readonly IReadOnlyList<AtlasContentMapEntry> entries;
 
     internal AtlasContentMap(IReadOnlyList<AtlasContentMapEntry> entries)
@@ -82,8 +85,9 @@ public sealed class AtlasContentMap
     internal IReadOnlyList<AtlasContentMapEntry> Entries => entries;
 
     /// <summary>
-    ///     通过同步执行一次 configure 委托创建不可变内容映射。
-    ///     configure 异常会向上传播，且不会返回部分映射。
+    ///     Creates an immutable content map by running the configure delegate
+    ///     once. A configure exception propagates and no partial map is
+    ///     returned.
     /// </summary>
     public static AtlasContentMap Create(Action<AtlasContentMapBuilder> configure)
     {
@@ -96,16 +100,18 @@ public sealed class AtlasContentMap
 }
 
 /// <summary>
-///     <see cref="AtlasContentMap"/> 的创建期构建器。
-///     实例仅提供给 <see cref="AtlasContentMap.Create"/>；
-///     在 Create 返回后被捕获的调用会抛出 <see cref="InvalidOperationException"/>。
+///     The creation-time builder for <see cref="AtlasContentMap"/>. Instances
+///     are only supplied to <see cref="AtlasContentMap.Create"/>; calls made
+///     through a captured instance after Create returns throw
+///     <see cref="InvalidOperationException"/>.
 /// </summary>
 public sealed class AtlasContentMapBuilder
 {
-    // 创建期收集的映射条目；Build 时快照为不可变数组。
+    // Map entries collected during creation; snapshotted to an immutable
+    // array on Build.
     private readonly List<AtlasContentMapEntry> entries = new();
 
-    // Create 返回后的过期标记；任何公开入口的调用都抛出。
+    // Expiry flag set after Create returns; every public entry point throws.
     private bool expired;
 
     internal AtlasContentMapBuilder()
@@ -113,9 +119,11 @@ public sealed class AtlasContentMapBuilder
     }
 
     /// <summary>
-    ///     将一个序数 Kind 映射到带强类型绑定的组件；
-    ///     派生自 AtlasContentComponent 的组件由渲染器自动注入 Content 参数。
-    ///     保留重复的 Kind 贡献，使生效目录报告确定性冲突而非覆盖。
+    ///     Maps one ordinal Kind to a component with strongly typed bindings;
+    ///     components derived from AtlasContentComponent receive the Content
+    ///     parameter automatically. Duplicate Kind contributions are kept so
+    ///     the effective catalog reports a deterministic conflict instead of
+    ///     overwriting.
     /// </summary>
     public AtlasContentMapBuilder MapComponent<TComponent>(
         string kind,
@@ -147,7 +155,8 @@ public sealed class AtlasContentMapBuilder
     }
 
     /// <summary>
-    ///     将构建器标记为过期；此后任何公开入口的调用都会抛出。
+    ///     Marks the builder expired; every subsequent public entry point
+    ///     throws.
     /// </summary>
     internal void Expire()
     {
@@ -155,16 +164,18 @@ public sealed class AtlasContentMapBuilder
     }
 
     /// <summary>
-    ///     取回不可变内容映射快照；仅在 Create 的 configure 委托返回后调用一次。
+    ///     Takes the immutable content map snapshot; called exactly once after
+    ///     the Create configure delegate returns.
     /// </summary>
     /// <returns>
-    ///     包含已登记条目的不可变映射。
+    ///     The immutable map containing the registered entries.
     /// </returns>
     internal AtlasContentMap Build()
     {
-        // 内部方法：仅在 configure 委托返回后由 AtlasContentMap.Create 调用。
-        // 过期保护公开的 MapComponent 入口；
-        // 逃逸的构建器无法改动此处取得的快照。
+        // Internal method: only called by AtlasContentMap.Create after the
+        // configure delegate returns. The expiry guard protects the public
+        // MapComponent entry point; an escaped builder cannot mutate the
+        // snapshot taken here.
         return new AtlasContentMap(entries.ToArray());
     }
 
@@ -179,17 +190,20 @@ public sealed class AtlasContentMapBuilder
 }
 
 /// <summary>
-///     单个映射组件的创建期类型化绑定构建器。
-///     实例仅由 <see cref="AtlasContentMapBuilder.MapComponent{TComponent}"/> 提供；
-///     在 Create 返回后被捕获的调用会抛出 <see cref="InvalidOperationException"/>。
+///     The creation-time typed binding builder for one mapped component.
+///     Instances are only supplied by
+///     <see cref="AtlasContentMapBuilder.MapComponent{TComponent}"/>; calls
+///     made through a captured instance after Create returns throw
+///     <see cref="InvalidOperationException"/>.
 /// </summary>
 public sealed class AtlasComponentBinding<TComponent>
     where TComponent : IComponent
 {
-    // 创建期收集的参数绑定；供映射条目快照。
+    // Parameter bindings collected during creation; snapshotted by the map
+    // entry.
     private readonly List<AtlasContentBinding> bindings = new();
 
-    // Create 返回后的过期标记；任何公开入口的调用都抛出。
+    // Expiry flag set after Create returns; every public entry point throws.
     private bool expired;
 
     internal AtlasComponentBinding()
@@ -199,9 +213,11 @@ public sealed class AtlasComponentBinding<TComponent>
     internal IReadOnlyList<AtlasContentBinding> Bindings => bindings;
 
     /// <summary>
-    ///     将一个可写 Blazor 参数绑定到渲染期间求值的值工厂。
-    ///     选择器必须是组件上直接的公共可写 <c>[Parameter]</c> 属性，参数名由属性名派生；
-    ///     同一参数重复绑定，或绑定保留的 AtlasContentComponent.Content，都会抛出。
+    ///     Binds one writable Blazor parameter to a value factory evaluated at
+    ///     render time. The selector must be a direct public writable
+    ///     [Parameter] property on the component and the parameter name is
+    ///     derived from the property; binding the same parameter twice, or
+    ///     binding the reserved AtlasContentComponent.Content, throws.
     /// </summary>
     public AtlasComponentBinding<TComponent> Bind<TValue>(
         Expression<Func<TComponent, TValue>> parameter,
@@ -234,7 +250,8 @@ public sealed class AtlasComponentBinding<TComponent>
     }
 
     /// <summary>
-    ///     将绑定构建器标记为过期；此后任何公开入口的调用都会抛出。
+    ///     Marks the binding builder expired; every subsequent public entry
+    ///     point throws.
     /// </summary>
     internal void Expire()
     {

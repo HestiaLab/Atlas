@@ -39,7 +39,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0017](./0017-nuget-consumer-demo-sample.md) | Accepted | 新增独立 NuGet consumer sample；取代 ADR-0016 的长期应用项目禁令 |
 | [ADR-0018](./0018-unified-content-catalog-and-runtime-binding.md) | Accepted | 统一启动期 DI、Host-local Route 与强类型 Map 内容注册；跨 Panel 状态由应用拥有 |
 | [ADR-0019](./0019-single-package-atlas-blazor.md) | Accepted | 只发布一个包（Atlas.Blazor）并嵌入 Atlas.Core.dll；保留独立 Core 项目；取代 ADR-0001 双包决策 |
-| [ADR-0020](./0020-content-developer-experience.md) | Proposed | per-Item 状态绑定、内容到工作区通道、模型绑定内容基类、DI 状态通道（FR-01/02/04/07） |
+| [ADR-0020](./0020-content-developer-experience.md) | Accepted | per-Item 状态绑定、内容到工作区通道、模型绑定内容基类、DI 状态通道（FR-01/02/04/07）；按轨道采纳：D1+D4 已发布，D2 单独评审，D3 推迟，D5 拒绝 |
 | [ADR-0021](./0021-elastic-absorb-split-sizing.md) | Accepted | 弹性吸收分割尺寸：FixedPixels dock 面板 + 隐式 1fr 工作区；终态 resize 提交保留 basis 类型 |
 | [ADR-0022](./0022-group-visibility-invariant.md) | Accepted | 空 Persistent tool group 通过 snapshot 边界不变量折叠（REQ-F-154）；展开空组被拒绝 |
 | [ADR-0023](./0023-css-variable-theming.md) | Accepted | CSS 变量主题契约：将 atlas.css 的 `--atlas-*` 变量 token 化以供使用者定制 |

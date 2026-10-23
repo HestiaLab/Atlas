@@ -3,38 +3,43 @@ using Atlas.Core.Items;
 namespace Atlas.Blazor.Content;
 
 /// <summary>
-///     解析以 <see cref="ContentReference"/> 为键的、应用拥有的业务状态。
-///     同一资源的多个视图共享一个状态对象；不同的 ResourceId 解析为不同的对象。
-///     状态容器归宿主所有，并在宿主释放时释放所有状态对象；
-///     关闭项不会释放业务状态。
+///     Resolves application-owned business state keyed by
+///     <see cref="ContentReference"/>. Multiple views of the same resource
+///     share one state object; different ResourceId values resolve to
+///     different objects. The scope instance is owned by the Host. Closing an
+///     item does not release business state, and Atlas never disposes state
+///     objects automatically: they live as long as the scope instance is
+///     reachable.
 /// </summary>
 public interface IAtlasContentStateScope
 {
     /// <summary>
-    ///     获取 <paramref name="reference"/> 的状态对象，
-    ///     通过 <paramref name="factory"/> 创建，
-    ///     在作用域生命周期内每个引用最多创建一次。
+    ///     Gets the state object for <paramref name="reference"/>, creating it
+    ///     through <paramref name="factory"/> at most once per reference
+    ///     during the scope's lifetime.
     /// </summary>
     TState GetOrCreate<TState>(ContentReference reference, Func<TState> factory)
         where TState : class;
 
     /// <summary>
-    ///     在不创建的情况下尝试获取 <paramref name="reference"/> 的状态对象。
-    ///     当该引用尚未创建任何状态，或已创建的状态不是
-    ///     <typeparamref name="TState"/> 类型时，返回 <see langword="false"/>。
+    ///     Tries to get the state object for <paramref name="reference"/>
+    ///     without creating it. Returns <see langword="false"/> when no state
+    ///     has been created for that reference, or when the created state is
+    ///     not of type <typeparamref name="TState"/>.
     /// </summary>
     bool TryGetState<TState>(ContentReference reference, out TState? state)
         where TState : class;
 }
 
 /// <summary>
-///     默认的宿主本地 <see cref="IAtlasContentStateScope"/>：
-///     每个 <c>(Kind, ResourceId)</c> 键一个对象。
-///     该作用域在 Blazor 渲染线程上使用，因此字典无需加锁。
+///     Default Host-local <see cref="IAtlasContentStateScope"/>: one object
+///     per (Kind, ResourceId) key. The scope is used on the Blazor render
+///     thread, so the dictionary needs no locking.
 /// </summary>
 internal sealed class AtlasContentStateScope : IAtlasContentStateScope
 {
-    // 引用到状态对象的缓存；同一 (Kind, ResourceId) 至多创建一个状态。
+    // Reference-to-state cache; at most one state is created per
+    // (Kind, ResourceId) key.
     private readonly Dictionary<(string Kind, string ResourceId), object> states = new();
 
     /// <inheritdoc />

@@ -1,22 +1,23 @@
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     控制编程式提供的工作区的所有权。
+///     Controls the ownership of a programmatically supplied workspace.
 /// </summary>
 public enum WorkspaceOwnership
 {
     /// <summary>
-    ///     声明式模式使用宿主所有权，编程式模式使用外部所有权。
+    ///     Uses Host ownership in declarative mode and external ownership in
+    ///     programmatic mode.
     /// </summary>
     Automatic = 0,
 
     /// <summary>
-    ///     工作区由应用程序拥有并释放。
+    ///     The workspace is owned and disposed by the application.
     /// </summary>
     External = 1,
 
     /// <summary>
-    ///     工作区由宿主拥有并释放。
+    ///     The workspace is owned and disposed by the Host.
     /// </summary>
     Host = 2,
 }

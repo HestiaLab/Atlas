@@ -103,8 +103,9 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 ```
 
 Do not skip `npm run build:js` if you touched `ClientScripts/*.ts` — the
-csproj does not call npm automatically, and packing without a fresh bundle
-silently ships the old JavaScript.
+csproj's `EnsureAtlasJsBundle` target rebuilds the bundle on `dotnet build`
+only when sources are newer and only warns when npm is unavailable, so
+packing without a fresh bundle can still silently ship the old JavaScript.
 
 ## 6. Update Traceability In The Same Commit
 
@@ -130,7 +131,9 @@ Suppose the behavior also needs a new Razor projection. Then:
 
 If you add or change a public symbol:
 
-- Update the matching `PublicAPI.Unshipped.txt` baseline.
+- Add new entries to the matching `PublicAPI.Unshipped.txt`; the first stable
+  baseline lives in `PublicAPI.Shipped.txt` and breaking changes require a
+  major version plus a replacement ADR (ADR-0029).
 - Add a compile-time or behavior contract test.
 - Check whether an ADR is required (public API, package structure, protocol,
   persistence compatibility, or security boundaries).

@@ -182,3 +182,13 @@
   accessibility, or compatibility review.
 - In Progress explicitly means only part of the ACs is covered; Not
   Started/Deferred are not disguised as complete.
+
+### 2026-10-24 re-review
+
+After the ADR-0024~0034 implementation batch and the `PublicAPI.Shipped`
+baseline migration, all 151 rows were re-checked against the current
+implementation and test evidence (341 Core + 130 Blazor + 51 JS tests).
+No status changes: each In Progress row still covers only part of its ACs,
+REQ-F-047 (Reset Layout) stays Not Started because `ResetWorkspace` remains
+reserved per ADR-0029, and the Deferred rows stay Deferred. Upgrades to
+Implemented/Verified require closing the per-AC gaps recorded in each row.

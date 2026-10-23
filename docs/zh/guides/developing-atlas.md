@@ -87,7 +87,9 @@ dotnet test Atlas.sln --no-build --no-restore
 dotnet format Atlas.sln --verify-no-changes --no-restore
 ```
 
-如果你改动 `ClientScripts/*.ts`，不要跳过 `npm run build:js` —— csproj 不会自动调用 npm，不重建 bundle 打包会静默带上旧 JavaScript。
+如果你改动 `ClientScripts/*.ts`，不要跳过 `npm run build:js` —— csproj 的
+`EnsureAtlasJsBundle` 目标只在源比产物新时随 `dotnet build` 重建，且 npm
+不可用时仅告警，不重建 bundle 打包仍可能静默带上旧 JavaScript。
 
 ## 6. 在同一提交更新追溯
 
