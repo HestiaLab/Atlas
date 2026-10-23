@@ -170,7 +170,7 @@ internal static class ShowcaseWorkspaceDefinition
             GroupVisibility.Expanded,
             itemIds,
             itemIds[0],
-            logicalRegion: logicalRegion);
+            toolbarRegion: logicalRegion);
     }
 
     private static SplitNode Split(
