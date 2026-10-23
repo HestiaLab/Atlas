@@ -226,10 +226,17 @@ public sealed partial class AtlasWorkspaceHost
                 // Fixed-pixel bases have no render-time ratio; the anchored
                 // child's pixel extent is the committed value. Expose it as
                 // text instead of fabricating a 50% reading.
+                var anchoredSide = split.Basis.Anchor == SplitAnchor.First
+                    ? split.Axis == SplitAxis.InlineChildren
+                        ? "inline-start"
+                        : "block-start"
+                    : split.Axis == SplitAxis.InlineChildren
+                        ? "inline-end"
+                        : "block-end";
                 builder.AddAttribute(
                     28,
                     "aria-valuetext",
-                    $"{Invariant(split.Basis.Value)} pixels anchored {split.Basis.Anchor}");
+                    $"{Invariant(split.Basis.Value)} pixels on the {anchoredSide} side");
             }
             builder.AddAttribute(
                 29,
