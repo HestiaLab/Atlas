@@ -116,10 +116,12 @@ public sealed class PlannerMutationCharacterizationTests
 
         var serializer = new AtlasXmlLayoutSerializer();
         var xml = serializer.Serialize(workspace.Current);
+        // XmlWriter emits platform newlines; normalize so the golden hash is portable.
+        var normalized = xml.Replace("\r\n", "\n", StringComparison.Ordinal);
         var hash = Convert.ToHexString(
-            SHA256.HashData(Encoding.UTF8.GetBytes(xml)));
+            SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
         Assert.True(
-            hash == "0DE534C96302F9F88E0225604F3CB6C77CEC9F138959F60871031246E1F6FC7D",
+            hash == "D444D5279455D8EAB9A88CA50F9CF99A41E6CDC795E6437D9574095056DCF952",
             $"Actual hash: {hash}\nLayout XML:\n{xml}");
 
         Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
