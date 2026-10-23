@@ -380,65 +380,66 @@ internal sealed class AtlasDefinitionCollector
 }
 
 /// <summary>
-///     声明包含两个子节点的分割节点。
+///     Declares a split node with two child definitions.
 /// </summary>
 public sealed class AtlasSplitDefinition : ComponentBase
 {
     /// <summary>
-    ///     获取或设置声明必需的唯一标识；更改它相当于先移除再添加。
+    ///     The required unique identifier of the declaration; changing it is
+    ///     equivalent to removing the declaration and adding a new one.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public LayoutNodeId Id { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的轴；默认为内联子项。
+    ///     The axis of this definition; defaults to inline children.
     /// </summary>
     [Parameter]
     public SplitAxis Axis { get; set; } = SplitAxis.InlineChildren;
 
     /// <summary>
-    ///     获取或设置定义中的尺寸基准；默认为 0.5 比例。
+    ///     The size basis of this definition; defaults to a 0.5 ratio.
     /// </summary>
     [Parameter]
     public SplitBasis Basis { get; set; } = SplitBasis.Proportional(0.5d);
 
     /// <summary>
-    ///     获取或设置定义中的约束；默认为无有限最大值。
+    ///     The constraints of this definition; defaults to no finite maximums.
     /// </summary>
     [Parameter]
     public SplitConstraints Constraints { get; set; }
 
     /// <summary>
-    ///     获取或设置是否禁用用户分割条交互。
-    ///     呈现参数。
+    ///     Whether user splitter interaction is disabled.
+    ///     Presentation parameter.
     /// </summary>
     [Parameter]
     public bool IsLocked { get; set; }
 
     /// <summary>
-    ///     获取或设置分割条可选的安全 CSS 类令牌。
-    ///     呈现参数。
+    ///     The optional safe CSS class tokens of the splitter.
+    ///     Presentation parameter.
     /// </summary>
     [Parameter]
     public string? SplitterClass { get; set; }
 
     /// <summary>
-    ///     获取或设置第一个子项是否可提供折叠操作入口。
-    ///     呈现参数。
+    ///     Whether the first child offers a collapse entry point.
+    ///     Presentation parameter.
     /// </summary>
     [Parameter]
     public bool CanCollapseFirst { get; set; }
 
     /// <summary>
-    ///     获取或设置第二个子项是否可提供折叠操作入口。
-    ///     呈现参数。
+    ///     Whether the second child offers a collapse entry point.
+    ///     Presentation parameter.
     /// </summary>
     [Parameter]
     public bool CanCollapseSecond { get; set; }
 
     /// <summary>
-    ///     获取或设置必需的子定义；更改会原子地对账。
+    ///     The required child definitions; changes reconcile atomically.
     /// </summary>
     [Parameter]
     [EditorRequired]
@@ -484,44 +485,47 @@ public sealed class AtlasSplitDefinition : ComponentBase
 }
 
 /// <summary>
-///     声明工具组节点。
+///     Declares a tool group node.
 /// </summary>
 public sealed class AtlasToolGroupDefinition : ComponentBase
 {
     /// <summary>
-    ///     获取或设置声明必需的唯一标识；更改它相当于先移除再添加。
+    ///     The required unique identifier of the declaration; changing it is
+    ///     equivalent to removing the declaration and adding a new one.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public LayoutNodeId Id { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中必需的逻辑工具栏区域。
+    ///     The required logical toolbar region of this definition.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public LogicalRegion LogicalRegion { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的保留策略；默认为持久。
+    ///     The retention policy of this definition; defaults to persistent.
     /// </summary>
     [Parameter]
     public GroupRetentionPolicy RetentionPolicy { get; set; } = GroupRetentionPolicy.Persistent;
 
     /// <summary>
-    ///     获取或设置定义中的可见性；默认为展开。
+    ///     The visibility of this definition; defaults to expanded.
     /// </summary>
     [Parameter]
     public GroupVisibility Visibility { get; set; } = GroupVisibility.Expanded;
 
     /// <summary>
-    ///     获取或设置定义中的选中项；默认为选中第一个项。
+    ///     The selected item of this definition; defaults to selecting the
+    ///     first item.
     /// </summary>
     [Parameter]
     public DockItemId? SelectedItemId { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的子项；默认为空的持久组。
+    ///     The child items of this definition; defaults to an empty persistent
+    ///     group.
     /// </summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
@@ -564,43 +568,46 @@ public sealed class AtlasToolGroupDefinition : ComponentBase
 }
 
 /// <summary>
-///     声明文档组节点。
+///     Declares a document group node.
 /// </summary>
 public sealed class AtlasDocumentGroupDefinition : ComponentBase
 {
     /// <summary>
-    ///     获取或设置声明必需的唯一标识；更改它相当于先移除再添加。
+    ///     The required unique identifier of the declaration; changing it is
+    ///     equivalent to removing the declaration and adding a new one.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public LayoutNodeId Id { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的保留策略；默认为持久。
+    ///     The retention policy of this definition; defaults to persistent.
     /// </summary>
     [Parameter]
     public GroupRetentionPolicy RetentionPolicy { get; set; } = GroupRetentionPolicy.Persistent;
 
     /// <summary>
-    ///     获取或设置定义中的溢出模式；默认为滚动。
+    ///     The overflow mode of this definition; defaults to scroll.
     /// </summary>
     [Parameter]
     public EditorOverflowMode OverflowMode { get; set; } = EditorOverflowMode.Scroll;
 
     /// <summary>
-    ///     获取或设置定义中的激活策略；默认为相邻。
+    ///     The activation policy of this definition; defaults to adjacent.
     /// </summary>
     [Parameter]
     public EditorActivationPolicy ActivationPolicy { get; set; } = EditorActivationPolicy.Adjacent;
 
     /// <summary>
-    ///     获取或设置定义中的选中项；默认为选中第一个项。
+    ///     The selected item of this definition; defaults to selecting the
+    ///     first item.
     /// </summary>
     [Parameter]
     public DockItemId? SelectedItemId { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的子项；默认为空的持久组。
+    ///     The child items of this definition; defaults to an empty persistent
+    ///     group.
     /// </summary>
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
@@ -643,45 +650,46 @@ public sealed class AtlasDocumentGroupDefinition : ComponentBase
 }
 
 /// <summary>
-///     声明工具项。
+///     Declares a tool item.
 /// </summary>
 public sealed class AtlasToolItemDefinition : ComponentBase
 {
     /// <summary>
-    ///     获取或设置声明必需的唯一标识；更改它相当于先移除再添加。
+    ///     The required unique identifier of the declaration; changing it is
+    ///     equivalent to removing the declaration and adding a new one.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public DockItemId Id { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中必需的内容提供方种类。
+    ///     The required content provider Kind of this definition.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public string ContentKind { get; set; } = string.Empty;
 
     /// <summary>
-    ///     获取或设置定义中必需的业务资源标识。
+    ///     The required business resource identifier of this definition.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public string ResourceId { get; set; } = string.Empty;
 
     /// <summary>
-    ///     获取或设置定义中的标题；为 null 时派生 Core 默认标题。
+    ///     The title of this definition; null derives the Core default title.
     /// </summary>
     [Parameter]
     public string? Title { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的图标标识；默认为 null。
+    ///     The icon key of this definition; defaults to null.
     /// </summary>
     [Parameter]
     public string? IconKey { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的能力集；默认为 Tool 预设。
+    ///     The capability set of this definition; defaults to the Tool preset.
     /// </summary>
     [Parameter]
     public DockItemCapabilities Capabilities { get; set; } = DockItemCapabilityPresets.Tool;
@@ -721,51 +729,53 @@ public sealed class AtlasToolItemDefinition : ComponentBase
 }
 
 /// <summary>
-///     声明文档项。
+///     Declares a document item.
 /// </summary>
 public sealed class AtlasDocumentItemDefinition : ComponentBase
 {
     /// <summary>
-    ///     获取或设置声明必需的唯一标识；更改它相当于先移除再添加。
+    ///     The required unique identifier of the declaration; changing it is
+    ///     equivalent to removing the declaration and adding a new one.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public DockItemId Id { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中必需的内容提供方种类。
+    ///     The required content provider Kind of this definition.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public string ContentKind { get; set; } = string.Empty;
 
     /// <summary>
-    ///     获取或设置定义中必需的业务资源标识。
+    ///     The required business resource identifier of this definition.
     /// </summary>
     [Parameter]
     [EditorRequired]
     public string ResourceId { get; set; } = string.Empty;
 
     /// <summary>
-    ///     获取或设置定义中的标题；为 null 时派生 Core 默认标题。
+    ///     The title of this definition; null derives the Core default title.
     /// </summary>
     [Parameter]
     public string? Title { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的图标标识；默认为 null。
+    ///     The icon key of this definition; defaults to null.
     /// </summary>
     [Parameter]
     public string? IconKey { get; set; }
 
     /// <summary>
-    ///     获取或设置定义中的能力集；默认为 Document 预设。
+    ///     The capability set of this definition; defaults to the Document
+    ///     preset.
     /// </summary>
     [Parameter]
     public DockItemCapabilities Capabilities { get; set; } = DockItemCapabilityPresets.Document;
 
     /// <summary>
-    ///     获取或设置定义中的固定状态；默认为 false。
+    ///     The pinned state of this definition; defaults to false.
     /// </summary>
     [Parameter]
     public bool IsPinned { get; set; }

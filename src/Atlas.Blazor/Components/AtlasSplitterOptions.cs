@@ -1,12 +1,13 @@
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     配置浏览器端分割条交互。
+///     Configures browser-side splitter interaction.
 /// </summary>
 public sealed class AtlasSplitterOptions
 {
     /// <summary>
-    ///     初始化分割条交互选项；方向键步进必须为正且有限，提交延迟不能为负。
+    ///     Initializes splitter interaction options; the keyboard step must be
+    ///     positive and finite, and the commit delay cannot be negative.
     /// </summary>
     public AtlasSplitterOptions(
         double keyboardStepPixels = 10d,
@@ -28,23 +29,24 @@ public sealed class AtlasSplitterOptions
     }
 
     /// <summary>
-    ///     获取分割条单次方向键步进的 CSS 像素变化量。
+    ///     Gets the CSS pixel change applied by one splitter arrow-key step.
     /// </summary>
     public double KeyboardStepPixels { get; }
 
     /// <summary>
-    ///     获取终止键盘调整连发的防抖延迟。
+    ///     Gets the debounce delay that terminates a keyboard resize burst.
     /// </summary>
     public int KeyboardCommitDelayMilliseconds { get; }
 }
 
 /// <summary>
-///     描述单个分割条的瞬态呈现与允许的操作。
+///     Describes one splitter's transient presentation and allowed actions.
 /// </summary>
 public sealed class AtlasSplitterPresentation
 {
     /// <summary>
-    ///     初始化分割条呈现；CSS 类仅接受类名令牌，非法字符抛异常。
+    ///     Initializes a splitter presentation; CSS classes accept class-name
+    ///     tokens only, and invalid characters throw.
     /// </summary>
     public AtlasSplitterPresentation(
         bool isLocked = false,
@@ -59,22 +61,22 @@ public sealed class AtlasSplitterPresentation
     }
 
     /// <summary>
-    ///     获取是否禁用用户交互。
+    ///     Gets whether user interaction is disabled.
     /// </summary>
     public bool IsLocked { get; }
 
     /// <summary>
-    ///     获取可选的安全 CSS 类令牌。
+    ///     Gets the optional safe CSS class tokens.
     /// </summary>
     public string? CssClass { get; }
 
     /// <summary>
-    ///     获取第一个子项是否提供折叠操作入口。
+    ///     Gets whether the first child offers a collapse entry point.
     /// </summary>
     public bool CanCollapseFirst { get; }
 
     /// <summary>
-    ///     获取第二个子项是否提供折叠操作入口。
+    ///     Gets whether the second child offers a collapse entry point.
     /// </summary>
     public bool CanCollapseSecond { get; }
 

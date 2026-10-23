@@ -1,16 +1,19 @@
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     使用固定的默认拒绝沙箱策略配置不可信内容 iframe。
+///     Configures an untrusted content iframe with a fixed deny-by-default
+///     sandbox policy.
 /// </summary>
 public sealed class AtlasSandboxedFrameOptions
 {
     /// <summary>
-    ///     配置不可信内容 iframe；源与标题不能为空白，消息大小限制在 256–1048576 字节。
+    ///     Configures the untrusted content iframe; the source and title cannot
+    ///     be blank and the message size limit must be within 256-1048576
+    ///     bytes.
     /// </summary>
-    /// <param name="source">框架源 URL。</param>
-    /// <param name="title">可访问的框架标题。</param>
-    /// <param name="maxMessageBytes">可接受的最大 UTF-8 消息大小。</param>
+    /// <param name="source">The frame source URL.</param>
+    /// <param name="title">The accessible frame title.</param>
+    /// <param name="maxMessageBytes">The maximum accepted UTF-8 message size.</param>
     public AtlasSandboxedFrameOptions(
         string source,
         string title,
@@ -37,17 +40,17 @@ public sealed class AtlasSandboxedFrameOptions
     }
 
     /// <summary>
-    ///     获取框架源 URL。
+    ///     Gets the frame source URL.
     /// </summary>
     public string Source { get; }
 
     /// <summary>
-    ///     获取可访问的框架标题。
+    ///     Gets the accessible frame title.
     /// </summary>
     public string Title { get; }
 
     /// <summary>
-    ///     获取可接受的最大 UTF-8 消息大小。
+    ///     Gets the maximum accepted UTF-8 message size.
     /// </summary>
     public int MaxMessageBytes { get; }
 }
