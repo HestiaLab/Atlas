@@ -16,6 +16,8 @@ Atlas.Core.AtlasWorkspaceOptions.AtlasWorkspaceOptions(Atlas.Core.WorkspaceHisto
 Atlas.Core.AtlasWorkspaceOptions.CloseGuardResolver.get -> Atlas.Core.Operations.IDockItemCloseGuardResolver?
 Atlas.Core.AtlasWorkspaceOptions.ContentIdentityPolicy.get -> Atlas.Core.Items.IContentIdentityPolicy?
 Atlas.Core.AtlasWorkspaceOptions.History.get -> Atlas.Core.WorkspaceHistoryOptions!
+Atlas.Core.AtlasWorkspaceOptions.SubscriberFaultSink.get -> System.Action<System.Exception!>?
+Atlas.Core.AtlasWorkspaceOptions.SubscriberFaultSink.init -> void
 Atlas.Core.AtlasWorkspaceQueries
 Atlas.Core.Changes.LayoutChangeKind
 Atlas.Core.Changes.LayoutChangeKind.Operation = 0 -> Atlas.Core.Changes.LayoutChangeKind

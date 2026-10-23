@@ -171,6 +171,27 @@ public sealed class OpenItemOperationTests
     }
 
     [Fact]
+    public async Task Activate_existing_chooses_deterministic_smallest_identity()
+    {
+        var zeta = CreateDocument("zeta", "shared");
+        var alpha = CreateDocument("alpha", "shared");
+        var request = CreateDocument("request", "shared");
+        var (workspace, group) = CreateDocumentWorkspace(zeta, alpha);
+        await using (workspace)
+        {
+            var result = await workspace.ExecuteAsync(
+                new OpenItemOperation(
+                    request,
+                    group.Id,
+                    ContentDeduplicationMode.ActivateExisting));
+
+            Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+            Assert.Equal(alpha.Id, CurrentGroup(workspace, group.Id).SelectedItemId);
+            Assert.DoesNotContain(request.Id, workspace.Current.Items);
+        }
+    }
+
+    [Fact]
     public async Task Missing_or_incompatible_target_returns_typed_failure()
     {
         var existing = CreateDocument("existing", "existing");

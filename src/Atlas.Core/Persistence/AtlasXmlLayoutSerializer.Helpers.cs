@@ -1,14 +1,10 @@
 using System.Globalization;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Schema;
 using Atlas.Core.Diagnostics;
-using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
@@ -161,25 +157,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             new WorkspaceError(
                 WorkspaceErrorCode.LayoutVersionIncompatible,
                 LayoutOperationKind.RestoreWorkspace,
-                "ATLAS-PERSIST-VERSION",
-                "Atlas.Persistence.VersionIncompatible"));
-    }
-
-    private sealed class Utf8StringWriter : StringWriter
-    {
-        internal Utf8StringWriter(IFormatProvider formatProvider)
-            : base(formatProvider)
-        {
-        }
-
-        public override Encoding Encoding => Encoding.UTF8;
-    }
-
-    private interface ILegacyItem
-    {
-        DockItemId Id { get; }
-
-        bool Active { get; }
+                WorkspaceDiagnostics.Ids.PersistVersion,
+                WorkspaceDiagnostics.Messages.PersistenceVersionIncompatible));
     }
 
 }

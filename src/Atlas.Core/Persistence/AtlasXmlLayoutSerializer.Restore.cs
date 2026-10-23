@@ -1,9 +1,4 @@
-using System.Globalization;
-using System.Reflection;
-using System.Text;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.Schema;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
@@ -46,8 +41,8 @@ public sealed partial class AtlasXmlLayoutSerializer
                 new WorkspaceError(
                     WorkspaceErrorCode.ContentNotRegistered,
                     LayoutOperationKind.RestoreWorkspace,
-                    "ATLAS-RESTORE-CONTENT",
-                    "Atlas.Persistence.ContentNotRegistered",
+                    WorkspaceDiagnostics.Ids.RestoreContent,
+                    WorkspaceDiagnostics.Messages.PersistenceContentNotRegistered,
                     itemId: missing[0]));
         }
 
@@ -71,7 +66,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         // 策略组合可能破坏不变量（如剔除后组变空、占位项残留选中状态），统一在此复验。
         if (WorkspaceInvariantValidator.Validate(snapshot).Count != 0)
         {
-            return Invalid("ATLAS-RESTORE-POLICY");
+            return Invalid(WorkspaceDiagnostics.Ids.RestorePolicy);
         }
 
         return WorkspaceResult<LayoutRestoreDocument>.Success(

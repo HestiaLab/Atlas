@@ -80,8 +80,8 @@ internal static class MoveToolPlanner
             failure = Failure(
                 WorkspaceErrorCode.CapabilityRejected,
                 operation,
-                "ATLAS-MOVE-CAPABILITY",
-                "Atlas.Move.CapabilityRejected");
+                WorkspaceDiagnostics.Ids.MoveCapability,
+                WorkspaceDiagnostics.Messages.MoveCapabilityRejected);
             return false;
         }
 
@@ -103,8 +103,8 @@ internal static class MoveToolPlanner
             failure = Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-MOVE-TARGET-MISSING",
-                "Atlas.Move.TargetNotFound",
+                WorkspaceDiagnostics.Ids.MoveTargetMissing,
+                WorkspaceDiagnostics.Messages.MoveTargetNotFound,
                 operation.TargetGroupId);
             return false;
         }
@@ -116,8 +116,8 @@ internal static class MoveToolPlanner
             failure = Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-MOVE-TARGET-REJECTED",
-                "Atlas.Move.TargetRejected",
+                WorkspaceDiagnostics.Ids.MoveTargetRejected,
+                WorkspaceDiagnostics.Messages.MoveTargetRejected,
                 operation.TargetGroupId);
             return false;
         }
@@ -129,8 +129,8 @@ internal static class MoveToolPlanner
             failure = Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-MOVE-INDEX-REJECTED",
-                "Atlas.Move.TargetRejected",
+                WorkspaceDiagnostics.Ids.MoveIndexRejected,
+                WorkspaceDiagnostics.Messages.MoveTargetRejected,
                 group.Id);
             return false;
         }

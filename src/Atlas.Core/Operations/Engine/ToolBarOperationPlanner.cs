@@ -30,8 +30,8 @@ internal static class ToolBarOperationPlanner
                 new WorkspaceError(
                     WorkspaceErrorCode.TargetNotFound,
                     operation.Kind,
-                    "ATLAS-TOOLBAR-MISSING",
-                    "Atlas.ToolBar.NotFound"));
+                    WorkspaceDiagnostics.Ids.ToolbarMissing,
+                    WorkspaceDiagnostics.Messages.ToolBarNotFound));
         }
 
         if (toolbar.Visibility == operation.Visibility)
@@ -73,8 +73,8 @@ internal static class ToolBarOperationPlanner
             return Failure(
                 WorkspaceErrorCode.CapabilityRejected,
                 operation,
-                "ATLAS-TOOLBAR-ITEM-REJECTED",
-                "Atlas.ToolBar.ItemRejected");
+                WorkspaceDiagnostics.Ids.ToolbarItemRejected,
+                WorkspaceDiagnostics.Messages.ToolBarItemRejected);
         }
 
         if (!snapshot.ToolBarOrders.TryGetValue(
@@ -84,8 +84,8 @@ internal static class ToolBarOperationPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-TOOLBAR-REGION-MISSING",
-                "Atlas.ToolBar.RegionNotFound");
+                WorkspaceDiagnostics.Ids.ToolbarRegionMissing,
+                WorkspaceDiagnostics.Messages.ToolBarRegionNotFound);
         }
 
         var currentIndex = order.ItemIds.ToList().IndexOf(operation.ItemId);
@@ -94,8 +94,8 @@ internal static class ToolBarOperationPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-TOOLBAR-TARGET-REJECTED",
-                "Atlas.ToolBar.TargetRejected");
+                WorkspaceDiagnostics.Ids.ToolbarTargetRejected,
+                WorkspaceDiagnostics.Messages.ToolBarTargetRejected);
         }
 
         if (currentIndex == operation.TargetIndex)

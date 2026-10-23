@@ -6,27 +6,6 @@ namespace Atlas.Core.Items;
 /// </summary>
 public sealed class DockItem
 {
-    // 全部已知能力的并集；构造时据此拒绝未声明的能力位。
-    private const DockItemCapabilities KnownCapabilities =
-        DockItemCapabilities.CanClose
-        | DockItemCapabilities.CanMove
-        | DockItemCapabilities.CanAutoHide
-        | DockItemCapabilities.CanSplit
-        | DockItemCapabilities.CanPinDocument;
-
-    // 工具项允许的能力子集：可关闭/移动/自动隐藏，不含拆分与固定文档。
-    private const DockItemCapabilities ToolCapabilities =
-        DockItemCapabilities.CanClose
-        | DockItemCapabilities.CanMove
-        | DockItemCapabilities.CanAutoHide;
-
-    // 文档项允许的能力子集：可关闭/移动/拆分/固定文档，不含自动隐藏。
-    private const DockItemCapabilities DocumentCapabilities =
-        DockItemCapabilities.CanClose
-        | DockItemCapabilities.CanMove
-        | DockItemCapabilities.CanSplit
-        | DockItemCapabilities.CanPinDocument;
-
     /// <summary>
     ///     构造不可变项并校验组合约束：Id 与 Content 不得为默认值，kind 仅限工具/文档；
     ///     Capabilities 必须属于该 kind 允许的能力子集（工具项不可拆分/固定，文档项不可自动隐藏），
@@ -116,7 +95,7 @@ public sealed class DockItem
         DockItemKind kind,
         DockItemCapabilities capabilities)
     {
-        if ((capabilities & ~KnownCapabilities) != 0)
+        if ((capabilities & ~DockItemCapabilityPresets.KnownCapabilities) != 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(capabilities),
@@ -124,11 +103,7 @@ public sealed class DockItem
                 "The capability set contains unknown flags.");
         }
 
-        var allowedCapabilities = kind == DockItemKind.Tool
-            ? ToolCapabilities
-            : DocumentCapabilities;
-
-        if ((capabilities & ~allowedCapabilities) != 0)
+        if ((capabilities & ~DockItemCapabilityPresets.AllowedFor(kind)) != 0)
         {
             throw new ArgumentException(
                 $"The capability set is not valid for a {kind} item.",

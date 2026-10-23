@@ -1,7 +1,8 @@
 namespace Atlas.Core.Results;
 
 /// <summary>
-///     类型化的操作结果：成功或无变更时携带值，失败时携带预期错误。
+///     Typed operation result: success or no-change carries a value; failure carries
+///     an expected error.
 /// </summary>
 public sealed class WorkspaceResult<T>
 {
@@ -13,36 +14,38 @@ public sealed class WorkspaceResult<T>
     }
 
     /// <summary>
-    ///     获取结果分类。
+    ///     Gets the result category.
     /// </summary>
     public WorkspaceResultStatus Status { get; }
 
     /// <summary>
-    ///     获取操作是否在未发生预期失败的情况下完成。
+    ///     Gets a value indicating whether the operation completed without an
+    ///     expected failure.
     /// </summary>
     public bool Succeeded => Status is WorkspaceResultStatus.Success or WorkspaceResultStatus.NoChange;
 
     /// <summary>
-    ///     获取操作是否在未提交新修订的情况下完成。
+    ///     Gets a value indicating whether the operation completed without committing
+    ///     a new revision.
     /// </summary>
     public bool IsNoChange => Status == WorkspaceResultStatus.NoChange;
 
     /// <summary>
-    ///     获取成功及无变更结果的结果值。
+    ///     Gets the result value for success and no-change results.
     /// </summary>
     public T? Value { get; }
 
     /// <summary>
-    ///     获取操作未成功时的预期失败。
+    ///     Gets the expected error when the operation did not succeed.
     /// </summary>
     public WorkspaceError? Error { get; }
 
     /// <summary>
-    ///     创建成功完成的操作结果。
+    ///     Creates a successfully completed operation result.
     /// </summary>
-    /// <param name="value">操作产生的值。</param>
+    /// <param name="value">Value produced by the operation.</param>
     /// <returns>
-    ///     携带所给值的成功结果。
+    ///     A success result carrying the supplied value.
     /// </returns>
     internal static WorkspaceResult<T> Success(T value)
     {
@@ -51,11 +54,11 @@ public sealed class WorkspaceResult<T>
     }
 
     /// <summary>
-    ///     创建未提交新修订的操作结果。
+    ///     Creates a result that completed without committing a new revision.
     /// </summary>
-    /// <param name="value">操作产生的值。</param>
+    /// <param name="value">Value produced by the operation.</param>
     /// <returns>
-    ///     携带所给值且未提交新修订的结果。
+    ///     A result carrying the supplied value without a new revision.
     /// </returns>
     internal static WorkspaceResult<T> NoChange(T value)
     {
@@ -64,11 +67,11 @@ public sealed class WorkspaceResult<T>
     }
 
     /// <summary>
-    ///     创建携带预期失败的操作结果。
+    ///     Creates a result carrying an expected failure.
     /// </summary>
-    /// <param name="error">预期失败描述。</param>
+    /// <param name="error">Expected failure description.</param>
     /// <returns>
-    ///     携带预期失败且无值的结果。
+    ///     A result carrying the expected failure and no value.
     /// </returns>
     internal static WorkspaceResult<T> Failure(WorkspaceError error)
     {

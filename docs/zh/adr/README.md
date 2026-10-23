@@ -46,6 +46,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0024](./0024-public-workspace-factory-seam.md) | Accepted | 公共工作区工厂接缝；公开 `AtlasWorkspaceFactory`，planner/workspace 保持 internal（CORE-P2-02） |
 | [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | 工具栏顺序按组内相邻项锚定插入，而非复制数字组内索引（CORE-P2-12） |
 | [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | 分层代码注释语言政策：公共 XML 文档/消息英文，内部注释增量迁移（CORE-P2-20） |
+| [ADR-0027](./0027-subscriber-fault-diagnostics.md) | Accepted | 可选 `SubscriberFaultSink` 上报订阅者异常，不改变事件隔离（CORE-P2-17） |
 
 ## 编写约定
 

@@ -193,6 +193,37 @@ public sealed class LayoutPresetServiceTests
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, apply.Error!.Code);
     }
 
+    [Fact]
+    public async Task Writer_state_is_released_when_idle()
+    {
+        await using var workspace = CreateWorkspace();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new InMemoryLayoutPresetStore());
+
+        Assert.Equal(0, service.ActiveWriterCount);
+        Assert.True((await service.SaveAsync("focus")).Succeeded);
+        Assert.Equal(0, service.ActiveWriterCount);
+        Assert.True((await service.DeleteAsync("focus")).Succeeded);
+        Assert.Equal(0, service.ActiveWriterCount);
+    }
+
+    [Fact]
+    public async Task List_cancellation_propagates()
+    {
+        await using var workspace = CreateWorkspace();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new InMemoryLayoutPresetStore());
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => service.ListAsync(cancellation.Token).AsTask());
+    }
+
     private static IAtlasWorkspace CreateWorkspace()
     {
         var group = new GroupNode(

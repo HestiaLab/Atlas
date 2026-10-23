@@ -38,8 +38,8 @@ internal static class DockDocumentPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-DOCK-SOURCE-REJECTED",
-                "Atlas.Dock.SourceRejected");
+                WorkspaceDiagnostics.Ids.DockSourceRejected,
+                WorkspaceDiagnostics.Messages.DockSourceRejected);
         }
 
         // 源组即目标组时有两种幂等情形：中心区停靠只是再次激活，
@@ -59,8 +59,8 @@ internal static class DockDocumentPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-DOCK-ID-COLLISION",
-                "Atlas.Dock.TargetRejected");
+                WorkspaceDiagnostics.Ids.DockIdCollision,
+                WorkspaceDiagnostics.Messages.DockTargetRejected);
         }
 
         var mutation = WorkspaceMutation.From(snapshot);
@@ -107,8 +107,8 @@ internal static class DockDocumentPlanner
             failure = Failure(
                 WorkspaceErrorCode.CapabilityRejected,
                 operation,
-                "ATLAS-DOCK-CAPABILITY",
-                "Atlas.Dock.CapabilityRejected");
+                WorkspaceDiagnostics.Ids.DockCapability,
+                WorkspaceDiagnostics.Messages.DockCapabilityRejected);
             return false;
         }
 
@@ -128,8 +128,8 @@ internal static class DockDocumentPlanner
             failure = Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-DOCK-TARGET-MISSING",
-                "Atlas.Dock.TargetNotFound",
+                WorkspaceDiagnostics.Ids.DockTargetMissing,
+                WorkspaceDiagnostics.Messages.DockTargetNotFound,
                 operation.TargetGroupId);
             return false;
         }
@@ -140,8 +140,8 @@ internal static class DockDocumentPlanner
             failure = Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-DOCK-TARGET-REJECTED",
-                "Atlas.Dock.TargetRejected",
+                WorkspaceDiagnostics.Ids.DockTargetRejected,
+                WorkspaceDiagnostics.Messages.DockTargetRejected,
                 operation.TargetGroupId);
             return false;
         }

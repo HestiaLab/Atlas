@@ -1,13 +1,9 @@
 using System.Globalization;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using Atlas.Core.Items;
-using Atlas.Core.Layout;
-using Atlas.Core.Operations;
-using Atlas.Core.Placement;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
@@ -73,7 +69,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
         limits ??= new LayoutPersistenceLimits();
         if (Encoding.UTF8.GetByteCount(xml) > limits.MaxDocumentBytes)
         {
-            return Invalid("ATLAS-PERSIST-LIMIT");
+            return Invalid(WorkspaceDiagnostics.Ids.PersistLimit);
         }
 
         try
@@ -82,7 +78,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             var root = document.Root;
             if (root is null)
             {
-                return Invalid("ATLAS-PERSIST-ROOT");
+                return Invalid(WorkspaceDiagnostics.Ids.PersistRoot);
             }
 
             var version = (string?)root.Attribute("schemaVersion");
@@ -113,7 +109,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             var persistedWorkspaceId = Required(root, "workspaceId");
             if (!StringComparer.Ordinal.Equals(persistedWorkspaceId, targetWorkspaceId.Value))
             {
-                return Invalid("ATLAS-PERSIST-WORKSPACE");
+                return Invalid(WorkspaceDiagnostics.Ids.PersistWorkspace);
             }
 
             // XML 合法不等于语义合法：快照仍须通过域不变量校验，失败即整体拒绝恢复。
@@ -121,7 +117,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             var violations = WorkspaceInvariantValidator.Validate(snapshot);
             if (violations.Count != 0)
             {
-                return Invalid("ATLAS-PERSIST-INVARIANT");
+                return Invalid(WorkspaceDiagnostics.Ids.PersistInvariant);
             }
 
             return WorkspaceResult<LayoutRestoreDocument>.Success(
@@ -129,11 +125,11 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
         }
         catch (PersistenceLimitException)
         {
-            return Invalid("ATLAS-PERSIST-LIMIT");
+            return Invalid(WorkspaceDiagnostics.Ids.PersistLimit);
         }
         catch (XmlSchemaValidationException)
         {
-            return Invalid("ATLAS-PERSIST-SCHEMA");
+            return Invalid(WorkspaceDiagnostics.Ids.PersistSchema);
         }
         catch (Exception exception) when (
             exception is XmlException
@@ -143,7 +139,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             or OverflowException)
         {
             // 把剩余解析/校验结构错误归一为“文档无效”诊断，调用方只需处理预期失败。
-            return Invalid("ATLAS-PERSIST-INVALID");
+            return Invalid(WorkspaceDiagnostics.Ids.PersistenceInvalid);
         }
     }
 
@@ -188,15 +184,4 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
         }
     }
 
-    private sealed record LegacyPanel(
-        DockItemId Id,
-        LogicalRegion Region,
-        bool Active,
-        bool AutoHidden,
-        double? Size) : ILegacyItem;
-
-    private sealed record LegacyEditor(
-        DockItemId Id,
-        bool Active,
-        bool Pinned) : ILegacyItem;
 }

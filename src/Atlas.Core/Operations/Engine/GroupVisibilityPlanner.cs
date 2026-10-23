@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Results;
@@ -27,8 +28,8 @@ internal static class GroupVisibilityPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-GROUP-MISSING",
-                "Atlas.Group.NotFound");
+                WorkspaceDiagnostics.Ids.GroupMissing,
+                WorkspaceDiagnostics.Messages.GroupNotFound);
         }
 
         if (node is not GroupNode group
@@ -37,8 +38,8 @@ internal static class GroupVisibilityPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-GROUP-VISIBILITY-REJECTED",
-                "Atlas.Group.VisibilityRejected");
+                WorkspaceDiagnostics.Ids.GroupVisibilityRejected,
+                WorkspaceDiagnostics.Messages.GroupVisibilityRejected);
         }
 
         if (group.Visibility == operation.Visibility)
@@ -57,8 +58,8 @@ internal static class GroupVisibilityPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-GROUP-VISIBILITY-REJECTED",
-                "Atlas.Group.VisibilityRejectedOnEmptyGroup");
+                WorkspaceDiagnostics.Ids.GroupVisibilityRejected,
+                WorkspaceDiagnostics.Messages.GroupVisibilityRejectedOnEmptyGroup);
         }
 
         var replacement = new GroupNode(

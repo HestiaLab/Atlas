@@ -198,6 +198,29 @@ public sealed class LayoutAutoPersistenceTests
             Assert.Single(diagnostics).Kind);
     }
 
+    [Fact]
+    public async Task Restore_storage_failure_is_reported_as_diagnostic()
+    {
+        await using var workspace = CreateWorkspace();
+        var diagnostics = new List<WorkspacePersistenceDiagnostic>();
+        await using var persistence = new LayoutAutoPersistence(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new ThrowingLoadStore(),
+            diagnosticSink: diagnostics.Add);
+
+        var result = await persistence.RestoreIfAvailableAsync();
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(
+            WorkspaceErrorCode.PersistenceUnavailable,
+            result.Error!.Code);
+        Assert.Equal("ATLAS-AUTO-READ", result.Error.DiagnosticId);
+        Assert.Equal(
+            WorkspacePersistenceDiagnosticKind.StorageUnavailable,
+            Assert.Single(diagnostics).Kind);
+    }
+
     private static IAtlasWorkspace CreateWorkspace()
     {
         // The group is non-empty so its Expanded visibility is a legal
@@ -307,6 +330,19 @@ public sealed class LayoutAutoPersistenceTests
         public ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
             CancellationToken cancellationToken = default) =>
             ValueTask.FromResult<WorkspaceLayoutDocument?>(null);
+    }
+
+    private sealed class ThrowingLoadStore : IWorkspaceLayoutStore
+    {
+        public ValueTask SaveAsync(
+            WorkspaceLayoutDocument document,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.CompletedTask;
+
+        public ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromException<WorkspaceLayoutDocument?>(
+                new InvalidOperationException("load failed"));
     }
 
     private sealed class BlockingLoadStore : IWorkspaceLayoutStore

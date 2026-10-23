@@ -6,10 +6,16 @@ using Atlas.Core.Results;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     防抖自动保存并恢复已保留的工作区文档。
-///     变更触发防抖窗口后按代际写入：排队期间若出现更新的快照，旧快照直接放弃，
-///     保证落盘的始终是最新状态；存储与序列化失败一律降级为诊断上报，不中断应用。
+///     Debounces workspace changes, persists the latest snapshot, and restores a
+///     previously saved document. Writes are generation-ordered so a stale
+///     snapshot cannot overwrite a newer one; storage and serialization failures
+///     degrade to diagnostics instead of stopping the application.
 /// </summary>
+/// <remarks>
+///     DisposeAsync cancels pending debounce timers and drains in-flight saves;
+///     it does not implicitly flush. Call FlushAsync before disposal when the
+///     current snapshot must be written immediately.
+/// </remarks>
 public sealed class LayoutAutoPersistence : IAsyncDisposable
 {
     // 防抖状态互斥锁：保护取消源、待决保存任务与释放标记。
@@ -120,8 +126,8 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         {
             Report(
                 WorkspacePersistenceDiagnosticKind.StorageUnavailable,
-                "ATLAS-AUTO-READ");
-            return Failure<LayoutChangeSet>("ATLAS-AUTO-READ");
+                WorkspaceDiagnostics.Ids.AutoRead);
+            return Failure<LayoutChangeSet>(WorkspaceDiagnostics.Ids.AutoRead);
         }
 
         // 从未保存过文档（首次运行）视为无变更，不产生恢复操作。
@@ -365,12 +371,12 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         {
             Report(
                 WorkspacePersistenceDiagnosticKind.SerializationFailure,
-                "ATLAS-AUTO-SERIALIZE");
+                WorkspaceDiagnostics.Ids.AutoSerialize);
             return WorkspaceResult<bool>.Failure(
                 new WorkspaceError(
                     WorkspaceErrorCode.InvalidLayoutData,
                     LayoutOperationKind.RestoreWorkspace,
-                    "ATLAS-AUTO-SERIALIZE",
+                    WorkspaceDiagnostics.Ids.AutoSerialize,
                     WorkspaceDiagnostics.Messages.PersistenceInvalid));
         }
 
@@ -393,8 +399,8 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         {
             Report(
                 WorkspacePersistenceDiagnosticKind.StorageUnavailable,
-                "ATLAS-AUTO-WRITE");
-            return Failure<bool>("ATLAS-AUTO-WRITE");
+                WorkspaceDiagnostics.Ids.AutoWrite);
+            return Failure<bool>(WorkspaceDiagnostics.Ids.AutoWrite);
         }
         finally
         {

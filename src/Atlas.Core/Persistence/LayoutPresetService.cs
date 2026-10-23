@@ -24,6 +24,14 @@ public sealed class LayoutPresetService
     private readonly ConcurrentDictionary<string, WriterState> writers =
         new(StringComparer.Ordinal);
 
+    // 串行化 WriterState 的获取/释放/回收，避免回收与并发写入竞争。
+    private readonly object writerGate = new();
+
+    /// <summary>
+    ///     Gets the number of currently retained per-key writer states.
+    /// </summary>
+    internal int ActiveWriterCount => writers.Count;
+
     /// <summary>
     ///     为一个工作区初始化预设服务。
     /// </summary>
@@ -53,7 +61,7 @@ public sealed class LayoutPresetService
         {
             return Failure<LayoutPresetDescriptor>(
                 WorkspaceErrorCode.InvalidLayoutData,
-                "ATLAS-PRESET-NAME");
+                WorkspaceDiagnostics.Ids.PresetName);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -68,7 +76,7 @@ public sealed class LayoutPresetService
         {
             return Failure<LayoutPresetDescriptor>(
                 WorkspaceErrorCode.InvalidLayoutData,
-                "ATLAS-PRESET-SERIALIZE");
+                WorkspaceDiagnostics.Ids.PresetSerialize);
         }
 
         var descriptor = new LayoutPresetDescriptor(
@@ -78,11 +86,20 @@ public sealed class LayoutPresetService
             DateTimeOffset.UtcNow);
         var document = new LayoutPresetDocument(descriptor, xml);
         // 每个预设名独立串行化写入：同名保存排队执行，不同名互不阻塞。
-        var writer = writers.GetOrAdd(validatedName, _ => new WriterState());
+        var writer = AcquireWriter(validatedName);
         // 代际计数用于丢弃过期请求：排队期间若出现更新的保存，本次写入视为过时，
         // 返回 NoChange 而不是让旧快照覆盖新快照。
         var generation = Interlocked.Increment(ref writer.LatestGeneration);
-        await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            ReleaseWriter(validatedName, writer);
+            throw;
+        }
+
         try
         {
             if (generation != Volatile.Read(ref writer.LatestGeneration))
@@ -98,11 +115,12 @@ public sealed class LayoutPresetService
         {
             return Failure<LayoutPresetDescriptor>(
                 WorkspaceErrorCode.PersistenceUnavailable,
-                "ATLAS-PRESET-WRITE");
+                WorkspaceDiagnostics.Ids.PresetWrite);
         }
         finally
         {
             writer.Gate.Release();
+            ReleaseWriter(validatedName, writer);
         }
     }
 
@@ -125,13 +143,13 @@ public sealed class LayoutPresetService
         {
             return Failure<LayoutChangeSet>(
                 WorkspaceErrorCode.InvalidLayoutData,
-                "ATLAS-PRESET-NAME");
+                WorkspaceDiagnostics.Ids.PresetName);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             return Failure<LayoutChangeSet>(
                 WorkspaceErrorCode.PersistenceUnavailable,
-                "ATLAS-PRESET-READ");
+                WorkspaceDiagnostics.Ids.PresetRead);
         }
 
         if (stored is null)
@@ -169,12 +187,21 @@ public sealed class LayoutPresetService
         {
             return Failure<bool>(
                 WorkspaceErrorCode.InvalidLayoutData,
-                "ATLAS-PRESET-NAME");
+                WorkspaceDiagnostics.Ids.PresetName);
         }
 
-        var writer = writers.GetOrAdd(validatedName, _ => new WriterState());
+        var writer = AcquireWriter(validatedName);
         var generation = Interlocked.Increment(ref writer.LatestGeneration);
-        await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            ReleaseWriter(validatedName, writer);
+            throw;
+        }
+
         try
         {
             if (generation != Volatile.Read(ref writer.LatestGeneration))
@@ -192,11 +219,12 @@ public sealed class LayoutPresetService
         {
             return Failure<bool>(
                 WorkspaceErrorCode.PersistenceUnavailable,
-                "ATLAS-PRESET-DELETE");
+                WorkspaceDiagnostics.Ids.PresetDelete);
         }
         finally
         {
             writer.Gate.Release();
+            ReleaseWriter(validatedName, writer);
         }
     }
 
@@ -215,7 +243,7 @@ public sealed class LayoutPresetService
         {
             return Failure<IReadOnlyList<LayoutPresetDescriptor>>(
                 WorkspaceErrorCode.PersistenceUnavailable,
-                "ATLAS-PRESET-LIST");
+                WorkspaceDiagnostics.Ids.PresetList);
         }
     }
 
@@ -239,8 +267,32 @@ public sealed class LayoutPresetService
             new WorkspaceError(
                 WorkspaceErrorCode.TargetNotFound,
                 LayoutOperationKind.RestoreWorkspace,
-                "ATLAS-PRESET-MISSING",
-                "Atlas.Preset.NotFound"));
+                WorkspaceDiagnostics.Ids.PresetMissing,
+                WorkspaceDiagnostics.Messages.PresetNotFound));
+    }
+
+    private WriterState AcquireWriter(string name)
+    {
+        lock (writerGate)
+        {
+            var writer = writers.GetOrAdd(name, _ => new WriterState());
+            writer.ActiveCount++;
+            return writer;
+        }
+    }
+
+    private void ReleaseWriter(string name, WriterState writer)
+    {
+        lock (writerGate)
+        {
+            writer.ActiveCount--;
+            if (writer.ActiveCount == 0
+                && writer.Gate.CurrentCount == 1
+                && writers.TryRemove(name, out var removed))
+            {
+                removed.Gate.Dispose();
+            }
+        }
     }
 
     private sealed class WriterState
@@ -255,5 +307,10 @@ public sealed class LayoutPresetService
         ///     本次写入视为过期并放弃，避免旧快照覆盖新快照。
         /// </summary>
         internal long LatestGeneration;
+
+        /// <summary>
+        ///     当前持有或等待该 WriterState 的操作数；归零后可回收。
+        /// </summary>
+        internal int ActiveCount;
     }
 }

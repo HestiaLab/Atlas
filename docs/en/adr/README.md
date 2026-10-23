@@ -46,6 +46,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0024](./0024-public-workspace-factory-seam.md) | Accepted | Public workspace factory seam; publish `AtlasWorkspaceFactory` while keeping planners/workspace internal (CORE-P2-02) |
 | [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | Toolbar order insertion by group neighbor anchor instead of numeric group index (CORE-P2-12) |
 | [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | Tiered code-comment language policy: English public XML docs/messages, incremental internal comments (CORE-P2-20) |
+| [ADR-0027](./0027-subscriber-fault-diagnostics.md) | Accepted | Optional `SubscriberFaultSink` reports subscriber exceptions without changing event isolation (CORE-P2-17) |
 
 ## Writing Conventions
 

@@ -251,6 +251,21 @@ public sealed class AtlasXmlLayoutSerializerTests
     }
 
     [Fact]
+    public void Rejects_schema_invalid_document_with_schema_diagnostic()
+    {
+        const string xml =
+            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:2\" "
+            + "schemaVersion=\"2.0\" workspaceId=\"main\">"
+            + "<Items/><Layout/><ToolBars/><AutoHide/><Extra/></AtlasWorkspace>";
+
+        var result = serializer.Deserialize(xml, new WorkspaceId("main"));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+        Assert.Equal("ATLAS-PERSIST-SCHEMA", result.Error.DiagnosticId);
+    }
+
+    [Fact]
     public void Rejects_non_finite_numbers_and_duplicate_ids()
     {
         var golden = File.ReadAllText(GoldenPath("workspace-v2.xml"));

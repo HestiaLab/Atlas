@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Layout;
 using Atlas.Core.Results;
 
@@ -27,8 +28,8 @@ internal static class ResizeSplitPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-SPLIT-MISSING",
-                "Atlas.Split.NotFound");
+                WorkspaceDiagnostics.Ids.SplitMissing,
+                WorkspaceDiagnostics.Messages.SplitNotFound);
         }
 
         if (node is not SplitNode split)
@@ -36,8 +37,8 @@ internal static class ResizeSplitPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-SPLIT-TARGET-REJECTED",
-                "Atlas.Split.TargetRejected");
+                WorkspaceDiagnostics.Ids.SplitTargetRejected,
+                WorkspaceDiagnostics.Messages.SplitTargetRejected);
         }
 
         // 基准相同说明尺寸意图未变，返回 NoChange 避免产生无意义修订。

@@ -60,8 +60,8 @@ public sealed class WorkspaceSnapshot
         Id = id;
         Revision = revision;
         RootNodeId = rootNodeId;
-        // 规范化工具组可见性，使每个已提交的快照都满足 REQ-F-154
-        // （空的 Persistent 工具组折叠，非空的工具组展开）。
+        // 规范化工具组可见性，使每个已提交的快照都满足 REQ-F-154：
+        // 空的 Persistent 工具组折叠；非空组保持调用方给定的可见性。
         // 参见 GroupVisibilityInvariant。
         Nodes = GroupVisibilityInvariant.Normalize(Copy(nodes, nameof(nodes)));
         Items = Copy(items, nameof(items));

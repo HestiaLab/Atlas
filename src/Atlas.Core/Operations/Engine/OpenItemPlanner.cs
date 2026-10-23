@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Placement;
@@ -29,8 +30,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-OPEN-TARGET-MISSING",
-                "Atlas.Open.TargetNotFound");
+                WorkspaceDiagnostics.Ids.OpenTargetMissing,
+                WorkspaceDiagnostics.Messages.OpenTargetNotFound);
         }
 
         if (targetNode is not GroupNode target || target.Kind != operation.Item.Kind)
@@ -38,8 +39,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-OPEN-TARGET-REJECTED",
-                "Atlas.Open.TargetRejected");
+                WorkspaceDiagnostics.Ids.OpenTargetRejected,
+                WorkspaceDiagnostics.Messages.OpenTargetRejected);
         }
 
         if (snapshot.Items.ContainsKey(operation.Item.Id))
@@ -49,15 +50,17 @@ internal static class OpenItemPlanner
                     ? WorkspaceErrorCode.DuplicateTabId
                     : WorkspaceErrorCode.InvalidLayoutData,
                 operation,
-                "ATLAS-OPEN-ID-DUPLICATE",
-                "Atlas.Open.DuplicateItemId");
+                WorkspaceDiagnostics.Ids.OpenIdDuplicate,
+                WorkspaceDiagnostics.Messages.OpenDuplicateItemId);
         }
 
         var duplicate = snapshot.Items.Values
-            .FirstOrDefault(
+            .Where(
                 item => contentIdentityPolicy.AreEquivalent(
                     item.Content,
-                    operation.Item.Content));
+                    operation.Item.Content))
+            .OrderBy(item => item.Id.Value, StringComparer.Ordinal)
+            .FirstOrDefault();
         if (duplicate is not null)
         {
             return operation.DeduplicationMode switch
@@ -71,8 +74,8 @@ internal static class OpenItemPlanner
                         new WorkspaceError(
                             WorkspaceErrorCode.DuplicateContentIdentity,
                             operation.Kind,
-                            "ATLAS-OPEN-CONTENT-DUPLICATE",
-                            "Atlas.Open.DuplicateContentIdentity",
+                            WorkspaceDiagnostics.Ids.OpenContentDuplicate,
+                            WorkspaceDiagnostics.Messages.OpenDuplicateContentIdentity,
                             itemId: duplicate.Id)),
                 ContentDeduplicationMode.AllowMultiple =>
                     InsertNew(snapshot, operation, target),
@@ -98,8 +101,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-OPEN-INDEX-REJECTED",
-                "Atlas.Open.TargetRejected");
+                WorkspaceDiagnostics.Ids.OpenIndexRejected,
+                WorkspaceDiagnostics.Messages.OpenTargetRejected);
         }
 
         var itemIds = target.ItemIds.ToList();
@@ -109,8 +112,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-OPEN-PINNED-PREFIX",
-                "Atlas.Open.TargetRejected");
+                WorkspaceDiagnostics.Ids.OpenPinnedPrefix,
+                WorkspaceDiagnostics.Messages.OpenTargetRejected);
         }
 
         var mutation = WorkspaceMutation.From(snapshot);
@@ -140,8 +143,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-OPEN-DUPLICATE-PLACEMENT",
-                "Atlas.Open.TargetRejected");
+                WorkspaceDiagnostics.Ids.OpenDuplicatePlacement,
+                WorkspaceDiagnostics.Messages.OpenTargetRejected);
         }
 
         var replacementGroup = BuildReplacementGroup(group, existing.Id);
@@ -158,8 +161,8 @@ internal static class OpenItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-OPEN-PINNED-PREFIX",
-                "Atlas.Open.TargetRejected");
+                WorkspaceDiagnostics.Ids.OpenPinnedPrefix,
+                WorkspaceDiagnostics.Messages.OpenTargetRejected);
         }
 
         // 选中项、可见性、MRU 与项内容均未变化时返回 NoChange，

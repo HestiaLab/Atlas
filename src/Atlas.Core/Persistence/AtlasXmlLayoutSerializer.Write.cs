@@ -1,15 +1,8 @@
 using System.Globalization;
-using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Schema;
-using Atlas.Core.Items;
 using Atlas.Core.Layout;
-using Atlas.Core.Operations;
-using Atlas.Core.Placement;
-using Atlas.Core.Results;
-using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
 
@@ -153,23 +146,13 @@ public sealed partial class AtlasXmlLayoutSerializer
                                     entry.DockBack.FallbackEdge))))));
     }
 
-    private static XmlSchemaSet CreateSchemas()
+    private sealed class Utf8StringWriter : StringWriter
     {
-        var assembly = typeof(AtlasXmlLayoutSerializer).Assembly;
-        using var stream = assembly.GetManifestResourceStream(
-            "Atlas.Core.Persistence.Schema.atlas-workspace-v2.xsd")
-            ?? throw new InvalidOperationException("The embedded V2 persistence schema is missing.");
-        var schemas = new XmlSchemaSet
+        internal Utf8StringWriter(IFormatProvider formatProvider)
+            : base(formatProvider)
         {
-            XmlResolver = null,
-        };
-        schemas.Add(NamespaceValue, XmlReader.Create(stream, new XmlReaderSettings
-        {
-            DtdProcessing = DtdProcessing.Prohibit,
-            XmlResolver = null,
-        }));
-        schemas.Compile();
-        return schemas;
-    }
+        }
 
+        public override Encoding Encoding => Encoding.UTF8;
+    }
 }

@@ -1,12 +1,8 @@
-using System.Globalization;
-using System.Reflection;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.Schema;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
-using Atlas.Core.Operations;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -37,7 +33,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             Required(root, "workspaceId"),
             targetWorkspaceId.Value))
         {
-            return Invalid("ATLAS-PERSIST-WORKSPACE");
+            return Invalid(WorkspaceDiagnostics.Ids.PersistWorkspace);
         }
 
         if (!TryGetLegacySections(
@@ -70,7 +66,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             strips);
         if (WorkspaceInvariantValidator.Validate(snapshot).Count != 0)
         {
-            return Invalid("ATLAS-V1-INVARIANT");
+            return Invalid(WorkspaceDiagnostics.Ids.V1Invariant);
         }
 
         return WorkspaceResult<LayoutRestoreDocument>.Success(
@@ -96,7 +92,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         {
             panelElements = Array.Empty<XElement>();
             editorElements = Array.Empty<XElement>();
-            failure = Invalid("ATLAS-V1-SHAPE");
+            failure = Invalid(WorkspaceDiagnostics.Ids.V1Shape);
             return false;
         }
 
@@ -108,7 +104,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             || editorElements.Any(element => element.Name != "EditorView")
             || panelElements.Length + editorElements.Length > limits.MaxItemCount)
         {
-            failure = Invalid("ATLAS-V1-SHAPE");
+            failure = Invalid(WorkspaceDiagnostics.Ids.V1Shape);
             return false;
         }
 
@@ -309,12 +305,12 @@ public sealed partial class AtlasXmlLayoutSerializer
         // size 属于窄契约的接受字段，但当前迁移没有可表达的单面板尺寸模型，因此明确告警为未应用。
         var warnings = new List<string>
         {
-            "ATLAS-V1-NARROW-CONTRACT",
-            "ATLAS-V1-TOPOLOGY-FALLBACK",
+            WorkspaceDiagnostics.Ids.V1NarrowContract,
+            WorkspaceDiagnostics.Ids.V1TopologyFallback,
         };
         if (panelElements.Any(element => element.Attribute("size") is not null))
         {
-            warnings.Add("ATLAS-V1-SIZE-IGNORED");
+            warnings.Add(WorkspaceDiagnostics.Ids.V1SizeIgnored);
         }
 
         return warnings;
@@ -402,6 +398,25 @@ public sealed partial class AtlasXmlLayoutSerializer
 
         return root;
     }
+
+    private interface ILegacyItem
+    {
+        DockItemId Id { get; }
+
+        bool Active { get; }
+    }
+
+    private sealed record LegacyPanel(
+        DockItemId Id,
+        LogicalRegion Region,
+        bool Active,
+        bool AutoHidden,
+        double? Size) : ILegacyItem;
+
+    private sealed record LegacyEditor(
+        DockItemId Id,
+        bool Active,
+        bool Pinned) : ILegacyItem;
 
     private static DockItemId? ChooseActive<T>(IReadOnlyList<T> values)
         where T : ILegacyItem

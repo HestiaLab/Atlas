@@ -41,4 +41,17 @@ public static class DockItemCapabilityPresets
     ///     占位项：未解析内容使用的保守能力，不暴露任何操作。
     /// </summary>
     public static DockItemCapabilities Placeholder => DockItemCapabilities.None;
+
+    /// <summary>
+    ///     所有已知能力的并集；DockItem 构造时据此拒绝未知能力位。
+    /// </summary>
+    internal static DockItemCapabilities KnownCapabilities => Tool | Document;
+
+    /// <summary>
+    ///     返回指定项种类允许的能力子集。
+    /// </summary>
+    internal static DockItemCapabilities AllowedFor(DockItemKind kind)
+    {
+        return kind == DockItemKind.Tool ? Tool : Document;
+    }
 }

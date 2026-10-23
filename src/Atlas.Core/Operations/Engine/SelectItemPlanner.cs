@@ -44,8 +44,8 @@ internal static class SelectItemPlanner
                 new WorkspaceError(
                     WorkspaceErrorCode.TargetRejectedByPolicy,
                     operation.Kind,
-                    "ATLAS-SELECT-NO-GROUP",
-                    "Atlas.Select.NoGroup",
+                    WorkspaceDiagnostics.Ids.SelectNoGroup,
+                    WorkspaceDiagnostics.Messages.SelectNoGroup,
                     itemId: operation.ItemId));
         }
 

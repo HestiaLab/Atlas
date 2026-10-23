@@ -39,8 +39,8 @@ internal static class ReorderItemPlanner
             return Failure(
                 WorkspaceErrorCode.CapabilityRejected,
                 operation,
-                "ATLAS-REORDER-CAPABILITY",
-                "Atlas.Reorder.CapabilityRejected");
+                WorkspaceDiagnostics.Ids.ReorderCapability,
+                WorkspaceDiagnostics.Messages.ReorderCapabilityRejected);
         }
 
         if (!snapshot.Nodes.TryGetValue(operation.GroupId, out var groupNode))
@@ -48,8 +48,8 @@ internal static class ReorderItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-REORDER-GROUP-MISSING",
-                "Atlas.Reorder.GroupNotFound");
+                WorkspaceDiagnostics.Ids.ReorderGroupMissing,
+                WorkspaceDiagnostics.Messages.ReorderGroupNotFound);
         }
 
         if (groupNode is not GroupNode group || !group.ItemIds.Contains(item.Id))
@@ -57,8 +57,8 @@ internal static class ReorderItemPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-REORDER-GROUP-REJECTED",
-                "Atlas.Reorder.TargetRejected");
+                WorkspaceDiagnostics.Ids.ReorderGroupRejected,
+                WorkspaceDiagnostics.Messages.ReorderTargetRejected);
         }
 
         if (operation.TargetIndex >= group.ItemIds.Count)
@@ -111,8 +111,8 @@ internal static class ReorderItemPlanner
             new WorkspaceError(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation.Kind,
-                "ATLAS-REORDER-TARGET",
-                "Atlas.Reorder.TargetRejected",
+                WorkspaceDiagnostics.Ids.ReorderTarget,
+                WorkspaceDiagnostics.Messages.ReorderTargetRejected,
                 groupId,
                 operation.ItemId));
     }

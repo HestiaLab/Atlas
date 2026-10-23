@@ -10,6 +10,13 @@ namespace Atlas.Core.Events;
 /// </summary>
 internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
 {
+    private readonly Action<Exception>? subscriberFaultSink;
+
+    internal AtlasWorkspaceDomainEvents(Action<Exception>? subscriberFaultSink = null)
+    {
+        this.subscriberFaultSink = subscriberFaultSink;
+    }
+
     public event EventHandler<ItemOpenedEventArgs>? ItemOpened;
 
     public event EventHandler<ItemClosedEventArgs>? ItemClosed;
@@ -249,7 +256,7 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
         return -1;
     }
 
-    private static void InvokeSafely<TEventArgs>(
+    private void InvokeSafely<TEventArgs>(
         EventHandler<TEventArgs>? handlers,
         object sender,
         TEventArgs args)
@@ -271,6 +278,14 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
                 Trace.TraceError(
                     "Atlas domain event subscriber failed: {0}",
                     exception);
+                try
+                {
+                    subscriberFaultSink?.Invoke(exception);
+                }
+                catch
+                {
+                    // 诊断回调不能影响派发。
+                }
             }
         }
     }

@@ -119,8 +119,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                 new WorkspaceError(
                     WorkspaceErrorCode.CapabilityRejected,
                     operation.Kind,
-                    "ATLAS-CLOSE-CAPABILITY",
-                    "Atlas.Close.CapabilityRejected",
+                    WorkspaceDiagnostics.Ids.CloseCapability,
+                    WorkspaceDiagnostics.Messages.CloseCapabilityRejected,
                     itemId: item.Id));
         }
 
@@ -165,8 +165,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                     new WorkspaceError(
                         WorkspaceErrorCode.WorkspaceFaulted,
                         operation.Kind,
-                        "ATLAS-CLOSE-GUARD-FAULT",
-                        "Atlas.Close.GuardFaulted",
+                        WorkspaceDiagnostics.Ids.CloseGuardFault,
+                        WorkspaceDiagnostics.Messages.CloseGuardFaulted,
                         itemId: item.Id));
             }
 
@@ -176,8 +176,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                     new WorkspaceError(
                         WorkspaceErrorCode.CloseCancelledByGuard,
                         operation.Kind,
-                        "ATLAS-CLOSE-GUARD",
-                        "Atlas.Close.CancelledByGuard",
+                        WorkspaceDiagnostics.Ids.CloseGuard,
+                        WorkspaceDiagnostics.Messages.CloseCancelledByGuard,
                         itemId: item.Id));
             }
         }

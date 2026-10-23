@@ -4,13 +4,14 @@ using Atlas.Core.Operations;
 namespace Atlas.Core;
 
 /// <summary>
-///     定义不可变的创建时工作区服务与历史行为。
+///     Defines immutable workspace creation-time services and history behavior.
 /// </summary>
 public sealed class AtlasWorkspaceOptions
 {
     /// <summary>
-    ///     构造不可变选项；历史缺省为默认历史选项，
-    ///     内容标识策略与关闭守卫解析器可选注入。
+    ///     Creates immutable options; history defaults to the default history
+    ///     options, and the content identity policy and close guard resolver are
+    ///     optional injections.
     /// </summary>
     public AtlasWorkspaceOptions(
         WorkspaceHistoryOptions? history = null,
@@ -23,17 +24,23 @@ public sealed class AtlasWorkspaceOptions
     }
 
     /// <summary>
-    ///     获取有界的历史行为。
+    ///     Gets the bounded history behavior.
     /// </summary>
     public WorkspaceHistoryOptions History { get; }
 
     /// <summary>
-    ///     获取可选的自定义内容标识策略。
+    ///     Gets the optional custom content identity policy.
     /// </summary>
     public IContentIdentityPolicy? ContentIdentityPolicy { get; }
 
     /// <summary>
-    ///     获取可选的项关闭守卫解析器。
+    ///     Gets the optional item close guard resolver.
     /// </summary>
     public IDockItemCloseGuardResolver? CloseGuardResolver { get; }
+
+    /// <summary>
+    ///     Gets or initializes the optional callback invoked when a Changed/domain-event
+    ///     subscriber throws; callback failures are isolated from event dispatch.
+    /// </summary>
+    public Action<Exception>? SubscriberFaultSink { get; init; }
 }

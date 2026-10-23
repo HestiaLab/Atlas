@@ -239,6 +239,70 @@ public sealed class DomainEventTests
         Assert.Equal(countAtDispose, Volatile.Read(ref callbacks));
     }
 
+    [Fact]
+    public async Task Subscriber_fault_sink_receives_changed_and_typed_failures()
+    {
+        var faults = new List<Exception>();
+        var options = new AtlasWorkspaceOptions
+        {
+            SubscriberFaultSink = faults.Add,
+        };
+        await using var workspace = (AtlasWorkspace)new AtlasWorkspaceFactory()
+            .Create(Definition(), options).Value!;
+        workspace.Changed += (_, _) =>
+            throw new InvalidOperationException("changed");
+        workspace.DomainEvents.ItemOpened += (_, _) =>
+            throw new InvalidOperationException("opened");
+
+        var result = await workspace.ExecuteAsync(
+            new OpenItemOperation(
+                Document("document-1"),
+                new LayoutNodeId("documents"),
+                ContentDeduplicationMode.AllowMultiple));
+
+        Assert.True(result.Succeeded);
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+        while (faults.Count < 2 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.Contains(faults, exception => exception.Message == "changed");
+        Assert.Contains(faults, exception => exception.Message == "opened");
+    }
+
+    [Fact]
+    public async Task Subscriber_fault_sink_exceptions_do_not_break_dispatch()
+    {
+        var changed = 0;
+        var opened = 0;
+        var options = new AtlasWorkspaceOptions
+        {
+            SubscriberFaultSink = _ => throw new InvalidOperationException("sink"),
+        };
+        await using var workspace = (AtlasWorkspace)new AtlasWorkspaceFactory()
+            .Create(Definition(), options).Value!;
+        workspace.Changed += (_, _) => Interlocked.Increment(ref changed);
+        workspace.DomainEvents.ItemOpened += (_, _) => Interlocked.Increment(ref opened);
+
+        var result = await workspace.ExecuteAsync(
+            new OpenItemOperation(
+                Document("document-1"),
+                new LayoutNodeId("documents"),
+                ContentDeduplicationMode.AllowMultiple));
+
+        Assert.True(result.Succeeded);
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+        while ((Volatile.Read(ref changed) < 1 || Volatile.Read(ref opened) < 1)
+               && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.Equal(1, Volatile.Read(ref changed));
+        Assert.Equal(1, Volatile.Read(ref opened));
+    }
+
     private static AtlasWorkspace CreateWorkspace()
     {
         return (AtlasWorkspace)new AtlasWorkspaceFactory().Create(Definition()).Value!;

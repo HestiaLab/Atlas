@@ -1,14 +1,9 @@
-using System.Globalization;
-using System.Reflection;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
-using Atlas.Core.Operations;
 using Atlas.Core.Placement;
-using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
 namespace Atlas.Core.Persistence;
@@ -30,6 +25,25 @@ public sealed partial class AtlasXmlLayoutSerializer
         using var textReader = new StringReader(xml);
         using var reader = XmlReader.Create(textReader, settings);
         return XDocument.Load(reader, LoadOptions.None);
+    }
+
+    private static XmlSchemaSet CreateSchemas()
+    {
+        var assembly = typeof(AtlasXmlLayoutSerializer).Assembly;
+        using var stream = assembly.GetManifestResourceStream(
+            "Atlas.Core.Persistence.Schema.atlas-workspace-v2.xsd")
+            ?? throw new InvalidOperationException("The embedded V2 persistence schema is missing.");
+        var schemas = new XmlSchemaSet
+        {
+            XmlResolver = null,
+        };
+        schemas.Add(NamespaceValue, XmlReader.Create(stream, new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null,
+        }));
+        schemas.Compile();
+        return schemas;
     }
 
     private static void ValidateSchema(XDocument document)
@@ -96,7 +110,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         LayoutPersistenceLimits limits)
     {
         // 按节还原快照：项、布局、工具栏与自动隐藏彼此独立；
-        // Layout 根元素允许缺失，以支持保存空工作区（无根布局）。
+        // Layout 元素始终存在，但允许没有根节点（空工作区）。
         var items = root.Element(Namespace + "Items")!
             .Elements(Namespace + "Item")
             .Select(ReadItem)

@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Layout;
 using Atlas.Core.Results;
 
@@ -30,8 +31,8 @@ internal static class EqualizeSplitPlanner
             return Failure(
                 WorkspaceErrorCode.TargetNotFound,
                 operation,
-                "ATLAS-SPLIT-MISSING",
-                "Atlas.Split.NotFound");
+                WorkspaceDiagnostics.Ids.SplitMissing,
+                WorkspaceDiagnostics.Messages.SplitNotFound);
         }
 
         if (node is not SplitNode split)
@@ -39,8 +40,8 @@ internal static class EqualizeSplitPlanner
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
                 operation,
-                "ATLAS-SPLIT-TARGET-REJECTED",
-                "Atlas.Split.TargetRejected");
+                WorkspaceDiagnostics.Ids.SplitTargetRejected,
+                WorkspaceDiagnostics.Messages.SplitTargetRejected);
         }
 
         if (split.Basis == EqualBasis)

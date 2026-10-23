@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Changes;
 using Atlas.Core.Events;
 using Atlas.Core.Results;
@@ -24,10 +25,10 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
     private readonly IWorkspaceOperationPlanner planner;
 
     // 变更派发器：提交后在锁外异步派发 Changed 事件与域事件。
-    private readonly WorkspaceEventDispatcher eventDispatcher = new();
+    private readonly WorkspaceEventDispatcher eventDispatcher;
 
     // 域事件聚合器：随提交发布强类型域事件，与 Changed 共用派发队列。
-    private readonly AtlasWorkspaceDomainEvents domainEvents = new();
+    private readonly AtlasWorkspaceDomainEvents domainEvents;
 
     // 撤销历史容量上限；超限时 AppendBounded 丢弃最旧补丁。
     private readonly int maxHistoryEntries;
@@ -65,11 +66,14 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
     internal AtlasWorkspace(
         WorkspaceSnapshot initialSnapshot,
         IWorkspaceOperationPlanner planner,
-        int maxHistoryEntries = DefaultMaxHistoryEntries)
+        int maxHistoryEntries = DefaultMaxHistoryEntries,
+        Action<Exception>? subscriberFaultSink = null)
         : this(
             initialSnapshot,
             planner,
-            new WorkspaceHistoryOptions(maxEntries: maxHistoryEntries))
+            new WorkspaceHistoryOptions(maxEntries: maxHistoryEntries),
+            utcNow: null,
+            subscriberFaultSink)
     {
     }
 
@@ -77,11 +81,14 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         WorkspaceSnapshot initialSnapshot,
         IWorkspaceOperationPlanner planner,
         WorkspaceHistoryOptions history,
-        Func<DateTimeOffset>? utcNow = null)
+        Func<DateTimeOffset>? utcNow = null,
+        Action<Exception>? subscriberFaultSink = null)
     {
         ArgumentNullException.ThrowIfNull(initialSnapshot);
         this.planner = planner ?? throw new ArgumentNullException(nameof(planner));
         ArgumentNullException.ThrowIfNull(history);
+        eventDispatcher = new WorkspaceEventDispatcher(subscriberFaultSink);
+        domainEvents = new AtlasWorkspaceDomainEvents(subscriberFaultSink);
 
         var violations = WorkspaceInvariantValidator.Validate(initialSnapshot);
         if (violations.Count != 0)
@@ -426,8 +433,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             new WorkspaceError(
                 WorkspaceErrorCode.StaleOperation,
                 kind,
-                "ATLAS-OP-STALE",
-                "Atlas.Operation.Stale"));
+                WorkspaceDiagnostics.Ids.OpStale,
+                WorkspaceDiagnostics.Messages.OperationStale));
     }
 
     private static void EnsureValid(WorkspaceSnapshot candidate)

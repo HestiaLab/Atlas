@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Changes;
 using Atlas.Core.Operations;
 using Atlas.Core.Results;
@@ -30,8 +31,8 @@ internal static class RestoreWorkspacePlanner
                 new WorkspaceError(
                     WorkspaceErrorCode.InvalidLayoutData,
                     operation.Kind,
-                    "ATLAS-RESTORE-WORKSPACE",
-                    "Atlas.Restore.WorkspaceMismatch"));
+                    WorkspaceDiagnostics.Ids.RestoreWorkspace,
+                    WorkspaceDiagnostics.Messages.RestoreWorkspaceMismatch));
         }
 
         return WorkspacePlan.Commit(

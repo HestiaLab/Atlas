@@ -1,87 +1,87 @@
 namespace Atlas.Core.Results;
 
 /// <summary>
-///     标识稳定的预期工作区失败。
+///     Identifies a stable expected workspace failure.
 /// </summary>
 public enum WorkspaceErrorCode
 {
     /// <summary>
-    ///     存储的布局使用不受支持的架构版本。
+    ///     The stored layout uses an unsupported schema version.
     /// </summary>
     LayoutVersionIncompatible = 1,
 
     /// <summary>
-    ///     请求的内容标识已注册。
+    ///     The requested content identifier is already registered.
     /// </summary>
     ContentAlreadyRegistered = 2,
 
     /// <summary>
-    ///     提供的布局数据结构无效。
+    ///     The supplied layout data is invalid.
     /// </summary>
     InvalidLayoutData = 3,
 
     /// <summary>
-    ///     提供的状态包含重复的标签页标识。
+    ///     The supplied state contains duplicate tab identifiers.
     /// </summary>
     DuplicateTabId = 4,
 
     /// <summary>
-    ///     请求的停靠项不存在。
+    ///     The requested dock item does not exist.
     /// </summary>
     ItemNotFound = 5,
 
     /// <summary>
-    ///     操作针对过时的工作区修订。
+    ///     The operation targets a stale workspace revision.
     /// </summary>
     StaleOperation = 6,
 
     /// <summary>
-    ///     请求的内容标识未注册。
+    ///     The requested content identifier is not registered.
     /// </summary>
     ContentNotRegistered = 7,
 
     /// <summary>
-    ///     目标被放置策略禁止。
+    ///     The target is rejected by the placement policy.
     /// </summary>
     TargetRejectedByPolicy = 8,
 
     /// <summary>
-    ///     项能力集禁止该操作。
+    ///     The item capability set forbids the operation.
     /// </summary>
     CapabilityRejected = 9,
 
     /// <summary>
-    ///     异步关闭守卫取消了该操作。
+    ///     The asynchronous close guard cancelled the operation.
     /// </summary>
     CloseCancelledByGuard = 10,
 
     /// <summary>
-    ///     配置的持久化提供程序不可用。
+    ///     The configured persistence provider is unavailable.
     /// </summary>
     PersistenceUnavailable = 11,
 
     /// <summary>
-    ///     工作区已故障，无法继续。
+    ///     The workspace is faulted and cannot continue.
     /// </summary>
     WorkspaceFaulted = 12,
 
     /// <summary>
-    ///     交互请求违反冻结的协议。
+    ///     The interaction request violated the frozen protocol.
     /// </summary>
     InteractionProtocolInvalid = 13,
 
     /// <summary>
-    ///     引用的拖拽会话不再活动。
+    ///     The referenced drag session is no longer active.
     /// </summary>
     DragSessionExpired = 14,
 
     /// <summary>
-    ///     请求的布局目标不存在。
+    ///     The requested layout target does not exist.
     /// </summary>
     TargetNotFound = 15,
 
     /// <summary>
-    ///     请求的内容标识与现有工作区项重复。
+    ///     The requested content identity duplicates an existing workspace item.
     /// </summary>
     DuplicateContentIdentity = 16,
 }
