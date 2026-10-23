@@ -7,6 +7,13 @@ import {
   isSupportedProtocolVersion
 } from "../ClientScripts/protocol";
 import { AtlasInteractionController, documentTargetKind } from "../ClientScripts/controller";
+import {
+  basisFor,
+  clamp,
+  readLimits,
+  readRatio
+} from "../ClientScripts/split-geometry";
+import { SplitResizeSession } from "../ClientScripts/split-resize-session";
 import type {
   AtlasInteractionMessage,
   AtlasDotNetReceiver
@@ -32,6 +39,80 @@ test("public api exposes every C#-invokable controller entry point", () => {
   assert.equal(typeof updateAtlasController, "function");
   assert.equal(typeof disposeAtlasController, "function");
   assert.equal(typeof clearAtlasSplitPreview, "function");
+});
+
+test("split geometry reads proportional and fixed-pixel ratios and limits", () => {
+  const split = new FakeElement();
+  split.dataset.atlasSplitAxis = "InlineChildren";
+  split.rect = { left: 0, top: 0, width: 400, height: 100 };
+  split.dataset.atlasSplitRatio = "0.25";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.25);
+
+  split.dataset.atlasSplitBasisKind = "FixedPixels";
+  split.dataset.atlasSplitBasisValue = "100";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.25);
+  split.dataset.atlasSplitAnchor = "Second";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.75);
+
+  split.dataset.atlasFirstMinimum = "120";
+  split.dataset.atlasSecondMinimum = "80";
+  const limits = readLimits(split as unknown as HTMLElement, 400);
+  assert.equal(limits.minimum, 0.3);
+  assert.equal(limits.maximum, 0.8);
+  assert.equal(clamp(1.5, 0, 1), 1);
+  assert.deepEqual(
+    basisFor(split as unknown as HTMLElement),
+    { basisKind: "fixed-pixels", anchor: "Second" });
+});
+
+test("split resize session commits once and cancel only clears", () => {
+  const splitter = new FakeElement();
+  const split = new FakeElement();
+  splitter.parentElement = split;
+  splitter.dataset.atlasSplitId = "root";
+  split.dataset.atlasNodeId = "root";
+  split.dataset.atlasSplitAxis = "InlineChildren";
+  split.dataset.atlasSplitRatio = "0.5";
+  split.rect = { left: 0, top: 0, width: 400, height: 100 };
+
+  const previews: number[] = [];
+  const commits: number[] = [];
+  let clears = 0;
+  const session = new SplitResizeSession({
+    preview: (_split, ratio) => previews.push(ratio),
+    clearPreview: () => clears++,
+    commit: (_split, ratio) => commits.push(ratio)
+  });
+
+  const begin = interactionEvent(
+    "pointerdown",
+    { pointerId: 5, clientX: 10, clientY: 0, preventDefault: () => undefined });
+  assert.equal(
+    session.begin(
+      splitter as unknown as HTMLElement,
+      split as unknown as HTMLElement,
+      begin as unknown as PointerEvent),
+    true);
+  session.move(interactionEvent(
+    "pointermove",
+    { pointerId: 5, clientX: 110, clientY: 0 }) as unknown as PointerEvent);
+  assert.deepEqual(previews, [0.75]);
+  session.finish(interactionEvent(
+    "pointerup",
+    { pointerId: 5, clientX: 110, clientY: 0 }) as unknown as PointerEvent);
+  assert.deepEqual(commits, [0.75]);
+  assert.equal(clears, 0);
+
+  session.begin(
+    splitter as unknown as HTMLElement,
+    split as unknown as HTMLElement,
+    begin as unknown as PointerEvent);
+  session.move(interactionEvent(
+    "pointermove",
+    { pointerId: 5, clientX: 60, clientY: 0 }) as unknown as PointerEvent);
+  session.cancel();
+  assert.equal(clears, 1);
+  assert.deepEqual(commits, [0.75]);
 });
 
 test("protocol version is explicit and rejects unknown versions", () => {

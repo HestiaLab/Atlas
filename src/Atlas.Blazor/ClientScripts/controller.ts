@@ -12,6 +12,15 @@ import {
 } from "./protocol";
 import domMetadata from "./dom-metadata-manifest.json";
 import { AtlasSandboxController } from "./sandbox";
+import {
+  basisFor,
+  clamp,
+  extentFor,
+  readLimits,
+  readRatio,
+  readRevision
+} from "./split-geometry";
+import { SplitResizeSession } from "./split-resize-session";
 
 const controllers = new Map<string, AtlasInteractionController>();
 // Monotonic drag-session counter shared across controller instances. Blazor
@@ -30,21 +39,6 @@ const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("ArrowUp", "focus-block-start", false, false, true),
   binding("ArrowDown", "focus-block-end", false, false, true)
 ];
-
-interface ActiveResize {
-  readonly splitter: HTMLElement;
-  readonly split: HTMLElement;
-  readonly pointerId: number;
-  readonly startCoordinate: number;
-  readonly startRatio: number;
-  readonly extent: number;
-  readonly minimumRatio: number;
-  readonly maximumRatio: number;
-  readonly baseRevision: number;
-  readonly basisKind: "proportional" | "fixed-pixels";
-  readonly anchor: string | undefined;
-  currentRatio: number;
-}
 
 interface DropTarget {
   readonly element: HTMLElement;
@@ -81,7 +75,7 @@ export class AtlasInteractionController {
   private readonly ownerWindow: Window | null | undefined;
   private readonly reducedMotionQuery: MediaQueryList | undefined;
   private readonly sandboxController: AtlasSandboxController;
-  private activeResize: ActiveResize | undefined;
+  private readonly resizeSession: SplitResizeSession;
   private activeDrag: ActiveDrag | undefined;
   private dragSequence = 0;
   private dragPreviewFrame: number | undefined;
@@ -113,6 +107,12 @@ export class AtlasInteractionController {
     this.reducedMotionQuery = this.ownerWindow?.matchMedia(
       "(prefers-reduced-motion: reduce)");
     this.sandboxController = new AtlasSandboxController(root, identity);
+    this.resizeSession = new SplitResizeSession({
+      preview: (split, ratio) => this.preview(split, ratio),
+      clearPreview: split => this.clearPreview(split),
+      commit: (split, ratio, mode, baseRevision, basis) =>
+        this.commitResize(split, ratio, mode, baseRevision, basis)
+    });
     this.root.addEventListener("pointerdown", this.onPointerDown);
     this.root.addEventListener("pointermove", this.onPointerMove);
     this.root.addEventListener("pointerup", this.onPointerUp);
@@ -145,7 +145,7 @@ export class AtlasInteractionController {
     validateOptions(options);
     if (identity.generation !== this.identity.generation) {
       this.cancelDrag();
-      this.cancelResize();
+      this.resizeSession.cancel();
       this.clearKeyboardCommit();
     }
     this.identity = identity;
@@ -164,7 +164,7 @@ export class AtlasInteractionController {
     }
 
     this.disposed = true;
-    this.cancelResize();
+    this.resizeSession.cancel();
     this.cancelDrag();
     this.clearKeyboardCommit();
     this.sandboxController.dispose();
@@ -208,7 +208,7 @@ export class AtlasInteractionController {
       const sourceKind = dragSource.dataset.atlasDragKind as AtlasDragSourceKind;
       if (itemId && isDragSourceKind(sourceKind)) {
         const sourceGroupId = this.groupIdFrom(dragSource);
-        this.cancelResize();
+        this.resizeSession.cancel();
         globalDragSequence += 1;
         this.dragSequence = globalDragSequence;
         this.activeDrag = {
@@ -241,31 +241,7 @@ export class AtlasInteractionController {
       return;
     }
 
-    const rect = split.getBoundingClientRect();
-    const inline = split.dataset.atlasSplitAxis === "InlineChildren";
-    const extent = inline ? rect.width : rect.height;
-    if (!Number.isFinite(extent) || extent <= 0) {
-      return;
-    }
-
-    const startRatio = this.readRatio(split);
-    const limits = this.readLimits(split, extent);
-    this.activeResize = {
-      splitter,
-      split,
-      pointerId: event.pointerId,
-      startCoordinate: inline ? event.clientX : event.clientY,
-      startRatio,
-      extent,
-      minimumRatio: limits.minimum,
-      maximumRatio: limits.maximum,
-      baseRevision: this.readRevision(split),
-      ...this.basisFor(split),
-      currentRatio: startRatio
-    };
-    splitter.setPointerCapture?.(event.pointerId);
-    split.dataset.atlasResizing = "true";
-    event.preventDefault();
+    this.resizeSession.begin(splitter, split, event);
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
@@ -293,18 +269,7 @@ export class AtlasInteractionController {
       return;
     }
 
-    const active = this.activeResize;
-    if (!active || event.pointerId !== active.pointerId) {
-      return;
-    }
-
-    const inline = active.split.dataset.atlasSplitAxis === "InlineChildren";
-    const coordinate = inline ? event.clientX : event.clientY;
-    active.currentRatio = clamp(
-      active.startRatio + ((coordinate - active.startCoordinate) / active.extent),
-      active.minimumRatio,
-      active.maximumRatio);
-    this.preview(active.split, active.currentRatio);
+    this.resizeSession.move(event);
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
@@ -353,37 +318,15 @@ export class AtlasInteractionController {
       return;
     }
 
-    const active = this.activeResize;
-    if (!active || event.pointerId !== active.pointerId) {
-      return;
-    }
-
-    this.activeResize = undefined;
-    active.split.removeAttribute("data-atlas-resizing");
-    active.splitter.releasePointerCapture?.(event.pointerId);
-    if (active.currentRatio !== active.startRatio) {
-      // Keep the preview (the drag position) in place while the commit
-      // round-trips to Blazor. Clearing it synchronously here would let the
-      // split fall back to the previous ratio until Blazor re-renders with
-      // the committed ratio — the visible bounce on release. Blazor confirms
-      // the clear via clearAtlasSplitPreview once the commit result is known.
-      this.commitResize(
-        active.split,
-        active.currentRatio,
-        "resize",
-        active.baseRevision,
-        { basisKind: active.basisKind, anchor: active.anchor });
-    } else {
-      this.clearPreview(active.split);
-    }
+    this.resizeSession.finish(event);
   };
 
   private readonly onPointerCancel = (event: PointerEvent): void => {
     if (this.activeDrag?.pointerId === event.pointerId) {
       this.cancelDrag();
     }
-    if (this.activeResize?.pointerId === event.pointerId) {
-      this.cancelResize();
+    if (this.resizeSession.matchesPointer(event.pointerId)) {
+      this.resizeSession.cancel();
     }
   };
 
@@ -398,8 +341,8 @@ export class AtlasInteractionController {
       return;
     }
 
-    this.cancelResize();
-    const baseRevision = this.readRevision(split);
+    this.resizeSession.cancel();
+    const baseRevision = readRevision(split);
     const rect = split.getBoundingClientRect();
     const inline = split.dataset.atlasSplitAxis === "InlineChildren";
     const extent = inline ? rect.width : rect.height;
@@ -407,13 +350,13 @@ export class AtlasInteractionController {
       return;
     }
 
-    const limits = this.readLimits(split, extent);
+    const limits = readLimits(split, extent);
     // Equalize to the closest legal split position: the raw 0.5 may exceed
     // the split's pixel constraints (e.g. a dock panel with a maximum
     // width), which would commit a layout outside the valid range.
     const ratio = clamp(0.5, limits.minimum, limits.maximum);
     this.preview(split, ratio);
-    this.commitResize(split, ratio, "equalize", baseRevision, this.basisFor(split));
+    this.commitResize(split, ratio, "equalize", baseRevision, basisFor(split));
   };
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
@@ -423,9 +366,9 @@ export class AtlasInteractionController {
       return;
     }
 
-    if (event.code === "Escape" && this.activeResize) {
+    if (event.code === "Escape" && this.resizeSession.active) {
       event.preventDefault();
-      this.cancelResize();
+      this.resizeSession.cancel();
       return;
     }
 
@@ -442,17 +385,17 @@ export class AtlasInteractionController {
           ? 1
           : (this.keyboardSplit === split && this.keyboardRatio !== undefined
             ? this.keyboardRatio
-            : this.readRatio(split))
+            : readRatio(split))
               + (direction * (this.keyboardStepPixels / extentFor(split)));
       const rect = split.getBoundingClientRect();
       const extent = split.dataset.atlasSplitAxis === "InlineChildren"
         ? rect.width
         : rect.height;
-      const limits = this.readLimits(split, extent);
+      const limits = readLimits(split, extent);
       this.keyboardSplit = split;
       this.keyboardRatio = clamp(requested, limits.minimum, limits.maximum);
       this.preview(split, this.keyboardRatio);
-      this.commitResize(split, this.keyboardRatio, "keyboard", null, this.basisFor(split));
+      this.commitResize(split, this.keyboardRatio, "keyboard", null, basisFor(split));
       this.scheduleKeyboardCommit();
       return;
     }
@@ -489,7 +432,7 @@ export class AtlasInteractionController {
   };
 
   private readonly onEnvironmentInvalidated = (): void => {
-    this.cancelResize();
+    this.resizeSession.cancel();
     this.cancelDrag();
     this.clearKeyboardCommit();
   };
@@ -616,16 +559,6 @@ export class AtlasInteractionController {
     this.keyboardRatio = undefined;
   }
 
-  private cancelResize(): void {
-    const active = this.activeResize;
-    this.activeResize = undefined;
-    if (active) {
-      active.split.removeAttribute("data-atlas-resizing");
-      this.clearPreview(active.split);
-      active.splitter.releasePointerCapture?.(active.pointerId);
-    }
-  }
-
   public clearSplitPreview(splitId: string): void {
     if (this.disposed) {
       return;
@@ -633,7 +566,7 @@ export class AtlasInteractionController {
 
     const split = this.root.querySelector<HTMLElement>(
       `[data-atlas-node-id="${splitId}"]`);
-    if (!split || this.activeResize?.split === split) {
+    if (!split || this.resizeSession.isResizingSplit(split)) {
       // Unknown split, or the split is currently being dragged: do not wipe
       // a live preview.
       return;
@@ -1008,18 +941,6 @@ export class AtlasInteractionController {
     });
   }
 
-  private basisFor(split: HTMLElement): {
-    readonly basisKind: "proportional" | "fixed-pixels";
-    readonly anchor: string | undefined;
-  } {
-    return {
-      basisKind: split.dataset.atlasSplitBasisKind === "FixedPixels"
-        ? "fixed-pixels"
-        : "proportional",
-      anchor: split.dataset.atlasSplitAnchor
-    };
-  }
-
   private send(message: AtlasInteractionMessage): void {
     this.callbackQueue = this.callbackQueue.then(
       () => this.disposed
@@ -1052,63 +973,6 @@ export class AtlasInteractionController {
 
   private isLocked(split: HTMLElement): boolean {
     return split.dataset.atlasSplitLocked === "true";
-  }
-
-  private readRatio(split: HTMLElement): number {
-    if (split.dataset.atlasSplitBasisKind === "FixedPixels") {
-      const extent = extentFor(split);
-      const pixels = Number(split.dataset.atlasSplitBasisValue);
-      if (Number.isFinite(pixels)) {
-        return clamp(
-          split.dataset.atlasSplitAnchor === "Second"
-            ? 1 - (pixels / extent)
-            : pixels / extent,
-          0,
-          1);
-      }
-    }
-
-    const value = Number(split.dataset.atlasSplitRatio);
-    return Number.isFinite(value) ? clamp(value, 0, 1) : 0.5;
-  }
-
-  private readRevision(split: HTMLElement): number {
-    const value = Number(split.dataset.atlasRevision);
-    return Number.isSafeInteger(value) && value >= 0 ? value : 0;
-  }
-
-  private readLimits(split: HTMLElement, extent: number): {
-    minimum: number;
-    maximum: number;
-  } {
-    const firstMinimum = Number(split.dataset.atlasFirstMinimum) || 0;
-    const secondMinimum = Number(split.dataset.atlasSecondMinimum) || 0;
-    const firstMaximum = Number(split.dataset.atlasFirstMaximum);
-    const secondMaximum = Number(split.dataset.atlasSecondMaximum);
-    const minimumTotal = firstMinimum + secondMinimum;
-    if (minimumTotal > extent) {
-      const ratio = minimumTotal === 0 ? 0.5 : firstMinimum / minimumTotal;
-      return { minimum: ratio, maximum: ratio };
-    }
-
-    if (Number.isFinite(firstMaximum)
-      && Number.isFinite(secondMaximum)
-      && firstMaximum + secondMaximum < extent) {
-      const maximumTotal = firstMaximum + secondMaximum;
-      const ratio = maximumTotal === 0 ? 0.5 : firstMaximum / maximumTotal;
-      return { minimum: ratio, maximum: ratio };
-    }
-
-    const minimum = Math.max(
-      firstMinimum / extent,
-      Number.isFinite(secondMaximum) ? 1 - (secondMaximum / extent) : 0);
-    const maximum = Math.min(
-      1 - (secondMinimum / extent),
-      Number.isFinite(firstMaximum) ? firstMaximum / extent : 1);
-    return {
-      minimum: clamp(minimum, 0, 1),
-      maximum: clamp(maximum, 0, 1)
-    };
   }
 
   private isEditable(target: EventTarget | null): boolean {
@@ -1197,18 +1061,6 @@ export function clearAtlasSplitPreview(
   controller: AtlasInteractionController,
   splitId: string): void {
   controller.clearSplitPreview(splitId);
-}
-
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.min(Math.max(value, minimum), maximum);
-}
-
-function extentFor(split: HTMLElement): number {
-  const rect = split.getBoundingClientRect();
-  const extent = split.dataset.atlasSplitAxis === "InlineChildren"
-    ? rect.width
-    : rect.height;
-  return Number.isFinite(extent) && extent > 0 ? extent : 1;
 }
 
 function binding(
