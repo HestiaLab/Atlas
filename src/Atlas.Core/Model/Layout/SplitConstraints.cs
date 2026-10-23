@@ -47,6 +47,16 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     /// </summary>
     public double? SecondMaximum { get; }
 
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default constraint
+    ///     set (zero minimums and no maximums). The default set is a legal value.
+    /// </summary>
+    public bool IsDefault =>
+        FirstMinimum == 0d
+        && FirstMaximum is null
+        && SecondMinimum == 0d
+        && SecondMaximum is null;
+
     /// <inheritdoc />
     public bool Equals(SplitConstraints other)
     {

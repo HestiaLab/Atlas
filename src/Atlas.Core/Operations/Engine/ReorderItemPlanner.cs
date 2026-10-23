@@ -94,8 +94,8 @@ internal static class ReorderItemPlanner
                 reordered,
                 group.SelectedItemId,
                 group.EditorState,
-                group.LogicalRegion));
-        if (group.LogicalRegion is LogicalRegion region)
+                group.ToolbarRegion));
+        if (group.ToolbarRegion is LogicalRegion region)
         {
             mutation.SetOrder(region, reordered);
         }

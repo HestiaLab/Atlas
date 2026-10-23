@@ -8,6 +8,25 @@ export interface SplitBasisDescriptor {
   readonly anchor: string | undefined;
 }
 
+export interface ResolveBasis {
+  readonly kind: "proportional" | "fixed-pixels";
+  readonly value: number;
+  readonly anchor: "First" | "Second" | undefined;
+}
+
+export interface ResolveConstraints {
+  readonly firstMinimum: number;
+  readonly firstMaximum: number | undefined;
+  readonly secondMinimum: number;
+  readonly secondMaximum: number | undefined;
+}
+
+export interface ResolvedSplit {
+  readonly firstExtent: number;
+  readonly secondExtent: number;
+  readonly isClamped: boolean;
+}
+
 export function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value, minimum), maximum);
 }
@@ -43,35 +62,108 @@ export function readRevision(split: HTMLElement): number {
   return Number.isSafeInteger(value) && value >= 0 ? value : 0;
 }
 
-export function readLimits(split: HTMLElement, extent: number): SplitLimits {
-  const firstMinimum = Number(split.dataset.atlasFirstMinimum) || 0;
-  const secondMinimum = Number(split.dataset.atlasSecondMinimum) || 0;
-  const firstMaximum = Number(split.dataset.atlasFirstMaximum);
-  const secondMaximum = Number(split.dataset.atlasSecondMaximum);
-  const minimumTotal = firstMinimum + secondMinimum;
-  if (minimumTotal > extent) {
-    const ratio = minimumTotal === 0 ? 0.5 : firstMinimum / minimumTotal;
+/**
+ * Feasible first-child ratio range derived from both sides' constraints.
+ * Mirrors Atlas.Core `SplitLayoutResolver` semantics so pointer and keyboard
+ * limits stay in lockstep with the committed basis.
+ */
+export function feasibleRange(
+  availableExtent: number,
+  constraints: ResolveConstraints): SplitLimits {
+  const firstMaximum = constraints.firstMaximum ?? Number.POSITIVE_INFINITY;
+  const secondMaximum = constraints.secondMaximum ?? Number.POSITIVE_INFINITY;
+  const minimumTotal = constraints.firstMinimum + constraints.secondMinimum;
+  const maximumTotal = firstMaximum + secondMaximum;
+  if (minimumTotal > availableExtent) {
+    const ratio = minimumTotal === 0
+      ? 0.5
+      : constraints.firstMinimum / minimumTotal;
     return { minimum: ratio, maximum: ratio };
   }
 
-  if (Number.isFinite(firstMaximum)
-    && Number.isFinite(secondMaximum)
-    && firstMaximum + secondMaximum < extent) {
-    const maximumTotal = firstMaximum + secondMaximum;
-    const ratio = maximumTotal === 0 ? 0.5 : firstMaximum / maximumTotal;
+  if (maximumTotal < availableExtent) {
+    const ratio = maximumTotal === 0
+      ? 0.5
+      : firstMaximum / maximumTotal;
     return { minimum: ratio, maximum: ratio };
   }
 
   const minimum = Math.max(
-    firstMinimum / extent,
-    Number.isFinite(secondMaximum) ? 1 - (secondMaximum / extent) : 0);
+    constraints.firstMinimum / availableExtent,
+    Number.isFinite(secondMaximum) ? 1 - (secondMaximum / availableExtent) : 0);
   const maximum = Math.min(
-    1 - (secondMinimum / extent),
-    Number.isFinite(firstMaximum) ? firstMaximum / extent : 1);
+    1 - (constraints.secondMinimum / availableExtent),
+    Number.isFinite(firstMaximum) ? firstMaximum / availableExtent : 1);
   return {
     minimum: clamp(minimum, 0, 1),
     maximum: clamp(maximum, 0, 1)
   };
+}
+
+/**
+ * Pure split resolution in extent space; mirrors Atlas.Core
+ * `SplitLayoutResolver.Resolve` exactly so shared fixtures can lock both
+ * implementations.
+ */
+export function resolveSplit(
+  availableExtent: number,
+  basis: ResolveBasis,
+  constraints: ResolveConstraints): ResolvedSplit {
+  const preferredFirst = basis.kind === "fixed-pixels"
+    ? basis.anchor === "Second"
+      ? availableExtent - basis.value
+      : basis.value
+    : availableExtent * basis.value;
+  const preferredSecond = availableExtent - preferredFirst;
+
+  const firstMaximum = constraints.firstMaximum ?? Number.POSITIVE_INFINITY;
+  const secondMaximum = constraints.secondMaximum ?? Number.POSITIVE_INFINITY;
+  const minimumTotal = constraints.firstMinimum + constraints.secondMinimum;
+  const maximumTotal = firstMaximum + secondMaximum;
+
+  if (minimumTotal > availableExtent) {
+    return {
+      firstExtent: constraints.firstMinimum,
+      secondExtent: constraints.secondMinimum,
+      isClamped: true
+    };
+  }
+
+  if (maximumTotal < availableExtent) {
+    return {
+      firstExtent: firstMaximum,
+      secondExtent: secondMaximum,
+      isClamped: true
+    };
+  }
+
+  const feasibleFirstMinimum = Math.max(
+    constraints.firstMinimum,
+    availableExtent - secondMaximum);
+  const feasibleFirstMaximum = Math.min(
+    firstMaximum,
+    availableExtent - constraints.secondMinimum);
+
+  const resolvedFirst = clamp(
+    preferredFirst,
+    feasibleFirstMinimum,
+    feasibleFirstMaximum);
+  const resolvedSecond = availableExtent - resolvedFirst;
+  return {
+    firstExtent: resolvedFirst,
+    secondExtent: resolvedSecond,
+    isClamped: resolvedFirst !== preferredFirst
+      || resolvedSecond !== preferredSecond
+  };
+}
+
+export function readLimits(split: HTMLElement, extent: number): SplitLimits {
+  return feasibleRange(extent, {
+    firstMinimum: Number(split.dataset.atlasFirstMinimum) || 0,
+    firstMaximum: toFiniteOrUndefined(split.dataset.atlasFirstMaximum),
+    secondMinimum: Number(split.dataset.atlasSecondMinimum) || 0,
+    secondMaximum: toFiniteOrUndefined(split.dataset.atlasSecondMaximum)
+  });
 }
 
 export function basisFor(split: HTMLElement): SplitBasisDescriptor {
@@ -81,4 +173,9 @@ export function basisFor(split: HTMLElement): SplitBasisDescriptor {
       : "proportional",
     anchor: split.dataset.atlasSplitAnchor
   };
+}
+
+function toFiniteOrUndefined(value: string | undefined): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

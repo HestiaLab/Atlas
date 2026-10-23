@@ -280,7 +280,7 @@ public sealed class WorkspaceTransactionTests
             GroupVisibility.Expanded,
             new[] { itemId },
             itemId,
-            logicalRegion: logicalRegion);
+            toolbarRegion: logicalRegion);
 
         var nodes = source.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
         var items = source.Items.ToDictionary(pair => pair.Key, pair => pair.Value);

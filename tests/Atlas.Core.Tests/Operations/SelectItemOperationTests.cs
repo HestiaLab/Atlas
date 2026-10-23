@@ -49,7 +49,7 @@ public sealed class SelectItemOperationTests
             GroupVisibility.Collapsed,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
         await workspace.ExecuteAsync(new SelectItemOperation(item.Id));
@@ -69,7 +69,7 @@ public sealed class SelectItemOperationTests
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
         var result = await workspace.ExecuteAsync(new SelectItemOperation(item.Id));
@@ -90,7 +90,7 @@ public sealed class SelectItemOperationTests
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
         var result = await workspace.ExecuteAsync(
@@ -112,7 +112,7 @@ public sealed class SelectItemOperationTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var strip = new AutoHideStripState(
             WorkspaceEdge.InlineStart,
             new[]
@@ -159,7 +159,7 @@ public sealed class SelectItemOperationTests
         GroupNode group,
         params DockItem[] items)
     {
-        var toolBarOrders = group.LogicalRegion is LogicalRegion region
+        var toolBarOrders = group.ToolbarRegion is LogicalRegion region
             ? new[]
             {
                 new KeyValuePair<LogicalRegion, ToolBarOrderState>(

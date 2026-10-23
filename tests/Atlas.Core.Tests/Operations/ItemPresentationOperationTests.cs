@@ -89,7 +89,7 @@ public sealed class ItemPresentationOperationTests
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,

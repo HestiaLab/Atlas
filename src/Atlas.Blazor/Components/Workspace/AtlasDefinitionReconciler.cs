@@ -102,7 +102,7 @@ internal static class AtlasDefinitionReconciler
                     ids,
                     selected,
                     group.EditorState,
-                    group.LogicalRegion);
+                    group.ToolbarRegion);
             }).ToArray();
         // 工具栏顺序与自动隐藏条按「声明在前、运行时在后」合并，
         // 使对账结果与运行时状态一致且顺序可复现。
@@ -114,12 +114,12 @@ internal static class AtlasDefinitionReconciler
                     var declarationOrder = group.ItemIds
                         .Where(itemId => !runtimeIds.Contains(itemId));
                     var runtimeOrder = current.ToolBarOrders.TryGetValue(
-                        group.LogicalRegion!.Value,
+                        group.ToolbarRegion!.Value,
                         out var currentOrder)
                         ? currentOrder.ItemIds.Where(runtimeIds.Contains)
                         : group.ItemIds.Where(runtimeIds.Contains);
                     return new ToolBarOrderState(
-                        group.LogicalRegion.Value,
+                        group.ToolbarRegion.Value,
                         declarationOrder.Concat(runtimeOrder));
                 });
         var autoHideStrips = declaration.AutoHideStrips.Concat(
@@ -170,7 +170,7 @@ internal static class AtlasDefinitionReconciler
         return node switch
         {
             SplitNode split => $"S:{split.Id}:{split.Axis}:{split.Basis.Kind}:{split.Basis.Value}:{split.FirstId}:{split.SecondId}",
-            GroupNode group => $"G:{group.Id}:{group.Kind}:{group.RetentionPolicy}:{group.Visibility}:{group.LogicalRegion}:{group.SelectedItemId}:{string.Join("/", group.ItemIds)}",
+            GroupNode group => $"G:{group.Id}:{group.Kind}:{group.RetentionPolicy}:{group.Visibility}:{group.ToolbarRegion}:{group.SelectedItemId}:{string.Join("/", group.ItemIds)}",
             _ => node.Id.Value,
         };
     }

@@ -49,7 +49,9 @@ internal static class SelectItemPlanner
                     itemId: operation.ItemId));
         }
 
-        var editorState = UpdateRecentVisits(group, operation.ItemId);
+        var editorState = group.EditorState is { } state
+            ? GroupItemEditor.UpdateRecentVisits(state, operation.ItemId)
+            : null;
         var visibility = group.Kind == DockItemKind.Tool
             ? GroupVisibility.Expanded
             : group.Visibility;
@@ -71,26 +73,9 @@ internal static class SelectItemPlanner
             group.ItemIds,
             operation.ItemId,
             editorState,
-            group.LogicalRegion);
+            group.ToolbarRegion);
         var mutation = WorkspaceMutation.From(snapshot);
         mutation.ReplaceNode(replacement);
         return mutation.Commit();
-    }
-
-    private static EditorGroupState? UpdateRecentVisits(
-        GroupNode group,
-        DockItemId selectedItemId)
-    {
-        if (group.EditorState is null)
-        {
-            return null;
-        }
-
-        return new EditorGroupState(
-            group.EditorState.OverflowMode,
-            group.EditorState.ActivationPolicy,
-            group.EditorState.RecentlyVisitedIds
-                .Where(itemId => itemId != selectedItemId)
-                .Prepend(selectedItemId));
     }
 }

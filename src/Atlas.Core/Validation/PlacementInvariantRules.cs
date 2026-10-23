@@ -50,9 +50,9 @@ internal static class PlacementInvariantRules
         // 放置校验是多遍交叉核对的第一遍：登记组内放置计数与项→逻辑区域映射，
         // 供后续遍（自动隐藏、放置计数、工具栏顺序）交叉验证——
         // 单遍无法同时保证"恰好一个放置"与"顺序表完整"。
-        if (group.Kind == DockItemKind.Tool && group.LogicalRegion is not null)
+        if (group.Kind == DockItemKind.Tool && group.ToolbarRegion is not null)
         {
-            if (!groupRegions.TryAdd(group.LogicalRegion.Value, group.Id))
+            if (!groupRegions.TryAdd(group.ToolbarRegion.Value, group.Id))
             {
                 InvariantViolationSink.Add(
                     violations,
@@ -87,9 +87,9 @@ internal static class PlacementInvariantRules
                     itemId: itemId);
             }
 
-            if (group.LogicalRegion is not null)
+            if (group.ToolbarRegion is not null)
             {
-                itemRegions[itemId] = group.LogicalRegion.Value;
+                itemRegions[itemId] = group.ToolbarRegion.Value;
             }
 
             if (group.Kind == DockItemKind.Document)
@@ -186,11 +186,11 @@ internal static class PlacementInvariantRules
             && node is GroupNode
             {
                 Kind: DockItemKind.Tool,
-                LogicalRegion: not null,
+                ToolbarRegion: not null,
             } group
             && dockBack.PreferredIndex <= group.ItemIds.Count)
         {
-            region = group.LogicalRegion.Value;
+            region = group.ToolbarRegion.Value;
             return true;
         }
 

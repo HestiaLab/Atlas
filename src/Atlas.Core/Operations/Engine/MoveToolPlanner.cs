@@ -241,7 +241,7 @@ internal static class MoveToolPlanner
                 reordered,
                 operation.ItemId,
                 editorState: null,
-                group.LogicalRegion));
+                group.ToolbarRegion));
         mutation.ReorderOrderItem(
             group,
             reordered,

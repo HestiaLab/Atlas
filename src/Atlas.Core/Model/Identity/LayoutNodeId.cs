@@ -26,6 +26,11 @@ public readonly struct LayoutNodeId : IEquatable<LayoutNodeId>
     public string Value => _value
         ?? throw new InvalidOperationException("A default LayoutNodeId does not have a value.");
 
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => _value is null;
+
     /// <inheritdoc />
     public bool Equals(LayoutNodeId other)
     {

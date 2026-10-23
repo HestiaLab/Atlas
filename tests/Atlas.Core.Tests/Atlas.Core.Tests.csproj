@@ -17,6 +17,9 @@
     <None Include="..\..\src\Atlas.Core\Persistence\Schema\atlas-workspace-v2.xsd"
           Link="Persistence\Schema\atlas-workspace-v2.xsd"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\fixtures\split-geometry\*.json"
+          Link="Fixtures\split-geometry\%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Update="Persistence\Golden\*.xml"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

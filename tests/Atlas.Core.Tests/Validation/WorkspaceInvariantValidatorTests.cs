@@ -392,7 +392,7 @@ public sealed class WorkspaceInvariantValidatorTests
             GroupVisibility.Expanded,
             itemIds,
             itemIds.FirstOrDefault(),
-            logicalRegion: region);
+            toolbarRegion: region);
     }
 
     private static GroupNode CreateEmptyToolGroup(string id, LogicalRegion region)
@@ -404,7 +404,7 @@ public sealed class WorkspaceInvariantValidatorTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: region);
+            toolbarRegion: region);
     }
 
     private static DockItem CreateToolItem(string id)

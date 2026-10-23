@@ -63,7 +63,7 @@ public sealed class AtlasXmlLayoutSerializerTests
             GroupVisibility.Expanded,
             new[] { itemId },
             itemId,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,
@@ -101,6 +101,8 @@ public sealed class AtlasXmlLayoutSerializerTests
 
     [Theory]
     [InlineData("3.0", WorkspaceErrorCode.LayoutVersionIncompatible)]
+    [InlineData("2.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
+    [InlineData("2.0.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
     [InlineData("garbage", WorkspaceErrorCode.LayoutVersionIncompatible)]
     public void Rejects_incompatible_or_malformed_versions(
         string version,

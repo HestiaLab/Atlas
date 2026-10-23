@@ -81,7 +81,7 @@ public sealed class LayoutPresetService
 
         var descriptor = new LayoutPresetDescriptor(
             validatedName,
-            "2.0",
+            LayoutSchemaVersion.Current,
             snapshot.Revision,
             DateTimeOffset.UtcNow);
         var document = new LayoutPresetDocument(descriptor, xml);
@@ -256,7 +256,7 @@ public sealed class LayoutPresetService
         return WorkspaceResult<T>.Failure(
             new WorkspaceError(
                 code,
-                LayoutOperationKind.RestoreWorkspace,
+                LayoutOperationKind.Persistence,
                 diagnosticId,
                 code == WorkspaceErrorCode.PersistenceUnavailable
                     ? WorkspaceDiagnostics.Messages.PersistenceUnavailable
@@ -268,7 +268,7 @@ public sealed class LayoutPresetService
         return WorkspaceResult<T>.Failure(
             new WorkspaceError(
                 WorkspaceErrorCode.TargetNotFound,
-                LayoutOperationKind.RestoreWorkspace,
+                LayoutOperationKind.Persistence,
                 WorkspaceDiagnostics.Ids.PresetMissing,
                 WorkspaceDiagnostics.Messages.PresetNotFound));
     }

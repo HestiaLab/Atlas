@@ -34,6 +34,12 @@ public readonly struct DocumentState : IEquatable<DocumentState>
     /// </summary>
     public bool IsPreview { get; }
 
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default state
+    ///     (unpinned and not a preview). The default state is a legal value.
+    /// </summary>
+    public bool IsDefault => !IsPinned && !IsPreview;
+
     /// <inheritdoc />
     public bool Equals(DocumentState other)
     {

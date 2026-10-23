@@ -320,9 +320,9 @@ public sealed partial class AtlasWorkspaceHost
         var regions = snapshot.Nodes.Values
             .OfType<GroupNode>()
             .Where(group => group.Kind == DockItemKind.Tool
-                && group.LogicalRegion is not null
-                && AtlasDefinitionCollector.SideFor(group.LogicalRegion.Value) == side)
-            .OrderBy(group => group.LogicalRegion)
+                && group.ToolbarRegion is not null
+                && AtlasDefinitionCollector.SideFor(group.ToolbarRegion.Value) == side)
+            .OrderBy(group => group.ToolbarRegion)
             .Select(
                 group => (Group: group, Items: OrderedItems(snapshot, group).ToArray()))
             .ToArray();
@@ -332,10 +332,10 @@ public sealed partial class AtlasWorkspaceHost
         }
 
         var upperRegions = regions
-            .Where(region => IsUpperOrLowerRegion(region.Group.LogicalRegion!.Value))
+            .Where(region => IsUpperOrLowerRegion(region.Group.ToolbarRegion!.Value))
             .ToArray();
         var bottomRegions = regions
-            .Where(region => IsBottomRegion(region.Group.LogicalRegion!.Value))
+            .Where(region => IsBottomRegion(region.Group.ToolbarRegion!.Value))
             .ToArray();
 
         builder.OpenElement(0, "nav");
@@ -435,7 +435,7 @@ public sealed partial class AtlasWorkspaceHost
         builder.AddAttribute(
             2,
             "data-atlas-toolbar-region",
-            region.Group.LogicalRegion!.Value.ToString());
+            region.Group.ToolbarRegion!.Value.ToString());
         builder.AddAttribute(
             3,
             "data-atlas-group-id",
@@ -474,7 +474,7 @@ public sealed partial class AtlasWorkspaceHost
             builder.AddAttribute(
                 13,
                 "data-atlas-toolbar-region",
-                region.Group.LogicalRegion.Value.ToString());
+                region.Group.ToolbarRegion.Value.ToString());
             builder.AddAttribute(
                 14,
                 "data-atlas-insertion-index",
@@ -516,7 +516,7 @@ public sealed partial class AtlasWorkspaceHost
         builder.AddAttribute(
             25,
             "data-atlas-toolbar-region",
-            region.Group.LogicalRegion.Value.ToString());
+            region.Group.ToolbarRegion.Value.ToString());
         builder.AddAttribute(
             26,
             "data-atlas-insertion-index",
@@ -583,7 +583,7 @@ public sealed partial class AtlasWorkspaceHost
         WorkspaceSnapshot snapshot,
         GroupNode group)
     {
-        var ids = group.LogicalRegion is LogicalRegion region
+        var ids = group.ToolbarRegion is LogicalRegion region
             && snapshot.ToolBarOrders.TryGetValue(region, out var order)
             ? order.ItemIds
             : group.ItemIds;

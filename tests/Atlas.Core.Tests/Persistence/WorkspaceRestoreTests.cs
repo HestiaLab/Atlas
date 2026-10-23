@@ -153,6 +153,8 @@ public sealed class WorkspaceRestoreTests
         Assert.Equal(workspace.Current.Revision, result.Value!.TargetRevision);
         Assert.Single(result.Value.IdentityRemaps);
         Assert.Equal("2.0", result.Value.SourceSchemaVersion);
+        Assert.True(result.Value.ChangeSet.IsHistoryBarrier);
+        Assert.False(result.Value.ChangeSet.HistoryRecorded);
         await workspace.DisposeAsync();
     }
 

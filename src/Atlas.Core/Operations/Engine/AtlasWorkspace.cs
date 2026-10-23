@@ -182,8 +182,11 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
                 var committedAt = utcNow();
                 var resizeKey = ResizeHistoryKey.For(operation);
-                var undo = plan.IsHistoryBarrier
-                    ? Array.Empty<WorkspacePatch>()
+                var historyOutcome = plan.IsHistoryBarrier
+                    ? new HistoryAppendResult(
+                        Array.Empty<WorkspacePatch>(),
+                        Recorded: false,
+                        IsBarrier: true)
                     : AppendHistory(
                         currentState.Undo,
                         patch,
@@ -193,9 +196,12 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                     ref state,
                     new WorkspaceStoreState(
                         committedSnapshot,
-                        undo,
+                        historyOutcome.Patches,
                         redo: Array.Empty<WorkspacePatch>()));
-                if (plan.IsHistoryBarrier)
+                changeSet = changeSet.WithHistoryOutcome(
+                    historyOutcome.Recorded,
+                    historyOutcome.IsBarrier);
+                if (historyOutcome.IsBarrier)
                 {
                     lastResizeHistoryKey = null;
                 }
@@ -359,7 +365,12 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         }
     }
 
-    private WorkspacePatch[] AppendBounded(
+    private readonly record struct HistoryAppendResult(
+        WorkspacePatch[] Patches,
+        bool Recorded,
+        bool IsBarrier);
+
+    private HistoryAppendResult AppendBounded(
         IReadOnlyList<WorkspacePatch> history,
         WorkspacePatch patch)
     {
@@ -369,18 +380,18 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             .ToList();
         if (approximateMaxHistoryBytes is not long byteBudget)
         {
-            return bounded.ToArray();
+            return new HistoryAppendResult(bounded.ToArray(), Recorded: true, IsBarrier: false);
         }
 
-        // 从最新补丁向前保留，直到近似字节预算用尽；单条超预算的最新补丁仍保留，
-        // 以便它至少可被撤销一次（完整的 HistoryNotRecorded/屏障语义延后到 ADR）。
+        // Retain newest entries until the approximate byte budget is exhausted.
+        // If the newest entry alone exceeds the budget, the commit becomes a
+        // history barrier: the history is cleared and the entry is not recorded.
         var keepFrom = bounded.Count;
         long retainedBytes = 0;
         for (var index = bounded.Count - 1; index >= 0; index--)
         {
             var patchBytes = bounded[index].EstimatedBytes;
-            if (index < bounded.Count - 1
-                && retainedBytes + patchBytes > byteBudget)
+            if (retainedBytes + patchBytes > byteBudget)
             {
                 break;
             }
@@ -389,15 +400,23 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             keepFrom = index;
         }
 
+        if (keepFrom == bounded.Count)
+        {
+            return new HistoryAppendResult(
+                Array.Empty<WorkspacePatch>(),
+                Recorded: false,
+                IsBarrier: true);
+        }
+
         if (keepFrom > 0)
         {
             bounded.RemoveRange(0, keepFrom);
         }
 
-        return bounded.ToArray();
+        return new HistoryAppendResult(bounded.ToArray(), Recorded: true, IsBarrier: false);
     }
 
-    private WorkspacePatch[] AppendHistory(
+    private HistoryAppendResult AppendHistory(
         IReadOnlyList<WorkspacePatch> history,
         WorkspacePatch patch,
         ResizeHistoryKey? resizeKey,
@@ -410,10 +429,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             && committedAt - lastResizeCommittedAt <= resizeCoalescingWindow
             && history.Count != 0)
         {
-            return history
-                .Take(history.Count - 1)
-                .Append(WorkspacePatch.Create(history[^1].Before, patch.After))
-                .ToArray();
+            var coalesced = WorkspacePatch.Create(history[^1].Before, patch.After);
+            return AppendBounded(history.Take(history.Count - 1).ToArray(), coalesced);
         }
 
         return AppendBounded(history, patch);

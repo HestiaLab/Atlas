@@ -62,7 +62,10 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
         }
     }
 
-    internal bool IsDefault => !_isInitialized;
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => !_isInitialized;
 
     /// <inheritdoc />
     public bool Equals(AutoHideEntry other)

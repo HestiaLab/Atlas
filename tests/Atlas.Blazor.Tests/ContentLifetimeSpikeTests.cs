@@ -65,7 +65,7 @@ public sealed class ContentLifetimeSpikeTests : TestContext
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var target = new GroupNode(
             new LayoutNodeId("target"),
             DockItemKind.Tool,
@@ -73,7 +73,7 @@ public sealed class ContentLifetimeSpikeTests : TestContext
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineEndUpper);
+            toolbarRegion: LogicalRegion.InlineEndUpper);
         var root = new SplitNode(
             new LayoutNodeId("root"),
             SplitAxis.InlineChildren,

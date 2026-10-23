@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "interior-value",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.4, "anchor": null },
+      "constraints": { "firstMinimum": 0, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 400, "secondExtent": 600, "isClamped": false },
+      "expectedRange": { "minimum": 0, "maximum": 1 }
+    },
+    {
+      "name": "lower-clamp",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.4, "anchor": null },
+      "constraints": { "firstMinimum": 500, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 500, "secondExtent": 500, "isClamped": true },
+      "expectedRange": { "minimum": 0.5, "maximum": 1 }
+    },
+    {
+      "name": "upper-clamp",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.4, "anchor": null },
+      "constraints": { "firstMinimum": 0, "firstMaximum": 300, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 300, "secondExtent": 700, "isClamped": true },
+      "expectedRange": { "minimum": 0, "maximum": 0.3 }
+    },
+    {
+      "name": "both-sided-clamp",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.1, "anchor": null },
+      "constraints": { "firstMinimum": 450, "firstMaximum": 550, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 450, "secondExtent": 550, "isClamped": true },
+      "expectedRange": { "minimum": 0.45, "maximum": 0.55 }
+    },
+    {
+      "name": "single-sided-max",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.9, "anchor": null },
+      "constraints": { "firstMinimum": 200, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": 500 },
+      "expected": { "firstExtent": 900, "secondExtent": 100, "isClamped": false },
+      "expectedRange": { "minimum": 0.5, "maximum": 1 }
+    },
+    {
+      "name": "minimums-exceed-container",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.4, "anchor": null },
+      "constraints": { "firstMinimum": 600, "firstMaximum": null, "secondMinimum": 500, "secondMaximum": null },
+      "expected": { "firstExtent": 600, "secondExtent": 500, "isClamped": true },
+      "expectedRange": { "minimum": 0.5454545454545454, "maximum": 0.5454545454545454 }
+    },
+    {
+      "name": "maximums-fall-short",
+      "availableExtent": 1000,
+      "basis": { "kind": "proportional", "value": 0.4, "anchor": null },
+      "constraints": { "firstMinimum": 0, "firstMaximum": 300, "secondMinimum": 0, "secondMaximum": 400 },
+      "expected": { "firstExtent": 300, "secondExtent": 400, "isClamped": true },
+      "expectedRange": { "minimum": 0.42857142857142855, "maximum": 0.42857142857142855 }
+    },
+    {
+      "name": "fractional-rounding",
+      "availableExtent": 333,
+      "basis": { "kind": "proportional", "value": 0.3333, "anchor": null },
+      "constraints": { "firstMinimum": 0, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 110.9889, "secondExtent": 222.0111, "isClamped": false },
+      "expectedRange": { "minimum": 0, "maximum": 1 }
+    },
+    {
+      "name": "fixed-pixels-first",
+      "availableExtent": 1000,
+      "basis": { "kind": "fixed-pixels", "value": 250, "anchor": "First" },
+      "constraints": { "firstMinimum": 0, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 250, "secondExtent": 750, "isClamped": false },
+      "expectedRange": { "minimum": 0, "maximum": 1 }
+    },
+    {
+      "name": "fixed-pixels-second",
+      "availableExtent": 1000,
+      "basis": { "kind": "fixed-pixels", "value": 250, "anchor": "Second" },
+      "constraints": { "firstMinimum": 0, "firstMaximum": null, "secondMinimum": 0, "secondMaximum": null },
+      "expected": { "firstExtent": 750, "secondExtent": 250, "isClamped": false },
+      "expectedRange": { "minimum": 0, "maximum": 1 }
+    }
+  ]
+}

@@ -70,7 +70,7 @@ internal static class GroupVisibilityPlanner
             group.ItemIds,
             group.SelectedItemId,
             group.EditorState,
-            group.LogicalRegion);
+            group.ToolbarRegion);
         var mutation = WorkspaceMutation.From(snapshot);
         mutation.ReplaceNode(replacement);
         return mutation.Commit();

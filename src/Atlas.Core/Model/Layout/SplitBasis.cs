@@ -71,7 +71,10 @@ public readonly struct SplitBasis : IEquatable<SplitBasis>
         }
     }
 
-    internal bool IsDefault => !_isInitialized;
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => !_isInitialized;
 
     /// <summary>
     ///     Creates a fixed-pixel basis: the anchored child occupies pixels (CSS pixels) while the other child

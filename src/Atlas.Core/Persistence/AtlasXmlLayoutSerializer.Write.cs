@@ -60,7 +60,7 @@ public sealed partial class AtlasXmlLayoutSerializer
                 new XAttribute("retentionPolicy", group.RetentionPolicy),
                 new XAttribute("visibility", group.Visibility),
                 OptionalAttribute("selectedItemId", group.SelectedItemId?.Value),
-                OptionalAttribute("logicalRegion", group.LogicalRegion?.ToString()),
+                OptionalAttribute("logicalRegion", group.ToolbarRegion?.ToString()),
                 group.EditorState is { } editor
                     ? new XElement(
                         Namespace + "EditorState",

@@ -168,12 +168,12 @@ internal sealed class AtlasGroupView : ComponentBase
                     ? AtlasDomIdentity.ControlId(HostId, selected.Id, "document-tab")
                     : AtlasDomIdentity.HeadingId(HostId, selected.Id));
         }
-        if (Group.LogicalRegion is not null)
+        if (Group.ToolbarRegion is not null)
         {
             builder.AddAttribute(
                 7,
                 "data-atlas-logical-region",
-                Group.LogicalRegion.Value.ToString());
+                Group.ToolbarRegion.Value.ToString());
         }
 
         if (Items.Count == 0)

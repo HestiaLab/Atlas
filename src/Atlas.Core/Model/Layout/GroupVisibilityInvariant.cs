@@ -61,7 +61,7 @@ internal static class GroupVisibilityInvariant
                 group.ItemIds,
                 group.SelectedItemId,
                 group.EditorState,
-                group.LogicalRegion);
+                group.ToolbarRegion);
         }
 
         return mutable is null

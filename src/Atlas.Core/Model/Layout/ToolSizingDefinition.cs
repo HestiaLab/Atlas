@@ -7,8 +7,10 @@ namespace Atlas.Core.Layout;
 public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
 {
     /// <summary>
-    ///     Constructs a sizing definition; the initial ratio must lie in (0, 1], extents must be finite and
-    ///     non-negative, the maximum must not be less than the minimum, and the collapsed extent must be finite and non-negative.
+    ///     Constructs a sizing definition; the initial ratio must lie in the open
+    ///     interval (0, 1) so it can seed a proportional split, extents must be
+    ///     finite and non-negative, the maximum must not be less than the minimum,
+    ///     and the collapsed extent must be finite and non-negative.
     /// </summary>
     public ToolSizingDefinition(
         double? initialRatio = null,
@@ -19,12 +21,12 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
         if (initialRatio is not null
             && (!double.IsFinite(initialRatio.Value)
                 || initialRatio.Value <= 0d
-                || initialRatio.Value > 1d))
+                || initialRatio.Value >= 1d))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(initialRatio),
                 initialRatio,
-                "An initial ratio must be finite and greater than zero and at most one.");
+                "An initial ratio must be finite and greater than zero and less than one.");
         }
 
         ValidateOptionalExtent(minExtent, nameof(minExtent));
@@ -73,6 +75,16 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     ///     The extent a tool group occupies when collapsed; defaults to 0 (fully collapsed).
     /// </summary>
     public double CollapsedExtent { get; }
+
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default definition
+    ///     (no ratio or extents). The default definition is a legal value.
+    /// </summary>
+    public bool IsDefault =>
+        InitialRatio is null
+        && MinExtent is null
+        && MaxExtent is null
+        && CollapsedExtent == 0d;
 
     /// <inheritdoc />
     public bool Equals(ToolSizingDefinition other)

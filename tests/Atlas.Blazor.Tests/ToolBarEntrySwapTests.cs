@@ -89,7 +89,7 @@ public sealed class ToolBarEntrySwapTests : TestContext
             GroupVisibility.Expanded,
             new[] { tree.Id },
             tree.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var rightUpper = new GroupNode(
             new LayoutNodeId("right-upper"),
             DockItemKind.Tool,
@@ -97,7 +97,7 @@ public sealed class ToolBarEntrySwapTests : TestContext
             GroupVisibility.Expanded,
             new[] { property.Id },
             property.Id,
-            logicalRegion: LogicalRegion.InlineEndUpper);
+            toolbarRegion: LogicalRegion.InlineEndUpper);
         var split = new SplitNode(
             new LayoutNodeId("root"),
             SplitAxis.InlineChildren,

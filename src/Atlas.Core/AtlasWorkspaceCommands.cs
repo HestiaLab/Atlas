@@ -68,6 +68,7 @@ public sealed class AtlasWorkspaceCommands
     ///     collapsed tool group expands it, and Stale is returned when baseRevision differs
     ///     from the current revision.
     /// </summary>
+    /// <remarks>Maps to <c>SelectItemOperation</c>.</remarks>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateItemAsync(
         DockItemId itemId,
         long? baseRevision = null,
@@ -81,6 +82,7 @@ public sealed class AtlasWorkspaceCommands
     /// <summary>
     ///     Toggles the expanded/collapsed visibility of a tool group.
     /// </summary>
+    /// <remarks>Maps to <c>SetGroupVisibilityOperation</c>.</remarks>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> SetToolVisibilityAsync(
         LayoutNodeId groupId,
         bool visible,

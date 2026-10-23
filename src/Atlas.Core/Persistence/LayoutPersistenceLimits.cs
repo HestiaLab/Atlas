@@ -8,7 +8,11 @@ namespace Atlas.Core.Persistence;
 public sealed class LayoutPersistenceLimits
 {
     /// <summary>
-    ///     Creates the resource limits; every ceiling must be positive.
+    ///     Creates the resource limits; every ceiling must be positive. Values
+    ///     above the embedded schema hard caps (4096 items, 1024 item references
+    ///     per group/order/strip, 4096 character identifiers) are clamped to the
+    ///     hard cap: configured limits can only lower, never raise, the schema
+    ///     ceiling.
     /// </summary>
     public LayoutPersistenceLimits(
         int maxDocumentBytes = 1024 * 1024,
@@ -22,9 +26,15 @@ public sealed class LayoutPersistenceLimits
         MaxDocumentBytes = RequirePositive(maxDocumentBytes, nameof(maxDocumentBytes));
         MaxDepth = RequirePositive(maxDepth, nameof(maxDepth));
         MaxNodeCount = RequirePositive(maxNodeCount, nameof(maxNodeCount));
-        MaxItemCount = RequirePositive(maxItemCount, nameof(maxItemCount));
-        MaxItemsPerGroup = RequirePositive(maxItemsPerGroup, nameof(maxItemsPerGroup));
-        MaxStringLength = RequirePositive(maxStringLength, nameof(maxStringLength));
+        MaxItemCount = RequirePositive(
+            Math.Min(maxItemCount, LayoutPersistenceHardLimits.MaxItemCount),
+            nameof(maxItemCount));
+        MaxItemsPerGroup = RequirePositive(
+            Math.Min(maxItemsPerGroup, LayoutPersistenceHardLimits.MaxItemsPerGroup),
+            nameof(maxItemsPerGroup));
+        MaxStringLength = RequirePositive(
+            Math.Min(maxStringLength, LayoutPersistenceHardLimits.MaxStringLength),
+            nameof(maxStringLength));
         MaxMigrationSteps = RequirePositive(maxMigrationSteps, nameof(maxMigrationSteps));
     }
 

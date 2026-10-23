@@ -97,7 +97,7 @@ internal static class AtlasDockIntentFactory
                 or "toolbar-region"
                 or "drop-scaffold")
         {
-            if (target.LogicalRegion is not LogicalRegion targetRegion
+            if (target.ToolbarRegion is not LogicalRegion targetRegion
                 || message.InsertionIndex < 0
                 || (message.LogicalRegion is not null
                     && !string.Equals(
@@ -155,7 +155,7 @@ internal static class AtlasDockIntentFactory
                 || (message.LogicalRegion is not null
                     && !string.Equals(
                         message.LogicalRegion,
-                        target.LogicalRegion?.ToString(),
+                        target.ToolbarRegion?.ToString(),
                         StringComparison.Ordinal)))
             {
                 return null;
@@ -165,7 +165,7 @@ internal static class AtlasDockIntentFactory
             if (sourceIndex >= 0)
             {
                 if (message.TargetKind != "toolbar-insertion"
-                    || target.LogicalRegion is not LogicalRegion targetRegion
+                    || target.ToolbarRegion is not LogicalRegion targetRegion
                     || !snapshot.ToolBarOrders.TryGetValue(targetRegion, out var targetOrder)
                     || string.IsNullOrWhiteSpace(message.TargetItemId)
                     || message.InsertionIndex is not int toolbarWireIndex)

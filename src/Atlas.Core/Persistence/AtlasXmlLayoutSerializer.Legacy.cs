@@ -222,7 +222,7 @@ public sealed partial class AtlasXmlLayoutSerializer
                     GroupVisibility.Expanded,
                     visible.Select(panel => panel.Id),
                     ChooseActive(visible),
-                    logicalRegion: group.Key));
+                    toolbarRegion: group.Key));
             orderedRoots.Add(groupId);
             orders.Add(
                 group.Key,

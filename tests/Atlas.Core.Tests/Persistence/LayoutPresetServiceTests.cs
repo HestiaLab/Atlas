@@ -2,6 +2,7 @@ using Atlas.Core.Changes;
 using Atlas.Core.Definitions;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Operations;
 using Atlas.Core.Operations.Engine;
 using Atlas.Core.Persistence;
 using Atlas.Core.Results;
@@ -134,6 +135,7 @@ public sealed class LayoutPresetServiceTests
         Assert.Equal(
             Atlas.Core.Results.WorkspaceErrorCode.PersistenceUnavailable,
             result.Error!.Code);
+        Assert.Equal(LayoutOperationKind.Persistence, result.Error.OperationKind);
         Assert.Same(before, workspace.Current);
     }
 
@@ -150,6 +152,7 @@ public sealed class LayoutPresetServiceTests
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, result.Error!.Code);
+        Assert.Equal(LayoutOperationKind.Persistence, result.Error.OperationKind);
         Assert.Equal("ATLAS-PRESET-READ", result.Error.DiagnosticId);
     }
 
@@ -167,9 +170,11 @@ public sealed class LayoutPresetServiceTests
 
         Assert.False(list.Succeeded);
         Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, list.Error!.Code);
+        Assert.Equal(LayoutOperationKind.Persistence, list.Error.OperationKind);
         Assert.Equal("ATLAS-PRESET-LIST", list.Error.DiagnosticId);
         Assert.False(delete.Succeeded);
         Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, delete.Error!.Code);
+        Assert.Equal(LayoutOperationKind.Persistence, delete.Error.OperationKind);
         Assert.Equal("ATLAS-PRESET-DELETE", delete.Error.DiagnosticId);
     }
 
@@ -260,7 +265,7 @@ public sealed class LayoutPresetServiceTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: Atlas.Core.Placement.LogicalRegion.InlineStartUpper);
+            toolbarRegion: Atlas.Core.Placement.LogicalRegion.InlineStartUpper);
         return new AtlasWorkspaceFactory().Create(
             new AtlasWorkspaceDefinition(
                 new WorkspaceId("main"),

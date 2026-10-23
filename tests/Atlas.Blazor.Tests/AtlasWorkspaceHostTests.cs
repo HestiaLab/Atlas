@@ -2547,7 +2547,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { tool.Id },
             tool.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var emptyDocuments = new GroupNode(
             new LayoutNodeId("empty-documents"),
             DockItemKind.Document,
@@ -2662,7 +2662,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { upperTool.Id },
             upperTool.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var lowerGroup = new GroupNode(
             new LayoutNodeId("lower"),
             DockItemKind.Tool,
@@ -2670,7 +2670,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { lowerTool.Id },
             lowerTool.Id,
-            logicalRegion: LogicalRegion.InlineStartLower);
+            toolbarRegion: LogicalRegion.InlineStartLower);
         var bottomGroup = new GroupNode(
             new LayoutNodeId("bottom"),
             DockItemKind.Tool,
@@ -2678,7 +2678,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { bottomTool.Id },
             bottomTool.Id,
-            logicalRegion: LogicalRegion.BlockEndInlineStart);
+            toolbarRegion: LogicalRegion.BlockEndInlineStart);
         var split = new SplitNode(
             new LayoutNodeId("root"),
             SplitAxis.BlockChildren,
@@ -2740,7 +2740,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { upperTool.Id },
             upperTool.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var emptyLowerGroup = new GroupNode(
             new LayoutNodeId("lower"),
             DockItemKind.Tool,
@@ -2748,7 +2748,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartLower);
+            toolbarRegion: LogicalRegion.InlineStartLower);
         var split = new SplitNode(
             new LayoutNodeId("root"),
             SplitAxis.BlockChildren,
@@ -2823,7 +2823,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { first.Id, second.Id, third.Id },
             selectSecond ? second.Id : first.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         return new AtlasWorkspaceDefinition(
             new WorkspaceId("three-tools"),
             group.Id,
@@ -2866,7 +2866,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 GroupVisibility.Expanded,
                 new[] { item.Id },
                 item.Id,
-                logicalRegion: region);
+                toolbarRegion: region);
         }
 
         static SplitNode Split(
@@ -2982,7 +2982,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             },
             toolBarOrders: toolGroups.Select(
                 group => new ToolBarOrderState(
-                    group.LogicalRegion!.Value,
+                    group.ToolbarRegion!.Value,
                     group.ItemIds)));
     }
 
@@ -3079,7 +3079,7 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             GroupVisibility.Expanded,
             new[] { tool.Id },
             tool.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var documentGroup = DocumentGroup("documents", document);
         var split = new SplitNode(
             new LayoutNodeId("root"),

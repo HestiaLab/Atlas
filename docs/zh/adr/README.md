@@ -47,6 +47,13 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | 工具栏顺序按组内相邻项锚定插入，而非复制数字组内索引（CORE-P2-12） |
 | [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | 分层代码注释语言政策：公共 XML 文档/消息英文，内部注释增量迁移（CORE-P2-20） |
 | [ADR-0027](./0027-subscriber-fault-diagnostics.md) | Accepted | 可选 `SubscriberFaultSink` 上报订阅者异常，不改变事件隔离（CORE-P2-17） |
+| [ADR-0028](./0028-history-truncation-and-barriers.md) | Accepted | 变更集暴露历史截断结果与历史屏障语义（CORE-P1-03） |
+| [ADR-0029](./0029-public-operation-api-baseline.md) | Accepted | 受支持/保留操作集、错误上下文、命令映射与已发布基线（CORE-P2-04/P3-06） |
+| [ADR-0030](./0030-public-value-type-default-semantics.md) | Accepted | 统一值类型 default 语义并提供 `IsDefault`；重命名 `GroupNode.LogicalRegion`（CORE-P3-02/P3-05） |
+| [ADR-0031](./0031-persistence-schema-versioning-and-limits.md) | Accepted | 显式 schema 版本注册表与硬上限/limits 对齐（CORE-P2-03/P1-06） |
+| [ADR-0032](./0032-unwired-public-api-disposition.md) | Accepted | 未接线公共类型与未使用错误码的处置（CORE-P2-15） |
+| [ADR-0033](./0033-split-geometry-single-source.md) | Accepted | Core 参考语义 + C#/TS 共享黄金向量（CORE-P2-16） |
+| [ADR-0034](./0034-core-boundary-dependencies-and-autohide-relocation.md) | Accepted | Operations→Persistence 单向分层与自动隐藏书签确定清理（CORE-P2-01/P1-05） |
 
 ## 编写约定
 

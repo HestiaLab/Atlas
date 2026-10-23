@@ -21,9 +21,6 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
     // V2 文档的 XML 命名空间常量。
     private const string NamespaceValue = "urn:atlas:workspace:2";
 
-    // 当前写入的 schema 版本号，随文档序列化输出。
-    private const string CurrentVersion = "2.0";
-
     // 命名空间的 XNamespace 实例；构造与读取 XML 元素共用。
     private static readonly XNamespace Namespace = NamespaceValue;
 
@@ -38,7 +35,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 
         var root = new XElement(
             Namespace + "AtlasWorkspace",
-            new XAttribute("schemaVersion", CurrentVersion),
+            new XAttribute("schemaVersion", LayoutSchemaVersion.Current),
             new XAttribute("workspaceId", snapshot.Id.Value),
             WriteItems(snapshot),
             WriteLayout(snapshot),

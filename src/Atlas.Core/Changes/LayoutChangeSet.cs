@@ -19,7 +19,9 @@ public sealed class LayoutChangeSet
         IEnumerable<DockItemId>? updatedItems = null,
         IEnumerable<LogicalSide>? updatedToolBars = null,
         IEnumerable<LogicalRegion>? updatedToolBarOrders = null,
-        IEnumerable<WorkspaceEdge>? updatedAutoHideStrips = null)
+        IEnumerable<WorkspaceEdge>? updatedAutoHideStrips = null,
+        bool historyRecorded = true,
+        bool isHistoryBarrier = false)
     {
         if (beforeRevision < 0 || afterRevision < beforeRevision)
         {
@@ -41,6 +43,8 @@ public sealed class LayoutChangeSet
         UpdatedToolBars = CopyDistinct(updatedToolBars);
         UpdatedToolBarOrders = CopyDistinct(updatedToolBarOrders);
         UpdatedAutoHideStrips = CopyDistinct(updatedAutoHideStrips);
+        HistoryRecorded = historyRecorded;
+        IsHistoryBarrier = isHistoryBarrier;
     }
 
     /// <summary>
@@ -104,6 +108,19 @@ public sealed class LayoutChangeSet
     public IReadOnlyList<WorkspaceEdge> UpdatedAutoHideStrips { get; }
 
     /// <summary>
+    ///     Gets a value indicating whether the commit was retained in undo history.
+    ///     <see langword="false"/> means the commit succeeded but cannot be undone.
+    /// </summary>
+    public bool HistoryRecorded { get; }
+
+    /// <summary>
+    ///     Gets a value indicating whether this commit started a new history
+    ///     segment, either because the operation is an explicit barrier or
+    ///     because an oversized entry cleared the retained history.
+    /// </summary>
+    public bool IsHistoryBarrier { get; }
+
+    /// <summary>
     ///     创建无任何元素变更的空变更集。
     /// </summary>
     /// <param name="revision">变更前后一致的修订号。</param>
@@ -114,6 +131,25 @@ public sealed class LayoutChangeSet
     internal static LayoutChangeSet Empty(long revision, LayoutChangeKind kind)
     {
         return new LayoutChangeSet(revision, revision, kind);
+    }
+
+    internal LayoutChangeSet WithHistoryOutcome(bool historyRecorded, bool isHistoryBarrier)
+    {
+        return new LayoutChangeSet(
+            BeforeRevision,
+            AfterRevision,
+            ChangeKind,
+            AddedNodes,
+            RemovedNodes,
+            UpdatedNodes,
+            AddedItems,
+            RemovedItems,
+            UpdatedItems,
+            UpdatedToolBars,
+            UpdatedToolBarOrders,
+            UpdatedAutoHideStrips,
+            historyRecorded,
+            isHistoryBarrier);
     }
 
     private static IReadOnlyList<T> CopyDistinct<T>(IEnumerable<T>? source)

@@ -35,6 +35,7 @@ public sealed class WorkspaceFactoryTests
         var result = new AtlasWorkspaceFactory().Create(definition);
 
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+        Assert.Equal(LayoutOperationKind.Factory, result.Error.OperationKind);
         Assert.Null(result.Value);
     }
 
@@ -109,6 +110,40 @@ public sealed class WorkspaceFactoryTests
         }
 
         Assert.Equal(1, undoCount);
+    }
+
+    [Fact]
+    public async Task Ordinary_commit_reports_recorded_history()
+    {
+        var (definition, item, _) = CreateDefinition();
+        var result = new AtlasWorkspaceFactory().Create(definition);
+        await using var workspace = result.Value!;
+
+        var commit = await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
+
+        Assert.True(commit.Succeeded);
+        Assert.True(commit.Value!.HistoryRecorded);
+        Assert.False(commit.Value.IsHistoryBarrier);
+    }
+
+    [Fact]
+    public async Task Oversized_history_entry_becomes_a_barrier_and_is_not_recorded()
+    {
+        var (definition, item, _) = CreateDefinition();
+        var result = new AtlasWorkspaceFactory().Create(
+            definition,
+            new AtlasWorkspaceOptions(
+                new WorkspaceHistoryOptions(approximateMaxBytes: 1)));
+        await using var workspace = result.Value!;
+
+        var commit = await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
+
+        Assert.True(commit.Succeeded);
+        Assert.False(commit.Value!.HistoryRecorded);
+        Assert.True(commit.Value.IsHistoryBarrier);
+        Assert.Equal(WorkspaceResultStatus.NoChange, (await workspace.UndoAsync()).Status);
     }
 
     [Fact]

@@ -158,4 +158,43 @@ public sealed class PersistenceContractTests
         Assert.Same(descriptor, document.Descriptor);
         Assert.Equal("<AtlasWorkspace />", document.Xml);
     }
+
+    [Fact]
+    public void Persistence_limits_are_clamped_to_the_schema_hard_caps()
+    {
+        Assert.Equal("2.0", LayoutSchemaVersion.Current);
+
+        var oversized = new LayoutPersistenceLimits(
+            maxItemCount: 100_000,
+            maxItemsPerGroup: 50_000,
+            maxStringLength: 50_000);
+
+        Assert.Equal(4096, oversized.MaxItemCount);
+        Assert.Equal(1024, oversized.MaxItemsPerGroup);
+        Assert.Equal(4096, oversized.MaxStringLength);
+
+        var lowered = new LayoutPersistenceLimits(
+            maxItemCount: 10,
+            maxItemsPerGroup: 5,
+            maxStringLength: 20);
+
+        Assert.Equal(10, lowered.MaxItemCount);
+        Assert.Equal(5, lowered.MaxItemsPerGroup);
+        Assert.Equal(20, lowered.MaxStringLength);
+    }
+
+    [Fact]
+    public void Xsd_hard_caps_match_the_clamped_limit_constants()
+    {
+        using var stream = typeof(AtlasXmlLayoutSerializer).Assembly.GetManifestResourceStream(
+            "Atlas.Core.Persistence.Schema.atlas-workspace-v2.xsd");
+        Assert.NotNull(stream);
+        using var reader = new StreamReader(stream!);
+        var xsd = reader.ReadToEnd();
+
+        Assert.Contains("maxOccurs=\"4096\"", xsd, StringComparison.Ordinal);
+        Assert.Contains("maxOccurs=\"1024\"", xsd, StringComparison.Ordinal);
+        Assert.Contains("maxLength value=\"4096\"", xsd, StringComparison.Ordinal);
+        Assert.Contains("pattern value=\"2\\.[0-9]+\"", xsd, StringComparison.Ordinal);
+    }
 }

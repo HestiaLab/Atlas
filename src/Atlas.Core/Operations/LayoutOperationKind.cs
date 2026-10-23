@@ -46,12 +46,12 @@ public enum LayoutOperationKind
     SetGroupVisibility = 7,
 
     /// <summary>
-    ///     Moves an item into or out of auto-hide.
+    ///     Reserved; no operation or planner is implemented yet.
     /// </summary>
     SetAutoHide = 8,
 
     /// <summary>
-    ///     Restores an auto-hidden item to its committed dock return target.
+    ///     Reserved; no operation or planner is implemented yet.
     /// </summary>
     RestoreAutoHiddenItem = 9,
 
@@ -61,12 +61,12 @@ public enum LayoutOperationKind
     UpdateItemPresentation = 10,
 
     /// <summary>
-    ///     Replaces the content reference of an item.
+    ///     Reserved; no operation or planner is implemented yet.
     /// </summary>
     ReplaceContentReference = 11,
 
     /// <summary>
-    ///     Resets the workspace to its configured definition.
+    ///     Reserved; no operation or planner is implemented yet.
     /// </summary>
     ResetWorkspace = 12,
 
@@ -94,4 +94,19 @@ public enum LayoutOperationKind
     ///     Equalizes the two children of an existing split.
     /// </summary>
     EqualizeSplit = 17,
+
+    /// <summary>
+    ///     Error context for persistence failures; not a callable operation.
+    /// </summary>
+    Persistence = 20,
+
+    /// <summary>
+    ///     Error context for workspace factory failures; not a callable operation.
+    /// </summary>
+    Factory = 21,
+
+    /// <summary>
+    ///     Error context for history failures; not a callable operation.
+    /// </summary>
+    History = 22,
 }

@@ -335,7 +335,7 @@ public sealed class OpenItemOperationTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
     }
 
     private static AtlasWorkspace CreateEmptyToolWorkspace(GroupNode group)

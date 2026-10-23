@@ -92,7 +92,7 @@ public sealed class GroupVisibilityOperationTests
             GroupVisibility.Collapsed,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,
@@ -133,13 +133,13 @@ public sealed class GroupVisibilityOperationTests
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         return (CreateWorkspace(group, item), group);
     }
 
     private static AtlasWorkspace CreateWorkspace(GroupNode group, DockItem item)
     {
-        var orders = group.LogicalRegion is LogicalRegion region
+        var orders = group.ToolbarRegion is LogicalRegion region
             ? new[]
             {
                 new KeyValuePair<LogicalRegion, ToolBarOrderState>(

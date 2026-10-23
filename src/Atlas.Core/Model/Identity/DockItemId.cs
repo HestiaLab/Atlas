@@ -26,6 +26,11 @@ public readonly struct DockItemId : IEquatable<DockItemId>
     public string Value => _value
         ?? throw new InvalidOperationException("A default DockItemId does not have a value.");
 
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => _value is null;
+
     /// <inheritdoc />
     public bool Equals(DockItemId other)
     {

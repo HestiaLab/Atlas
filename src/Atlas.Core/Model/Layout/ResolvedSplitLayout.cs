@@ -36,4 +36,14 @@ public readonly struct ResolvedSplitLayout
     ///     Whether the preferred size was corrected by constraints or container bounds; false means it renders strictly by preference.
     /// </summary>
     public bool IsClamped { get; }
+
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default value
+    ///     (zero extents, default constraints, not clamped).
+    /// </summary>
+    public bool IsDefault =>
+        FirstExtent == 0d
+        && SecondExtent == 0d
+        && EffectiveConstraints.IsDefault
+        && !IsClamped;
 }

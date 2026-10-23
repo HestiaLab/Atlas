@@ -89,7 +89,7 @@ public sealed class InMemoryStoreTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         return new AtlasWorkspaceFactory().Create(
             new AtlasWorkspaceDefinition(
                 new WorkspaceId("main"),

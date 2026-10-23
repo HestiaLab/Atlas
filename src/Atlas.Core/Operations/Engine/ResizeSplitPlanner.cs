@@ -21,8 +21,8 @@ internal static class ResizeSplitPlanner
         WorkspaceSnapshot snapshot,
         ResizeSplitOperation operation)
     {
-        // 提交状态只记录用户意图的基准（basis）：min/max 约束由 SplitLayoutResolver
-        // 在渲染时解析并钳制，规划器不做钳制判断，只校验目标并替换基准。
+        // 提交状态只记录用户意图的基准（basis）；约束解析由 SplitLayoutResolver
+        // （headless 几何工具）负责，规划器只校验目标并替换基准。
         if (!snapshot.Nodes.TryGetValue(operation.SplitId, out var node))
         {
             return Failure(

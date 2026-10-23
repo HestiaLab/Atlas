@@ -110,7 +110,7 @@ public sealed class GroupConfigurationTests
                 GroupVisibility.Expanded,
                 new[] { documentId },
                 documentId,
-                logicalRegion: LogicalRegion.InlineStartUpper));
+                toolbarRegion: LogicalRegion.InlineStartUpper));
     }
 
     [Fact]
@@ -142,6 +142,7 @@ public sealed class GroupConfigurationTests
     [Theory]
     [InlineData(0d)]
     [InlineData(-0.1d)]
+    [InlineData(1d)]
     [InlineData(1.1d)]
     [InlineData(double.NaN)]
     [InlineData(double.PositiveInfinity)]

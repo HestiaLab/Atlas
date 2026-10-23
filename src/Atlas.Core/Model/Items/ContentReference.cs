@@ -42,7 +42,10 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     public string ResourceId => _resourceId
         ?? throw new InvalidOperationException("A default ContentReference does not have a resource identity.");
 
-    internal bool IsDefault => _kind is null || _resourceId is null;
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => _kind is null || _resourceId is null;
 
     /// <inheritdoc />
     public bool Equals(ContentReference other)

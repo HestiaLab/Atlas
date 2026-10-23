@@ -77,15 +77,9 @@ public sealed partial class AtlasXmlLayoutSerializer
 
     private static bool TryCompatibleVersion(string? value)
     {
-        if (value is null
-            || !Version.TryParse(value, out var version)
-            || version.Major != 2
-            || value.Count(character => character == '.') != 1)
-        {
-            return false;
-        }
-
-        return true;
+        // 版本注册表：只接受明确受支持的版本；未登记的 2.x 一律拒绝，
+        // 读取方不做前向猜测。
+        return StringComparer.Ordinal.Equals(value, LayoutSchemaVersion.Current);
     }
 
     private static string Required(XElement element, string name)
@@ -146,7 +140,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         return WorkspaceResult<LayoutRestoreDocument>.Failure(
             new WorkspaceError(
                 WorkspaceErrorCode.InvalidLayoutData,
-                LayoutOperationKind.RestoreWorkspace,
+                LayoutOperationKind.Persistence,
                 diagnosticId,
                 WorkspaceDiagnostics.Messages.PersistenceInvalid));
     }
@@ -156,7 +150,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         return WorkspaceResult<LayoutRestoreDocument>.Failure(
             new WorkspaceError(
                 WorkspaceErrorCode.LayoutVersionIncompatible,
-                LayoutOperationKind.RestoreWorkspace,
+                LayoutOperationKind.Persistence,
                 WorkspaceDiagnostics.Ids.PersistVersion,
                 WorkspaceDiagnostics.Messages.PersistenceVersionIncompatible));
     }

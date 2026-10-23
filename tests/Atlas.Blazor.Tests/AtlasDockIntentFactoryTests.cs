@@ -314,9 +314,9 @@ public sealed class AtlasDockIntentFactoryTests
             Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
             groups.Select(
                 group => new KeyValuePair<LogicalRegion, ToolBarOrderState>(
-                    group.LogicalRegion!.Value,
+                    group.ToolbarRegion!.Value,
                     new ToolBarOrderState(
-                        group.LogicalRegion.Value,
+                        group.ToolbarRegion.Value,
                         group.ItemIds))),
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
     }
@@ -351,7 +351,7 @@ public sealed class AtlasDockIntentFactoryTests
             GroupVisibility.Expanded,
             items.Select(item => item.Id),
             items[0].Id,
-            logicalRegion: region);
+            toolbarRegion: region);
     }
 
     private static SplitNode CreateSplit(

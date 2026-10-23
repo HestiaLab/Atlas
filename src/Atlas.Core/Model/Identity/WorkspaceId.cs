@@ -26,6 +26,11 @@ public readonly struct WorkspaceId : IEquatable<WorkspaceId>
     public string Value => _value
         ?? throw new InvalidOperationException("A default WorkspaceId does not have a value.");
 
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    /// </summary>
+    public bool IsDefault => _value is null;
+
     /// <inheritdoc />
     public bool Equals(WorkspaceId other)
     {

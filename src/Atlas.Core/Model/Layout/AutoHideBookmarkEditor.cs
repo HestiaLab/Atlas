@@ -9,7 +9,8 @@ namespace Atlas.Core.Layout;
 internal static class AutoHideBookmarkEditor
 {
     /// <summary>
-    ///     将仍指向现有工具组的书签索引钳制到组内项数；无变化时返回原字典。
+    ///     将仍指向现有工具组的书签索引钳制到组内项数；目标组已不存在
+    ///     （或不再是工具组）的书签被确定性移除；无变化时返回原字典。
     /// </summary>
     internal static IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> ClampToGroups(
         IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> strips,
@@ -20,7 +21,7 @@ internal static class AutoHideBookmarkEditor
         foreach (var pair in strips)
         {
             var strip = pair.Value;
-            List<AutoHideEntry>? entries = null;
+            List<AutoHideEntry>? rebuilt = null;
             for (var index = 0; index < strip.Entries.Count; index++)
             {
                 var entry = strip.Entries[index];
@@ -28,35 +29,39 @@ internal static class AutoHideBookmarkEditor
                     || node is not GroupNode
                     {
                         Kind: DockItemKind.Tool,
-                        LogicalRegion: not null,
                     } group)
                 {
+                    // 目标组已删除或不再是工具组：移除悬空书签，不做静默重挂。
+                    rebuilt ??= strip.Entries.Take(index).ToList();
                     continue;
                 }
 
                 var clampedIndex = Math.Min(
                     entry.DockBack.PreferredIndex,
                     group.ItemIds.Count);
-                if (clampedIndex == entry.DockBack.PreferredIndex)
+                if (clampedIndex != entry.DockBack.PreferredIndex)
                 {
-                    continue;
+                    entry = new AutoHideEntry(
+                        entry.ItemId,
+                        new DockBack(
+                            entry.DockBack.PreferredGroupId,
+                            clampedIndex,
+                            entry.DockBack.FallbackEdge));
+                    rebuilt ??= strip.Entries.Take(index).ToList();
                 }
 
-                entries ??= strip.Entries.ToList();
-                entries[index] = new AutoHideEntry(
-                    entry.ItemId,
-                    new DockBack(
-                        entry.DockBack.PreferredGroupId,
-                        clampedIndex,
-                        entry.DockBack.FallbackEdge));
+                if (rebuilt is not null)
+                {
+                    rebuilt.Add(entry);
+                }
             }
 
-            if (entries is not null)
+            if (rebuilt is not null)
             {
                 changed ??= strips.ToDictionary(
                     pairValue => pairValue.Key,
                     pairValue => pairValue.Value);
-                changed[pair.Key] = new AutoHideStripState(pair.Key, entries);
+                changed[pair.Key] = new AutoHideStripState(pair.Key, rebuilt);
             }
         }
 

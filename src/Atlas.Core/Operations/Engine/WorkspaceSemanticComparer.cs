@@ -79,7 +79,7 @@ internal static class WorkspaceSemanticComparer
             && left.ItemIds.SequenceEqual(right.ItemIds)
             && left.SelectedItemId == right.SelectedItemId
             && EditorStateEquals(left.EditorState, right.EditorState)
-            && left.LogicalRegion == right.LogicalRegion;
+            && left.ToolbarRegion == right.ToolbarRegion;
     }
 
     private static bool EditorStateEquals(EditorGroupState? left, EditorGroupState? right)

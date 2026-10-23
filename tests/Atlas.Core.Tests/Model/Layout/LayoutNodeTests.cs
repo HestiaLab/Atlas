@@ -137,7 +137,7 @@ public sealed class LayoutNodeTests
             GroupVisibility.Expanded,
             original,
             original[0],
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
 
         original[0] = new DockItemId("changed");
 
@@ -155,7 +155,7 @@ public sealed class LayoutNodeTests
             GroupVisibility.Collapsed,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
 
         Assert.Empty(node.ItemIds);
         Assert.Null(node.SelectedItemId);
@@ -198,7 +198,7 @@ public sealed class LayoutNodeTests
                 GroupVisibility.Expanded,
                 Array.Empty<DockItemId>(),
                 first,
-                logicalRegion: LogicalRegion.InlineStartUpper));
+                toolbarRegion: LogicalRegion.InlineStartUpper));
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public sealed class LayoutNodeTests
                 GroupVisibility.Expanded,
                 null!,
                 first,
-                logicalRegion: LogicalRegion.InlineStartUpper));
+                toolbarRegion: LogicalRegion.InlineStartUpper));
         Assert.Throws<ArgumentOutOfRangeException>(
             () => new GroupNode(
                 new LayoutNodeId("group"),
@@ -292,6 +292,6 @@ public sealed class LayoutNodeTests
             GroupVisibility.Expanded,
             itemIds,
             selectedItemId,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
     }
 }

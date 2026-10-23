@@ -26,7 +26,7 @@ public sealed class WorkspaceEventOrderingTests
             GroupVisibility.Expanded,
             new[] { itemId },
             itemId,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,

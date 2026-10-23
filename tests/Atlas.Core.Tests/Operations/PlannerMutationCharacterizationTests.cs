@@ -164,7 +164,7 @@ public sealed class PlannerMutationCharacterizationTests
             GroupVisibility.Expanded,
             itemIds.Select(itemId => new DockItemId(itemId)),
             new DockItemId(itemIds[0]),
-            logicalRegion: region);
+            toolbarRegion: region);
     }
 
     private static DockItem CreateTool(string id)

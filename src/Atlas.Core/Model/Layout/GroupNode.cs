@@ -23,7 +23,7 @@ public sealed class GroupNode : LayoutNode
     /// <param name="itemIds">The ordered item identifiers.</param>
     /// <param name="selectedItemId">The selected item identifier; null for an empty group.</param>
     /// <param name="editorState">Behaviour state carried by document groups only; defaults are used when omitted.</param>
-    /// <param name="logicalRegion">The semantic tool bar region required for tool groups only.</param>
+    /// <param name="toolbarRegion">The semantic tool bar region required for tool groups only.</param>
     public GroupNode(
         LayoutNodeId id,
         DockItemKind kind,
@@ -32,7 +32,7 @@ public sealed class GroupNode : LayoutNode
         IEnumerable<DockItemId> itemIds,
         DockItemId? selectedItemId,
         EditorGroupState? editorState = null,
-        LogicalRegion? logicalRegion = null)
+        LogicalRegion? toolbarRegion = null)
         : base(id)
     {
         ValidateEnums(kind, retentionPolicy, visibility);
@@ -53,20 +53,20 @@ public sealed class GroupNode : LayoutNode
 
         if (kind == DockItemKind.Tool)
         {
-            if (logicalRegion is null
-                || logicalRegion.Value < global::Atlas.Core.Placement.LogicalRegion.InlineStartUpper
-                || logicalRegion.Value > global::Atlas.Core.Placement.LogicalRegion.BlockEndInlineEnd)
+            if (toolbarRegion is null
+                || toolbarRegion.Value < LogicalRegion.InlineStartUpper
+                || toolbarRegion.Value > LogicalRegion.BlockEndInlineEnd)
             {
                 throw new ArgumentException(
                     "A tool group must identify a known logical region.",
-                    nameof(logicalRegion));
+                    nameof(toolbarRegion));
             }
         }
-        else if (logicalRegion is not null)
+        else if (toolbarRegion is not null)
         {
             throw new ArgumentException(
                 "A document group cannot identify a toolbar logical region.",
-                nameof(logicalRegion));
+                nameof(toolbarRegion));
         }
 
         ArgumentNullException.ThrowIfNull(itemIds);
@@ -82,7 +82,7 @@ public sealed class GroupNode : LayoutNode
         EditorState = kind == DockItemKind.Document
             ? editorState ?? new EditorGroupState()
             : null;
-        LogicalRegion = logicalRegion;
+        ToolbarRegion = toolbarRegion;
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public sealed class GroupNode : LayoutNode
     /// <summary>
     ///     The semantic tool bar region a tool group is attached to; always <see langword="null"/> for document groups.
     /// </summary>
-    public LogicalRegion? LogicalRegion { get; }
+    public LogicalRegion? ToolbarRegion { get; }
 
     private static void ValidateEnums(
         DockItemKind kind,

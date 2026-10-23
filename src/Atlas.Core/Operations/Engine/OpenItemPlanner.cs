@@ -215,7 +215,7 @@ internal static class OpenItemPlanner
             group.ItemIds,
             selectedItemId,
             editorState,
-            group.LogicalRegion);
+            group.ToolbarRegion);
     }
 
     private static DockItem BuildReplacementItem(

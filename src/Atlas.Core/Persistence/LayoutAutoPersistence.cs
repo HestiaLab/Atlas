@@ -381,7 +381,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
             return WorkspaceResult<bool>.Failure(
                 new WorkspaceError(
                     WorkspaceErrorCode.InvalidLayoutData,
-                    LayoutOperationKind.RestoreWorkspace,
+                    LayoutOperationKind.Persistence,
                     WorkspaceDiagnostics.Ids.AutoSerialize,
                     WorkspaceDiagnostics.Messages.PersistenceInvalid));
         }
@@ -397,7 +397,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
             }
 
             await store.SaveAsync(
-                new WorkspaceLayoutDocument("2.0", snapshot.Revision, xml),
+                new WorkspaceLayoutDocument(LayoutSchemaVersion.Current, snapshot.Revision, xml),
                 cancellationToken).ConfigureAwait(false);
             return WorkspaceResult<bool>.Success(true);
         }
@@ -419,7 +419,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         return WorkspaceResult<T>.Failure(
             new WorkspaceError(
                 WorkspaceErrorCode.PersistenceUnavailable,
-                LayoutOperationKind.RestoreWorkspace,
+                LayoutOperationKind.Persistence,
                 diagnosticId,
                 WorkspaceDiagnostics.Messages.PersistenceUnavailable));
     }

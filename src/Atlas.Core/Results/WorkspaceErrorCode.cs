@@ -11,11 +11,6 @@ public enum WorkspaceErrorCode
     LayoutVersionIncompatible = 1,
 
     /// <summary>
-    ///     The requested content identifier is already registered.
-    /// </summary>
-    ContentAlreadyRegistered = 2,
-
-    /// <summary>
     ///     The supplied layout data is invalid.
     /// </summary>
     InvalidLayoutData = 3,
@@ -64,16 +59,6 @@ public enum WorkspaceErrorCode
     ///     The workspace is faulted and cannot continue.
     /// </summary>
     WorkspaceFaulted = 12,
-
-    /// <summary>
-    ///     The interaction request violated the frozen protocol.
-    /// </summary>
-    InteractionProtocolInvalid = 13,
-
-    /// <summary>
-    ///     The referenced drag session is no longer active.
-    /// </summary>
-    DragSessionExpired = 14,
 
     /// <summary>
     ///     The requested layout target does not exist.

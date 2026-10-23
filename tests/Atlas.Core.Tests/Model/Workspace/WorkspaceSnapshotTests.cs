@@ -35,7 +35,7 @@ public sealed class WorkspaceSnapshotTests
             GroupVisibility.Expanded,
             new[] { item.Id },
             item.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var toolbar = new ToolBarState(
             LogicalSide.InlineStart,
             ToolBarVisibility.Expanded);
@@ -214,7 +214,7 @@ public sealed class WorkspaceSnapshotTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
     }
 
     private static KeyValuePair<TKey, TValue>[] Pair<TKey, TValue>(TKey key, TValue value)

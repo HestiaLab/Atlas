@@ -100,7 +100,7 @@ public sealed class ReorderItemOperationTests
 
     private static AtlasWorkspace CreateDocumentWorkspace(IReadOnlyList<DockItem> items)
     {
-        return CreateWorkspace(items, DockItemKind.Document, logicalRegion: null);
+        return CreateWorkspace(items, DockItemKind.Document, toolbarRegion: null);
     }
 
     private static AtlasWorkspace CreateToolWorkspace(IReadOnlyList<DockItem> items)
@@ -114,7 +114,7 @@ public sealed class ReorderItemOperationTests
     private static AtlasWorkspace CreateWorkspace(
         IReadOnlyList<DockItem> items,
         DockItemKind kind,
-        LogicalRegion? logicalRegion)
+        LogicalRegion? toolbarRegion)
     {
         var group = new GroupNode(
             new LayoutNodeId("group"),
@@ -127,8 +127,8 @@ public sealed class ReorderItemOperationTests
                 ? new EditorGroupState(
                     recentlyVisitedIds: items.Select(item => item.Id))
                 : null,
-            logicalRegion);
-        var orders = logicalRegion is LogicalRegion region
+            toolbarRegion);
+        var orders = toolbarRegion is LogicalRegion region
             ? new[]
             {
                 new KeyValuePair<LogicalRegion, ToolBarOrderState>(

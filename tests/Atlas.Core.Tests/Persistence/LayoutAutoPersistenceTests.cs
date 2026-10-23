@@ -239,7 +239,7 @@ public sealed class LayoutAutoPersistenceTests
             GroupVisibility.Expanded,
             new[] { tool.Id },
             selectedItemId: tool.Id,
-            logicalRegion: Atlas.Core.Placement.LogicalRegion.InlineStartUpper);
+            toolbarRegion: Atlas.Core.Placement.LogicalRegion.InlineStartUpper);
         return new AtlasWorkspaceFactory().Create(
             new AtlasWorkspaceDefinition(
                 new WorkspaceId("main"),

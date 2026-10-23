@@ -76,7 +76,7 @@ internal sealed class WorkspaceMutation
 
     internal void InsertOrderItem(GroupNode target, DockItemId itemId, int index)
     {
-        if (target.LogicalRegion is not LogicalRegion region)
+        if (target.ToolbarRegion is not LogicalRegion region)
         {
             return;
         }
@@ -102,7 +102,7 @@ internal sealed class WorkspaceMutation
         DockItemId itemId,
         int finalIndex)
     {
-        if (group.LogicalRegion is not LogicalRegion region)
+        if (group.ToolbarRegion is not LogicalRegion region)
         {
             return;
         }
@@ -170,7 +170,7 @@ internal sealed class WorkspaceMutation
         DockItemId itemId,
         IReadOnlyList<DockItemId> remainingItems)
     {
-        if (source.LogicalRegion is not LogicalRegion region)
+        if (source.ToolbarRegion is not LogicalRegion region)
         {
             return;
         }

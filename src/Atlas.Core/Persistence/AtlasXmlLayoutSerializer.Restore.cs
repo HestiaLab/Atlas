@@ -40,7 +40,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             return WorkspaceResult<LayoutRestoreDocument>.Failure(
                 new WorkspaceError(
                     WorkspaceErrorCode.ContentNotRegistered,
-                    LayoutOperationKind.RestoreWorkspace,
+                    LayoutOperationKind.Persistence,
                     WorkspaceDiagnostics.Ids.RestoreContent,
                     WorkspaceDiagnostics.Messages.PersistenceContentNotRegistered,
                     itemId: missing[0]));
@@ -137,7 +137,7 @@ public sealed partial class AtlasXmlLayoutSerializer
                             editor.ActivationPolicy,
                             editor.RecentlyVisitedIds.Select(Map))
                         : null,
-                    group.LogicalRegion)
+                    group.ToolbarRegion)
                 : node).ToDictionary(node => node.Id);
         var orders = snapshot.ToolBarOrders.Values
             .Select(order => new ToolBarOrderState(order.Region, order.ItemIds.Select(Map)))

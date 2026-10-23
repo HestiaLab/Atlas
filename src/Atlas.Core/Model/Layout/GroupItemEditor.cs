@@ -93,7 +93,7 @@ internal static class GroupItemEditor
             itemIds,
             item.Id,
             editorState,
-            target.LogicalRegion);
+            target.ToolbarRegion);
     }
 
     /// <summary>
@@ -133,7 +133,7 @@ internal static class GroupItemEditor
             remaining,
             selected,
             editorState,
-            source.LogicalRegion);
+            source.ToolbarRegion);
         return new GroupItemRemoval(remaining, group);
     }
 
@@ -177,7 +177,7 @@ internal static class GroupItemEditor
                 remaining,
                 selected,
                 editorState,
-                source.LogicalRegion));
+                source.ToolbarRegion));
     }
 
     /// <summary>

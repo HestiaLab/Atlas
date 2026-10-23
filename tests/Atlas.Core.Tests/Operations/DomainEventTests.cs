@@ -325,7 +325,7 @@ public sealed class DomainEventTests
             GroupVisibility.Expanded,
             toolItems,
             tool?.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var root = new SplitNode(
             new LayoutNodeId("root"),
             SplitAxis.InlineChildren,

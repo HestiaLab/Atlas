@@ -23,7 +23,7 @@ public sealed class AutoHideBookmarkTests
             GroupVisibility.Expanded,
             new[] { first.Id, second.Id, third.Id },
             first.Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var strip = new AutoHideStripState(
             WorkspaceEdge.InlineStart,
             new[]
@@ -71,6 +71,43 @@ public sealed class AutoHideBookmarkTests
         var entry = Assert.Single(
             workspace.Current.AutoHideStrips[WorkspaceEdge.InlineStart].Entries);
         Assert.Equal(1, entry.DockBack.PreferredIndex);
+    }
+
+    [Fact]
+    public void Clamp_to_groups_removes_bookmarks_for_deleted_groups()
+    {
+        var hidden = CreateTool("hidden");
+        var strip = new AutoHideStripState(
+            WorkspaceEdge.InlineStart,
+            new[]
+            {
+                new AutoHideEntry(
+                    hidden.Id,
+                    new DockBack(
+                        new LayoutNodeId("gone"),
+                        preferredIndex: 2,
+                        WorkspaceEdge.InlineStart)),
+            });
+        var group = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { hidden.Id },
+            hidden.Id,
+            toolbarRegion: LogicalRegion.InlineStartUpper);
+
+        var result = AutoHideBookmarkEditor.ClampToGroups(
+            new Dictionary<WorkspaceEdge, AutoHideStripState>
+            {
+                [WorkspaceEdge.InlineStart] = strip,
+            },
+            new Dictionary<LayoutNodeId, LayoutNode>
+            {
+                [group.Id] = group,
+            });
+
+        Assert.Empty(result[WorkspaceEdge.InlineStart].Entries);
     }
 
     private static DockItem CreateTool(string id)

@@ -181,7 +181,7 @@ public sealed class ToolBarOperationTests
             GroupVisibility.Expanded,
             items.Select(item => item.Id),
             selectSecond ? items[1].Id : items[0].Id,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,

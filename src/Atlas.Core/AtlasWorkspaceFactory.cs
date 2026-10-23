@@ -50,7 +50,7 @@ public sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
         return WorkspaceResult<IAtlasWorkspace>.Failure(
             new WorkspaceError(
                 WorkspaceErrorCode.InvalidLayoutData,
-                LayoutOperationKind.ResetWorkspace,
+                LayoutOperationKind.Factory,
                 WorkspaceDiagnostics.Ids.DefinitionInvalid,
                 WorkspaceDiagnostics.Messages.DefinitionInvalid));
     }

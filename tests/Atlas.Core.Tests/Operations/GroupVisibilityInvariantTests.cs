@@ -149,7 +149,7 @@ public sealed class GroupVisibilityInvariantTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var definition = new AtlasWorkspaceDefinition(
             new WorkspaceId("main"),
             group.Id,
@@ -174,7 +174,7 @@ public sealed class GroupVisibilityInvariantTests
             GroupVisibility.Expanded,
             Array.Empty<DockItemId>(),
             selectedItemId: null,
-            logicalRegion: LogicalRegion.InlineStartUpper);
+            toolbarRegion: LogicalRegion.InlineStartUpper);
         var definition = new AtlasWorkspaceDefinition(
             new WorkspaceId("main"),
             group.Id,
@@ -230,7 +230,7 @@ public sealed class GroupVisibilityInvariantTests
             visibility,
             items.Select(item => item.Id),
             items.Length == 0 ? null : items[0].Id,
-            logicalRegion: region);
+            toolbarRegion: region);
     }
 
     private static SplitNode CreateSplit(
@@ -253,11 +253,11 @@ public sealed class GroupVisibilityInvariantTests
     {
         var orders = nodes
             .OfType<GroupNode>()
-            .Where(group => group.LogicalRegion is not null)
+            .Where(group => group.ToolbarRegion is not null)
             .Select(
                 group => new KeyValuePair<LogicalRegion, ToolBarOrderState>(
-                    group.LogicalRegion!.Value,
-                    new ToolBarOrderState(group.LogicalRegion.Value, group.ItemIds)));
+                    group.ToolbarRegion!.Value,
+                    new ToolBarOrderState(group.ToolbarRegion.Value, group.ItemIds)));
         var snapshot = new WorkspaceSnapshot(
             new WorkspaceId("workspace"),
             revision: 0,

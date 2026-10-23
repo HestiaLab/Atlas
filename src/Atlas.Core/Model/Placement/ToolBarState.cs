@@ -36,4 +36,12 @@ public readonly struct ToolBarState
     ///     The committed visibility.
     /// </summary>
     public ToolBarVisibility Visibility { get; }
+
+    /// <summary>
+    ///     Gets a value indicating whether this instance is the default state
+    ///     (<see cref="LogicalSide.InlineStart"/> + <see cref="ToolBarVisibility.Expanded"/>).
+    ///     The default state is a legal value.
+    /// </summary>
+    public bool IsDefault =>
+        Side == LogicalSide.InlineStart && Visibility == ToolBarVisibility.Expanded;
 }

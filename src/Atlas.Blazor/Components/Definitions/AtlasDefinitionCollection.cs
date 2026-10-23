@@ -225,7 +225,7 @@ internal sealed class AtlasDefinitionCollector
             var toolBars = BuildToolBars(toolGroups);
             var orders = toolGroups.Select(
                 group => new ToolBarOrderState(
-                    group.LogicalRegion!.Value,
+                    group.ToolbarRegion!.Value,
                     group.ItemIds));
 
             definition = new AtlasWorkspaceDefinition(
@@ -250,7 +250,7 @@ internal sealed class AtlasDefinitionCollector
         // 按侧去重，避免同一侧生成重复的工具栏状态。
         var sides = groups
             .Where(group => group.ItemIds.Count != 0)
-            .Select(group => SideFor(group.LogicalRegion!.Value))
+            .Select(group => SideFor(group.ToolbarRegion!.Value))
             .Distinct();
         return sides.Select(side => new ToolBarState(side, ToolBarVisibility.Expanded));
     }
