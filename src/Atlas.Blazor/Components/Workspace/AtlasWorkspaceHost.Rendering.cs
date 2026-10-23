@@ -213,13 +213,24 @@ public sealed partial class AtlasWorkspaceHost
                 presentation.IsLocked ? "true" : "false");
             builder.AddAttribute(26, "aria-valuemin", "0");
             builder.AddAttribute(27, "aria-valuemax", "100");
-            builder.AddAttribute(
-                28,
-                "aria-valuenow",
-                (double.Parse(
-                    SplitRatio(split.Basis),
-                    CultureInfo.InvariantCulture) * 100d)
-                    .ToString("R", CultureInfo.InvariantCulture));
+            if (split.Basis.Kind == SplitBasisKind.Proportional)
+            {
+                builder.AddAttribute(
+                    28,
+                    "aria-valuenow",
+                    (split.Basis.Value * 100d)
+                        .ToString("R", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                // Fixed-pixel bases have no render-time ratio; the anchored
+                // child's pixel extent is the committed value. Expose it as
+                // text instead of fabricating a 50% reading.
+                builder.AddAttribute(
+                    28,
+                    "aria-valuetext",
+                    $"{Invariant(split.Basis.Value)} pixels anchored {split.Basis.Anchor}");
+            }
             builder.AddAttribute(
                 29,
                 "data-atlas-can-collapse-first",
