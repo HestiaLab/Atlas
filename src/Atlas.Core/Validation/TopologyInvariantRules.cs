@@ -37,7 +37,8 @@ internal static class TopologyInvariantRules
             InvariantViolationSink.Add(
                 violations,
                 InvariantViolationCode.RootMissing,
-                "The root identifier must resolve to a layout node.");
+                "The root identifier must resolve to a layout node.",
+                nodeId: rootId);
             return;
         }
 
@@ -70,7 +71,8 @@ internal static class TopologyInvariantRules
                     InvariantViolationSink.Add(
                         violations,
                         InvariantViolationCode.MissingChild,
-                        $"Split '{pair.Key}' references a missing child.");
+                        $"Split '{pair.Key}' references a missing child.",
+                        nodeId: pair.Key);
                 }
             }
         }
@@ -96,12 +98,16 @@ internal static class TopologyInvariantRules
             parentCounts[childId] = parentCount + 1;
         }
 
-        if (parentCounts.Values.Any(parentCount => parentCount > 1))
+        foreach (var pair in parentCounts)
         {
-            InvariantViolationSink.Add(
-                violations,
-                InvariantViolationCode.MultipleParents,
-                "A layout node cannot have more than one parent.");
+            if (pair.Value > 1)
+            {
+                InvariantViolationSink.Add(
+                    violations,
+                    InvariantViolationCode.MultipleParents,
+                    "A layout node cannot have more than one parent.",
+                    nodeId: pair.Key);
+            }
         }
     }
 
@@ -133,7 +139,8 @@ internal static class TopologyInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.Cycle,
-                    "The layout tree cannot contain a cycle.");
+                    "The layout tree cannot contain a cycle.",
+                    nodeId: frame.Id);
                 continue;
             }
 
@@ -157,12 +164,16 @@ internal static class TopologyInvariantRules
             }
         }
 
-        if (snapshot.Nodes.Keys.Any(nodeId => !reachable.Contains(nodeId)))
+        foreach (var nodeId in snapshot.Nodes.Keys)
         {
-            InvariantViolationSink.Add(
-                violations,
-                InvariantViolationCode.OrphanNode,
-                "Every indexed layout node must be reachable from the root.");
+            if (!reachable.Contains(nodeId))
+            {
+                InvariantViolationSink.Add(
+                    violations,
+                    InvariantViolationCode.OrphanNode,
+                    "Every indexed layout node must be reachable from the root.",
+                    nodeId: nodeId);
+            }
         }
     }
 

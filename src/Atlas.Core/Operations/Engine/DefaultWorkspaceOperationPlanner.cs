@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
@@ -128,14 +129,47 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             GuardDecision decision;
             lock (guardGate)
             {
+                // 只在锁内创建惰性包装；消费者守卫在锁外启动。
                 decision = guardDecisions.GetValue(
                     operation,
                     _ => new GuardDecision(
-                        closeGuard.CanCloseAsync(
-                            new DockItemCloseContext(snapshot, item),
-                            cancellationToken).AsTask()));
+                        () => StartGuardAsync(
+                            closeGuard,
+                            snapshot,
+                            item,
+                            cancellationToken)));
             }
-            if (!await decision.Task.WaitAsync(cancellationToken).ConfigureAwait(false))
+
+            GuardOutcome outcome;
+            try
+            {
+                outcome = await decision.Decision.Value
+                    .WaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // 取消不留下结果，允许同一操作实例用新令牌重试。
+                RemoveGuardDecision(operation);
+                throw;
+            }
+
+            if (outcome.Error is not null)
+            {
+                RemoveGuardDecision(operation);
+                Trace.TraceError(
+                    "Atlas close guard failed: {0}",
+                    outcome.Error);
+                return WorkspacePlan.Failure(
+                    new WorkspaceError(
+                        WorkspaceErrorCode.WorkspaceFaulted,
+                        operation.Kind,
+                        "ATLAS-CLOSE-GUARD-FAULT",
+                        "Atlas.Close.GuardFaulted",
+                        itemId: item.Id));
+            }
+
+            if (!outcome.Allowed)
             {
                 return WorkspacePlan.Failure(
                     new WorkspaceError(
@@ -147,80 +181,49 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             }
         }
 
-        return BuildCloseCandidate(snapshot, operation, item);
+        return BuildCloseCandidate(snapshot, item);
+    }
+
+    private static async Task<GuardOutcome> StartGuardAsync(
+        IDockItemCloseGuard guard,
+        WorkspaceSnapshot snapshot,
+        DockItem item,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var allowed = await guard.CanCloseAsync(
+                new DockItemCloseContext(snapshot, item),
+                cancellationToken).ConfigureAwait(false);
+            return new GuardOutcome(allowed, Error: null);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            return new GuardOutcome(Allowed: false, Error: exception);
+        }
+    }
+
+    private void RemoveGuardDecision(CloseItemOperation operation)
+    {
+        lock (guardGate)
+        {
+            guardDecisions.Remove(operation);
+        }
     }
 
     private static WorkspacePlan BuildCloseCandidate(
         WorkspaceSnapshot snapshot,
-        CloseItemOperation operation,
         DockItem item)
     {
-        // 关闭要清除项的所有放置痕迹：组、自动隐藏条、工具栏顺序表；
-        // 空出的 Dynamic 组从树中摘除（Persistent 组保留空壳），最后从 Items 移除项本体。
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var items = snapshot.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var strips = snapshot.AutoHideStrips.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var rootNodeId = snapshot.RootNodeId;
-
-        var group = nodes.Values
-            .OfType<GroupNode>()
-            .SingleOrDefault(node => node.ItemIds.Contains(item.Id));
-        if (group is not null)
-        {
-            var remaining = group.ItemIds.Where(itemId => itemId != item.Id).ToArray();
-            if (remaining.Length == 0
-                && group.RetentionPolicy == GroupRetentionPolicy.Dynamic)
-            {
-                LayoutTreeEditor.RemoveDynamicGroup(nodes, group.Id, ref rootNodeId);
-            }
-            else
-            {
-                var selected = ChooseSelection(group, item.Id, remaining);
-                var editorState = RemoveRecentVisit(group.EditorState, item.Id);
-                nodes[group.Id] = new GroupNode(
-                    group.Id,
-                    group.Kind,
-                    group.RetentionPolicy,
-                    group.Visibility,
-                    remaining,
-                    selected,
-                    editorState,
-                    group.LogicalRegion);
-            }
-        }
-
-        foreach (var pair in strips.ToArray())
-        {
-            if (pair.Value.Entries.Any(entry => entry.ItemId == item.Id))
-            {
-                strips[pair.Key] = new AutoHideStripState(
-                    pair.Key,
-                    pair.Value.Entries.Where(entry => entry.ItemId != item.Id));
-            }
-        }
-
-        foreach (var pair in orders.ToArray())
-        {
-            if (pair.Value.ItemIds.Contains(item.Id))
-            {
-                orders[pair.Key] = new ToolBarOrderState(
-                    pair.Key,
-                    pair.Value.ItemIds.Where(itemId => itemId != item.Id));
-            }
-        }
-
-        items.Remove(item.Id);
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                rootNodeId,
-                nodes,
-                items,
-                snapshot.ToolBars,
-                orders,
-                strips));
+        // 关闭要清除项的所有放置痕迹：组、自动隐藏条、工具栏顺序表与项索引；
+        // 这些规则统一由 WorkspaceMutation/GroupItemEditor 维护。
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.RemoveItemEverywhere(item.Id);
+        return mutation.Commit();
     }
 
     private static WorkspacePlan MissingItem(CloseItemOperation operation)
@@ -234,49 +237,17 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
                 itemId: operation.ItemId));
     }
 
-    private static DockItemId? ChooseSelection(
-        GroupNode group,
-        DockItemId removedItemId,
-        IReadOnlyList<DockItemId> remaining)
+    private readonly record struct GuardOutcome(bool Allowed, Exception? Error);
+
+    private sealed class GuardDecision
     {
-        if (remaining.Count == 0)
+        internal GuardDecision(Func<Task<GuardOutcome>> start)
         {
-            return null;
+            Decision = new Lazy<Task<GuardOutcome>>(start);
         }
 
-        if (group.SelectedItemId != removedItemId)
-        {
-            return group.SelectedItemId;
-        }
-
-        if (group.EditorState?.ActivationPolicy
-            == EditorActivationPolicy.MostRecentlyVisited)
-        {
-            var recent = group.EditorState.RecentlyVisitedIds
-                .FirstOrDefault(remaining.Contains);
-            if (recent != default)
-            {
-                return recent;
-            }
-        }
-
-        var removedIndex = group.ItemIds.ToList().IndexOf(removedItemId);
-        return remaining[Math.Min(removedIndex, remaining.Count - 1)];
+        internal Lazy<Task<GuardOutcome>> Decision { get; }
     }
-
-    private static EditorGroupState? RemoveRecentVisit(
-        EditorGroupState? editorState,
-        DockItemId removedItemId)
-    {
-        return editorState is null
-            ? null
-            : new EditorGroupState(
-                editorState.OverflowMode,
-                editorState.ActivationPolicy,
-                editorState.RecentlyVisitedIds.Where(itemId => itemId != removedItemId));
-    }
-
-    private sealed record GuardDecision(Task<bool> Task);
 
     private sealed class FixedCloseGuardResolver : IDockItemCloseGuardResolver
     {

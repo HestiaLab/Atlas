@@ -98,6 +98,106 @@ public sealed class LayoutAutoPersistenceTests
             Assert.Single(diagnostics).Kind);
     }
 
+    [Fact]
+    public async Task Dispose_waits_for_in_flight_flush()
+    {
+        await using var workspace = CreateWorkspace();
+        var store = new BlockingSaveStore();
+        var persistence = new LayoutAutoPersistence(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            store,
+            TimeSpan.FromSeconds(10));
+
+        var flush = persistence.FlushAsync().AsTask();
+        await store.SaveEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var dispose = persistence.DisposeAsync().AsTask();
+
+        Assert.False(dispose.IsCompleted);
+        store.ReleaseSave.TrySetResult(null);
+        Assert.True((await flush).Succeeded);
+        await dispose.WaitAsync(TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
+    public async Task Restore_suspends_auto_save_while_loading()
+    {
+        await using var workspace = CreateWorkspace();
+        var serializer = new AtlasXmlLayoutSerializer();
+        var store = new BlockingLoadStore
+        {
+            Current = new WorkspaceLayoutDocument(
+                "2.0",
+                0,
+                serializer.Serialize(workspace.Current)),
+        };
+        await using var persistence = new LayoutAutoPersistence(
+            workspace,
+            serializer,
+            store,
+            TimeSpan.FromMilliseconds(1));
+
+        var restore = persistence.RestoreIfAvailableAsync().AsTask();
+        await store.LoadEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(
+                new DockItemId("tool"),
+                "changed",
+                iconKey: null));
+        await Task.Delay(100);
+
+        Assert.Equal(0, store.SaveCount);
+
+        store.ReleaseLoad.TrySetResult(null);
+        Assert.True((await restore).Succeeded);
+    }
+
+    [Fact]
+    public async Task Serialization_failure_is_reported_as_diagnostic()
+    {
+        await using var workspace = CreateWorkspace();
+        var diagnostics = new List<WorkspacePersistenceDiagnostic>();
+        await using var persistence = new LayoutAutoPersistence(
+            workspace,
+            new ThrowingSerializer(),
+            new RecordingWorkspaceStore(),
+            diagnosticSink: diagnostics.Add);
+
+        var result = await persistence.FlushAsync();
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(
+            WorkspaceErrorCode.InvalidLayoutData,
+            result.Error!.Code);
+        Assert.Equal("ATLAS-AUTO-SERIALIZE", result.Error.DiagnosticId);
+        Assert.Equal(
+            WorkspacePersistenceDiagnosticKind.SerializationFailure,
+            Assert.Single(diagnostics).Kind);
+    }
+
+    [Fact]
+    public async Task Storage_failure_is_reported_as_diagnostic()
+    {
+        await using var workspace = CreateWorkspace();
+        var diagnostics = new List<WorkspacePersistenceDiagnostic>();
+        await using var persistence = new LayoutAutoPersistence(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new ThrowingWorkspaceStore(),
+            diagnosticSink: diagnostics.Add);
+
+        var result = await persistence.FlushAsync();
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(
+            WorkspaceErrorCode.PersistenceUnavailable,
+            result.Error!.Code);
+        Assert.Equal("ATLAS-AUTO-WRITE", result.Error.DiagnosticId);
+        Assert.Equal(
+            WorkspacePersistenceDiagnosticKind.StorageUnavailable,
+            Assert.Single(diagnostics).Kind);
+    }
+
     private static IAtlasWorkspace CreateWorkspace()
     {
         // The group is non-empty so its Expanded visibility is a legal
@@ -152,6 +252,93 @@ public sealed class LayoutAutoPersistenceTests
         {
             cancellationToken.ThrowIfCancellationRequested();
             return ValueTask.FromResult(Current);
+        }
+    }
+
+    private sealed class BlockingSaveStore : IWorkspaceLayoutStore
+    {
+        private readonly RecordingWorkspaceStore inner = new();
+
+        internal TaskCompletionSource<object?> SaveEntered { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        internal TaskCompletionSource<object?> ReleaseSave { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async ValueTask SaveAsync(
+            WorkspaceLayoutDocument document,
+            CancellationToken cancellationToken = default)
+        {
+            SaveEntered.TrySetResult(null);
+            await ReleaseSave.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await inner.SaveAsync(document, cancellationToken).ConfigureAwait(false);
+        }
+
+        public ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
+            CancellationToken cancellationToken = default) =>
+            inner.TryLoadAsync(cancellationToken);
+    }
+
+    private sealed class ThrowingSerializer : IAtlasLayoutSerializer
+    {
+        public string Serialize(WorkspaceSnapshot snapshot) =>
+            throw new InvalidOperationException("serialize failed");
+
+        public WorkspaceResult<LayoutRestoreDocument> Deserialize(
+            string xml,
+            WorkspaceId targetWorkspaceId,
+            LayoutPersistenceLimits? limits = null) =>
+            throw new NotSupportedException();
+
+        public WorkspaceResult<LayoutRestoreDocument> DeserializeWithOptions(
+            string xml,
+            WorkspaceId targetWorkspaceId,
+            LayoutRestoreOptions options) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class ThrowingWorkspaceStore : IWorkspaceLayoutStore
+    {
+        public ValueTask SaveAsync(
+            WorkspaceLayoutDocument document,
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromException(new InvalidOperationException("store failed"));
+
+        public ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<WorkspaceLayoutDocument?>(null);
+    }
+
+    private sealed class BlockingLoadStore : IWorkspaceLayoutStore
+    {
+        private int saveCount;
+
+        internal TaskCompletionSource<object?> LoadEntered { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        internal TaskCompletionSource<object?> ReleaseLoad { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        internal WorkspaceLayoutDocument? Current { get; set; }
+
+        internal int SaveCount => Volatile.Read(ref saveCount);
+
+        public ValueTask SaveAsync(
+            WorkspaceLayoutDocument document,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Interlocked.Increment(ref saveCount);
+            Current = document;
+            return ValueTask.CompletedTask;
+        }
+
+        public async ValueTask<WorkspaceLayoutDocument?> TryLoadAsync(
+            CancellationToken cancellationToken = default)
+        {
+            LoadEntered.TrySetResult(null);
+            await ReleaseLoad.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return Current;
         }
     }
 }

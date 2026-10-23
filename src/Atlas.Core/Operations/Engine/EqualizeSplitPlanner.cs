@@ -48,24 +48,16 @@ internal static class EqualizeSplitPlanner
             return WorkspacePlan.NoChange();
         }
 
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[split.Id] = new SplitNode(
-            split.Id,
-            split.Axis,
-            EqualBasis,
-            split.Constraints,
-            split.FirstId,
-            split.SecondId);
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                snapshot.ToolBarOrders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(
+            new SplitNode(
+                split.Id,
+                split.Axis,
+                EqualBasis,
+                split.Constraints,
+                split.FirstId,
+                split.SecondId));
+        return mutation.Commit();
     }
 
     private static WorkspacePlan Failure(

@@ -39,6 +39,32 @@ public sealed class WorkspaceFactoryTests
     }
 
     [Fact]
+    public void Definition_rejects_null_collection_entries()
+    {
+        var workspaceId = new WorkspaceId("workspace");
+
+        Assert.Throws<ArgumentException>(
+            () => new AtlasWorkspaceDefinition(
+                workspaceId,
+                rootNodeId: null,
+                new LayoutNode[] { null! },
+                Array.Empty<DockItem>()));
+        Assert.Throws<ArgumentException>(
+            () => new AtlasWorkspaceDefinition(
+                workspaceId,
+                rootNodeId: null,
+                Array.Empty<LayoutNode>(),
+                new DockItem[] { null! }));
+        Assert.Throws<ArgumentException>(
+            () => new AtlasWorkspaceDefinition(
+                workspaceId,
+                rootNodeId: null,
+                Array.Empty<LayoutNode>(),
+                Array.Empty<DockItem>(),
+                toolBarOrders: new ToolBarOrderState[] { null! }));
+    }
+
+    [Fact]
     public async Task History_options_bound_retained_undo_entries()
     {
         var (definition, item, _) = CreateDefinition();
@@ -57,6 +83,32 @@ public sealed class WorkspaceFactoryTests
 
         Assert.Equal("One", workspace.Current.Items[item.Id].Title);
         Assert.Equal(WorkspaceResultStatus.NoChange, exhausted.Status);
+    }
+
+    [Fact]
+    public async Task Approximate_history_budget_evicts_old_patches()
+    {
+        var (definition, item, _) = CreateDefinition();
+        var result = new AtlasWorkspaceFactory().Create(
+            definition,
+            new AtlasWorkspaceOptions(
+                new WorkspaceHistoryOptions(approximateMaxBytes: 1000)));
+        await using var workspace = result.Value!;
+
+        await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
+        await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(item.Id, "Two", iconKey: null));
+        await workspace.ExecuteAsync(
+            new UpdateItemPresentationOperation(item.Id, "Three", iconKey: null));
+
+        var undoCount = 0;
+        while ((await workspace.UndoAsync()).Status == WorkspaceResultStatus.Success)
+        {
+            undoCount++;
+        }
+
+        Assert.Equal(1, undoCount);
     }
 
     [Fact]

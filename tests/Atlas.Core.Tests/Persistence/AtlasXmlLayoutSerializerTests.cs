@@ -1,6 +1,7 @@
 using Atlas.Core.Layout;
 using Atlas.Core.Items;
 using Atlas.Core.Persistence;
+using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Xunit;
 
@@ -43,6 +44,44 @@ public sealed class AtlasXmlLayoutSerializerTests
         Assert.Equal(xml, serializer.Serialize(second.Value!.Snapshot));
         Assert.Contains("schemaVersion=\"2.0\"", xml, StringComparison.Ordinal);
         Assert.DoesNotContain("Revision", xml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Serialize_rejects_snapshot_over_default_limits()
+    {
+        var itemId = new DockItemId("item");
+        var item = new DockItem(
+            itemId,
+            DockItemKind.Tool,
+            new ContentReference("tool", "item"),
+            DockItemCapabilityPresets.Tool,
+            title: new string('x', 4097));
+        var group = new GroupNode(
+            new LayoutNodeId("group"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { itemId },
+            itemId,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            group.Id,
+            new[] { new KeyValuePair<LayoutNodeId, LayoutNode>(group.Id, group) },
+            new[] { new KeyValuePair<DockItemId, DockItem>(itemId, item) },
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            new[]
+            {
+                new KeyValuePair<LogicalRegion, ToolBarOrderState>(
+                    LogicalRegion.InlineStartUpper,
+                    new ToolBarOrderState(
+                        LogicalRegion.InlineStartUpper,
+                        new[] { itemId })),
+            },
+            Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
+
+        Assert.Throws<ArgumentException>(() => serializer.Serialize(snapshot));
     }
 
     [Fact]
@@ -208,6 +247,7 @@ public sealed class AtlasXmlLayoutSerializerTests
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+        Assert.Equal("ATLAS-PERSIST-LIMIT", result.Error.DiagnosticId);
     }
 
     [Fact]

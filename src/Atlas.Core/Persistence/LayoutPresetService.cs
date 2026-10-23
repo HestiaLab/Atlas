@@ -106,7 +106,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     将命名预设作为单个恢复历史屏障应用。
+    ///     将命名预设作为单个恢复历史屏障应用；预设不存在时返回失败。
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ApplyAsync(
         string name,
@@ -135,10 +135,7 @@ public sealed class LayoutPresetService
 
         if (stored is null)
         {
-            return WorkspaceResult<LayoutChangeSet>.NoChange(
-                LayoutChangeSet.Empty(
-                    workspace.Current.Revision,
-                    LayoutChangeKind.Restore));
+            return MissingPreset<LayoutChangeSet>();
         }
 
         var parsed = serializer.Deserialize(stored.Xml, workspace.Id);
@@ -156,20 +153,16 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     删除命名预设，不改变工作区状态。
+    ///     删除命名预设，不改变工作区状态；预设不存在时返回失败。
     /// </summary>
     public async ValueTask<WorkspaceResult<bool>> DeleteAsync(
         string name,
         CancellationToken cancellationToken = default)
     {
+        string validatedName;
         try
         {
-            var validatedName = LayoutPresetDescriptor.RequireName(name);
-            var removed = await store.DeleteAsync(validatedName, cancellationToken)
-                .ConfigureAwait(false);
-            return removed
-                ? WorkspaceResult<bool>.Success(true)
-                : WorkspaceResult<bool>.NoChange(false);
+            validatedName = LayoutPresetDescriptor.RequireName(name);
         }
         catch (ArgumentException)
         {
@@ -177,11 +170,32 @@ public sealed class LayoutPresetService
                 WorkspaceErrorCode.InvalidLayoutData,
                 "ATLAS-PRESET-NAME");
         }
+
+        var writer = writers.GetOrAdd(validatedName, _ => new WriterState());
+        var generation = Interlocked.Increment(ref writer.LatestGeneration);
+        await writer.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (generation != Volatile.Read(ref writer.LatestGeneration))
+            {
+                return WorkspaceResult<bool>.NoChange(false);
+            }
+
+            var removed = await store.DeleteAsync(validatedName, cancellationToken)
+                .ConfigureAwait(false);
+            return removed
+                ? WorkspaceResult<bool>.Success(true)
+                : MissingPreset<bool>();
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             return Failure<bool>(
                 WorkspaceErrorCode.PersistenceUnavailable,
                 "ATLAS-PRESET-DELETE");
+        }
+        finally
+        {
+            writer.Gate.Release();
         }
     }
 
@@ -216,6 +230,16 @@ public sealed class LayoutPresetService
                 code == WorkspaceErrorCode.PersistenceUnavailable
                     ? "Atlas.Persistence.Unavailable"
                     : "Atlas.Persistence.InvalidLayoutData"));
+    }
+
+    private static WorkspaceResult<T> MissingPreset<T>()
+    {
+        return WorkspaceResult<T>.Failure(
+            new WorkspaceError(
+                WorkspaceErrorCode.TargetNotFound,
+                LayoutOperationKind.RestoreWorkspace,
+                "ATLAS-PRESET-MISSING",
+                "Atlas.Preset.NotFound"));
     }
 
     private sealed class WriterState

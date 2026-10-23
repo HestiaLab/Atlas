@@ -46,17 +46,8 @@ internal static class ItemPresentationPlanner
             operation.Title,
             operation.IconKey,
             item.DocumentState);
-        var items = snapshot.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
-        items[item.Id] = replacement;
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                snapshot.Nodes,
-                items,
-                snapshot.ToolBars,
-                snapshot.ToolBarOrders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceItem(replacement);
+        return mutation.Commit();
     }
 }

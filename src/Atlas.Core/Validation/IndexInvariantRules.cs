@@ -21,7 +21,8 @@ internal static class IndexInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.NodeKeyMismatch,
-                    "A node index key must be non-default and equal the node identity.");
+                    "A node index key must be non-default and equal the node identity.",
+                    nodeId: pair.Key);
             }
         }
 
@@ -32,7 +33,8 @@ internal static class IndexInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.ItemKeyMismatch,
-                    "An item index key must be non-default and equal the item identity.");
+                    "An item index key must be non-default and equal the item identity.",
+                    itemId: pair.Key);
             }
         }
     }

@@ -38,18 +38,9 @@ internal static class ToolBarOperationPlanner
             return WorkspacePlan.NoChange();
         }
 
-        var toolbars = snapshot.ToolBars.ToDictionary(pair => pair.Key, pair => pair.Value);
-        toolbars[operation.Side] = new ToolBarState(operation.Side, operation.Visibility);
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                snapshot.Nodes,
-                snapshot.Items,
-                toolbars,
-                snapshot.ToolBarOrders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.SetToolBar(new ToolBarState(operation.Side, operation.Visibility));
+        return mutation.Commit();
     }
 
     /// <summary>
@@ -114,20 +105,9 @@ internal static class ToolBarOperationPlanner
         var reordered = order.ItemIds.ToList();
         reordered.RemoveAt(currentIndex);
         reordered.Insert(operation.TargetIndex, operation.ItemId);
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
-        orders[operation.LogicalRegion] = new ToolBarOrderState(
-            operation.LogicalRegion,
-            reordered);
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                snapshot.Nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                orders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.SetOrder(operation.LogicalRegion, reordered);
+        return mutation.Commit();
     }
 
     private static WorkspacePlan Failure(

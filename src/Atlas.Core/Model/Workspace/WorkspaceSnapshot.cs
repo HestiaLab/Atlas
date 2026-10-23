@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 
 namespace Atlas.Core;
@@ -12,6 +11,27 @@ namespace Atlas.Core;
 /// </summary>
 public sealed class WorkspaceSnapshot
 {
+    private WorkspaceSnapshot(
+        WorkspaceId id,
+        long revision,
+        LayoutNodeId? rootNodeId,
+        IReadOnlyDictionary<LayoutNodeId, LayoutNode> nodes,
+        IReadOnlyDictionary<DockItemId, DockItem> items,
+        IReadOnlyDictionary<LogicalSide, ToolBarState> toolBars,
+        IReadOnlyDictionary<LogicalRegion, ToolBarOrderState> toolBarOrders,
+        IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> autoHideStrips,
+        bool trusted)
+    {
+        Id = id;
+        Revision = revision;
+        RootNodeId = rootNodeId;
+        Nodes = nodes;
+        Items = items;
+        ToolBars = toolBars;
+        ToolBarOrders = toolBarOrders;
+        AutoHideStrips = autoHideStrips;
+    }
+
     internal WorkspaceSnapshot(
         WorkspaceId id,
         long revision,
@@ -112,7 +132,7 @@ public sealed class WorkspaceSnapshot
     }
 
     /// <summary>
-    ///     复制快照并仅替换修订号；其余集合直接共享引用（快照不可变，共享安全）。
+    ///     复制快照并仅替换修订号；五个索引直接共享引用（快照不可变，共享安全）。
     /// </summary>
     /// <param name="revision">新修订号。</param>
     /// <returns>
@@ -128,7 +148,8 @@ public sealed class WorkspaceSnapshot
             Items,
             ToolBars,
             ToolBarOrders,
-            AutoHideStrips);
+            AutoHideStrips,
+            trusted: true);
     }
 
     private static IReadOnlyDictionary<TKey, TValue> Copy<TKey, TValue>(

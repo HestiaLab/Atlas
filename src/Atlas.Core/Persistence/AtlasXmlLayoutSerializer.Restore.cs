@@ -7,7 +7,6 @@ using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -163,13 +162,20 @@ public sealed partial class AtlasXmlLayoutSerializer
         IReadOnlyList<DockItemId> missing)
     {
         var missingSet = missing.ToHashSet();
+        var autoHiddenItemIds = snapshot.AutoHideStrips.Values
+            .SelectMany(strip => strip.Entries)
+            .Select(entry => entry.ItemId)
+            .ToHashSet();
         var items = snapshot.Items.Values.Select(
             item => missingSet.Contains(item.Id)
                 ? new DockItem(
                     item.Id,
                     item.Kind,
                     item.Content,
-                    DockItemCapabilityPresets.Placeholder,
+                    item.Kind == DockItemKind.Tool
+                        && autoHiddenItemIds.Contains(item.Id)
+                            ? DockItemCapabilities.CanAutoHide
+                            : DockItemCapabilityPresets.Placeholder,
                     item.Title,
                     item.IconKey,
                     item.Kind == DockItemKind.Document ? default(DocumentState) : null)
@@ -202,29 +208,14 @@ public sealed partial class AtlasXmlLayoutSerializer
                 continue;
             }
 
-            var remaining = group.ItemIds.Where(id => !droppedSet.Contains(id)).ToArray();
-            if (remaining.Length == 0 && group.RetentionPolicy == GroupRetentionPolicy.Dynamic)
+            var removal = GroupItemEditor.RemoveItems(group, droppedSet);
+            if (removal.Group is null)
             {
                 LayoutTreeEditor.RemoveDynamicGroup(nodes, group.Id, ref rootNodeId);
                 continue;
             }
 
-            nodes[group.Id] = new GroupNode(
-                group.Id,
-                group.Kind,
-                group.RetentionPolicy,
-                group.Visibility,
-                remaining,
-                group.SelectedItemId is { } selected && remaining.Contains(selected)
-                    ? selected
-                    : remaining.FirstOrDefault() is { } first && first != default ? first : null,
-                group.EditorState is { } editor
-                    ? new EditorGroupState(
-                        editor.OverflowMode,
-                        editor.ActivationPolicy,
-                        editor.RecentlyVisitedIds.Where(id => !droppedSet.Contains(id)))
-                    : null,
-                group.LogicalRegion);
+            nodes[group.Id] = removal.Group;
         }
 
         var orders = snapshot.ToolBarOrders.Values
@@ -239,7 +230,13 @@ public sealed partial class AtlasXmlLayoutSerializer
                     strip.Edge,
                     strip.Entries.Where(entry => !droppedSet.Contains(entry.ItemId))))
             .ToDictionary(strip => strip.Edge);
-        return CopySnapshot(snapshot, rootNodeId, nodes, items, orders, strips);
+        return CopySnapshot(
+            snapshot,
+            rootNodeId,
+            nodes,
+            items,
+            orders,
+            AutoHideBookmarkEditor.ClampToGroups(strips, nodes));
     }
 
     private static WorkspaceSnapshot CopySnapshot(

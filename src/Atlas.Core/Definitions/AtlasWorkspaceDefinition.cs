@@ -82,6 +82,14 @@ public sealed class AtlasWorkspaceDefinition
         string parameterName)
     {
         ArgumentNullException.ThrowIfNull(source, parameterName);
-        return new ReadOnlyCollection<T>(source.ToArray());
+        var materialized = source.ToArray();
+        if (materialized.Any(item => item is null))
+        {
+            throw new ArgumentException(
+                "A definition collection cannot contain null entries.",
+                parameterName);
+        }
+
+        return new ReadOnlyCollection<T>(materialized);
     }
 }

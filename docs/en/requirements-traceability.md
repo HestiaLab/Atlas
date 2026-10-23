@@ -14,11 +14,14 @@ implementation and verification. The normative source for design mapping is
 - Current functional implementation status: see the P8 item-by-item audit;
   Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
 - Latest measured gate baseline (2026-10-23, branch
-  `refactor/code-quality-2026-10`): 282 Core + 129 Blazor + 50 JS tests;
-  Debug/Release, typecheck, format, pack, frozen-contract diff and the
-  dual-Host real-browser drag fixture pass. The P8 historical baseline
-  (264 Core + 43 Blazor + 17 Node) is retained in its row below; the
-  pre-refactor measurement was 275 Core + 114 Blazor + 43 JS
+  `refactor/code-quality-2026-10`, after Phase 0 correctness fixes and the
+  Phase 1 structural-refactor slice): 310 Core + 129 Blazor tests; Debug
+  build/test and format pass. The 50 JS tests and the
+  Release/typecheck/pack/frozen-contract/dual-Host real-browser gates were
+  not re-run in this slice and remain recorded from the pre-Phase-0
+  baseline. The P8 historical baseline (264 Core + 43 Blazor + 17 Node) is
+  retained in its row below; the pre-refactor measurement was
+  275 Core + 114 Blazor + 43 JS
 - Completed engineering work: P0~P8 Verified; DEV-GATE-001~007 Closed
 - Excluded from formal coverage: the 5 historical deleted IDs and 9
   non-normative boundary IDs listed in ADR-0014
@@ -128,6 +131,8 @@ converted directly to `Implemented` or `Verified`.
 | REQ-F-048、REQ-F-027、REQ-F-017 | DES-OP-001、DES-OP-004~007 | P9 | `Atlas.Core/Operations/Engine` | `DockDocumentOperationTests`、`OpenItemOperationTests`、`SelectItemOperationTests`: pinned-prefix center docking, empty Persistent group ToolBarOrder fallback, auto-hide-only selection typed failure | In Progress | 2026-10-23 crash guards CORE-01/02/03; related requirement statuses are unchanged and not upgraded to Verified |
 | REQ-F-109、REQ-F-133 | DES-INT-001~002、DES-PRJ-002 | P9 | `Atlas.Blazor/Components/Workspace` | `AtlasWorkspaceHostTests`: sequential programmatic-to-declarative switch preserves external ownership and disposes only the Host-owned workspace | In Progress | 2026-10-23 state-ownership fix BLAZOR-01; related requirement statuses unchanged |
 | — | DES-ARCH-001~004、DES-INT-001~008、DES-PRJ-001~003 | P9 | `Atlas.Core`、`Atlas.Blazor`、`ClientScripts` | 282 Core + 129 Blazor + 50 JS tests; Release build/test; typecheck; format; pack; frozen-contract diff empty; dual-Host real-browser drag fixture | Verified | 2026-10-23 behavior-preserving refactor slices 1–6; no public C# API, JS protocol, DOM metadata, XML schema or package-topology change; requirement statuses unchanged |
+| REQ-F-017~019、REQ-F-027~030、REQ-F-085~098、REQ-F-110~115、REQ-F-156 | DES-DOM-008、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 0 | `Atlas.Core` | 297 Core + 129 Blazor tests; `WorkspaceSnapshotTests`, `WorkspaceTransactionTests`, `OpenItemOperationTests`, `AutoHideBookmarkTests`, `WorkspaceEventOrderingTests`, `AtlasXmlLayoutSerializerTests`, `WorkspaceRestoreTests`, `LayoutPresetServiceTests`, `LayoutAutoPersistenceTests`, `WorkspaceFactoryTests`: read-only snapshot normalization, pinned ReplaceExisting rejection, DockBack index clamp, V1 limits/size warning, serialize limits, placeholder AutoHide capability, preset missing failure, guard fault/retry, auto-save lifecycle, repeated Dispose, event ordering, history byte budget, null definition entries | In Progress | 2026-10-23 Phase 0 correctness fixes; behavior changes: preset missing returns failure per SRS, V1 `size` emits a diagnostic warning, event enqueue order follows commits, Dispose waits in-flight saves, history honors the approximate byte budget, Serialize rejects over-limit snapshots, and close-guard faults return `WorkspaceFaulted`; no public C# API, JS protocol, DOM metadata or XML schema shape change; requirement statuses are unchanged; `HistoryNotRecorded`/history-barrier semantics remain deferred to an ADR |
+| — | DES-ARCH-001~004、DES-DOM-002~003、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 1 | `Atlas.Core` | 310 Core + 129 Blazor tests; `WorkspaceSnapshotTests` (`WithRevision` shares read-only indexes), planner suites, `PlannerMutationCharacterizationTests`, `InMemoryStoreTests`, `DockItemPlacementSnapshotTests`; Debug build/test/format | In Progress | 2026-10-23 Phase 1 structural-refactor slice: trusted revision constructor and out-of-lock candidate validation/patch/change-set; `GroupVisibilityInvariant`, `LayoutTreeEditor`, `GroupItemEditor` and `AutoHideBookmarkEditor` moved to `Model/Layout` (Persistence/Model no longer import `Operations.Engine`); `WorkspaceMutation` gained ToolBar editing and `RemoveItemEverywhere`, and is used by Select/GroupVisibility/ItemPresentation/Resize/Equalize/ToolBar planners plus the Close path; `DropItems` reuses `GroupItemEditor.RemoveItems`; `OpenItemPlanner.ActivateExisting` split into helpers; `GroupItemEditor` owns the MRU/adjacent/first selection-after-removal policy; `InvariantViolation` carries structured NodeId/ItemId and `EnsureValid` reports all violations; persistence distinguishes limit/schema/invalid diagnostics; low-coverage public persistence paths and failure modes now have tests. Layout-state behavior is preserved and diagnostic text/IDs were refined; no public C# API, JS protocol, DOM metadata or XML schema shape change. Remaining: RestoreWorkspacePlanner whole-snapshot construction, diagnostic literal catalog/event sink, remaining hotspots, boundary decisions |
 
 ## Update Rules
 

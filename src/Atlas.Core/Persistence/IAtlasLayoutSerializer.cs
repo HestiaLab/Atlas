@@ -10,6 +10,9 @@ public interface IAtlasLayoutSerializer
     /// <summary>
     ///     将一个不可变快照序列化为规范的 V2 XML。
     /// </summary>
+    /// <exception cref="ArgumentException">
+    ///     快照违反已提交状态不变量，或超过默认持久化大小限制。
+    /// </exception>
     string Serialize(WorkspaceSnapshot snapshot);
 
     /// <summary>

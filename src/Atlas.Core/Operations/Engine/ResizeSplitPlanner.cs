@@ -53,18 +53,9 @@ internal static class ResizeSplitPlanner
             split.Constraints,
             split.FirstId,
             split.SecondId);
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[split.Id] = replacement;
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                snapshot.ToolBarOrders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(replacement);
+        return mutation.Commit();
     }
 
     private static WorkspacePlan Failure(

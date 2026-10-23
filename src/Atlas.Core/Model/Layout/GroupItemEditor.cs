@@ -1,7 +1,6 @@
 using Atlas.Core.Items;
-using Atlas.Core.Layout;
 
-namespace Atlas.Core.Operations.Engine;
+namespace Atlas.Core.Layout;
 
 /// <summary>
 ///     组内项编辑结果：剩余项顺序与替换后的组节点。
@@ -104,21 +103,20 @@ internal static class GroupItemEditor
         GroupNode source,
         DockItemId itemId,
         bool chooseAdjacent,
-        bool updateRecentVisits)
+        bool updateRecentVisits,
+        bool useMostRecentlyVisited = false)
     {
         var itemIds = source.ItemIds.ToList();
-        var removedIndex = itemIds.IndexOf(itemId);
         var remaining = itemIds.Where(id => id != itemId).ToArray();
-        var selected = source.SelectedItemId == itemId
-            ? (remaining.Length == 0
-                ? null
-                : chooseAdjacent
-                    ? remaining[Math.Min(removedIndex, remaining.Length - 1)]
-                    : remaining[0])
-            : source.SelectedItemId;
+        var selected = SelectAfterRemoval(
+            source,
+            itemId,
+            remaining,
+            chooseAdjacent,
+            useMostRecentlyVisited);
         var editorState = source.Kind == DockItemKind.Document
             ? (updateRecentVisits
-                ? RemoveRecentVisit(source.EditorState!, itemId)
+                ? RemoveRecentVisit(source.EditorState, itemId)
                 : source.EditorState)
             : null;
         if (remaining.Length == 0
@@ -140,6 +138,49 @@ internal static class GroupItemEditor
     }
 
     /// <summary>
+    ///     批量移除组内项；选中项仍在时保留，否则回退到剩余首项。
+    /// </summary>
+    internal static GroupItemRemoval RemoveItems(
+        GroupNode source,
+        ISet<DockItemId> removedItemIds)
+    {
+        var remaining = source.ItemIds
+            .Where(itemId => !removedItemIds.Contains(itemId))
+            .ToArray();
+        var selected = source.SelectedItemId is { } current
+            && remaining.Contains(current)
+                ? current
+                : remaining.Length == 0
+                    ? (DockItemId?)null
+                    : remaining[0];
+        var editorState = source.Kind == DockItemKind.Document
+            ? new EditorGroupState(
+                source.EditorState!.OverflowMode,
+                source.EditorState.ActivationPolicy,
+                source.EditorState.RecentlyVisitedIds.Where(
+                    itemId => !removedItemIds.Contains(itemId)))
+            : null;
+
+        if (remaining.Length == 0
+            && source.RetentionPolicy == GroupRetentionPolicy.Dynamic)
+        {
+            return new GroupItemRemoval(remaining, Group: null);
+        }
+
+        return new GroupItemRemoval(
+            remaining,
+            new GroupNode(
+                source.Id,
+                source.Kind,
+                source.RetentionPolicy,
+                source.Visibility,
+                remaining,
+                selected,
+                editorState,
+                source.LogicalRegion));
+    }
+
+    /// <summary>
     ///     在组内移动项；调用方负责先校验目标索引。
     /// </summary>
     internal static List<DockItemId> Reorder(
@@ -154,6 +195,41 @@ internal static class GroupItemEditor
         return reordered;
     }
 
+    internal static DockItemId? SelectAfterRemoval(
+        GroupNode source,
+        DockItemId removedItemId,
+        IReadOnlyList<DockItemId> remaining,
+        bool chooseAdjacent,
+        bool useMostRecentlyVisited)
+    {
+        if (remaining.Count == 0)
+        {
+            return null;
+        }
+
+        if (source.SelectedItemId != removedItemId)
+        {
+            return source.SelectedItemId;
+        }
+
+        if (useMostRecentlyVisited
+            && source.EditorState?.ActivationPolicy
+                == EditorActivationPolicy.MostRecentlyVisited)
+        {
+            var recent = source.EditorState.RecentlyVisitedIds
+                .FirstOrDefault(remaining.Contains);
+            if (recent != default)
+            {
+                return recent;
+            }
+        }
+
+        var removedIndex = source.ItemIds.ToList().IndexOf(removedItemId);
+        return chooseAdjacent
+            ? remaining[Math.Min(removedIndex, remaining.Count - 1)]
+            : remaining[0];
+    }
+
     internal static EditorGroupState UpdateRecentVisits(
         EditorGroupState state,
         DockItemId itemId)
@@ -164,13 +240,15 @@ internal static class GroupItemEditor
             state.RecentlyVisitedIds.Where(id => id != itemId).Prepend(itemId));
     }
 
-    private static EditorGroupState RemoveRecentVisit(
-        EditorGroupState state,
+    internal static EditorGroupState? RemoveRecentVisit(
+        EditorGroupState? state,
         DockItemId itemId)
     {
-        return new EditorGroupState(
-            state.OverflowMode,
-            state.ActivationPolicy,
-            state.RecentlyVisitedIds.Where(id => id != itemId));
+        return state is null
+            ? null
+            : new EditorGroupState(
+                state.OverflowMode,
+                state.ActivationPolicy,
+                state.RecentlyVisitedIds.Where(id => id != itemId));
     }
 }

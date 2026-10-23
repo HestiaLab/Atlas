@@ -205,8 +205,10 @@ public sealed class WorkspaceTransactionTests
             Array.Empty<KeyValuePair<LogicalRegion, ToolBarOrderState>>(),
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => workspace.ExecuteAsync(TestOperation.Commit(invalid)).AsTask());
+        Assert.Contains("RootMissing", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("node=missing", exception.Message, StringComparison.Ordinal);
 
         Assert.Equal(0, workspace.Current.Revision);
         Assert.Null(workspace.Current.RootNodeId);
@@ -222,6 +224,32 @@ public sealed class WorkspaceTransactionTests
         await Assert.ThrowsAsync<ObjectDisposedException>(
             () => workspace.ExecuteAsync(TestOperation.NoChange()).AsTask());
         await workspace.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Concurrent_dispose_calls_wait_for_notification_drain()
+    {
+        var workspace = CreateWorkspace();
+        var handlerEntered = new TaskCompletionSource<object?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHandler = new TaskCompletionSource<object?>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        workspace.Changed += (_, _) =>
+        {
+            handlerEntered.TrySetResult(null);
+            releaseHandler.Task.GetAwaiter().GetResult();
+        };
+
+        await workspace.ExecuteAsync(
+            TestOperation.Commit(WithTool(workspace.Current, "explorer")));
+        await handlerEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        var first = workspace.DisposeAsync().AsTask();
+        var second = workspace.DisposeAsync().AsTask();
+
+        Assert.False(second.IsCompleted);
+        releaseHandler.TrySetResult(null);
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(2));
     }
 
     private static AtlasWorkspace CreateWorkspace()

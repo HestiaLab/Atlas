@@ -57,7 +57,8 @@ internal static class PlacementInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.DuplicateLogicalRegion,
-                    "Only one tool group can own a logical region.");
+                    "Only one tool group can own a logical region.",
+                    nodeId: group.Id);
             }
         }
 
@@ -69,7 +70,9 @@ internal static class PlacementInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.MissingItem,
-                    $"Group '{group.Id}' references a missing item.");
+                    $"Group '{group.Id}' references a missing item.",
+                    nodeId: group.Id,
+                    itemId: itemId);
                 continue;
             }
 
@@ -79,7 +82,9 @@ internal static class PlacementInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.ItemKindMismatch,
-                    "A group can contain only items of its declared kind.");
+                    "A group can contain only items of its declared kind.",
+                    nodeId: group.Id,
+                    itemId: itemId);
             }
 
             if (group.LogicalRegion is not null)
@@ -99,7 +104,9 @@ internal static class PlacementInvariantRules
                     InvariantViolationSink.Add(
                         violations,
                         InvariantViolationCode.PinnedPrefix,
-                        "Pinned document items must form a stable prefix.");
+                        "Pinned document items must form a stable prefix.",
+                        nodeId: group.Id,
+                        itemId: itemId);
                 }
             }
         }
@@ -112,7 +119,8 @@ internal static class PlacementInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.RecentVisitInvalid,
-                    "Recently visited items must still belong to the document group.");
+                    "Recently visited items must still belong to the document group.",
+                    nodeId: group.Id);
             }
         }
     }
@@ -147,7 +155,8 @@ internal static class PlacementInvariantRules
                     InvariantViolationSink.Add(
                         violations,
                         InvariantViolationCode.AutoHideItemInvalid,
-                        "Auto-hide placement requires an existing capable tool item.");
+                        "Auto-hide placement requires an existing capable tool item.",
+                        itemId: entry.ItemId);
                     continue;
                 }
 
@@ -157,7 +166,8 @@ internal static class PlacementInvariantRules
                     InvariantViolationSink.Add(
                         violations,
                         InvariantViolationCode.DockBackInvalid,
-                        "An auto-hide dock-back bookmark must resolve to a tool group.");
+                        "An auto-hide dock-back bookmark must resolve to a tool group.",
+                        itemId: entry.ItemId);
                 }
                 else
                 {
@@ -199,7 +209,8 @@ internal static class PlacementInvariantRules
                 InvariantViolationSink.Add(
                     violations,
                     InvariantViolationCode.ItemPlacementCount,
-                    $"Item '{placementCount.Key}' must have exactly one placement.");
+                    $"Item '{placementCount.Key}' must have exactly one placement.",
+                    itemId: placementCount.Key);
             }
         }
     }
@@ -250,7 +261,8 @@ internal static class PlacementInvariantRules
                     InvariantViolationSink.Add(
                         violations,
                         InvariantViolationCode.ToolBarOrderItemInvalid,
-                        "Toolbar order items must be tools placed in the same logical region.");
+                        "Toolbar order items must be tools placed in the same logical region.",
+                        itemId: itemId);
                 }
             }
         }

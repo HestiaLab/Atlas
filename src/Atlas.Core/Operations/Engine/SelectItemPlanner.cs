@@ -71,18 +71,9 @@ internal static class SelectItemPlanner
             operation.ItemId,
             editorState,
             group.LogicalRegion);
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[group.Id] = replacement;
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                snapshot.ToolBarOrders,
-                snapshot.AutoHideStrips));
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(replacement);
+        return mutation.Commit();
     }
 
     private static EditorGroupState? UpdateRecentVisits(

@@ -134,9 +134,7 @@ internal static class OpenItemPlanner
     {
         // 内容等价命中时激活既有项而不是插入新项——同一内容只允许一个 Tab；
         // ReplaceExisting 模式在此基础上用请求内容覆盖旧项（刷新内容引用与标题）。
-        var group = snapshot.Nodes.Values
-            .OfType<GroupNode>()
-            .SingleOrDefault(node => node.ItemIds.Contains(existing.Id));
+        var group = FindContainingGroup(snapshot, existing.Id);
         if (group is null || group.Kind != operation.Item.Kind)
         {
             return Failure(
@@ -146,45 +144,27 @@ internal static class OpenItemPlanner
                 "Atlas.Open.TargetRejected");
         }
 
-        var recentIds = group.EditorState?.RecentlyVisitedIds
-            .Where(itemId => itemId != existing.Id)
-            .Prepend(existing.Id);
-        var editorState = group.EditorState is null
-            ? null
-            : new EditorGroupState(
-                group.EditorState.OverflowMode,
-                group.EditorState.ActivationPolicy,
-                recentIds);
-        // 工具组激活时强制展开：被折叠/自动隐藏的工具随激活回到视野；文档组保持原可见性。
-        var replacementGroup = new GroupNode(
-            group.Id,
-            group.Kind,
-            group.RetentionPolicy,
-            group.Kind == DockItemKind.Tool
-                ? GroupVisibility.Expanded
-                : group.Visibility,
-            group.ItemIds,
-            existing.Id,
-            editorState,
-            group.LogicalRegion);
+        var replacementGroup = BuildReplacementGroup(group, existing.Id);
         var replacementItem = replace
-            ? new DockItem(
-                existing.Id,
-                operation.Item.Kind,
-                operation.Item.Content,
-                operation.Item.Capabilities,
-                operation.Item.Title,
-                operation.Item.IconKey,
-                operation.Item.DocumentState)
+            ? BuildReplacementItem(existing, operation.Item)
             : existing;
+        // 原位替换可能改变文档的 pinned 状态；固定文档必须保持稳定前缀。
+        if (replace
+            && !GroupItemEditor.HasPinnedPrefix(
+                snapshot,
+                group.ItemIds,
+                replacementItem))
+        {
+            return Failure(
+                WorkspaceErrorCode.TargetRejectedByPolicy,
+                operation,
+                "ATLAS-OPEN-PINNED-PREFIX",
+                "Atlas.Open.TargetRejected");
+        }
+
         // 选中项、可见性、MRU 与项内容均未变化时返回 NoChange，
         // 避免激活当前已选中的项产生空修订。
-        var groupChanged = !ReferenceEquals(group, replacementGroup)
-            && (group.SelectedItemId != replacementGroup.SelectedItemId
-                || group.Visibility != replacementGroup.Visibility
-                || !RecentIdsEqual(group.EditorState, replacementGroup.EditorState));
-        var itemChanged = !ReferenceEquals(existing, replacementItem);
-        if (!groupChanged && !itemChanged)
+        if (!HasActivationChanges(group, replacementGroup) && !replace)
         {
             return WorkspacePlan.NoChange();
         }
@@ -197,6 +177,65 @@ internal static class OpenItemPlanner
         }
 
         return mutation.Commit();
+    }
+
+    private static GroupNode? FindContainingGroup(
+        WorkspaceSnapshot snapshot,
+        DockItemId itemId)
+    {
+        return snapshot.Nodes.Values
+            .OfType<GroupNode>()
+            .SingleOrDefault(node => node.ItemIds.Contains(itemId));
+    }
+
+    private static GroupNode BuildReplacementGroup(
+        GroupNode group,
+        DockItemId selectedItemId)
+    {
+        var recentIds = group.EditorState?.RecentlyVisitedIds
+            .Where(itemId => itemId != selectedItemId)
+            .Prepend(selectedItemId);
+        var editorState = group.EditorState is null
+            ? null
+            : new EditorGroupState(
+                group.EditorState.OverflowMode,
+                group.EditorState.ActivationPolicy,
+                recentIds);
+        // 工具组激活时强制展开：被折叠/自动隐藏的工具随激活回到视野；文档组保持原可见性。
+        return new GroupNode(
+            group.Id,
+            group.Kind,
+            group.RetentionPolicy,
+            group.Kind == DockItemKind.Tool
+                ? GroupVisibility.Expanded
+                : group.Visibility,
+            group.ItemIds,
+            selectedItemId,
+            editorState,
+            group.LogicalRegion);
+    }
+
+    private static DockItem BuildReplacementItem(
+        DockItem existing,
+        DockItem requested)
+    {
+        return new DockItem(
+            existing.Id,
+            requested.Kind,
+            requested.Content,
+            requested.Capabilities,
+            requested.Title,
+            requested.IconKey,
+            requested.DocumentState);
+    }
+
+    private static bool HasActivationChanges(
+        GroupNode group,
+        GroupNode replacement)
+    {
+        return group.SelectedItemId != replacement.SelectedItemId
+            || group.Visibility != replacement.Visibility
+            || !RecentIdsEqual(group.EditorState, replacement.EditorState);
     }
 
     private static bool RecentIdsEqual(

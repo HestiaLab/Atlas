@@ -23,6 +23,7 @@ public sealed class WorkspaceRestoreTests
         Assert.True(result.Succeeded);
         Assert.Equal("1.0", result.Value!.SourceSchemaVersion);
         Assert.NotEmpty(result.Value.Warnings);
+        Assert.Contains("ATLAS-V1-SIZE-IGNORED", result.Value.Warnings);
         Assert.Equal(2, result.Value.Snapshot.Items.Count);
         Assert.Contains(
             result.Value.Snapshot.Nodes.Values.OfType<GroupNode>(),
@@ -42,6 +43,40 @@ public sealed class WorkspaceRestoreTests
         var result = new AtlasXmlLayoutSerializer().Deserialize(
             xml,
             new WorkspaceId("main"));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+    }
+
+    [Fact]
+    public void V1_rejects_strings_over_configured_limit()
+    {
+        var result = new AtlasXmlLayoutSerializer().Deserialize(
+            File.ReadAllText(GoldenPath("workspace-v1-narrow.xml")),
+            new WorkspaceId("main"),
+            new LayoutPersistenceLimits(maxStringLength: 4));
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
+        Assert.Equal("ATLAS-PERSIST-LIMIT", result.Error.DiagnosticId);
+    }
+
+    [Fact]
+    public void V1_rejects_regions_over_configured_group_limit()
+    {
+        const string xml =
+            "<AtlasLayout schemaVersion=\"1.0\" workspaceId=\"main\">"
+            + "<Panels>"
+            + "<Panel id=\"a\" contentKey=\"a\" region=\"left-upper\" />"
+            + "<Panel id=\"b\" contentKey=\"b\" region=\"left-upper\" />"
+            + "</Panels>"
+            + "<EditorViews />"
+            + "</AtlasLayout>";
+
+        var result = new AtlasXmlLayoutSerializer().Deserialize(
+            xml,
+            new WorkspaceId("main"),
+            new LayoutPersistenceLimits(maxItemsPerGroup: 1));
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
@@ -119,6 +154,26 @@ public sealed class WorkspaceRestoreTests
         Assert.Single(result.Value.IdentityRemaps);
         Assert.Equal("2.0", result.Value.SourceSchemaVersion);
         await workspace.DisposeAsync();
+    }
+
+    [Fact]
+    public void Missing_auto_hidden_content_keeps_placeholder_capability()
+    {
+        var xml = File.ReadAllText(GoldenPath("workspace-v1-narrow.xml"))
+            .Replace(
+                "autoHidden=\"false\"",
+                "autoHidden=\"true\"",
+                StringComparison.Ordinal);
+        var result = new AtlasXmlLayoutSerializer().DeserializeWithOptions(
+            xml,
+            new WorkspaceId("main"),
+            new LayoutRestoreOptions(
+                isContentRegistered: _ => false));
+
+        Assert.True(result.Succeeded);
+        var placeholder = result.Value!.Snapshot.Items[new DockItemId("explorer")];
+        Assert.True(placeholder.Capabilities.HasFlag(DockItemCapabilities.CanAutoHide));
+        Assert.Contains(new DockItemId("explorer"), result.Value.PlaceholderItems);
     }
 
     private static IAtlasWorkspace CreateWorkspace()

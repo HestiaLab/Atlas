@@ -11,6 +11,21 @@ internal sealed class WorkspacePatch
     {
         Before = before;
         After = after;
+        EstimatedBytes = EstimateBytes(after);
+    }
+
+    /// <summary>
+    ///     获取补丁的近似内存成本；用于历史字节预算，不追求精确。
+    /// </summary>
+    internal long EstimatedBytes { get; }
+
+    private static long EstimateBytes(WorkspaceSnapshot snapshot)
+    {
+        return snapshot.Nodes.Count * 256L
+            + snapshot.Items.Count * 512L
+            + snapshot.ToolBars.Count * 64L
+            + snapshot.ToolBarOrders.Count * 128L
+            + snapshot.AutoHideStrips.Count * 128L;
     }
 
     /// <summary>

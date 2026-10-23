@@ -1,7 +1,7 @@
+using System.Collections.ObjectModel;
 using Atlas.Core.Items;
-using Atlas.Core.Layout;
 
-namespace Atlas.Core.Operations.Engine;
+namespace Atlas.Core.Layout;
 
 /// <summary>
 ///     在快照边界强制执行工具组可见性不变式（REQ-F-154）：
@@ -64,6 +64,8 @@ internal static class GroupVisibilityInvariant
                 group.LogicalRegion);
         }
 
-        return (IReadOnlyDictionary<LayoutNodeId, LayoutNode>?)mutable ?? nodes;
+        return mutable is null
+            ? nodes
+            : new ReadOnlyDictionary<LayoutNodeId, LayoutNode>(mutable);
     }
 }

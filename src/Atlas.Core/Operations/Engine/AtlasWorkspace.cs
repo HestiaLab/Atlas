@@ -32,6 +32,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
     // 撤销历史容量上限；超限时 AppendBounded 丢弃最旧补丁。
     private readonly int maxHistoryEntries;
 
+    // 近似历史字节预算；null 表示只按条数限制。
+    private readonly long? approximateMaxHistoryBytes;
+
     // 键盘微调分割的合并时间窗；窗口内的同键补丁并入上一条历史。
     private readonly TimeSpan resizeCoalescingWindow;
 
@@ -49,6 +52,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
     // 排空信号：置释放标记后在途操作清零时置位，DisposeAsync 等待它。
     private TaskCompletionSource<object?>? operationsDrained;
+
+    // 释放完成任务：首次 DisposeAsync 创建，重复调用等待同一个实例。
+    private Task? disposeCompletion;
 
     // 在途操作计数：BeginOperation/EndOperation 在生命周期锁内增减。
     private int activeOperations;
@@ -87,6 +93,7 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
         state = new WorkspaceStoreState(initialSnapshot);
         maxHistoryEntries = history.MaxEntries;
+        approximateMaxHistoryBytes = history.ApproximateMaxBytes;
         resizeCoalescingWindow = history.ResizeCoalescingWindow;
         this.utcNow = utcNow ?? (() => DateTimeOffset.UtcNow);
     }
@@ -147,10 +154,16 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
             var candidate = plan.Candidate
                 ?? throw new InvalidOperationException("A commit plan must provide a candidate snapshot.");
-            // 提交段必须原子完成：重验修订号 → 应用补丁 → 校验不变式 → 写历史；
+
+            // 候选补丁、校验与差异描述都基于不可变 captured，可在锁外完成；
+            // 锁内只重验 Revision、写历史并交换状态，缩短并发提交的临界区。
+            var patch = WorkspacePatch.Create(captured, candidate);
+            var committedSnapshot = patch.ApplyForward(captured);
+            EnsureValid(committedSnapshot);
+            var changeSet = patch.Describe(captured, committedSnapshot, plan.ChangeKind);
+
+            // 提交段必须原子完成：重验修订号 → 写历史 → 原子替换快照；
             // 新提交使重做分支失效（redo 清空），历史边界操作（Restore）同时清空撤销栈。
-            LayoutChangeSet changeSet;
-            WorkspaceSnapshot committedSnapshot;
             lock (transactionGate)
             {
                 ThrowIfDisposed();
@@ -160,10 +173,6 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                     return Stale(operation.Kind);
                 }
 
-                var patch = WorkspacePatch.Create(captured, candidate);
-                committedSnapshot = patch.ApplyForward(captured);
-                EnsureValid(committedSnapshot);
-                changeSet = patch.Describe(captured, committedSnapshot, plan.ChangeKind);
                 var committedAt = utcNow();
                 var resizeKey = ResizeHistoryKey.For(operation);
                 var undo = plan.IsHistoryBarrier
@@ -188,16 +197,18 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                     lastResizeHistoryKey = resizeKey;
                     lastResizeCommittedAt = committedAt;
                 }
+
+                // 通知在提交锁内入队，保证并发提交的派发顺序与 Revision 一致；
+                // 订阅者回调仍由后台任务在锁外执行，不会持锁调用消费者代码。
+                eventDispatcher.Enqueue(
+                    Changed,
+                    domainEvents,
+                    this,
+                    captured,
+                    committedSnapshot,
+                    changeSet);
             }
 
-            // 事件在提交锁外派发：订阅者回调可能重入 ExecuteAsync，持锁调用会死锁。
-            eventDispatcher.Enqueue(
-                Changed,
-                domainEvents,
-                this,
-                captured,
-                committedSnapshot,
-                changeSet);
             return WorkspaceResult<LayoutChangeSet>.Success(changeSet);
         }
         finally
@@ -232,16 +243,23 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         return TraverseHistoryAsync(undo: false, cancellationToken);
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
+    {
+        Task completion;
+        lock (lifecycleGate)
+        {
+            disposeCompletion ??= DisposeCoreAsync();
+            completion = disposeCompletion;
+        }
+
+        return new ValueTask(completion);
+    }
+
+    private async Task DisposeCoreAsync()
     {
         Task waitForOperations;
         lock (lifecycleGate)
         {
-            if (disposed)
-            {
-                return;
-            }
-
             disposed = true;
             if (activeOperations == 0)
             {
@@ -305,6 +323,15 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                     // 撤销/重做后清空 resize 合并键：合并窗口只适用于连续键盘微调，
                     // 不能跨历史遍历把补丁合并在一起。
                     lastResizeHistoryKey = null;
+
+                    // 与 ExecuteAsync 相同：锁内入队保证并发提交顺序，回调仍在锁外执行。
+                    eventDispatcher.Enqueue(
+                        Changed,
+                        domainEvents,
+                        this,
+                        before!,
+                        after!,
+                        changeSet);
                 }
             }
 
@@ -316,13 +343,6 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                         undo ? LayoutChangeKind.Undo : LayoutChangeKind.Redo));
             }
 
-            eventDispatcher.Enqueue(
-                Changed,
-                domainEvents,
-                this,
-                before!,
-                after!,
-                changeSet);
             return ValueTask.FromResult(
                 WorkspaceResult<LayoutChangeSet>.Success(changeSet));
         }
@@ -336,10 +356,38 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         IReadOnlyList<WorkspacePatch> history,
         WorkspacePatch patch)
     {
-        return history
+        var bounded = history
             .Append(patch)
             .TakeLast(maxHistoryEntries)
-            .ToArray();
+            .ToList();
+        if (approximateMaxHistoryBytes is not long byteBudget)
+        {
+            return bounded.ToArray();
+        }
+
+        // 从最新补丁向前保留，直到近似字节预算用尽；单条超预算的最新补丁仍保留，
+        // 以便它至少可被撤销一次（完整的 HistoryNotRecorded/屏障语义延后到 ADR）。
+        var keepFrom = bounded.Count;
+        long retainedBytes = 0;
+        for (var index = bounded.Count - 1; index >= 0; index--)
+        {
+            var patchBytes = bounded[index].EstimatedBytes;
+            if (index < bounded.Count - 1
+                && retainedBytes + patchBytes > byteBudget)
+            {
+                break;
+            }
+
+            retainedBytes += patchBytes;
+            keepFrom = index;
+        }
+
+        if (keepFrom > 0)
+        {
+            bounded.RemoveRange(0, keepFrom);
+        }
+
+        return bounded.ToArray();
     }
 
     private WorkspacePatch[] AppendHistory(
@@ -388,7 +436,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         if (violations.Count != 0)
         {
             throw new InvalidOperationException(
-                $"The operation planner produced an invalid candidate: {violations[0].Code}.");
+                "The operation planner produced an invalid candidate: "
+                + string.Join("; ", violations.Select(violation => violation.ToString()))
+                + ".");
         }
     }
 

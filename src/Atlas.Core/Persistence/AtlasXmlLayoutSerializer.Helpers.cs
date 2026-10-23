@@ -7,7 +7,6 @@ using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -26,6 +25,56 @@ public sealed partial class AtlasXmlLayoutSerializer
             throw new ArgumentException(
                 "The snapshot violates committed-state invariants.",
                 nameof(snapshot));
+        }
+    }
+
+    private static void EnsureSnapshotWithinLimits(
+        WorkspaceSnapshot snapshot,
+        XDocument document)
+    {
+        var limits = new LayoutPersistenceLimits();
+        foreach (var group in snapshot.Nodes.Values.OfType<GroupNode>())
+        {
+            if (group.ItemIds.Count > limits.MaxItemsPerGroup
+                || group.EditorState?.RecentlyVisitedIds.Count > limits.MaxItemsPerGroup)
+            {
+                throw new ArgumentException(
+                    "The snapshot exceeds the persistence group item limit.",
+                    nameof(snapshot));
+            }
+        }
+
+        if (snapshot.ToolBarOrders.Values.Any(
+                order => order.ItemIds.Count > limits.MaxItemsPerGroup)
+            || snapshot.AutoHideStrips.Values.Any(
+                strip => strip.Entries.Count > limits.MaxItemsPerGroup))
+        {
+            throw new ArgumentException(
+                "The snapshot exceeds the persistence collection item limit.",
+                nameof(snapshot));
+        }
+
+        try
+        {
+            ValidateLimits(document.Root!, limits);
+        }
+        catch (XmlException exception)
+        {
+            throw new ArgumentException(
+                "The snapshot exceeds the persistence size limits.",
+                nameof(snapshot),
+                exception);
+        }
+    }
+
+    private static void EnsureDocumentWithinLimit(string xml)
+    {
+        var limits = new LayoutPersistenceLimits();
+        if (System.Text.Encoding.UTF8.GetByteCount(xml) > limits.MaxDocumentBytes)
+        {
+            throw new ArgumentException(
+                "The serialized snapshot exceeds the persistence byte limit.",
+                "snapshot");
         }
     }
 

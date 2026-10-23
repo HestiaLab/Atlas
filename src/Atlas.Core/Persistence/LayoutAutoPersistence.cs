@@ -42,7 +42,16 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     private long generation;
 
     // 释放标记：置位后停止订阅、取消计时并排空在途保存。
-    private bool disposed;
+    private volatile bool disposed;
+
+    // 在途 Flush/保存计数与排空信号：Dispose 必须等这些写入完成后再释放 writer。
+    private int activeFlushes;
+    private int activeSaves;
+    private TaskCompletionSource<object?>? flushesDrained;
+    private TaskCompletionSource<object?>? savesDrained;
+
+    // 恢复期间暂停自动保存，避免恢复前的变更覆盖存储中的目标文档；计数支持并发恢复。
+    private int activeRestores;
 
     /// <summary>
     ///     订阅工作区变更并启动防抖自动保存；防抖间隔缺省 500ms，不能为负。
@@ -73,11 +82,33 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     /// <summary>
     ///     加载已保存文档并经操作引擎原子恢复；从未保存过返回 NoChange，
     ///     存储不可用或文档损坏返回诊断化失败，绝不强行恢复残缺布局。
+    ///     恢复期间的变更不会触发自动保存，避免覆盖存储中的目标文档。
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> RestoreIfAvailableAsync(
         CancellationToken cancellationToken = default)
     {
-        ThrowIfDisposed();
+        lock (gate)
+        {
+            ThrowIfDisposed();
+            activeRestores++;
+        }
+
+        try
+        {
+            return await RestoreCoreAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            lock (gate)
+            {
+                activeRestores--;
+            }
+        }
+    }
+
+    private async ValueTask<WorkspaceResult<LayoutChangeSet>> RestoreCoreAsync(
+        CancellationToken cancellationToken)
+    {
         // 存储不可用按降级处理：只上报诊断，不让自动恢复的失败中断应用。
         WorkspaceLayoutDocument? stored;
         try
@@ -122,33 +153,42 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     public async ValueTask<WorkspaceResult<bool>> FlushAsync(
         CancellationToken cancellationToken = default)
     {
-        ThrowIfDisposed();
-        Task previous;
-        lock (gate)
-        {
-            delayCancellation?.Cancel();
-            previous = pendingSave;
-        }
-
+        BeginFlush();
         try
         {
-            await previous.ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-        }
+            Task previous;
+            lock (gate)
+            {
+                delayCancellation?.Cancel();
+                previous = pendingSave;
+            }
 
-        return await SaveSnapshotAsync(
-            workspace.Current,
-            Interlocked.Increment(ref generation),
-            cancellationToken,
-            force: true).ConfigureAwait(false);
+            try
+            {
+                await previous.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            return await SaveSnapshotAsync(
+                workspace.Current,
+                Interlocked.Increment(ref generation),
+                cancellationToken,
+                force: true).ConfigureAwait(false);
+        }
+        finally
+        {
+            EndFlush();
+        }
     }
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         Task pending;
+        Task? waitForFlushes = null;
+        Task? waitForSaves = null;
         lock (gate)
         {
             if (disposed)
@@ -160,6 +200,19 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
             workspace.Changed -= OnWorkspaceChanged;
             delayCancellation?.Cancel();
             pending = pendingSave;
+            if (activeFlushes > 0)
+            {
+                flushesDrained = new TaskCompletionSource<object?>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                waitForFlushes = flushesDrained.Task;
+            }
+
+            if (activeSaves > 0)
+            {
+                savesDrained = new TaskCompletionSource<object?>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                waitForSaves = savesDrained.Task;
+            }
         }
 
         try
@@ -170,15 +223,80 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         {
         }
 
+        if (waitForFlushes is not null)
+        {
+            await waitForFlushes.ConfigureAwait(false);
+        }
+
+        if (waitForSaves is not null)
+        {
+            await waitForSaves.ConfigureAwait(false);
+        }
+
         delayCancellation?.Dispose();
         writer.Dispose();
+    }
+
+    private void BeginFlush()
+    {
+        lock (gate)
+        {
+            ThrowIfDisposed();
+            activeFlushes++;
+        }
+    }
+
+    private bool TryBeginSave()
+    {
+        lock (gate)
+        {
+            if (disposed)
+            {
+                return false;
+            }
+
+            activeSaves++;
+            return true;
+        }
+    }
+
+    private void EndSave()
+    {
+        TaskCompletionSource<object?>? drained = null;
+        lock (gate)
+        {
+            activeSaves--;
+            if (disposed && activeSaves == 0)
+            {
+                drained = savesDrained;
+                savesDrained = null;
+            }
+        }
+
+        drained?.TrySetResult(null);
+    }
+
+    private void EndFlush()
+    {
+        TaskCompletionSource<object?>? drained = null;
+        lock (gate)
+        {
+            activeFlushes--;
+            if (disposed && activeFlushes == 0)
+            {
+                drained = flushesDrained;
+                flushesDrained = null;
+            }
+        }
+
+        drained?.TrySetResult(null);
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
     {
         lock (gate)
         {
-            if (disposed)
+            if (disposed || activeRestores > 0)
             {
                 return;
             }
@@ -210,6 +328,31 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
         long capturedGeneration,
         CancellationToken cancellationToken,
         bool force = false)
+    {
+        if (!TryBeginSave())
+        {
+            return WorkspaceResult<bool>.NoChange(false);
+        }
+
+        try
+        {
+            return await SaveSnapshotCoreAsync(
+                snapshot,
+                capturedGeneration,
+                cancellationToken,
+                force).ConfigureAwait(false);
+        }
+        finally
+        {
+            EndSave();
+        }
+    }
+
+    private async ValueTask<WorkspaceResult<bool>> SaveSnapshotCoreAsync(
+        WorkspaceSnapshot snapshot,
+        long capturedGeneration,
+        CancellationToken cancellationToken,
+        bool force)
     {
         // 序列化在写入器外并行完成，写入器只保护存储写入，避免拖长串行化窗口。
         string xml;

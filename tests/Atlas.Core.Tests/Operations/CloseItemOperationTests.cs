@@ -141,6 +141,39 @@ public sealed class CloseItemOperationTests
     }
 
     [Fact]
+    public async Task Guard_failure_returns_typed_failure_and_can_be_retried()
+    {
+        var item = CreateDocument("document");
+        var group = CreateDocumentGroup(
+            "editors",
+            GroupRetentionPolicy.Persistent,
+            new[] { item },
+            item.Id);
+        var calls = 0;
+        var guard = new StubGuard(
+            _ =>
+            {
+                if (Interlocked.Increment(ref calls) == 1)
+                {
+                    throw new InvalidOperationException("guard failed");
+                }
+
+                return Task.FromResult(true);
+            });
+        await using var workspace = CreateWorkspace(group, guard, item);
+        var operation = new CloseItemOperation(item.Id);
+
+        var failed = await workspace.ExecuteAsync(operation);
+        var retried = await workspace.ExecuteAsync(operation);
+
+        Assert.Equal(WorkspaceResultStatus.Failure, failed.Status);
+        Assert.Equal(WorkspaceErrorCode.WorkspaceFaulted, failed.Error!.Code);
+        Assert.Equal(WorkspaceResultStatus.Success, retried.Status);
+        Assert.Equal(2, calls);
+        Assert.DoesNotContain(item.Id, workspace.Current.Items);
+    }
+
+    [Fact]
     public async Task Shared_guard_runs_once_and_losing_close_returns_stale()
     {
         var first = CreateDocument("first");

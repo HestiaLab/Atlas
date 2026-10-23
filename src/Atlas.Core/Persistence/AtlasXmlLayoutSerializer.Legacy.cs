@@ -7,7 +7,6 @@ using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -61,6 +60,8 @@ public sealed partial class AtlasXmlLayoutSerializer
         {
             return Invalid("ATLAS-V1-SHAPE");
         }
+
+        ValidateLegacyLimits(root, limits);
 
         // 先完整提取面板的布局元数据（区域/激活/尺寸），再按区域重建组；
         // V1 中这些信息与项本体混杂，单项构造时无法直接映射到 V2 结构。
@@ -215,16 +216,78 @@ public sealed partial class AtlasXmlLayoutSerializer
             return Invalid("ATLAS-V1-INVARIANT");
         }
 
-        // 迁移结果附带两条警告：只接受 V1 严格子集（窄契约），且拓扑由链式拆分近似（回退）。
+        // 迁移结果附带警告：只接受 V1 严格子集（窄契约），拓扑由链式拆分近似（回退）；
+        // size 属于窄契约的接受字段，但当前迁移没有可表达的单面板尺寸模型，因此明确告警为未应用。
+        var warnings = new List<string>
+        {
+            "ATLAS-V1-NARROW-CONTRACT",
+            "ATLAS-V1-TOPOLOGY-FALLBACK",
+        };
+        if (panelElements.Any(element => element.Attribute("size") is not null))
+        {
+            warnings.Add("ATLAS-V1-SIZE-IGNORED");
+        }
+
         return WorkspaceResult<LayoutRestoreDocument>.Success(
             new LayoutRestoreDocument(
                 snapshot,
                 "1.0",
-                new[]
+                warnings));
+    }
+
+    private static void ValidateLegacyLimits(
+        XElement root,
+        LayoutPersistenceLimits limits)
+    {
+        var panelCountByRegion = new Dictionary<string, int>(StringComparer.Ordinal);
+        var totalItems = 0;
+        foreach (var element in root.DescendantsAndSelf())
+        {
+            var depth = 0;
+            for (var current = element.Parent; current is not null; current = current.Parent)
+            {
+                depth++;
+            }
+
+            if (depth > limits.MaxDepth)
+            {
+                throw new PersistenceLimitException(
+                    "The legacy persistence document exceeds the depth limit.");
+            }
+
+            if (element.Attributes().Any(attribute => attribute.Value.Length > limits.MaxStringLength))
+            {
+                throw new PersistenceLimitException(
+                    "The legacy persistence document exceeds the string limit.");
+            }
+
+            if (element.Name == "Panel")
+            {
+                totalItems++;
+                var region = (string?)element.Attribute("region");
+                if (region is not null)
                 {
-                    "ATLAS-V1-NARROW-CONTRACT",
-                    "ATLAS-V1-TOPOLOGY-FALLBACK",
-                }));
+                    panelCountByRegion.TryGetValue(region, out var count);
+                    panelCountByRegion[region] = count + 1;
+                }
+            }
+            else if (element.Name == "EditorView")
+            {
+                totalItems++;
+            }
+        }
+
+        if (totalItems > limits.MaxItemCount)
+        {
+            throw new PersistenceLimitException(
+                "The legacy persistence document exceeds the item limit.");
+        }
+
+        if (panelCountByRegion.Values.Any(count => count > limits.MaxItemsPerGroup))
+        {
+            throw new PersistenceLimitException(
+                "A legacy region exceeds the group item limit.");
+        }
     }
 
     private static LayoutNodeId? ChainLegacyRoots(

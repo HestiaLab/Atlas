@@ -35,11 +35,15 @@ internal static class InvariantViolationSink
     /// <param name="violations">目标违规集合。</param>
     /// <param name="code">违规分类。</param>
     /// <param name="message">违规说明。</param>
+    /// <param name="nodeId">相关节点标识。</param>
+    /// <param name="itemId">相关项标识。</param>
     internal static void Add(
         ICollection<InvariantViolation> violations,
         InvariantViolationCode code,
-        string message)
+        string message,
+        LayoutNodeId? nodeId = null,
+        DockItemId? itemId = null)
     {
-        violations.Add(new InvariantViolation(code, message));
+        violations.Add(new InvariantViolation(code, message, nodeId, itemId));
     }
 }

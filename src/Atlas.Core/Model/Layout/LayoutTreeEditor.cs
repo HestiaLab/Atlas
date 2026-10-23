@@ -1,6 +1,4 @@
-using Atlas.Core.Layout;
-
-namespace Atlas.Core.Operations.Engine;
+namespace Atlas.Core.Layout;
 
 /// <summary>
 ///     布局树编辑工具：结构性移除空动态组并保持树拓扑有效。

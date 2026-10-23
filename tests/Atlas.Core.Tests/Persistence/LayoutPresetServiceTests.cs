@@ -4,6 +4,7 @@ using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations.Engine;
 using Atlas.Core.Persistence;
+using Atlas.Core.Results;
 using Xunit;
 
 namespace Atlas.Core.Tests.Persistence;
@@ -46,7 +47,7 @@ public sealed class LayoutPresetServiceTests
     }
 
     [Fact]
-    public async Task Missing_preset_is_no_change_and_delete_is_idempotent()
+    public async Task Missing_preset_apply_and_delete_return_failure()
     {
         await using var workspace = CreateWorkspace();
         var service = new LayoutPresetService(
@@ -58,9 +59,33 @@ public sealed class LayoutPresetServiceTests
         var apply = await service.ApplyAsync("missing");
         var delete = await service.DeleteAsync("missing");
 
-        Assert.True(apply.IsNoChange);
-        Assert.True(delete.IsNoChange);
+        Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);
+        Assert.Equal(WorkspaceErrorCode.TargetNotFound, apply.Error!.Code);
+        Assert.Equal(WorkspaceResultStatus.Failure, delete.Status);
+        Assert.Equal(WorkspaceErrorCode.TargetNotFound, delete.Error!.Code);
         Assert.Same(before, workspace.Current);
+    }
+
+    [Fact]
+    public async Task Delete_waits_for_in_flight_save_and_removes_preset()
+    {
+        await using var workspace = CreateWorkspace();
+        var store = new BlockingFirstSaveStore();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            store);
+
+        var save = service.SaveAsync("focus").AsTask();
+        await store.FirstSaveEntered.Task;
+        var delete = service.DeleteAsync("focus").AsTask();
+
+        Assert.False(delete.IsCompleted);
+        store.ReleaseFirstSave.SetResult(null);
+
+        Assert.True((await save).Succeeded);
+        Assert.True((await delete).Succeeded);
+        Assert.Null(await store.TryLoadAsync("focus"));
     }
 
     [Fact]
@@ -110,6 +135,62 @@ public sealed class LayoutPresetServiceTests
             Atlas.Core.Results.WorkspaceErrorCode.PersistenceUnavailable,
             result.Error!.Code);
         Assert.Same(before, workspace.Current);
+    }
+
+    [Fact]
+    public async Task Apply_read_failure_is_typed()
+    {
+        await using var workspace = CreateWorkspace();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new ThrowingStore());
+
+        var result = await service.ApplyAsync("focus");
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, result.Error!.Code);
+        Assert.Equal("ATLAS-PRESET-READ", result.Error.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task List_and_delete_failures_are_typed()
+    {
+        await using var workspace = CreateWorkspace();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new ThrowingStore());
+
+        var list = await service.ListAsync();
+        var delete = await service.DeleteAsync("focus");
+
+        Assert.False(list.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, list.Error!.Code);
+        Assert.Equal("ATLAS-PRESET-LIST", list.Error.DiagnosticId);
+        Assert.False(delete.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, delete.Error!.Code);
+        Assert.Equal("ATLAS-PRESET-DELETE", delete.Error.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task Delete_existing_preset_succeeds_and_later_apply_fails()
+    {
+        await using var workspace = CreateWorkspace();
+        var store = new InMemoryLayoutPresetStore();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            store);
+
+        Assert.True((await service.SaveAsync("focus")).Succeeded);
+        var delete = await service.DeleteAsync("focus");
+        var apply = await service.ApplyAsync("focus");
+
+        Assert.True(delete.Succeeded);
+        Assert.Null(await store.TryLoadAsync("focus"));
+        Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);
+        Assert.Equal(WorkspaceErrorCode.TargetNotFound, apply.Error!.Code);
     }
 
     private static IAtlasWorkspace CreateWorkspace()

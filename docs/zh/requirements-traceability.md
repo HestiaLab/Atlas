@@ -14,11 +14,12 @@
 - 正式需求块：151（REQ-F 142 + REQ-NF 9）
 - 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 18、In Progress 80、
   Not Started 5、Deferred 2
-- 最新实测门禁基线（2026-10-23，分支 `refactor/code-quality-2026-10`）：
-  282 Core + 129 Blazor + 50 JS tests；Debug/Release、typecheck、format、pack、
-  冻结契约 diff 与双 Host 真实浏览器拖拽夹具均通过。P8 历史基线
-  （264 Core + 43 Blazor + 17 Node）保留在下方对应行；重构前实测为
-  275 Core + 114 Blazor + 43 JS
+- 最新实测门禁基线（2026-10-23，分支 `refactor/code-quality-2026-10`，Phase 0
+  正确性修复与 Phase 1 结构重构切片后）：310 Core + 129 Blazor tests；
+  Debug build/test 与 format 通过。50 JS tests 及 Release/typecheck/pack/
+  冻结契约 diff/双 Host 真实浏览器门禁未在本切片重跑，仍沿用 Phase 0 前
+  基线记录。P8 历史基线（264 Core + 43 Blazor + 17 Node）保留在下方对应行；
+  重构前实测为 275 Core + 114 Blazor + 43 JS
 - 已完成工程工作：P0~P8 Verified；DEV-GATE-001~007 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
@@ -122,6 +123,8 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-048、REQ-F-027、REQ-F-017 | DES-OP-001、DES-OP-004~007 | P9 | `Atlas.Core/Operations/Engine` | `DockDocumentOperationTests`、`OpenItemOperationTests`、`SelectItemOperationTests`：pinned-prefix 中心停靠、空 Persistent 组 ToolBarOrder 回退、仅自动隐藏项选中 typed failure | In Progress | 2026-10-23 崩溃守卫 CORE-01/02/03；相关需求状态不变，不升级为 Verified |
 | REQ-F-109、REQ-F-133 | DES-INT-001~002、DES-PRJ-002 | P9 | `Atlas.Blazor/Components/Workspace` | `AtlasWorkspaceHostTests`：编程式→声明式顺序切换保留外部所有权，仅释放 Host 拥有的 workspace | In Progress | 2026-10-23 状态所有权修复 BLAZOR-01；相关需求状态不变 |
 | — | DES-ARCH-001~004、DES-INT-001~008、DES-PRJ-001~003 | P9 | `Atlas.Core`、`Atlas.Blazor`、`ClientScripts` | 282 Core + 129 Blazor + 50 JS tests；Release build/test；typecheck；format；pack；冻结契约 diff 为空；双 Host 真实浏览器拖拽夹具 | Verified | 2026-10-23 行为保持重构切片 1–6；公共 C# API、JS 协议、DOM metadata、XML schema 与包拓扑均未变更；需求状态不变 |
+| REQ-F-017~019、REQ-F-027~030、REQ-F-085~098、REQ-F-110~115、REQ-F-156 | DES-DOM-008、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 0 | `Atlas.Core` | 297 Core + 129 Blazor tests；`WorkspaceSnapshotTests`、`WorkspaceTransactionTests`、`OpenItemOperationTests`、`AutoHideBookmarkTests`、`WorkspaceEventOrderingTests`、`AtlasXmlLayoutSerializerTests`、`WorkspaceRestoreTests`、`LayoutPresetServiceTests`、`LayoutAutoPersistenceTests`、`WorkspaceFactoryTests`：快照规范化只读、pinned ReplaceExisting 拒绝、DockBack 索引钳制、V1 limits/size 警告、序列化限制、占位符 AutoHide 能力、Preset 缺失 failure、守卫故障重试、自动保存生命周期、重复 Dispose、事件顺序、历史字节预算、定义 null 元素 | In Progress | 2026-10-23 Phase 0 正确性修复；行为变化：Preset 缺失按 SRS 返回 failure、V1 `size` 输出诊断警告、事件入队顺序跟随提交、Dispose 等待在途保存、历史遵循近似字节预算、Serialize 拒绝超限快照、关闭守卫故障返回 `WorkspaceFaulted`；公共 C# API、JS 协议、DOM metadata 与 XML schema 形态未变；需求状态不升级；`HistoryNotRecorded`/历史屏障语义仍待 ADR |
+| — | DES-ARCH-001~004、DES-DOM-002~003、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 1 | `Atlas.Core` | 310 Core + 129 Blazor tests；`WorkspaceSnapshotTests`（`WithRevision` 共享只读索引）、规划器测试、`PlannerMutationCharacterizationTests`、`InMemoryStoreTests`、`DockItemPlacementSnapshotTests`；Debug build/test/format | In Progress | 2026-10-23 Phase 1 结构重构切片：trusted revision 构造与锁外候选校验/补丁/差异；`GroupVisibilityInvariant`、`LayoutTreeEditor`、`GroupItemEditor`、`AutoHideBookmarkEditor` 移至 `Model/Layout`（Persistence/Model 不再引用 `Operations.Engine`）；`WorkspaceMutation` 增加 ToolBar 编辑与 `RemoveItemEverywhere`，并被 Select/GroupVisibility/ItemPresentation/Resize/Equalize/ToolBar 规划器及 Close 路径使用；`DropItems` 复用 `GroupItemEditor.RemoveItems`；`OpenItemPlanner.ActivateExisting` 拆分为辅助方法；`GroupItemEditor` 统一了 MRU/相邻/首项的选择策略；`InvariantViolation` 携带结构化 NodeId/ItemId，`EnsureValid` 报告全部违规；持久化区分 limit/schema/invalid 诊断；低覆盖公共持久化路径与失败模式已补测试。布局状态行为保持不变，诊断文案/ID 有细化；公共 C# API、JS 协议、DOM metadata 与 XML schema 形态未变。剩余：RestoreWorkspacePlanner 整体快照构造、诊断字面量目录/事件 sink、剩余热点、边界决策 |
 
 ## 更新规则
 

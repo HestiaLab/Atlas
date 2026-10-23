@@ -7,7 +7,6 @@ using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -63,7 +62,8 @@ public sealed partial class AtlasXmlLayoutSerializer
 
             if (depth > limits.MaxDepth)
             {
-                throw new XmlException("The persistence document exceeds the depth limit.");
+                throw new PersistenceLimitException(
+                    "The persistence document exceeds the depth limit.");
             }
 
             if (element.Name == Namespace + "Group" || element.Name == Namespace + "Split")
@@ -78,13 +78,15 @@ public sealed partial class AtlasXmlLayoutSerializer
 
             if (element.Attributes().Any(attribute => attribute.Value.Length > limits.MaxStringLength))
             {
-                throw new XmlException("The persistence document exceeds the string limit.");
+                throw new PersistenceLimitException(
+                    "The persistence document exceeds the string limit.");
             }
         }
 
         if (nodes > limits.MaxNodeCount || items > limits.MaxItemCount)
         {
-            throw new XmlException("The persistence document exceeds a collection limit.");
+            throw new PersistenceLimitException(
+                "The persistence document exceeds a collection limit.");
         }
     }
 
@@ -176,7 +178,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             // 组级上限独立于全局项数：单个组塞入超量项不会触发全局限制，必须在此单独拦截。
             if (itemIds.Length > limits.MaxItemsPerGroup)
             {
-                throw new XmlException("A group exceeds the item limit.");
+                throw new PersistenceLimitException(
+                    "A group exceeds the item limit.");
             }
 
             var editorElement = element.Element(Namespace + "EditorState");

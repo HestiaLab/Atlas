@@ -5,25 +5,22 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Operations.Engine;
 
 /// <summary>
-///     一次操作的可变候选快照：集中克隆索引，并只替换操作涉及的节点、项与顺序，
+///     一次操作的可变候选快照：按需克隆被修改的索引，并只替换操作涉及的节点、项与顺序，
 ///     避免每个规划器重复手写五份字典复制。
 /// </summary>
 internal sealed class WorkspaceMutation
 {
     private readonly WorkspaceSnapshot source;
-    private readonly Dictionary<LayoutNodeId, LayoutNode> nodes;
-    private readonly Dictionary<DockItemId, DockItem> items;
-    private readonly Dictionary<LogicalRegion, ToolBarOrderState> orders;
-    private readonly Dictionary<WorkspaceEdge, AutoHideStripState> strips;
+    private Dictionary<LayoutNodeId, LayoutNode>? nodes;
+    private Dictionary<DockItemId, DockItem>? items;
+    private Dictionary<LogicalRegion, ToolBarOrderState>? orders;
+    private Dictionary<WorkspaceEdge, AutoHideStripState>? strips;
+    private Dictionary<LogicalSide, ToolBarState>? toolBars;
     private LayoutNodeId? rootNodeId;
 
     private WorkspaceMutation(WorkspaceSnapshot source)
     {
         this.source = source;
-        nodes = source.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        items = source.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
-        orders = source.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
-        strips = source.AutoHideStrips.ToDictionary(pair => pair.Key, pair => pair.Value);
         rootNodeId = source.RootNodeId;
     }
 
@@ -34,32 +31,47 @@ internal sealed class WorkspaceMutation
 
     internal void ReplaceNode(LayoutNode node)
     {
-        nodes[node.Id] = node;
+        EnsureNodes()[node.Id] = node;
     }
 
     internal void ReplaceNodeWithSplit(LayoutNodeId targetId, SplitNode replacement)
     {
-        LayoutTreeEditor.InsertSplitAbove(nodes, targetId, replacement, ref rootNodeId);
+        LayoutTreeEditor.InsertSplitAbove(
+            EnsureNodes(),
+            targetId,
+            replacement,
+            ref rootNodeId);
     }
 
     internal void RemoveDynamicGroup(LayoutNodeId groupId)
     {
-        LayoutTreeEditor.RemoveDynamicGroup(nodes, groupId, ref rootNodeId);
+        LayoutTreeEditor.RemoveDynamicGroup(
+            EnsureNodes(),
+            groupId,
+            ref rootNodeId);
     }
 
     internal void AddItem(DockItem item)
     {
-        items.Add(item.Id, item);
+        EnsureItems().Add(item.Id, item);
     }
 
     internal void ReplaceItem(DockItem item)
     {
-        items[item.Id] = item;
+        EnsureItems()[item.Id] = item;
     }
 
     internal void SetOrder(LogicalRegion region, IEnumerable<DockItemId> itemIds)
     {
-        orders[region] = new ToolBarOrderState(region, itemIds);
+        EnsureOrders()[region] = new ToolBarOrderState(region, itemIds);
+    }
+
+    internal void SetToolBar(ToolBarState toolbar)
+    {
+        toolBars ??= source.ToolBars.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
+        toolBars[toolbar.Side] = toolbar;
     }
 
     internal void InsertOrderItem(GroupNode target, DockItemId itemId, int index)
@@ -69,6 +81,7 @@ internal sealed class WorkspaceMutation
             return;
         }
 
+        var orders = EnsureOrders();
         var order = orders.TryGetValue(region, out var currentOrder)
             ? currentOrder.ItemIds.ToList()
             : target.ItemIds.ToList();
@@ -86,6 +99,7 @@ internal sealed class WorkspaceMutation
             return;
         }
 
+        var orders = EnsureOrders();
         var order = orders.TryGetValue(region, out var currentOrder)
             ? currentOrder.ItemIds.Where(id => id != itemId)
             : remainingItems;
@@ -94,6 +108,7 @@ internal sealed class WorkspaceMutation
 
     internal void RemoveAutoHideItem(DockItemId itemId)
     {
+        var strips = EnsureStrips();
         var strip = strips.Single(
             pair => pair.Value.Entries.Any(entry => entry.ItemId == itemId));
         strips[strip.Key] = new AutoHideStripState(
@@ -101,17 +116,120 @@ internal sealed class WorkspaceMutation
             strip.Value.Entries.Where(entry => entry.ItemId != itemId));
     }
 
+    /// <summary>
+    ///     从组、工具栏顺序、自动隐藏条与项索引中完整移除一个项。
+    /// </summary>
+    internal void RemoveItemEverywhere(DockItemId itemId)
+    {
+        var currentNodes = nodes ?? source.Nodes;
+        var group = currentNodes.Values
+            .OfType<GroupNode>()
+            .SingleOrDefault(node => node.ItemIds.Contains(itemId));
+        if (group is not null)
+        {
+            var removal = GroupItemEditor.RemoveItem(
+                group,
+                itemId,
+                chooseAdjacent: true,
+                updateRecentVisits: true,
+                useMostRecentlyVisited: true);
+            if (removal.Group is null)
+            {
+                RemoveDynamicGroup(group.Id);
+            }
+            else
+            {
+                ReplaceNode(removal.Group);
+            }
+        }
+
+        RemoveOrderItemEverywhere(itemId);
+        RemoveAutoHideItemEverywhere(itemId);
+        EnsureItems().Remove(itemId);
+    }
+
+    private void RemoveOrderItemEverywhere(DockItemId itemId)
+    {
+        if (!(orders ?? source.ToolBarOrders).Values.Any(
+                order => order.ItemIds.Contains(itemId)))
+        {
+            return;
+        }
+
+        var mutableOrders = EnsureOrders();
+        foreach (var pair in mutableOrders.ToArray())
+        {
+            if (pair.Value.ItemIds.Contains(itemId))
+            {
+                mutableOrders[pair.Key] = new ToolBarOrderState(
+                    pair.Key,
+                    pair.Value.ItemIds.Where(id => id != itemId));
+            }
+        }
+    }
+
+    private void RemoveAutoHideItemEverywhere(DockItemId itemId)
+    {
+        if (!(strips ?? source.AutoHideStrips).Values.Any(
+                strip => strip.Entries.Any(entry => entry.ItemId == itemId)))
+        {
+            return;
+        }
+
+        var mutableStrips = EnsureStrips();
+        foreach (var pair in mutableStrips.ToArray())
+        {
+            if (pair.Value.Entries.Any(entry => entry.ItemId == itemId))
+            {
+                mutableStrips[pair.Key] = new AutoHideStripState(
+                    pair.Key,
+                    pair.Value.Entries.Where(entry => entry.ItemId != itemId));
+            }
+        }
+    }
+
     internal WorkspacePlan Commit()
     {
+        var finalNodes = nodes ?? source.Nodes;
         return WorkspacePlan.Commit(
             new WorkspaceSnapshot(
                 source.Id,
                 source.Revision,
                 rootNodeId,
-                nodes,
-                items,
-                source.ToolBars,
-                orders,
-                strips));
+                finalNodes,
+                items ?? source.Items,
+                toolBars ?? source.ToolBars,
+                orders ?? source.ToolBarOrders,
+                AutoHideBookmarkEditor.ClampToGroups(
+                    strips ?? source.AutoHideStrips,
+                    finalNodes)));
+    }
+
+    private Dictionary<LayoutNodeId, LayoutNode> EnsureNodes()
+    {
+        return nodes ??= source.Nodes.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
+    }
+
+    private Dictionary<DockItemId, DockItem> EnsureItems()
+    {
+        return items ??= source.Items.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
+    }
+
+    private Dictionary<LogicalRegion, ToolBarOrderState> EnsureOrders()
+    {
+        return orders ??= source.ToolBarOrders.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
+    }
+
+    private Dictionary<WorkspaceEdge, AutoHideStripState> EnsureStrips()
+    {
+        return strips ??= source.AutoHideStrips.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
     }
 }

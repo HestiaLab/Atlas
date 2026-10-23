@@ -92,6 +92,42 @@ public sealed class WorkspaceSnapshotTests
     }
 
     [Fact]
+    public void Snapshot_normalization_keeps_nodes_read_only()
+    {
+        var group = CreateEmptyGroup(new LayoutNodeId("empty"));
+
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            rootNodeId: group.Id,
+            new[] { new KeyValuePair<LayoutNodeId, LayoutNode>(group.Id, group) },
+            Array.Empty<KeyValuePair<DockItemId, DockItem>>(),
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            Array.Empty<KeyValuePair<LogicalRegion, ToolBarOrderState>>(),
+            Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
+
+        AssertReadOnly(snapshot.Nodes);
+        Assert.Equal(
+            GroupVisibility.Collapsed,
+            Assert.IsType<GroupNode>(snapshot.Nodes[group.Id]).Visibility);
+    }
+
+    [Fact]
+    public void With_revision_reuses_read_only_indexes()
+    {
+        var snapshot = WorkspaceSnapshot.Empty(new WorkspaceId("workspace"));
+
+        var revised = snapshot.WithRevision(3);
+
+        Assert.Equal(3, revised.Revision);
+        Assert.Same(snapshot.Nodes, revised.Nodes);
+        Assert.Same(snapshot.Items, revised.Items);
+        Assert.Same(snapshot.ToolBars, revised.ToolBars);
+        Assert.Same(snapshot.ToolBarOrders, revised.ToolBarOrders);
+        Assert.Same(snapshot.AutoHideStrips, revised.AutoHideStrips);
+    }
+
+    [Fact]
     public void Snapshot_rejects_invalid_aggregate_identity_or_revision()
     {
         Assert.Throws<ArgumentException>(

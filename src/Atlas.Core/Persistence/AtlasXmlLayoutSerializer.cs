@@ -7,7 +7,6 @@ using System.Xml.Schema;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
-using Atlas.Core.Operations.Engine;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
@@ -48,9 +47,12 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             WriteToolBars(snapshot),
             WriteAutoHide(snapshot));
         var document = new XDocument(new XDeclaration("1.0", "utf-8", null), root);
+        EnsureSnapshotWithinLimits(snapshot, document);
         using var writer = new Utf8StringWriter(CultureInfo.InvariantCulture);
         document.Save(writer, SaveOptions.None);
-        return writer.ToString();
+        var xml = writer.ToString();
+        EnsureDocumentWithinLimit(xml);
+        return xml;
     }
 
     /// <inheritdoc />
@@ -125,15 +127,22 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             return WorkspaceResult<LayoutRestoreDocument>.Success(
                 new LayoutRestoreDocument(snapshot, version!));
         }
+        catch (PersistenceLimitException)
+        {
+            return Invalid("ATLAS-PERSIST-LIMIT");
+        }
+        catch (XmlSchemaValidationException)
+        {
+            return Invalid("ATLAS-PERSIST-SCHEMA");
+        }
         catch (Exception exception) when (
             exception is XmlException
-            or XmlSchemaValidationException
             or InvalidOperationException
             or ArgumentException
             or FormatException
             or OverflowException)
         {
-            // 把解析与校验中的各类结构错误统一归一为“文档无效”诊断，调用方只需处理一种失败形态。
+            // 把剩余解析/校验结构错误归一为“文档无效”诊断，调用方只需处理预期失败。
             return Invalid("ATLAS-PERSIST-INVALID");
         }
     }

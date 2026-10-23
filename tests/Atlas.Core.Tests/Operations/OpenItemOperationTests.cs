@@ -140,6 +140,37 @@ public sealed class OpenItemOperationTests
     }
 
     [Fact]
+    public async Task Replace_existing_cannot_break_pinned_prefix()
+    {
+        var first = CreateDocument("first", "first");
+        var second = CreateDocument("second", "second");
+        var request = new DockItem(
+            new DockItemId("request"),
+            DockItemKind.Document,
+            new ContentReference("document", "second"),
+            DockItemCapabilityPresets.Document,
+            documentState: new DocumentState(isPinned: true, isPreview: false));
+        var (workspace, group) = CreateDocumentWorkspace(first, second);
+        await using (workspace)
+        {
+            var result = await workspace.ExecuteAsync(
+                new OpenItemOperation(
+                    request,
+                    group.Id,
+                    ContentDeduplicationMode.ReplaceExisting));
+
+            Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
+            Assert.Equal(
+                WorkspaceErrorCode.TargetRejectedByPolicy,
+                result.Error!.Code);
+            Assert.Equal(0, workspace.Current.Revision);
+            Assert.Equal(
+                new[] { first.Id, second.Id },
+                CurrentGroup(workspace, group.Id).ItemIds);
+        }
+    }
+
+    [Fact]
     public async Task Missing_or_incompatible_target_returns_typed_failure()
     {
         var existing = CreateDocument("existing", "existing");
