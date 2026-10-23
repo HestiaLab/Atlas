@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <SupportedPlatform Include="browser" />
+    <InternalsVisibleTo Include="Atlas.Blazor.Tests" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Atlas.Core\Atlas.Core.csproj" PrivateAssets="all" />
