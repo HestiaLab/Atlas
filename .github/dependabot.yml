@@ -16,6 +16,15 @@ updates:
           - "Microsoft.NET.Test.Sdk"
           - "xunit*"
           - "coverlet*"
+    # Keep the ASP.NET Core/Extensions majors pinned until the net6.0 TFM
+    # migration ADR lands; mixing 6.x and 10.x packages is unsupported.
+    ignore:
+      - dependency-name: "Microsoft.AspNetCore.*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: npm
     directory: /src/Atlas.Blazor
@@ -24,6 +33,15 @@ updates:
     labels:
       - dependencies
       - javascript
+    # Track the Node.js 24.x runtime and TypeScript 5.x toolchain; major
+    # upgrades require a deliberate migration.
+    ignore:
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /
