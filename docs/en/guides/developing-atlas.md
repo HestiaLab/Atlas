@@ -103,8 +103,9 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 ```
 
 Do not skip `npm run build:js` if you touched `ClientScripts/*.ts` — the
-csproj does not call npm automatically, and packing without a fresh bundle
-silently ships the old JavaScript.
+csproj's `EnsureAtlasJsBundle` target rebuilds the bundle on `dotnet build`
+only when sources are newer and only warns when npm is unavailable, so
+packing without a fresh bundle can still silently ship the old JavaScript.
 
 ## 6. Update Traceability In The Same Commit
 

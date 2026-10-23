@@ -177,11 +177,13 @@ npm run build:js
 cd ../..
 ```
 
-`atlas.js` and its source map are ignored generated artifacts;
-`Atlas.Blazor.csproj` does not call npm automatically before a normal
-`dotnet build`. After modifying `ClientScripts/*.ts`, you must explicitly run
-`npm run build:js` before packing or running the Demo, or the package may
-contain a stale or missing bundle.
+`atlas.js` and its source map are gitignored generated artifacts. The
+`EnsureAtlasJsBundle` target in `Atlas.Blazor.csproj` rebuilds the bundle
+incrementally before a normal `dotnet build` when the TypeScript sources are
+newer, but npm failures only warn (and can be skipped with
+`AtlasSkipJsBuild=true`), so after modifying `ClientScripts/*.ts` you must
+still run `npm run build:js` explicitly before packing or running the Demo —
+otherwise the package may contain a stale or missing bundle.
 
 ### Modifying Persistence
 
