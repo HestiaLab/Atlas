@@ -14,7 +14,7 @@
 | 维度 | 结论 | 证据/缺口 |
 |---|---|---|
 | Requirement correctness | Pass | ADR-0014 与 RequirementsBaselineTests 固定正文/索引同一 151 项集合。 |
-| Architecture boundary | Pass | Atlas.Core architecture test 禁止 Blazor、JS interop 与 Atlas.Blazor 引用；双包边界保持。 |
+| Architecture boundary | Pass | Atlas.Core architecture test 禁止 Blazor、JS interop 与 Atlas.Blazor 引用；Core/Blazor 程序集边界保持。本历史审计描述的双包发布已被 ADR-0019 取代：只发布 Atlas.Blazor，并嵌入 Atlas.Core。 |
 | Domain model | Partial | identity、snapshot、layout、placement、sizing、persistence 模型存在；Auto-hide runtime、Reset 等行为仍缺。 |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 纵向切片存在；Overflow Menu/Wrap、Context Menu、部分修复策略未实现。 |
 | Delivery evidence | Partial | Chromium 实机、a11y、Splitter FPS、20-panel init 与完整分层门禁已完成；Firefox/Edge/Safari 兼容性矩阵仍是明确缺口。 |

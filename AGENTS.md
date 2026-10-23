@@ -40,7 +40,8 @@ windows, editor split views, and panel switching for web applications. The
 repository uses Node.js 24 LTS and npm for TypeScript interop.
 
 ```text
-src/Atlas.Core/           Pure C# domain and operation engine (NuGet: Atlas.Core)
+src/Atlas.Core/           Pure C# domain and operation engine (packable project;
+                          embedded into the Atlas.Blazor package, ADR-0019)
 src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazor)
   Components/             Public Razor components
   Interop/                C# JS interop boundary

@@ -10,13 +10,14 @@ does not replace the HLD, the [SRS](../SRS.md), or the ADRs.
 
 Atlas is a Dock Layout component library for Blazor applications that provides
 tool panels, editor tabs, split views, drag-and-drop, Splitters, layout
-history, and persistence. The repository defines two packable .NET 6 NuGet
-packages:
+history, and persistence. The repository defines two independent .NET 6
+projects and publishes one NuGet package (ADR-0019):
 
 - `Atlas.Core`: UI-independent domain model, operation engine, history, and
-  persistence.
+  persistence. It remains an independent, packable project.
 - `Atlas.Blazor`: Blazor rendering, content hosting, CSS, and browser
-  interaction; depends on `Atlas.Core`.
+  interaction; depends on `Atlas.Core`, which is embedded into the published
+  `Atlas.Blazor` package. Only `Atlas.Blazor` is published.
 
 The in-repo teaching demo [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)
 demonstrates the framework's public API with runnable panels. The NuGet
@@ -32,7 +33,8 @@ Browser input / DOM
         │
         ▼
 TypeScript interaction controller
-ClientScripts/controller.ts + protocol.ts + sandbox.ts
+ClientScripts/controller.ts + drag-session.ts + drop-target.ts
+  + split-resize-session.ts + protocol.ts + sandbox.ts
         │ structured intent at commit boundary
         ▼
 Atlas.Blazor

@@ -13,6 +13,12 @@ implementation and verification. The normative source for design mapping is
 - Formal requirement blocks: 151 (REQ-F 142 + REQ-NF 9)
 - Current functional implementation status: see the P8 item-by-item audit;
   Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
+- Latest measured gate baseline (2026-10-23, branch
+  `refactor/code-quality-2026-10`): 282 Core + 129 Blazor + 50 JS tests;
+  Debug/Release, typecheck, format, pack, frozen-contract diff and the
+  dual-Host real-browser drag fixture pass. The P8 historical baseline
+  (264 Core + 43 Blazor + 17 Node) is retained in its row below; the
+  pre-refactor measurement was 275 Core + 114 Blazor + 43 JS
 - Completed engineering work: P0~P8 Verified; DEV-GATE-001~007 Closed
 - Excluded from formal coverage: the 5 historical deleted IDs and 9
   non-normative boundary IDs listed in ADR-0014
@@ -118,6 +124,10 @@ converted directly to `Implemented` or `Verified`.
 | — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests; Chromium a11y/reduced-motion/performance; restore/build/test/format; Core/Blazor Release pack; [P8 evidence](./evidence/p8-system-hardening.md) and [151-item audit](./evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate historical evidence remains valid; Demo deleted per ADR-0016; REQ-NF-002/003/007 still do not claim full coverage |
 | REQ-F-001~005、REQ-F-009~026、REQ-F-035、REQ-F-050~071、REQ-F-073~082、REQ-F-140~156、REQ-NF-003~005、REQ-NF-007~008 | DES-ARCH-001~004、DES-DOM-003、DES-DOM-008、DES-INT-001~008、DES-NFR-001~003、DES-PRJ-001~003、DES-RND-005~009 | Consumer Demo (historical) | historical `samples/Atlas.Demo`, now `HestiaLab/DbcView`; in-repo teaching demo `samples/Atlas.Showcase` | 9 bUnit/consumer-boundary tests; six Tool Groups, one Document Group, six Splitters, six LogicalRegions, fixed chrome, LT/RT, three Tabs/ARIA; independent and repository-external restore/build/test/run; real browser Panel/ToolBar/Tab/Splitter/cancel/Undo/Redo/cross-Host/responsive/37.94 FPS/zero console issue; the live demo on GitHub Pages validates the published package | Verified | ADR-0017 accepted and does not change the Atlas public API/protocol/schema; the consumer showcase moved to the standalone DbcView repository (same boundary tests preserved there); the in-repo Atlas.Showcase teaching demo replaced the business sample and is covered by the main solution gates; historical evidence is maintained separately and does not replace or rewrite historical P7/P8 evidence; Escape/pointercancel/lost-capture/stale mid-gesture events that an atomic browser driver cannot inject are covered by Node/Blazor automation and explicitly layered in the evidence |
 | REQ-NF-009 | DES-NFR-005 | P9 | `wwwroot/atlas-v2/atlas.css`、`docs/en/theming.md` | ADR-0023 variable contract; real browser: default `--atlas-*` values resolve, drop-zone highlight and drag-preview border follow an `--atlas-accent: #d33` override without `!important`, no hard-coded theme values outside the variable block | Implemented | ADR-0023 accepted; atlas.css tokenized (defaults pixel-identical), theming guide published; full build/test/format green |
+
+| REQ-F-048、REQ-F-027、REQ-F-017 | DES-OP-001、DES-OP-004~007 | P9 | `Atlas.Core/Operations/Engine` | `DockDocumentOperationTests`、`OpenItemOperationTests`、`SelectItemOperationTests`: pinned-prefix center docking, empty Persistent group ToolBarOrder fallback, auto-hide-only selection typed failure | In Progress | 2026-10-23 crash guards CORE-01/02/03; related requirement statuses are unchanged and not upgraded to Verified |
+| REQ-F-109、REQ-F-133 | DES-INT-001~002、DES-PRJ-002 | P9 | `Atlas.Blazor/Components/Workspace` | `AtlasWorkspaceHostTests`: sequential programmatic-to-declarative switch preserves external ownership and disposes only the Host-owned workspace | In Progress | 2026-10-23 state-ownership fix BLAZOR-01; related requirement statuses unchanged |
+| — | DES-ARCH-001~004、DES-INT-001~008、DES-PRJ-001~003 | P9 | `Atlas.Core`、`Atlas.Blazor`、`ClientScripts` | 282 Core + 129 Blazor + 50 JS tests; Release build/test; typecheck; format; pack; frozen-contract diff empty; dual-Host real-browser drag fixture | Verified | 2026-10-23 behavior-preserving refactor slices 1–6; no public C# API, JS protocol, DOM metadata, XML schema or package-topology change; requirement statuses unchanged |
 
 ## Update Rules
 

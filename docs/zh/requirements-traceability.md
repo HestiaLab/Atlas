@@ -14,6 +14,11 @@
 - 正式需求块：151（REQ-F 142 + REQ-NF 9）
 - 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 18、In Progress 80、
   Not Started 5、Deferred 2
+- 最新实测门禁基线（2026-10-23，分支 `refactor/code-quality-2026-10`）：
+  282 Core + 129 Blazor + 50 JS tests；Debug/Release、typecheck、format、pack、
+  冻结契约 diff 与双 Host 真实浏览器拖拽夹具均通过。P8 历史基线
+  （264 Core + 43 Blazor + 17 Node）保留在下方对应行；重构前实测为
+  275 Core + 114 Blazor + 43 JS
 - 已完成工程工作：P0~P8 Verified；DEV-GATE-001~007 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 
@@ -113,6 +118,10 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | — | DES-ARCH-001~004、DES-INT-004、DES-INT-007~008、DES-NFR-002~003、DES-PRJ-001~003 | P8 | `Atlas.Core`、`Atlas.Blazor`、historical `Atlas.Demo` | 264 Core + 43 Blazor + 17 Node tests；Chromium a11y/reduced-motion/performance；restore/build/test/format；Core/Blazor Release pack；[P8 evidence](./evidence/p8-system-hardening.md) 与 [151 条审计](./evidence/p8-requirement-audit.md) | Verified | P8 Phase Exit Gate 的历史证据保持有效；Demo 已按 ADR-0016 删除；REQ-NF-002/003/007 仍不宣称完整覆盖 |
 | REQ-F-001~005、REQ-F-009~026、REQ-F-035、REQ-F-050~071、REQ-F-073~082、REQ-F-140~156、REQ-NF-003~005、REQ-NF-007~008 | DES-ARCH-001~004、DES-DOM-003、DES-DOM-008、DES-INT-001~008、DES-NFR-001~003、DES-PRJ-001~003、DES-RND-005~009 | Consumer Demo (historical) | historical `samples/Atlas.Demo`，现为 `HestiaLab/DbcView`；仓内教学演示 `samples/Atlas.Showcase` | 9 bUnit/consumer-boundary tests；六 Tool Group、一个 Document Group、六 Splitter、六 LogicalRegion、固定 chrome、LT/RT、三 Tab/ARIA；独立及仓库外 restore/build/test/run；真实浏览器 Panel/ToolBar/Tab/Splitter/cancel/Undo/Redo/cross-Host/响应式/37.94 FPS/零 console issue；GitHub Pages 在线演示验证已发布包 | Verified | ADR-0017 已接受且未改变 Atlas public API/protocol/schema；consumer showcase 已迁移到独立的 DbcView 仓库（相同的 boundary tests 在那里保留）；仓内 Atlas.Showcase 教学演示取代了业务示例并由主 solution 门禁覆盖；历史证据单独维护，不替代或改写历史 P7/P8 证据；原子浏览器驱动不能注入的 Escape/pointercancel/lost capture/stale 中途事件由 Node/Blazor 自动化覆盖并在证据中明确分层 |
 | REQ-NF-009 | DES-NFR-005 | P9 | `wwwroot/atlas-v2/atlas.css`、`docs/en/theming.md` | ADR-0023 变量契约；真实浏览器：默认 `--atlas-*` 变量解析正确、放置区域高亮与拖拽预览边框在 `--atlas-accent: #d33` 覆盖下生效且无需 `!important`、变量块之外无硬编码主题值 | Implemented | ADR-0023 已接受；atlas.css 已 token 化（默认值逐像素一致），主题指南已发布；build/test/format 全绿 |
+
+| REQ-F-048、REQ-F-027、REQ-F-017 | DES-OP-001、DES-OP-004~007 | P9 | `Atlas.Core/Operations/Engine` | `DockDocumentOperationTests`、`OpenItemOperationTests`、`SelectItemOperationTests`：pinned-prefix 中心停靠、空 Persistent 组 ToolBarOrder 回退、仅自动隐藏项选中 typed failure | In Progress | 2026-10-23 崩溃守卫 CORE-01/02/03；相关需求状态不变，不升级为 Verified |
+| REQ-F-109、REQ-F-133 | DES-INT-001~002、DES-PRJ-002 | P9 | `Atlas.Blazor/Components/Workspace` | `AtlasWorkspaceHostTests`：编程式→声明式顺序切换保留外部所有权，仅释放 Host 拥有的 workspace | In Progress | 2026-10-23 状态所有权修复 BLAZOR-01；相关需求状态不变 |
+| — | DES-ARCH-001~004、DES-INT-001~008、DES-PRJ-001~003 | P9 | `Atlas.Core`、`Atlas.Blazor`、`ClientScripts` | 282 Core + 129 Blazor + 50 JS tests；Release build/test；typecheck；format；pack；冻结契约 diff 为空；双 Host 真实浏览器拖拽夹具 | Verified | 2026-10-23 行为保持重构切片 1–6；公共 C# API、JS 协议、DOM metadata、XML schema 与包拓扑均未变更；需求状态不变 |
 
 ## 更新规则
 
