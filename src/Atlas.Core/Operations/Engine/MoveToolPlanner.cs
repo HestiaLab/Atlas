@@ -84,52 +84,41 @@ internal static class MoveToolPlanner
             return PlanWithinGroup(snapshot, operation, target, targetIndex);
         }
 
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var strips = snapshot.AutoHideStrips.ToDictionary(pair => pair.Key, pair => pair.Value);
-        var rootNodeId = snapshot.RootNodeId;
-
+        var mutation = WorkspaceMutation.From(snapshot);
         if (source is not null)
         {
-            RemoveFromSource(nodes, orders, source, item.Id, ref rootNodeId);
+            var removal = GroupItemEditor.RemoveItem(
+                source,
+                item.Id,
+                chooseAdjacent: false,
+                updateRecentVisits: false);
+            if (removal.Group is null)
+            {
+                mutation.RemoveDynamicGroup(source.Id);
+            }
+            else
+            {
+                mutation.ReplaceNode(removal.Group);
+            }
+
+            mutation.RemoveOrderItem(source, item.Id, removal.RemainingItems);
         }
         else
         {
-            RemoveFromAutoHide(strips, item.Id);
+            mutation.RemoveAutoHideItem(item.Id);
         }
 
         // 目标组与其逻辑区域（工具栏）的条目顺序必须同步更新，
         // 否则组内顺序与工具栏顺序漂移，违反 ToolBarOrder 不变式。
-        var targetItems = target.ItemIds.ToList();
-        targetItems.Insert(targetIndex, item.Id);
-        nodes[target.Id] = new GroupNode(
-            target.Id,
-            target.Kind,
-            target.RetentionPolicy,
-            GroupVisibility.Expanded,
-            targetItems,
-            item.Id,
-            editorState: null,
-            target.LogicalRegion);
-        if (target.LogicalRegion is LogicalRegion targetRegion)
-        {
-            var targetOrder = orders.TryGetValue(targetRegion, out var currentOrder)
-                ? currentOrder.ItemIds.ToList()
-                : target.ItemIds.ToList();
-            targetOrder.Insert(targetIndex, item.Id);
-            orders[targetRegion] = new ToolBarOrderState(targetRegion, targetOrder);
-        }
-
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                rootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                orders,
-                strips));
+        mutation.ReplaceNode(
+            GroupItemEditor.InsertItem(
+                target,
+                item,
+                targetIndex,
+                GroupVisibility.Expanded,
+                updateRecentVisits: false));
+        mutation.InsertOrderItem(target, item.Id, targetIndex);
+        return mutation.Commit();
     }
 
     private static WorkspacePlan PlanWithinGroup(
@@ -149,91 +138,27 @@ internal static class MoveToolPlanner
             return WorkspacePlan.NoChange();
         }
 
-        var reordered = group.ItemIds.ToList();
-        reordered.RemoveAt(currentIndex);
-        reordered.Insert(finalIndex, operation.ItemId);
-        var replacement = new GroupNode(
-            group.Id,
-            group.Kind,
-            group.RetentionPolicy,
-            GroupVisibility.Expanded,
-            reordered,
+        var reordered = GroupItemEditor.Reorder(
+            group.ItemIds,
             operation.ItemId,
-            editorState: null,
-            group.LogicalRegion);
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[group.Id] = replacement;
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
+            finalIndex);
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(
+            new GroupNode(
+                group.Id,
+                group.Kind,
+                group.RetentionPolicy,
+                GroupVisibility.Expanded,
+                reordered,
+                operation.ItemId,
+                editorState: null,
+                group.LogicalRegion));
         if (group.LogicalRegion is LogicalRegion region)
         {
-            orders[region] = new ToolBarOrderState(region, reordered);
+            mutation.SetOrder(region, reordered);
         }
 
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                orders,
-                snapshot.AutoHideStrips));
-    }
-
-    private static void RemoveFromSource(
-        IDictionary<LayoutNodeId, LayoutNode> nodes,
-        IDictionary<LogicalRegion, ToolBarOrderState> orders,
-        GroupNode source,
-        DockItemId itemId,
-        ref LayoutNodeId? rootNodeId)
-    {
-        var remaining = source.ItemIds.Where(id => id != itemId).ToArray();
-        if (remaining.Length == 0
-            && source.RetentionPolicy == GroupRetentionPolicy.Dynamic)
-        {
-            LayoutTreeEditor.RemoveDynamicGroup(nodes, source.Id, ref rootNodeId);
-        }
-        else
-        {
-            var selected = source.SelectedItemId == itemId
-                ? remaining.FirstOrDefault()
-                : source.SelectedItemId;
-            // 空的 Persistent 工具组保留在树中（与 Dynamic 不同），
-            // 最后一个面板移走后必须折叠以停止占用布局空间（REQ-F-154）。
-            // 折叠由 GroupVisibilityInvariant 在快照边界统一强制执行；
-            // 有面板再次移入或选中时组重新展开。
-            nodes[source.Id] = new GroupNode(
-                source.Id,
-                source.Kind,
-                source.RetentionPolicy,
-                source.Visibility,
-                remaining,
-                remaining.Length == 0 ? null : selected,
-                editorState: null,
-                source.LogicalRegion);
-        }
-
-        if (source.LogicalRegion is LogicalRegion sourceRegion)
-        {
-            var sourceOrder = orders.TryGetValue(sourceRegion, out var currentSourceOrder)
-                ? currentSourceOrder.ItemIds.Where(id => id != itemId)
-                : remaining;
-            orders[sourceRegion] = new ToolBarOrderState(
-                sourceRegion,
-                sourceOrder);
-        }
-    }
-
-    private static void RemoveFromAutoHide(
-        IDictionary<WorkspaceEdge, AutoHideStripState> strips,
-        DockItemId itemId)
-    {
-        var source = strips.Single(
-            pair => pair.Value.Entries.Any(entry => entry.ItemId == itemId));
-        strips[source.Key] = new AutoHideStripState(
-            source.Key,
-            source.Value.Entries.Where(entry => entry.ItemId != itemId));
+        return mutation.Commit();
     }
 
     private static WorkspacePlan Failure(

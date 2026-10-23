@@ -8,6 +8,40 @@ namespace Atlas.Core.Operations.Engine;
 internal static class LayoutTreeEditor
 {
     /// <summary>
+    ///     在目标节点上方插入分割：目标节点保持为分割子节点，
+    ///     父节点或根引用改为指向新分割。
+    /// </summary>
+    internal static void InsertSplitAbove(
+        IDictionary<LayoutNodeId, LayoutNode> nodes,
+        LayoutNodeId targetId,
+        SplitNode replacement,
+        ref LayoutNodeId? rootNodeId)
+    {
+        var parent = nodes.Values
+            .OfType<SplitNode>()
+            .SingleOrDefault(node => node.FirstId == targetId || node.SecondId == targetId);
+        nodes[replacement.Id] = replacement;
+        if (rootNodeId == targetId)
+        {
+            rootNodeId = replacement.Id;
+            return;
+        }
+
+        if (parent is null)
+        {
+            throw new InvalidOperationException("A non-root target must have one parent.");
+        }
+
+        nodes[parent.Id] = new SplitNode(
+            parent.Id,
+            parent.Axis,
+            parent.Basis,
+            parent.Constraints,
+            parent.FirstId == targetId ? replacement.Id : parent.FirstId,
+            parent.SecondId == targetId ? replacement.Id : parent.SecondId);
+    }
+
+    /// <summary>
     ///     从布局树中移除空的动态组：组为根时清空根引用；
     ///     挂在分割节点下时移除父分割并上提兄弟子树顶替。
     /// </summary>

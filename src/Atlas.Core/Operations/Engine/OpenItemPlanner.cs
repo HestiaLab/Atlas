@@ -92,7 +92,7 @@ internal static class OpenItemPlanner
         // 非固定项追加到组尾——默认行为也必须维持前缀不变量；
         // 显式索引同样要过一遍前缀校验，违规拒绝而非静默修正。
         var targetIndex = operation.TargetIndex
-            ?? DefaultInsertionIndex(snapshot, target, operation.Item);
+            ?? GroupItemEditor.DefaultInsertionIndex(snapshot, target, operation.Item);
         if (targetIndex > target.ItemIds.Count)
         {
             return Failure(
@@ -104,7 +104,7 @@ internal static class OpenItemPlanner
 
         var itemIds = target.ItemIds.ToList();
         itemIds.Insert(targetIndex, operation.Item.Id);
-        if (!HasPinnedPrefix(snapshot, itemIds, operation.Item))
+        if (!GroupItemEditor.HasPinnedPrefix(snapshot, itemIds, operation.Item))
         {
             return Failure(
                 WorkspaceErrorCode.TargetRejectedByPolicy,
@@ -113,37 +113,17 @@ internal static class OpenItemPlanner
                 "Atlas.Open.TargetRejected");
         }
 
-        // 新项立即成为选中项并置为最近访问首位：MRU 顺序供文档组激活策略使用。
-        var editorState = target.EditorState is null
-            ? null
-            : new EditorGroupState(
-                target.EditorState.OverflowMode,
-                target.EditorState.ActivationPolicy,
-                target.EditorState.RecentlyVisitedIds.Prepend(operation.Item.Id));
-        var replacement = new GroupNode(
-            target.Id,
-            target.Kind,
-            target.RetentionPolicy,
-            GroupVisibility.Expanded,
-            itemIds,
-            operation.Item.Id,
-            editorState,
-            target.LogicalRegion);
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[target.Id] = replacement;
-        var items = snapshot.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
-        items.Add(operation.Item.Id, operation.Item);
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
-        if (target.LogicalRegion is LogicalRegion region)
-        {
-            var order = orders.TryGetValue(region, out var currentOrder)
-                ? currentOrder.ItemIds.ToList()
-                : target.ItemIds.ToList();
-            order.Insert(targetIndex, operation.Item.Id);
-            orders[region] = new ToolBarOrderState(region, order);
-        }
-
-        return Commit(snapshot, nodes, items, orders);
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(
+            GroupItemEditor.InsertItem(
+                target,
+                operation.Item,
+                targetIndex,
+                GroupVisibility.Expanded,
+                updateRecentVisits: target.Kind == DockItemKind.Document));
+        mutation.AddItem(operation.Item);
+        mutation.InsertOrderItem(target, operation.Item.Id, targetIndex);
+        return mutation.Commit();
     }
 
     private static WorkspacePlan ActivateExisting(
@@ -209,11 +189,14 @@ internal static class OpenItemPlanner
             return WorkspacePlan.NoChange();
         }
 
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[group.Id] = replacementGroup;
-        var items = snapshot.Items.ToDictionary(pair => pair.Key, pair => pair.Value);
-        items[existing.Id] = replacementItem;
-        return Commit(snapshot, nodes, items, snapshot.ToolBarOrders);
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(replacementGroup);
+        if (replace)
+        {
+            mutation.ReplaceItem(replacementItem);
+        }
+
+        return mutation.Commit();
     }
 
     private static bool RecentIdsEqual(
@@ -224,62 +207,6 @@ internal static class OpenItemPlanner
             ? right is null
             : right is not null
                 && left.RecentlyVisitedIds.SequenceEqual(right.RecentlyVisitedIds);
-    }
-
-    private static int DefaultInsertionIndex(
-        WorkspaceSnapshot snapshot,
-        GroupNode target,
-        DockItem item)
-    {
-        if (item.DocumentState?.IsPinned != true)
-        {
-            return target.ItemIds.Count;
-        }
-
-        return target.ItemIds
-            .TakeWhile(itemId => snapshot.Items[itemId].DocumentState?.IsPinned == true)
-            .Count();
-    }
-
-    private static bool HasPinnedPrefix(
-        WorkspaceSnapshot snapshot,
-        IEnumerable<DockItemId> itemIds,
-        DockItem addedItem)
-    {
-        var unpinnedSeen = false;
-        foreach (var itemId in itemIds)
-        {
-            var item = itemId == addedItem.Id ? addedItem : snapshot.Items[itemId];
-            var pinned = item.DocumentState?.IsPinned == true;
-            if (!pinned)
-            {
-                unpinnedSeen = true;
-            }
-            else if (unpinnedSeen)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static WorkspacePlan Commit(
-        WorkspaceSnapshot snapshot,
-        IEnumerable<KeyValuePair<LayoutNodeId, LayoutNode>> nodes,
-        IEnumerable<KeyValuePair<DockItemId, DockItem>> items,
-        IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> orders)
-    {
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                items,
-                snapshot.ToolBars,
-                orders,
-                snapshot.AutoHideStrips));
     }
 
     private static WorkspacePlan Failure(
