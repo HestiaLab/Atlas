@@ -1,3 +1,4 @@
+using System.Globalization;
 using Atlas.Core;
 using Atlas.Core.Definitions;
 using Atlas.Core.Items;
@@ -169,10 +170,38 @@ internal static class AtlasDefinitionReconciler
     {
         return node switch
         {
-            SplitNode split => $"S:{split.Id}:{split.Axis}:{split.Basis.Kind}:{split.Basis.Value}:{split.FirstId}:{split.SecondId}",
-            GroupNode group => $"G:{group.Id}:{group.Kind}:{group.RetentionPolicy}:{group.Visibility}:{group.ToolbarRegion}:{group.SelectedItemId}:{string.Join("/", group.ItemIds)}",
+            // 数值字段必须用不变文化格式化：指纹跨文化稳定是
+            // "声明未变即跳过对账"的前提，文化敏感的格式化会让
+            // 非不变文化应用每次渲染都误判声明变化。
+            SplitNode split => $"S:{split.Id}:{split.Axis}:{split.Basis.Kind}:"
+                + $"{split.Basis.Value.ToString("R", CultureInfo.InvariantCulture)}:"
+                + $"{ConstraintToken(split.Constraints)}:"
+                + $"{split.FirstId}:{split.SecondId}",
+            GroupNode group => $"G:{group.Id}:{group.Kind}:{group.RetentionPolicy}:"
+                + $"{group.Visibility}:{group.ToolbarRegion}:{group.SelectedItemId}:"
+                + $"{EditorStateToken(group.EditorState)}:"
+                + $"{string.Join("/", group.ItemIds)}",
             _ => node.Id.Value,
         };
+    }
+
+    private static string ConstraintToken(SplitConstraints constraints)
+    {
+        var firstMaximum = constraints.FirstMaximum is double maximum
+            ? maximum.ToString("R", CultureInfo.InvariantCulture)
+            : "-";
+        var secondMaximum = constraints.SecondMaximum is double maximum2
+            ? maximum2.ToString("R", CultureInfo.InvariantCulture)
+            : "-";
+        return $"{constraints.FirstMinimum.ToString("R", CultureInfo.InvariantCulture)}:"
+            + $"{firstMaximum}:"
+            + $"{constraints.SecondMinimum.ToString("R", CultureInfo.InvariantCulture)}:"
+            + $"{secondMaximum}";
+    }
+
+    private static string EditorStateToken(EditorGroupState? state)
+    {
+        return state is null ? "-" : $"{state.OverflowMode}:{state.ActivationPolicy}";
     }
 
     private static string ItemFingerprint(DockItem item)
