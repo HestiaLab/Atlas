@@ -54,7 +54,7 @@ an ADR/Spike is required to settle the implementation contract; it does not mean
 | OI-001 | F-069, F-140, F-150, F-155 | The descriptions of Panel drop eligibility across visible Dock Regions, ToolBar, and Drop Scaffold are inconsistent | **Closed**: ADR-0007 adopts ToolBar-first + hidden Scaffold; a visible RegionBody accepts Panel Header drags as a RegionCenter placement and rejects ToolBar Entry drags |
 | OI-002 | F-070, DES-RND-005 | The SRS requires component internal state to be preserved after cross-region moves, but Blazor re-mounting under a different parent cannot guarantee instance identity | **Closed**: ADR-0012 limits the contract to content identity and externalized business state; remount is allowed across Groups |
 | OI-003 | SRS §5, Appendix A | The formal requirement block count is 150, but the appendix previously stated 152 | **Closed**: ADR-0014 fixes 150 = F142 + NF8; the appendix has been synchronized with the main text |
-| OI-004 | AGENTS.md, DES-PRJ-001 | Target Framework, PackageId, and the project structure need to be unified | **Closed**: ADR-0001/0016/0017 adopt .NET 6.0, dual packages Atlas.Core/Atlas.Blazor, a standalone NuGet consumer sample, and Node 24 LTS + npm; the sample is not part of the dual-package implementation layers and is not added to the main solution |
+| OI-004 | AGENTS.md, DES-PRJ-001 | Target Framework, PackageId, and the project structure need to be unified | **Closed**: ADR-0001/0016/0017 adopt .NET 6.0, dual packages Atlas.Core/Atlas.Blazor, a standalone NuGet consumer sample, and Node 24 LTS + npm; the sample is not part of the dual-package implementation layers and is not added to the main solution. ADR-0019 later supersedes dual-package publication: only Atlas.Blazor is published, while Atlas.Core remains an independent packable project embedded in that package |
 | OI-005 | SRS Appendix A §3.10 | Edge cases such as F-129 and F-131 previously appeared in indexes/references but had no formal requirement block and AC | **Closed**: ADR-0014 classifies the 9 IDs as non-normative design/test inputs, not counted toward requirement status or coverage |
 | OI-006 | NF-006, DES-RND-001 | A Blazor RenderFragment in the same DOM cannot prevent content from accessing other DOM nodes, and ErrorBoundary is not a security sandbox either | **Closed**: ADR-0013 keeps TrustedComponent as the default and clarifies it is not a security sandbox; untrusted content uses SandboxedFrame |
 | OI-007 | F-006~008, F-122, DES-RND-001~003 | Host ContentTemplate and DI registration currently form mutually exclusive rendering pipelines and cannot express one deterministic catalog or strongly typed functional binding | **Closed**: ADR-0018 adopts one effective Content Catalog with startup DI, Host-local Route, and immutable Host-local Map sources; duplicate startup DI fails registry construction, while Host-local conflicts are isolated to the affected Kind |
@@ -2352,7 +2352,8 @@ Module Partitioning and Dependency Direction
 Project structure:
 
   src/
-    Atlas.Core/              ← pure C#, NuGet package Atlas.Core (net6.0)
+    Atlas.Core/              ← pure C#, packable project Atlas.Core (net6.0);
+      │                        embedded in the Atlas.Blazor package (ADR-0019)
       Model/                   Nodes/ SplitNode, GroupNode
       │                        Items/ DockItem, ContentReference
       │                        Content/
@@ -2362,14 +2363,16 @@ Project structure:
       Persistence/             Serializer, RestorePipeline, Migration
       Results/                 WorkspaceResult<T>, WorkspaceError
 
-    Atlas.Blazor/            ← NuGet package Atlas.Blazor (net6.0), depends on Atlas.Core
+    Atlas.Blazor/            ← published NuGet package Atlas.Blazor (net6.0),
+      │                        depends on Atlas.Core
       Components/              Workspace/ AtlasWorkspaceHost
       │                        Nodes/ SplitNodeView, GroupNodeView
       │                        Groups/ GroupHeaderView, DockContentOutlet
       │                        Content/
       │                        Chrome/
       Interop/                 RootInteractionController, IJSAtlasInterop
-      ClientScripts/           interaction-controller.ts, drag-session.ts, ...
+      ClientScripts/           controller.ts, drag-session.ts, drop-target.ts,
+      │                        split-resize-session.ts, ...
       wwwroot/
 
   tests/
@@ -2382,15 +2385,16 @@ on the artifact under test. Reverse dependencies are forbidden. The NuGet
 consumer showcase (a DBC file viewer) lives in the standalone
 `HestiaLab/DbcView` repository: it is not part of `Atlas.sln`, does not
 belong to the Atlas implementation layer, and does not reference source
-projects; it only consumes `Atlas.Core` / `Atlas.Blazor` from the Release
-pack feed, so a clean restore of the main solution does not depend on
-locally pre-built packages. See ADR-0017 for details.
+projects; it only consumes the published `Atlas.Blazor` package from the
+Release pack feed (`Atlas.Core` is embedded per ADR-0019), so a clean restore
+of the main solution does not depend on locally pre-built packages. See
+ADR-0017 for details.
 
 V1/V2 coexistence rules:
 
 | Layer | Atlas 1.x | Atlas 2.0 |
 |-----------------|-------------------------|----------------------------------------|
-| NuGet PackageId | Atlas | Atlas.Core, Atlas.Blazor |
+| NuGet PackageId | Atlas | Atlas.Blazor (Atlas.Core embedded, ADR-0019) |
 | Namespace root | Existing Atlas.* | Atlas.Core.*, Atlas.Blazor.* |
 | DI extension | Existing AddAtlas | AddAtlasWorkspace |
 | Static assets | _content/Atlas/... | _content/Atlas.Blazor/... |

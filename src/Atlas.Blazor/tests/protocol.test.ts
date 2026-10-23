@@ -7,6 +7,18 @@ import {
   isSupportedProtocolVersion
 } from "../ClientScripts/protocol";
 import { AtlasInteractionController, documentTargetKind } from "../ClientScripts/controller";
+import { attachAtlasController as attachAtlasControllerFromController } from "../ClientScripts/controller";
+import {
+  resolveDropTarget,
+  type DropTargetDragContext
+} from "../ClientScripts/drop-target";
+import {
+  basisFor,
+  clamp,
+  readLimits,
+  readRatio
+} from "../ClientScripts/split-geometry";
+import { SplitResizeSession } from "../ClientScripts/split-resize-session";
 import type {
   AtlasInteractionMessage,
   AtlasDotNetReceiver
@@ -32,6 +44,81 @@ test("public api exposes every C#-invokable controller entry point", () => {
   assert.equal(typeof updateAtlasController, "function");
   assert.equal(typeof disposeAtlasController, "function");
   assert.equal(typeof clearAtlasSplitPreview, "function");
+  assert.equal(attachAtlasControllerFromController, attachAtlasController);
+});
+
+test("split geometry reads proportional and fixed-pixel ratios and limits", () => {
+  const split = new FakeElement();
+  split.dataset.atlasSplitAxis = "InlineChildren";
+  split.rect = { left: 0, top: 0, width: 400, height: 100 };
+  split.dataset.atlasSplitRatio = "0.25";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.25);
+
+  split.dataset.atlasSplitBasisKind = "FixedPixels";
+  split.dataset.atlasSplitBasisValue = "100";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.25);
+  split.dataset.atlasSplitAnchor = "Second";
+  assert.equal(readRatio(split as unknown as HTMLElement), 0.75);
+
+  split.dataset.atlasFirstMinimum = "120";
+  split.dataset.atlasSecondMinimum = "80";
+  const limits = readLimits(split as unknown as HTMLElement, 400);
+  assert.equal(limits.minimum, 0.3);
+  assert.equal(limits.maximum, 0.8);
+  assert.equal(clamp(1.5, 0, 1), 1);
+  assert.deepEqual(
+    basisFor(split as unknown as HTMLElement),
+    { basisKind: "fixed-pixels", anchor: "Second" });
+});
+
+test("split resize session commits once and cancel only clears", () => {
+  const splitter = new FakeElement();
+  const split = new FakeElement();
+  splitter.parentElement = split;
+  splitter.dataset.atlasSplitId = "root";
+  split.dataset.atlasNodeId = "root";
+  split.dataset.atlasSplitAxis = "InlineChildren";
+  split.dataset.atlasSplitRatio = "0.5";
+  split.rect = { left: 0, top: 0, width: 400, height: 100 };
+
+  const previews: number[] = [];
+  const commits: number[] = [];
+  let clears = 0;
+  const session = new SplitResizeSession({
+    preview: (_split, ratio) => previews.push(ratio),
+    clearPreview: () => clears++,
+    commit: (_split, ratio) => commits.push(ratio)
+  });
+
+  const begin = interactionEvent(
+    "pointerdown",
+    { pointerId: 5, clientX: 10, clientY: 0, preventDefault: () => undefined });
+  assert.equal(
+    session.begin(
+      splitter as unknown as HTMLElement,
+      split as unknown as HTMLElement,
+      begin as unknown as PointerEvent),
+    true);
+  session.move(interactionEvent(
+    "pointermove",
+    { pointerId: 5, clientX: 110, clientY: 0 }) as unknown as PointerEvent);
+  assert.deepEqual(previews, [0.75]);
+  session.finish(interactionEvent(
+    "pointerup",
+    { pointerId: 5, clientX: 110, clientY: 0 }) as unknown as PointerEvent);
+  assert.deepEqual(commits, [0.75]);
+  assert.equal(clears, 0);
+
+  session.begin(
+    splitter as unknown as HTMLElement,
+    split as unknown as HTMLElement,
+    begin as unknown as PointerEvent);
+  session.move(interactionEvent(
+    "pointermove",
+    { pointerId: 5, clientX: 60, clientY: 0 }) as unknown as PointerEvent);
+  session.cancel();
+  assert.equal(clears, 1);
+  assert.deepEqual(commits, [0.75]);
 });
 
 test("protocol version is explicit and rejects unknown versions", () => {
@@ -425,6 +512,11 @@ class FakeElement extends EventTarget {
 }
 
 Object.defineProperty(globalThis, "Element", {
+  configurable: true,
+  value: FakeElement
+});
+
+Object.defineProperty(globalThis, "HTMLElement", {
   configurable: true,
   value: FakeElement
 });
@@ -1048,6 +1140,91 @@ function dragPreview(fixture: ReturnType<typeof dragFixture>): FakeElement | und
     child => child.className === "atlas-v2-drag-preview");
 }
 
+function registryRoot(): FakeElement {
+  const document = new FakeDocument();
+  const root = new FakeElement();
+  root.ownerDocument = document;
+  root.dataset.atlasHostId = "registry-host";
+  root.dataset.atlasWorkspaceId = "registry-workspace";
+  root.dataset.atlasRevision = "3";
+  root.dataset.atlasDragKind = "toolbar-entry";
+  root.dataset.atlasItemId = "tool";
+  root.dataset.atlasGroupId = "left-upper";
+  root.dataset.atlasCommandCapabilities = "2";
+  root.dataset.atlasInsertionIndex = "0";
+  root.dataset.atlasToolbarEntry = "true";
+  root.dataset.atlasToolbarRegion = "InlineStartUpper";
+  return root;
+}
+
+function performToolbarDrag(root: FakeElement, pointerId: number): void {
+  root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId, clientX: 5, clientY: 0
+  }));
+  root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId, clientX: 5, clientY: 0
+  }));
+}
+
+test("controller registry rejects unsupported versions and replaces same-host controllers", async () => {
+  const identity = {
+    hostId: "registry-host",
+    workspaceId: "registry-workspace",
+    generation: 2,
+    protocolVersion: ATLAS_PROTOCOL_VERSION
+  } as const;
+  assert.throws(
+    () => attachAtlasController(
+      registryRoot() as unknown as HTMLElement,
+      {
+        ...identity,
+        protocolVersion: ATLAS_PROTOCOL_VERSION + 1
+      } as unknown as typeof identity,
+      { invokeMethodAsync: async () => undefined }),
+    /ATLAS-INTERACTION-ATTACH-REJECTED/);
+
+  const firstMessages: AtlasInteractionMessage[] = [];
+  const firstRoot = registryRoot();
+  attachAtlasController(
+    firstRoot as unknown as HTMLElement,
+    identity,
+    {
+      invokeMethodAsync: async (_method, message) => {
+        firstMessages.push(message);
+      }
+    });
+
+  const secondMessages: AtlasInteractionMessage[] = [];
+  const secondRoot = registryRoot();
+  const second = attachAtlasController(
+    secondRoot as unknown as HTMLElement,
+    identity,
+    {
+      invokeMethodAsync: async (_method, message) => {
+        secondMessages.push(message);
+      }
+    });
+
+  performToolbarDrag(firstRoot, 90);
+  await flushCallbacks();
+  assert.equal(firstMessages.length, 0);
+
+  performToolbarDrag(secondRoot, 91);
+  await flushCallbacks();
+  assert.equal(secondMessages.length, 1);
+  assert.equal(secondMessages[0]?.type, "dock-item");
+  assert.equal(
+    secondMessages[0]?.type === "dock-item"
+      ? secondMessages[0].generation
+      : -1,
+    2);
+
+  disposeAtlasController(second);
+});
+
 test("toolbar drag preview appears after the threshold, follows the pointer, and cleans up", () => {
   const fixture = dragFixture("toolbar-entry");
   fixture.root.dispatchEvent(interactionEvent("pointerdown", {
@@ -1390,6 +1567,305 @@ test("documentTargetKind maps the five dock zones on the group body", () => {
   for (const [x, y, expected] of cases) {
     assert.equal(documentTargetKind(rect, x, y), expected, `at (${x}, ${y})`);
   }
+});
+
+function dropTargetRoot(
+  attributes: Record<string, string>): { root: FakeElement; document: FakeDocument } {
+  const document = new FakeDocument();
+  const root = new FakeElement();
+  root.ownerDocument = document;
+  root.dataset.atlasWorkspaceId = "drop-workspace";
+  Object.assign(root.dataset, attributes);
+  document.pointElement = root;
+  return { root, document };
+}
+
+function dropContext(
+  sourceKind: "document-tab" | "panel-header" | "toolbar-entry",
+  sourceGroupId?: string,
+  documentGeometry: ReadonlyMap<HTMLElement, DOMRect> = new Map(),
+  documentTabGeometry: ReadonlyMap<HTMLElement, DOMRect> = new Map())
+  : DropTargetDragContext {
+  return {
+    sourceKind,
+    ...(sourceGroupId === undefined ? {} : { sourceGroupId }),
+    documentGeometry,
+    documentTabGeometry
+  };
+}
+
+function resolveAt(
+  root: FakeElement,
+  document: FakeDocument,
+  x: number,
+  y: number,
+  drag: DropTargetDragContext,
+  eventTarget: EventTarget | null = null) {
+  return resolveDropTarget(
+    root as unknown as HTMLElement,
+    document as unknown as Document,
+    x,
+    y,
+    eventTarget,
+    drag);
+}
+
+test("drop target resolver scopes hits to the controller root and falls back to the event target", () => {
+  const { root, document } = dropTargetRoot({});
+  const foreign = new FakeElement();
+  foreign.dataset.atlasWorkspaceId = "other-workspace";
+  foreign.dataset.atlasGroupKind = "document";
+  foreign.dataset.atlasGroupId = "foreign-documents";
+  document.pointElement = foreign;
+  assert.equal(
+    resolveAt(root, document, 50, 50, dropContext("document-tab", "documents")),
+    undefined);
+
+  document.pointElement = null;
+  assert.equal(
+    resolveAt(root, document, 50, 50, dropContext("document-tab", "documents")),
+    undefined);
+
+  Object.assign(root.dataset, {
+    atlasGroupKind: "document",
+    atlasGroupId: "documents"
+  });
+  const fallback = resolveAt(
+    root,
+    document,
+    50,
+    50,
+    dropContext("document-tab", "source-documents"),
+    root);
+  assert.equal(fallback?.kind, "document-center");
+  assert.equal(fallback?.groupId, "documents");
+});
+
+test("document tab drop resolves same-group insertion from cached tab geometry", () => {
+  const { root, document } = dropTargetRoot({
+    atlasGroupKind: "document",
+    atlasGroupId: "documents",
+    atlasDragKind: "document-tab",
+    atlasInsertionIndex: "2"
+  });
+  root.rect = { left: 100, top: 100, width: 100, height: 100 };
+  const cachedTab = {
+    left: 0, top: 0, width: 100, height: 20
+  } as DOMRect;
+  const tabGeometry = new Map<HTMLElement, DOMRect>([
+    [root as unknown as HTMLElement, cachedTab]
+  ]);
+
+  const before = resolveAt(
+    root, document, 40, 10,
+    dropContext("document-tab", "documents", new Map(), tabGeometry));
+  assert.equal(before?.kind, "document-center");
+  assert.equal(before?.insertionIndex, 2);
+
+  const after = resolveAt(
+    root, document, 50, 10,
+    dropContext("document-tab", "documents", new Map(), tabGeometry));
+  assert.equal(after?.kind, "document-center");
+  assert.equal(after?.insertionIndex, 3);
+
+  const crossGroup = resolveAt(
+    root, document, 50, 10,
+    dropContext("document-tab", "other-documents", new Map(), tabGeometry));
+  assert.equal(crossGroup?.kind, "document-center");
+  assert.equal(crossGroup?.insertionIndex, undefined);
+
+  delete root.dataset.atlasInsertionIndex;
+  const noIndex = resolveAt(
+    root, document, 50, 10,
+    dropContext("document-tab", "documents", new Map(), tabGeometry));
+  assert.equal(noIndex?.kind, "document-center");
+  assert.equal(noIndex?.insertionIndex, undefined);
+});
+
+test("document tab drop on the group body uses cached geometry for all five zones", () => {
+  const { root, document } = dropTargetRoot({
+    atlasGroupKind: "document",
+    atlasGroupId: "documents"
+  });
+  root.rect = { left: 100, top: 100, width: 10, height: 10 };
+  const geometry = new Map<HTMLElement, DOMRect>([[
+    root as unknown as HTMLElement,
+    { left: 0, top: 0, width: 400, height: 200 } as DOMRect
+  ]]);
+  const context = dropContext("document-tab", "documents", geometry);
+
+  assert.equal(resolveAt(root, document, 10, 100, context)?.kind,
+    "document-inline-start");
+  assert.equal(resolveAt(root, document, 390, 100, context)?.kind,
+    "document-inline-end");
+  assert.equal(resolveAt(root, document, 200, 10, context)?.kind,
+    "document-block-start");
+  assert.equal(resolveAt(root, document, 200, 190, context)?.kind,
+    "document-block-end");
+  assert.equal(resolveAt(root, document, 200, 100, context)?.kind,
+    "document-center");
+});
+
+test("panel and toolbar drop targets keep their priority order", () => {
+  const sameGroupPanel = dropTargetRoot({
+    atlasPanelHeader: "true",
+    atlasGroupKind: "tool",
+    atlasGroupId: "tools",
+    atlasInsertionIndex: "1"
+  });
+  assert.equal(
+    resolveAt(
+      sameGroupPanel.root,
+      sameGroupPanel.document,
+      50,
+      5,
+      dropContext("panel-header", "tools")),
+    undefined);
+
+  const crossGroupPanel = dropTargetRoot({
+    atlasPanelHeader: "true",
+    atlasGroupId: "right-upper",
+    atlasInsertionIndex: "1"
+  });
+  crossGroupPanel.root.rect = { left: 0, top: 0, width: 120, height: 24 };
+  const top = resolveAt(
+    crossGroupPanel.root,
+    crossGroupPanel.document,
+    60,
+    5,
+    dropContext("panel-header", "tools"));
+  assert.equal(top?.kind, "panel-header-insertion");
+  assert.equal(top?.groupId, "right-upper");
+  assert.equal(top?.insertionIndex, 1);
+  const bottom = resolveAt(
+    crossGroupPanel.root,
+    crossGroupPanel.document,
+    60,
+    20,
+    dropContext("panel-header", "tools"));
+  assert.equal(bottom?.insertionIndex, 2);
+
+  const foreignBody = dropTargetRoot({
+    atlasGroupKind: "tool",
+    atlasGroupId: "right-upper"
+  });
+  const regionCenter = resolveAt(
+    foreignBody.root,
+    foreignBody.document,
+    50,
+    50,
+    dropContext("panel-header", "tools"));
+  assert.equal(regionCenter?.kind, "panel-region-center");
+  assert.equal(regionCenter?.groupId, "right-upper");
+
+  const ownBody = dropTargetRoot({
+    atlasGroupKind: "tool",
+    atlasGroupId: "tools"
+  });
+  assert.equal(
+    resolveAt(
+      ownBody.root,
+      ownBody.document,
+      50,
+      50,
+      dropContext("panel-header", "tools")),
+    undefined);
+
+  const entry = dropTargetRoot({
+    atlasToolbarEntry: "true",
+    atlasGroupId: "right-upper",
+    atlasItemId: "target-tool",
+    atlasToolbarRegion: "InlineEndUpper",
+    atlasInsertionIndex: "1"
+  });
+  entry.root.rect = { left: 0, top: 0, width: 60, height: 24 };
+  const entryTop = resolveAt(
+    entry.root,
+    entry.document,
+    5,
+    5,
+    dropContext("panel-header", "tools"));
+  assert.equal(entryTop?.kind, "toolbar-insertion");
+  assert.equal(entryTop?.targetItemId, "target-tool");
+  assert.equal(entryTop?.logicalRegion, "InlineEndUpper");
+  assert.equal(entryTop?.insertionIndex, 1);
+  const entryBottom = resolveAt(
+    entry.root,
+    entry.document,
+    5,
+    20,
+    dropContext("panel-header", "tools"));
+  assert.equal(entryBottom?.insertionIndex, 2);
+
+  const missingItemId = dropTargetRoot({
+    atlasToolbarEntry: "true",
+    atlasGroupId: "right-upper",
+    atlasToolbarRegion: "InlineEndUpper"
+  });
+  assert.equal(
+    resolveAt(
+      missingItemId.root,
+      missingItemId.document,
+      5,
+      5,
+      dropContext("toolbar-entry", "left-upper")),
+    undefined);
+
+  const scaffold = dropTargetRoot({
+    atlasDropScaffold: "true",
+    atlasGroupId: "right-upper",
+    atlasToolbarRegion: "InlineEndUpper",
+    atlasInsertionIndex: "1"
+  });
+  const scaffoldTarget = resolveAt(
+    scaffold.root,
+    scaffold.document,
+    5,
+    5,
+    dropContext("toolbar-entry", "left-upper"));
+  assert.equal(scaffoldTarget?.kind, "drop-scaffold");
+  assert.equal(scaffoldTarget?.logicalRegion, "InlineEndUpper");
+  assert.equal(scaffoldTarget?.insertionIndex, 1);
+
+  const ownScaffold = dropTargetRoot({
+    atlasDropScaffold: "true",
+    atlasGroupId: "tools",
+    atlasToolbarRegion: "InlineStartUpper"
+  });
+  assert.equal(
+    resolveAt(
+      ownScaffold.root,
+      ownScaffold.document,
+      5,
+      5,
+      dropContext("panel-header", "tools")),
+    undefined);
+
+  const region = dropTargetRoot({
+    atlasGroupId: "right-upper",
+    atlasToolbarRegion: "InlineEndUpper"
+  });
+  const regionTarget = resolveAt(
+    region.root,
+    region.document,
+    5,
+    5,
+    dropContext("toolbar-entry", "left-upper"));
+  assert.equal(regionTarget?.kind, "toolbar-region");
+  assert.equal(regionTarget?.logicalRegion, "InlineEndUpper");
+
+  const ownRegion = dropTargetRoot({
+    atlasGroupId: "tools",
+    atlasToolbarRegion: "InlineStartUpper"
+  });
+  assert.equal(
+    resolveAt(
+      ownRegion.root,
+      ownRegion.document,
+      5,
+      5,
+      dropContext("panel-header", "tools")),
+    undefined);
 });
 
 test("drag terminal paths cancel without callback and generation update expires session", async () => {

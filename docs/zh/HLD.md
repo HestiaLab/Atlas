@@ -57,7 +57,7 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
-| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution |
+| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution。ADR-0019 后续取代双包发布：只发布 Atlas.Blazor，Atlas.Core 仍是独立可打包项目并嵌入该包 |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
 | OI-006 | NF-006、DES-RND-001 | Blazor RenderFragment 在同一 DOM 内无法阻止内容访问其他 DOM；ErrorBoundary 也不是 security sandbox | **Closed**：ADR-0013 保持 TrustedComponent 默认路径并明确它不是安全沙箱；不可信内容使用 SandboxedFrame |
 | OI-007 | F-006~008、F-122、DES-RND-001~003 | Host ContentTemplate 与 DI Registration 当前形成互斥渲染管线，无法表达一个确定性 Catalog 或强类型函数式绑定 | **Closed**：ADR-0018 采用一个 Effective Content Catalog，来源包括启动期 DI、Host-local Route 和 immutable Host-local Map；重复 startup DI 导致 Registry 构造失败，Host-local 冲突仅隔离受影响 Kind |
@@ -2142,7 +2142,8 @@ DES-PRJ-001
 项目结构：
 
   src/
-    Atlas.Core/              ← 纯 C#，NuGet 包 Atlas.Core（net6.0）
+    Atlas.Core/              ← 纯 C#，可打包项目 Atlas.Core（net6.0）；
+      │                        按 ADR-0019 嵌入 Atlas.Blazor 包
       Model/                   Nodes/ SplitNode, GroupNode
       │                        Items/ DockItem, ContentReference
       │                        Content/
@@ -2152,14 +2153,16 @@ DES-PRJ-001
       Persistence/             Serializer, RestorePipeline, Migration
       Results/                 WorkspaceResult<T>, WorkspaceError
 
-    Atlas.Blazor/            ← NuGet 包 Atlas.Blazor（net6.0），依赖 Atlas.Core
+    Atlas.Blazor/            ← 已发布 NuGet 包 Atlas.Blazor（net6.0），
+      │                        依赖 Atlas.Core
       Components/              Workspace/ AtlasWorkspaceHost
       │                        Nodes/ SplitNodeView, GroupNodeView
       │                        Groups/ GroupHeaderView, DockContentOutlet
       │                        Content/
       │                        Chrome/
       Interop/                 RootInteractionController, IJSAtlasInterop
-      ClientScripts/           interaction-controller.ts, drag-session.ts, ...
+      ClientScripts/           controller.ts、drag-session.ts、drop-target.ts、
+      │                        split-resize-session.ts、...
       wwwroot/
 
   tests/
@@ -2170,13 +2173,13 @@ DES-PRJ-001
 依赖方向：Atlas.Core ← Atlas.Blazor；测试项目只依赖被测产物。禁止反向依赖。
 NuGet consumer showcase（DBC 文件查看器）位于独立的 `HestiaLab/DbcView` 仓库：
 不加入 `Atlas.sln`，不属于 Atlas 实现层，不引用源码项目；它只从 Release pack feed
-消费 `Atlas.Core` / `Atlas.Blazor`，因此主 solution 的干净恢复不依赖本地预生成包。详见 ADR-0017。
+消费已发布的 `Atlas.Blazor` 包（`Atlas.Core` 按 ADR-0019 嵌入），因此主 solution 的干净恢复不依赖本地预生成包。详见 ADR-0017。
 
 V1/V2 共存规则：
 
 | 层               | Atlas 1.x               | Atlas 2.0                              |
 |-----------------|-------------------------|----------------------------------------|
-| NuGet PackageId | Atlas                   | Atlas.Core、Atlas.Blazor                |
+| NuGet PackageId | Atlas                   | Atlas.Blazor（Atlas.Core 按 ADR-0019 嵌入） |
 | Namespace root  | 现有 Atlas.*             | Atlas.Core.*、Atlas.Blazor.*            |
 | DI extension    | 现有 AddAtlas            | AddAtlasWorkspace                      |
 | Static assets   | _content/Atlas/...      | _content/Atlas.Blazor/...              |

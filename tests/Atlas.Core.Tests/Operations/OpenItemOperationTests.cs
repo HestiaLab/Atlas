@@ -1,3 +1,4 @@
+using Atlas.Core;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
@@ -166,6 +167,58 @@ public sealed class OpenItemOperationTests
         }
     }
 
+    [Fact]
+    public async Task Open_into_empty_persistent_tool_group_without_order_creates_order()
+    {
+        var opened = CreateTool("opened");
+        var group = CreateEmptyToolGroup();
+        await using var workspace = CreateEmptyToolWorkspace(group);
+
+        var result = await workspace.ExecuteAsync(
+            new OpenItemOperation(
+                opened,
+                group.Id,
+                ContentDeduplicationMode.AllowMultiple));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        var current = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
+        Assert.Equal(new[] { opened.Id }, current.ItemIds);
+        Assert.Equal(GroupVisibility.Expanded, current.Visibility);
+        Assert.Equal(
+            new[] { opened.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.DoesNotContain(
+            LogicalRegion.InlineStartUpper,
+            workspace.Current.ToolBarOrders.Keys);
+        Assert.Empty(Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]).ItemIds);
+
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(
+            new[] { opened.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+    }
+
+    [Fact]
+    public async Task OpenItemAsync_facade_handles_empty_tool_group_without_order()
+    {
+        var opened = CreateTool("opened");
+        var group = CreateEmptyToolGroup();
+        await using var workspace = CreateEmptyToolWorkspace(group);
+        var commands = new AtlasWorkspaceCommands(workspace);
+
+        var result = await commands.OpenItemAsync(
+            opened,
+            group.Id,
+            ContentDeduplicationMode.AllowMultiple);
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        Assert.Equal(
+            new[] { opened.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+    }
+
     private static (AtlasWorkspace Workspace, GroupNode Group)
         CreateDocumentWorkspace(params DockItem[] items)
     {
@@ -219,5 +272,31 @@ public sealed class OpenItemOperationTests
             DockItemKind.Tool,
             new ContentReference("tool", id),
             DockItemCapabilityPresets.Tool);
+    }
+
+    private static GroupNode CreateEmptyToolGroup()
+    {
+        return new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+    }
+
+    private static AtlasWorkspace CreateEmptyToolWorkspace(GroupNode group)
+    {
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            group.Id,
+            new[] { new KeyValuePair<LayoutNodeId, LayoutNode>(group.Id, group) },
+            Array.Empty<KeyValuePair<DockItemId, DockItem>>(),
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            Array.Empty<KeyValuePair<LogicalRegion, ToolBarOrderState>>(),
+            Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
+        return new AtlasWorkspace(snapshot, new DefaultWorkspaceOperationPlanner());
     }
 }

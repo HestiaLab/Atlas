@@ -306,6 +306,15 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
 
         hostError = null;
         declarativeMode = Workspace is null;
+        if (declarativeMode && activeWorkspace is not null && !activeWorkspaceDeclarative)
+        {
+            // 同一 Host 从编程式切换到声明式：外部工作区必须先解绑，
+            // 否则后续声明会被对账进应用拥有的工作区。按所有权决定是否释放。
+            await UnbindWorkspaceAsync(disposeOwned: true);
+            focusCoordinator.Clear();
+            ResetDeclarationLedger();
+        }
+
         if (!declarativeMode)
         {
             await BindWorkspaceAsync(

@@ -8,10 +8,10 @@
 
 ## 1. Atlas 是什么
 
-Atlas 是一个面向 Blazor 应用的 Dock Layout 组件库，提供工具面板、编辑器标签页、分屏、拖放、Splitter、布局历史和持久化能力。仓库定义两个可打包的 .NET 6 NuGet 包：
+Atlas 是一个面向 Blazor 应用的 Dock Layout 组件库，提供工具面板、编辑器标签页、分屏、拖放、Splitter、布局历史和持久化能力。仓库定义两个独立的 .NET 6 项目，只发布一个 NuGet 包（ADR-0019）：
 
-- `Atlas.Core`：与 UI 无关的领域模型、操作引擎、历史和持久化。
-- `Atlas.Blazor`：Blazor 渲染、内容承载、CSS 和浏览器交互；依赖 `Atlas.Core`。
+- `Atlas.Core`：与 UI 无关的领域模型、操作引擎、历史和持久化。它仍是独立、可打包的项目。
+- `Atlas.Blazor`：Blazor 渲染、内容承载、CSS 和浏览器交互；依赖 `Atlas.Core`，并将其嵌入已发布的 `Atlas.Blazor` 包。只有 `Atlas.Blazor` 会发布。
 
 仓内教学演示 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 用可运行面板演示框架公共 API。NuGet consumer showcase（DBC 文件查看器）位于独立的 [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库，不属于主 solution，也不能引用 Atlas 源码项目。
 
@@ -22,7 +22,8 @@ Browser input / DOM
         │
         ▼
 TypeScript interaction controller
-ClientScripts/controller.ts + protocol.ts + sandbox.ts
+ClientScripts/controller.ts + drag-session.ts + drop-target.ts
+  + split-resize-session.ts + protocol.ts + sandbox.ts
         │ structured intent at commit boundary
         ▼
 Atlas.Blazor

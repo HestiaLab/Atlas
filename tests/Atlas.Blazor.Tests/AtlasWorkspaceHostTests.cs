@@ -186,6 +186,73 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public void Sequential_programmatic_to_declarative_switch_preserves_external_workspace()
+    {
+        var external = CreateWorkspace(
+            DocumentDefinition("programmatic", "Programmatic"));
+        var externalRevision = external.Current.Revision;
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, external));
+
+        cut.WaitForAssertion(
+            () => Assert.Contains("Programmatic", cut.Markup, StringComparison.Ordinal));
+
+        cut.SetParametersAndRender(
+            parameters => parameters
+                .Add(component => component.Workspace, (IAtlasWorkspace?)null)
+                .Add(component => component.WorkspaceId, new WorkspaceId("declarative"))
+                .Add(
+                    component => component.ChildContent,
+                    DocumentDeclaration("Declarative after switch")));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(externalRevision, external.Current.Revision);
+                Assert.Equal(0, trackingFactory.LastWorkspace!.DisposeCount);
+                Assert.Equal(
+                    new WorkspaceId("declarative"),
+                    trackingFactory.LastWorkspace.Id);
+                Assert.Contains(
+                    "Declarative after switch",
+                    cut.Markup,
+                    StringComparison.Ordinal);
+            });
+    }
+
+    [Fact]
+    public void Sequential_programmatic_to_declarative_switch_disposes_host_owned_workspace()
+    {
+        var owned = CreateWorkspace(
+            DocumentDefinition("owned-programmatic", "Owned programmatic"));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, owned)
+                .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.Host));
+
+        cut.WaitForAssertion(
+            () => Assert.Contains("Owned programmatic", cut.Markup, StringComparison.Ordinal));
+
+        cut.SetParametersAndRender(
+            parameters => parameters
+                .Add(component => component.Workspace, (IAtlasWorkspace?)null)
+                .Add(component => component.WorkspaceId, new WorkspaceId("declarative-owned"))
+                .Add(
+                    component => component.ChildContent,
+                    DocumentDeclaration("Declarative owned")));
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(1, Assert.IsType<TrackingWorkspace>(owned).DisposeCount);
+                Assert.Equal(
+                    new WorkspaceId("declarative-owned"),
+                    trackingFactory.LastWorkspace!.Id);
+            });
+    }
+
+    [Fact]
     public void Projects_split_tool_panel_toolbar_tab_and_empty_state()
     {
         var workspace = CreateWorkspace(ProjectionDefinition());

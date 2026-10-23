@@ -74,61 +74,32 @@ internal static class ReorderItemPlanner
         // 重排后的顺序必须同时满足两个不变量：固定文档前缀不被破坏，
         // 且组顺序与所属逻辑区域的工具栏顺序同步更新——
         // 两个视图必须一起写，否则提交校验会报顺序不一致。
-        var reordered = group.ItemIds.ToList();
-        reordered.RemoveAt(currentIndex);
-        reordered.Insert(operation.TargetIndex, item.Id);
-        if (!HasPinnedPrefix(snapshot, reordered))
+        var reordered = GroupItemEditor.Reorder(
+            group.ItemIds,
+            item.Id,
+            operation.TargetIndex);
+        if (!GroupItemEditor.HasPinnedPrefix(snapshot, reordered))
         {
             return TargetRejected(operation, group.Id);
         }
 
-        var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
-        nodes[group.Id] = new GroupNode(
-            group.Id,
-            group.Kind,
-            group.RetentionPolicy,
-            group.Visibility,
-            reordered,
-            group.SelectedItemId,
-            group.EditorState,
-            group.LogicalRegion);
-        var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
+        var mutation = WorkspaceMutation.From(snapshot);
+        mutation.ReplaceNode(
+            new GroupNode(
+                group.Id,
+                group.Kind,
+                group.RetentionPolicy,
+                group.Visibility,
+                reordered,
+                group.SelectedItemId,
+                group.EditorState,
+                group.LogicalRegion));
         if (group.LogicalRegion is LogicalRegion region)
         {
-            orders[region] = new ToolBarOrderState(region, reordered);
+            mutation.SetOrder(region, reordered);
         }
 
-        return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                snapshot.Id,
-                snapshot.Revision,
-                snapshot.RootNodeId,
-                nodes,
-                snapshot.Items,
-                snapshot.ToolBars,
-                orders,
-                snapshot.AutoHideStrips));
-    }
-
-    private static bool HasPinnedPrefix(
-        WorkspaceSnapshot snapshot,
-        IEnumerable<DockItemId> itemIds)
-    {
-        var unpinnedSeen = false;
-        foreach (var itemId in itemIds)
-        {
-            var pinned = snapshot.Items[itemId].DocumentState?.IsPinned == true;
-            if (!pinned)
-            {
-                unpinnedSeen = true;
-            }
-            else if (unpinnedSeen)
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return mutation.Commit();
     }
 
     private static WorkspacePlan TargetRejected(

@@ -13,7 +13,7 @@
 | Dimension | Conclusion | Evidence/Gap |
 |-----------|------------|--------------|
 | Requirement correctness | Pass | ADR-0014 and RequirementsBaselineTests fix the body/index to the same 151-item set. |
-| Architecture boundary | Pass | The Atlas.Core architecture test forbids Blazor, JS interop, and Atlas.Blazor references; the two-package boundary holds. |
+| Architecture boundary | Pass | The Atlas.Core architecture test forbids Blazor, JS interop, and Atlas.Blazor references; the Core/Blazor assembly boundary holds. The dual-package publication described by this historical audit is superseded by ADR-0019: only Atlas.Blazor is published, with Atlas.Core embedded. |
 | Domain model | Partial | identity, snapshot, layout, placement, sizing, and persistence models exist; Auto-hide runtime, Reset, and other behaviors are still missing. |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 vertical slices exist; Overflow Menu/Wrap, Context Menu, and some repair policies are not implemented. |
 | Delivery evidence | Partial | Chromium real-device, a11y, Splitter FPS, 20-panel init, and the full layered gates are done; the Firefox/Edge/Safari compatibility matrix is an explicit gap. |
