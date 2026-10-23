@@ -70,8 +70,11 @@ internal sealed class AtlasContentErrorBoundary : ErrorBoundary
                 SafeError.WorkspaceId,
                 SafeError.ItemId,
                 SafeError.NodeId);
+            // F-128 AC2: 诊断详情（异常类型与消息）只进入日志侧，
+            // 与同一 DiagnosticId 关联；UI 与回调仍只携带不透明标识。
             Console.Error.WriteLine(
-                $"Atlas content render failure: {occurrenceId}");
+                $"Atlas content render failure {occurrenceId}: "
+                + $"{exception.GetType().Name}: {exception.Message}");
             await OnSafeError.InvokeAsync(occurrence);
         }
     }
