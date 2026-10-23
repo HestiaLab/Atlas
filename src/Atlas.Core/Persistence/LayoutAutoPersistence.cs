@@ -1,4 +1,5 @@
 using Atlas.Core.Changes;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Operations;
 using Atlas.Core.Results;
 
@@ -370,7 +371,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
                     WorkspaceErrorCode.InvalidLayoutData,
                     LayoutOperationKind.RestoreWorkspace,
                     "ATLAS-AUTO-SERIALIZE",
-                    "Atlas.Persistence.InvalidLayoutData"));
+                    WorkspaceDiagnostics.Messages.PersistenceInvalid));
         }
 
         await writer.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -408,7 +409,7 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
                 WorkspaceErrorCode.PersistenceUnavailable,
                 LayoutOperationKind.RestoreWorkspace,
                 diagnosticId,
-                "Atlas.Persistence.Unavailable"));
+                WorkspaceDiagnostics.Messages.PersistenceUnavailable));
     }
 
     private void Report(

@@ -8,6 +8,9 @@ Atlas.Core.AtlasWorkspaceCommands.OpenItemAsync(Atlas.Core.Items.DockItem! item,
 Atlas.Core.AtlasWorkspaceCommands.RestoreAsync(Atlas.Core.Persistence.LayoutRestoreDocument! document, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Persistence.LayoutRestoreResult!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolBarVisibilityAsync(Atlas.Core.Placement.LogicalSide side, Atlas.Core.Placement.ToolBarVisibility visibility, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
 Atlas.Core.AtlasWorkspaceCommands.SetToolVisibilityAsync(Atlas.Core.LayoutNodeId groupId, bool visible, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceFactory
+Atlas.Core.AtlasWorkspaceFactory.AtlasWorkspaceFactory() -> void
+Atlas.Core.AtlasWorkspaceFactory.Create(Atlas.Core.Definitions.AtlasWorkspaceDefinition! definition, Atlas.Core.AtlasWorkspaceOptions? options = null) -> Atlas.Core.Results.WorkspaceResult<Atlas.Core.IAtlasWorkspace!>!
 Atlas.Core.AtlasWorkspaceOptions
 Atlas.Core.AtlasWorkspaceOptions.AtlasWorkspaceOptions(Atlas.Core.WorkspaceHistoryOptions? history = null, Atlas.Core.Items.IContentIdentityPolicy? contentIdentityPolicy = null, Atlas.Core.Operations.IDockItemCloseGuardResolver? closeGuardResolver = null) -> void
 Atlas.Core.AtlasWorkspaceOptions.CloseGuardResolver.get -> Atlas.Core.Operations.IDockItemCloseGuardResolver?

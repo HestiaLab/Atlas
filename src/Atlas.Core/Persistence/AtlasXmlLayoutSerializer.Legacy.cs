@@ -40,6 +40,53 @@ public sealed partial class AtlasXmlLayoutSerializer
             return Invalid("ATLAS-PERSIST-WORKSPACE");
         }
 
+        if (!TryGetLegacySections(
+                root,
+                limits,
+                out var panelElements,
+                out var editorElements,
+                out var failure))
+        {
+            return failure;
+        }
+
+        ValidateLegacyLimits(root, limits);
+
+        var items = new Dictionary<DockItemId, DockItem>();
+        var panelData = ReadLegacyPanels(panelElements, items);
+        var editorData = ReadLegacyEditors(editorElements, items);
+        var rootNodeId = BuildLegacyLayout(
+            panelData,
+            editorData,
+            out var nodes,
+            out var orders,
+            out var strips);
+        var snapshot = CreateLegacySnapshot(
+            targetWorkspaceId,
+            rootNodeId,
+            nodes,
+            items,
+            orders,
+            strips);
+        if (WorkspaceInvariantValidator.Validate(snapshot).Count != 0)
+        {
+            return Invalid("ATLAS-V1-INVARIANT");
+        }
+
+        return WorkspaceResult<LayoutRestoreDocument>.Success(
+            new LayoutRestoreDocument(
+                snapshot,
+                "1.0",
+                BuildLegacyWarnings(panelElements)));
+    }
+
+    private static bool TryGetLegacySections(
+        XElement root,
+        LayoutPersistenceLimits limits,
+        out XElement[] panelElements,
+        out XElement[] editorElements,
+        out WorkspaceResult<LayoutRestoreDocument> failure)
+    {
         // V1 文档必须恰为 Panels + EditorViews 两个固定子节；只接受这个精确形状，
         // 任何多余属性或子元素都视为未知方言拒绝，避免把不认识的变体误迁成 V2。
         var children = root.Elements().ToArray();
@@ -47,26 +94,35 @@ public sealed partial class AtlasXmlLayoutSerializer
             || children[0].Name != "Panels"
             || children[1].Name != "EditorViews")
         {
-            return Invalid("ATLAS-V1-SHAPE");
+            panelElements = Array.Empty<XElement>();
+            editorElements = Array.Empty<XElement>();
+            failure = Invalid("ATLAS-V1-SHAPE");
+            return false;
         }
 
         RequireAllowedAttributes(children[0]);
         RequireAllowedAttributes(children[1]);
-        var panelElements = children[0].Elements().ToArray();
-        var editorElements = children[1].Elements().ToArray();
+        panelElements = children[0].Elements().ToArray();
+        editorElements = children[1].Elements().ToArray();
         if (panelElements.Any(element => element.Name != "Panel")
             || editorElements.Any(element => element.Name != "EditorView")
             || panelElements.Length + editorElements.Length > limits.MaxItemCount)
         {
-            return Invalid("ATLAS-V1-SHAPE");
+            failure = Invalid("ATLAS-V1-SHAPE");
+            return false;
         }
 
-        ValidateLegacyLimits(root, limits);
+        failure = null!;
+        return true;
+    }
 
+    private static List<LegacyPanel> ReadLegacyPanels(
+        IReadOnlyList<XElement> panelElements,
+        IDictionary<DockItemId, DockItem> items)
+    {
         // 先完整提取面板的布局元数据（区域/激活/尺寸），再按区域重建组；
         // V1 中这些信息与项本体混杂，单项构造时无法直接映射到 V2 结构。
-        var items = new Dictionary<DockItemId, DockItem>();
-        var panelData = new List<LegacyPanel>();
+        var panelData = new List<LegacyPanel>(panelElements.Count);
         foreach (var element in panelElements)
         {
             RequireAllowedAttributes(
@@ -84,13 +140,13 @@ public sealed partial class AtlasXmlLayoutSerializer
             var size = Optional(element, "size") is { } rawSize
                 ? ParseFinite(rawSize)
                 : (double?)null;
-            var panel = new LegacyPanel(
-                id,
-                region,
-                ParseOptionalBool(element, "active"),
-                ParseOptionalBool(element, "autoHidden"),
-                size);
-            panelData.Add(panel);
+            panelData.Add(
+                new LegacyPanel(
+                    id,
+                    region,
+                    ParseOptionalBool(element, "active"),
+                    ParseOptionalBool(element, "autoHidden"),
+                    size));
             items.Add(
                 id,
                 new DockItem(
@@ -101,7 +157,14 @@ public sealed partial class AtlasXmlLayoutSerializer
                     Optional(element, "title")));
         }
 
-        var editorData = new List<LegacyEditor>();
+        return panelData;
+    }
+
+    private static List<LegacyEditor> ReadLegacyEditors(
+        IReadOnlyList<XElement> editorElements,
+        IDictionary<DockItemId, DockItem> items)
+    {
+        var editorData = new List<LegacyEditor>(editorElements.Count);
         foreach (var element in editorElements)
         {
             RequireAllowedAttributes(
@@ -129,14 +192,26 @@ public sealed partial class AtlasXmlLayoutSerializer
                         Optional(element, "resourceId") ?? id.Value),
                     DockItemCapabilityPresets.Document,
                     Optional(element, "title"),
-                    documentState: new DocumentState(editor.Pinned, isPreview: false)));
+                    documentState: new DocumentState(
+                        editor.Pinned,
+                        isPreview: false)));
         }
 
+        return editorData;
+    }
+
+    private static LayoutNodeId? BuildLegacyLayout(
+        IReadOnlyList<LegacyPanel> panelData,
+        IReadOnlyList<LegacyEditor> editorData,
+        out Dictionary<LayoutNodeId, LayoutNode> nodes,
+        out Dictionary<LogicalRegion, ToolBarOrderState> orders,
+        out IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> strips)
+    {
         // 同一区域的面板合并为一个 Persistent 组，面板出现顺序即组内与工具栏顺序；
         // autoHidden 面板不进入组，改为挂回该区域边缘的自动隐藏条目，供日后重新弹出。
-        var nodes = new Dictionary<LayoutNodeId, LayoutNode>();
+        nodes = new Dictionary<LayoutNodeId, LayoutNode>();
         var orderedRoots = new List<LayoutNodeId>();
-        var orders = new Dictionary<LogicalRegion, ToolBarOrderState>();
+        orders = new Dictionary<LogicalRegion, ToolBarOrderState>();
         var hiddenEntries = new Dictionary<WorkspaceEdge, List<AutoHideEntry>>();
         foreach (var group in panelData.GroupBy(panel => panel.Region).OrderBy(group => group.Key))
         {
@@ -190,8 +265,21 @@ public sealed partial class AtlasXmlLayoutSerializer
         }
 
         // V1 无嵌套拓扑，按区域组与文档组的固定顺序用等比例 Split 链串成单根，属拓扑降级近似。
-        var rootNodeId = ChainLegacyRoots(nodes, orderedRoots);
-        var snapshot = new WorkspaceSnapshot(
+        strips = hiddenEntries.ToDictionary(
+            pair => pair.Key,
+            pair => new AutoHideStripState(pair.Key, pair.Value));
+        return ChainLegacyRoots(nodes, orderedRoots);
+    }
+
+    private static WorkspaceSnapshot CreateLegacySnapshot(
+        WorkspaceId targetWorkspaceId,
+        LayoutNodeId? rootNodeId,
+        IReadOnlyDictionary<LayoutNodeId, LayoutNode> nodes,
+        IReadOnlyDictionary<DockItemId, DockItem> items,
+        IReadOnlyDictionary<LogicalRegion, ToolBarOrderState> orders,
+        IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> strips)
+    {
+        return new WorkspaceSnapshot(
             targetWorkspaceId,
             revision: 0,
             rootNodeId,
@@ -201,21 +289,22 @@ public sealed partial class AtlasXmlLayoutSerializer
             {
                 KeyValuePair.Create(
                     LogicalSide.InlineStart,
-                    new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded)),
+                    new ToolBarState(
+                        LogicalSide.InlineStart,
+                        ToolBarVisibility.Expanded)),
                 KeyValuePair.Create(
                     LogicalSide.InlineEnd,
-                    new ToolBarState(LogicalSide.InlineEnd, ToolBarVisibility.Expanded)),
+                    new ToolBarState(
+                        LogicalSide.InlineEnd,
+                        ToolBarVisibility.Expanded)),
             },
             orders,
-            hiddenEntries.Select(
-                pair => KeyValuePair.Create(
-                    pair.Key,
-                    new AutoHideStripState(pair.Key, pair.Value))));
-        if (WorkspaceInvariantValidator.Validate(snapshot).Count != 0)
-        {
-            return Invalid("ATLAS-V1-INVARIANT");
-        }
+            strips);
+    }
 
+    private static IReadOnlyList<string> BuildLegacyWarnings(
+        IReadOnlyList<XElement> panelElements)
+    {
         // 迁移结果附带警告：只接受 V1 严格子集（窄契约），拓扑由链式拆分近似（回退）；
         // size 属于窄契约的接受字段，但当前迁移没有可表达的单面板尺寸模型，因此明确告警为未应用。
         var warnings = new List<string>
@@ -228,11 +317,7 @@ public sealed partial class AtlasXmlLayoutSerializer
             warnings.Add("ATLAS-V1-SIZE-IGNORED");
         }
 
-        return WorkspaceResult<LayoutRestoreDocument>.Success(
-            new LayoutRestoreDocument(
-                snapshot,
-                "1.0",
-                warnings));
+        return warnings;
     }
 
     private static void ValidateLegacyLimits(

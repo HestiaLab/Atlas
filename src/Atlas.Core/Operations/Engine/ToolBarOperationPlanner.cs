@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Placement;
 using Atlas.Core.Results;
@@ -63,8 +64,8 @@ internal static class ToolBarOperationPlanner
             return Failure(
                 WorkspaceErrorCode.ItemNotFound,
                 operation,
-                "ATLAS-ITEM-MISSING",
-                "Atlas.Item.NotFound");
+                WorkspaceDiagnostics.Ids.ItemMissing,
+                WorkspaceDiagnostics.Messages.ItemNotFound);
         }
 
         if (item.Kind != DockItemKind.Tool)

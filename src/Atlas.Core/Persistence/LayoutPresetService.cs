@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Atlas.Core.Changes;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Operations;
 using Atlas.Core.Results;
 
@@ -228,8 +229,8 @@ public sealed class LayoutPresetService
                 LayoutOperationKind.RestoreWorkspace,
                 diagnosticId,
                 code == WorkspaceErrorCode.PersistenceUnavailable
-                    ? "Atlas.Persistence.Unavailable"
-                    : "Atlas.Persistence.InvalidLayoutData"));
+                    ? WorkspaceDiagnostics.Messages.PersistenceUnavailable
+                    : WorkspaceDiagnostics.Messages.PersistenceInvalid));
     }
 
     private static WorkspaceResult<T> MissingPreset<T>()

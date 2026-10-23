@@ -132,6 +132,28 @@ public sealed class WorkspaceSnapshot
     }
 
     /// <summary>
+    ///     用新的已提交状态替换内容，保留工作区标识与修订号。
+    /// </summary>
+    internal WorkspaceSnapshot WithState(
+        LayoutNodeId? rootNodeId,
+        IEnumerable<KeyValuePair<LayoutNodeId, LayoutNode>> nodes,
+        IEnumerable<KeyValuePair<DockItemId, DockItem>> items,
+        IEnumerable<KeyValuePair<LogicalSide, ToolBarState>> toolBars,
+        IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> toolBarOrders,
+        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> autoHideStrips)
+    {
+        return new WorkspaceSnapshot(
+            Id,
+            Revision,
+            rootNodeId,
+            nodes,
+            items,
+            toolBars,
+            toolBarOrders,
+            autoHideStrips);
+    }
+
+    /// <summary>
     ///     复制快照并仅替换修订号；五个索引直接共享引用（快照不可变，共享安全）。
     /// </summary>
     /// <param name="revision">新修订号。</param>

@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Results;
@@ -29,8 +30,8 @@ internal static class SelectItemPlanner
                 new WorkspaceError(
                     WorkspaceErrorCode.ItemNotFound,
                     operation.Kind,
-                    "ATLAS-ITEM-MISSING",
-                    "Atlas.Item.NotFound",
+                    WorkspaceDiagnostics.Ids.ItemMissing,
+                    WorkspaceDiagnostics.Messages.ItemNotFound,
                     itemId: operation.ItemId));
         }
 

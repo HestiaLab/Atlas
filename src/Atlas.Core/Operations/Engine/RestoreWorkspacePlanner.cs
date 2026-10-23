@@ -35,9 +35,7 @@ internal static class RestoreWorkspacePlanner
         }
 
         return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                current.Id,
-                current.Revision,
+            current.WithState(
                 restored.RootNodeId,
                 restored.Nodes,
                 restored.Items,

@@ -1,4 +1,4 @@
-using Atlas.Core.Architecture;
+using Atlas.Core;
 
 namespace Atlas.Blazor.Architecture;
 
@@ -10,5 +10,5 @@ internal static class AtlasBlazorAssemblyMarker
     /// <summary>
     ///     获取 Atlas.Core 程序集的标记类型，用于跨程序集定位核心标记。
     /// </summary>
-    internal static Type CoreMarker => typeof(AtlasCoreAssemblyMarker);
+    internal static Type CoreMarker => typeof(WorkspaceSnapshot);
 }

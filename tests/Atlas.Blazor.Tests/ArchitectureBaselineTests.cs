@@ -1,4 +1,5 @@
 using System.Reflection;
+using Atlas.Core;
 using Microsoft.AspNetCore.Components;
 using Xunit;
 
@@ -6,6 +7,13 @@ namespace Atlas.Blazor.Tests;
 
 public sealed class ArchitectureBaselineTests
 {
+    [Fact]
+    public void Core_workspace_factory_is_public_and_sealed()
+    {
+        Assert.True(typeof(AtlasWorkspaceFactory).IsPublic);
+        Assert.True(typeof(AtlasWorkspaceFactory).IsSealed);
+    }
+
     [Fact]
     public void Blazor_references_Core()
     {

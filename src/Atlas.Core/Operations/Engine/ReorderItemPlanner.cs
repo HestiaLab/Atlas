@@ -1,3 +1,4 @@
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Placement;
@@ -29,8 +30,8 @@ internal static class ReorderItemPlanner
             return Failure(
                 WorkspaceErrorCode.ItemNotFound,
                 operation,
-                "ATLAS-ITEM-MISSING",
-                "Atlas.Item.NotFound");
+                WorkspaceDiagnostics.Ids.ItemMissing,
+                WorkspaceDiagnostics.Messages.ItemNotFound);
         }
 
         if (!item.Capabilities.HasFlag(DockItemCapabilities.CanMove))

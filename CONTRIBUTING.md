@@ -20,6 +20,20 @@ English document under `docs/en/` is the authority for each pair.
   design IDs, Actor/Priority/Source, AC counts and order, code identifiers,
   numeric constraints, and must/should/may strength.
 
+## Code Comment Language
+
+ADR-0026 defines the code-comment language tiers:
+
+- Public API XML documentation (types/members in `PublicAPI.*`) is English.
+- Public exception messages, diagnostic IDs, message keys, and protocol strings
+  are English; do not change their ASCII identifiers while translating.
+- Internal comments/XML docs prefer English. Chinese is allowed where it
+  captures domain rationale more precisely, but do not mix both languages for
+  the same kind of explanation within one file.
+- Translate public XML docs incrementally when a member is touched or before a
+  public release; do not mass-translate internal comments in a single change.
+- Documentation in `docs/en/` remains canonical, with `docs/zh/` mirrors.
+
 ## Local Checks
 
 ```sh

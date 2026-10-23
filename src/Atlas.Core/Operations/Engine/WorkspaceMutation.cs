@@ -85,8 +85,84 @@ internal sealed class WorkspaceMutation
         var order = orders.TryGetValue(region, out var currentOrder)
             ? currentOrder.ItemIds.ToList()
             : target.ItemIds.ToList();
-        order.Insert(index, itemId);
+        var insertionIndex = ResolveInsertionIndex(
+            order,
+            target.ItemIds,
+            index);
+        order.Insert(insertionIndex, itemId);
         orders[region] = new ToolBarOrderState(region, order);
+    }
+
+    /// <summary>
+    ///     同组重排时按最终组内相邻项锚定工具栏位置，保留独立工具栏顺序。
+    /// </summary>
+    internal void ReorderOrderItem(
+        GroupNode group,
+        IReadOnlyList<DockItemId> reorderedGroupItems,
+        DockItemId itemId,
+        int finalIndex)
+    {
+        if (group.LogicalRegion is not LogicalRegion region)
+        {
+            return;
+        }
+
+        var orders = EnsureOrders();
+        var order = (orders.TryGetValue(region, out var currentOrder)
+                ? currentOrder.ItemIds
+                : group.ItemIds)
+            .Where(id => id != itemId)
+            .ToList();
+        var remainingGroupItems = reorderedGroupItems
+            .Where(id => id != itemId)
+            .ToArray();
+        var insertionIndex = ResolveInsertionIndex(
+            order,
+            remainingGroupItems,
+            finalIndex);
+        order.Insert(insertionIndex, itemId);
+        orders[region] = new ToolBarOrderState(region, order);
+    }
+
+    private static int ResolveInsertionIndex(
+        IReadOnlyList<DockItemId> toolbarOrder,
+        IReadOnlyList<DockItemId> groupItems,
+        int groupIndex)
+    {
+        if (groupIndex < groupItems.Count)
+        {
+            var nextIndex = IndexOf(toolbarOrder, groupItems[groupIndex]);
+            if (nextIndex >= 0)
+            {
+                return nextIndex;
+            }
+        }
+
+        for (var index = groupItems.Count - 1; index >= 0; index--)
+        {
+            var previousIndex = IndexOf(toolbarOrder, groupItems[index]);
+            if (previousIndex >= 0)
+            {
+                return previousIndex + 1;
+            }
+        }
+
+        return toolbarOrder.Count;
+    }
+
+    private static int IndexOf(
+        IReadOnlyList<DockItemId> itemIds,
+        DockItemId itemId)
+    {
+        for (var index = 0; index < itemIds.Count; index++)
+        {
+            if (itemIds[index] == itemId)
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     internal void RemoveOrderItem(
@@ -192,9 +268,7 @@ internal sealed class WorkspaceMutation
     {
         var finalNodes = nodes ?? source.Nodes;
         return WorkspacePlan.Commit(
-            new WorkspaceSnapshot(
-                source.Id,
-                source.Revision,
+            source.WithState(
                 rootNodeId,
                 finalNodes,
                 items ?? source.Items,

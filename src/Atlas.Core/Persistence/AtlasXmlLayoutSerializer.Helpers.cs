@@ -4,6 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
@@ -151,7 +152,7 @@ public sealed partial class AtlasXmlLayoutSerializer
                 WorkspaceErrorCode.InvalidLayoutData,
                 LayoutOperationKind.RestoreWorkspace,
                 diagnosticId,
-                "Atlas.Persistence.InvalidLayoutData"));
+                WorkspaceDiagnostics.Messages.PersistenceInvalid));
     }
 
     private static WorkspaceResult<LayoutRestoreDocument> InvalidVersion()

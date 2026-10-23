@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Placement;
@@ -232,8 +233,8 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             new WorkspaceError(
                 WorkspaceErrorCode.ItemNotFound,
                 operation.Kind,
-                "ATLAS-ITEM-MISSING",
-                "Atlas.Item.NotFound",
+                WorkspaceDiagnostics.Ids.ItemMissing,
+                WorkspaceDiagnostics.Messages.ItemNotFound,
                 itemId: operation.ItemId));
     }
 

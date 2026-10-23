@@ -80,6 +80,80 @@ public sealed class MoveToolOperationTests
     }
 
     [Fact]
+    public async Task Cross_group_move_anchors_toolbar_insertion_to_group_neighbor()
+    {
+        var moved = CreateTool("moved");
+        var first = CreateTool("first");
+        var second = CreateTool("second");
+        var source = CreateToolGroup(
+            "source",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineStartUpper,
+            moved);
+        var target = CreateToolGroup(
+            "target",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineEndUpper,
+            first,
+            second);
+        var split = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspaceWithOrders(
+            split.Id,
+            new LayoutNode[] { split, source, target },
+            new[] { moved, first, second },
+            new ToolBarOrderState(
+                LogicalRegion.InlineStartUpper,
+                new[] { moved.Id }),
+            new ToolBarOrderState(
+                LogicalRegion.InlineEndUpper,
+                new[] { second.Id, first.Id }));
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        Assert.Equal(
+            new[] { moved.Id, first.Id, second.Id },
+            Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
+        Assert.Equal(
+            new[] { second.Id, moved.Id, first.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineEndUpper].ItemIds);
+    }
+
+    [Fact]
+    public async Task Same_group_move_anchors_toolbar_insertion_and_preserves_other_entries()
+    {
+        var first = CreateTool("first");
+        var second = CreateTool("second");
+        var third = CreateTool("third");
+        var group = CreateToolGroup(
+            "tools",
+            GroupRetentionPolicy.Persistent,
+            LogicalRegion.InlineStartUpper,
+            first,
+            second,
+            third);
+        await using var workspace = CreateWorkspaceWithOrders(
+            group.Id,
+            new LayoutNode[] { group },
+            new[] { first, second, third },
+            new ToolBarOrderState(
+                LogicalRegion.InlineStartUpper,
+                new[] { third.Id, first.Id, second.Id }));
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(first.Id, group.Id, targetIndex: 2));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        Assert.Equal(
+            new[] { second.Id, third.Id, first.Id },
+            Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]).ItemIds);
+        Assert.Equal(
+            new[] { third.Id, first.Id, second.Id },
+            workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
+    }
+
+    [Fact]
     public async Task Empty_persistent_target_without_toolbar_order_accepts_move_and_round_trips_history()
     {
         var moved = CreateTool("moved");
@@ -249,6 +323,27 @@ public sealed class MoveToolOperationTests
             items.Select(item => new KeyValuePair<DockItemId, DockItem>(item.Id, item)),
             Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
             orders,
+            Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
+        return new AtlasWorkspace(snapshot, new DefaultWorkspaceOperationPlanner());
+    }
+
+    private static AtlasWorkspace CreateWorkspaceWithOrders(
+        LayoutNodeId rootId,
+        IReadOnlyList<LayoutNode> nodes,
+        IReadOnlyList<DockItem> items,
+        params ToolBarOrderState[] orders)
+    {
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            rootId,
+            nodes.Select(node => new KeyValuePair<LayoutNodeId, LayoutNode>(node.Id, node)),
+            items.Select(item => new KeyValuePair<DockItemId, DockItem>(item.Id, item)),
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            orders.Select(
+                order => new KeyValuePair<LogicalRegion, ToolBarOrderState>(
+                    order.Region,
+                    order)),
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
         return new AtlasWorkspace(snapshot, new DefaultWorkspaceOperationPlanner());
     }

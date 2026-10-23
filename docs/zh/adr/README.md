@@ -43,6 +43,9 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0021](./0021-elastic-absorb-split-sizing.md) | Accepted | 弹性吸收分割尺寸：FixedPixels dock 面板 + 隐式 1fr 工作区；终态 resize 提交保留 basis 类型 |
 | [ADR-0022](./0022-group-visibility-invariant.md) | Accepted | 空 Persistent tool group 通过 snapshot 边界不变量折叠（REQ-F-154）；展开空组被拒绝 |
 | [ADR-0023](./0023-css-variable-theming.md) | Accepted | CSS 变量主题契约：将 atlas.css 的 `--atlas-*` 变量 token 化以供使用者定制 |
+| [ADR-0024](./0024-public-workspace-factory-seam.md) | Accepted | 公共工作区工厂接缝；公开 `AtlasWorkspaceFactory`，planner/workspace 保持 internal（CORE-P2-02） |
+| [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | 工具栏顺序按组内相邻项锚定插入，而非复制数字组内索引（CORE-P2-12） |
+| [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | 分层代码注释语言政策：公共 XML 文档/消息英文，内部注释增量迁移（CORE-P2-20） |
 
 ## 编写约定
 

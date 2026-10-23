@@ -247,9 +247,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> orders,
         IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> strips)
     {
-        return new WorkspaceSnapshot(
-            source.Id,
-            source.Revision,
+        return source.WithState(
             rootNodeId,
             nodes,
             items,

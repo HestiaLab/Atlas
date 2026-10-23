@@ -43,6 +43,9 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0021](./0021-elastic-absorb-split-sizing.md) | Accepted | elastic-absorb split sizing: FixedPixels dock panels + implicit 1fr work area; preserve basis kind on terminal resize commits |
 | [ADR-0022](./0022-group-visibility-invariant.md) | Accepted | empty Persistent tool groups collapse via a snapshot-boundary invariant (REQ-F-154); expanding an empty group is rejected |
 | [ADR-0023](./0023-css-variable-theming.md) | Accepted | CSS variable theming contract: tokenize atlas.css `--atlas-*` variables for consumer customization |
+| [ADR-0024](./0024-public-workspace-factory-seam.md) | Accepted | Public workspace factory seam; publish `AtlasWorkspaceFactory` while keeping planners/workspace internal (CORE-P2-02) |
+| [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | Toolbar order insertion by group neighbor anchor instead of numeric group index (CORE-P2-12) |
+| [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | Tiered code-comment language policy: English public XML docs/messages, incremental internal comments (CORE-P2-20) |
 
 ## Writing Conventions
 

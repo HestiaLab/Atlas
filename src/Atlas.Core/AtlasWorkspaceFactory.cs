@@ -1,12 +1,15 @@
 using Atlas.Core.Definitions;
+using Atlas.Core.Diagnostics;
+using Atlas.Core.Operations;
+using Atlas.Core.Operations.Engine;
 using Atlas.Core.Results;
 
-namespace Atlas.Core.Operations.Engine;
+namespace Atlas.Core;
 
 /// <summary>
-///     工作区工厂实现：将声明式定义物化为初始快照，并装配默认操作规划器创建工作区实例。
+///     公共工作区工厂：将声明式定义物化为初始快照，并装配默认操作规划器创建工作区实例。
 /// </summary>
-internal sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
+public sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
 {
     /// <summary>
     ///     从声明式定义创建可用的工作区实例；定义无效时返回结构化失败结果。
@@ -45,7 +48,7 @@ internal sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
             new WorkspaceError(
                 WorkspaceErrorCode.InvalidLayoutData,
                 LayoutOperationKind.ResetWorkspace,
-                "ATLAS-DEFINITION-INVALID",
-                "Atlas.Definition.Invalid"));
+                WorkspaceDiagnostics.Ids.DefinitionInvalid,
+                WorkspaceDiagnostics.Messages.DefinitionInvalid));
     }
 }

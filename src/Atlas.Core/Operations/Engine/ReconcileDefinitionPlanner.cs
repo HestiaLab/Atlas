@@ -1,4 +1,5 @@
 using Atlas.Core.Changes;
+using Atlas.Core.Diagnostics;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
@@ -59,7 +60,7 @@ internal static class ReconcileDefinitionPlanner
             new WorkspaceError(
                 WorkspaceErrorCode.InvalidLayoutData,
                 operation.Kind,
-                "ATLAS-DEFINITION-INVALID",
-                "Atlas.Definition.Invalid"));
+                WorkspaceDiagnostics.Ids.DefinitionInvalid,
+                WorkspaceDiagnostics.Messages.DefinitionInvalid));
     }
 }
