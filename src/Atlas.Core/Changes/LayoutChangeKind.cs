@@ -1,37 +1,37 @@
 namespace Atlas.Core.Changes;
 
 /// <summary>
-///     标识已提交布局变更的语义来源。
+///     Identifies the semantic source of a committed layout change.
 /// </summary>
 public enum LayoutChangeKind
 {
     /// <summary>
-    ///     直接执行的布局操作。
+    ///     A directly executed layout operation.
     /// </summary>
     Operation = 0,
 
     /// <summary>
-    ///     撤销历史遍历。
+    ///     An undo history traversal.
     /// </summary>
     Undo = 1,
 
     /// <summary>
-    ///     重做历史遍历。
+    ///     A redo history traversal.
     /// </summary>
     Redo = 2,
 
     /// <summary>
-    ///     重置为已配置的工作区定义。
+    ///     A reset to the configured workspace definition.
     /// </summary>
     Reset = 3,
 
     /// <summary>
-    ///     持久化工作区恢复。
+    ///     A persistent workspace restore.
     /// </summary>
     Restore = 4,
 
     /// <summary>
-    ///     与已更改的工作区定义对账。
+    ///     A reconcile with a changed workspace definition.
     /// </summary>
     ReconcileDefinition = 5,
 }

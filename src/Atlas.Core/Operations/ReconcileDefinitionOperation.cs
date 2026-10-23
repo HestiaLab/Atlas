@@ -3,12 +3,12 @@ using Atlas.Core.Definitions;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     将已提交工作区状态与声明式定义原子地对账。
+///     Atomically reconciles committed workspace state with a declarative definition.
 /// </summary>
 public sealed class ReconcileDefinitionOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化定义对账操作。
+    ///     Initializes a definition reconcile operation.
     /// </summary>
     public ReconcileDefinitionOperation(
         AtlasWorkspaceDefinition definition,
@@ -19,7 +19,7 @@ public sealed class ReconcileDefinitionOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取不可变的声明式定义。
+    ///     Gets the immutable declarative definition.
     /// </summary>
     public AtlasWorkspaceDefinition Definition { get; }
 }

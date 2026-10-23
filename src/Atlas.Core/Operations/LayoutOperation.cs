@@ -1,7 +1,7 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     原子地更改一个工作区快照的不可变请求。
+///     An immutable request that atomically changes a workspace snapshot.
 /// </summary>
 public abstract class LayoutOperation
 {
@@ -25,13 +25,14 @@ public abstract class LayoutOperation
     }
 
     /// <summary>
-    ///     获取稳定的操作种类。
+    ///     Gets the stable operation kind.
     /// </summary>
     public LayoutOperationKind Kind { get; }
 
     /// <summary>
-    ///     获取可选的乐观并发修订号：非空时提交前校验，
-    ///     与当前已提交修订不一致则按 StaleOperation 失败，不覆盖他人提交。
+    ///     Gets the optional optimistic concurrency revision: when non-null it is validated
+    ///     before commit, and a mismatch with the current committed revision fails as
+    ///     StaleOperation without overwriting another commit.
     /// </summary>
     public long? BaseRevision { get; }
 }

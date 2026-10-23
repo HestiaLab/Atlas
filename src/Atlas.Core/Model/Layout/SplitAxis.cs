@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     标识分割子项沿其排列的逻辑轴。
+///     Identifies the logical axis along which split children are arranged.
 /// </summary>
 public enum SplitAxis
 {
     /// <summary>
-    ///     子项沿逻辑内联轴排列。
+    ///     Children are arranged along the logical inline axis.
     /// </summary>
     InlineChildren = 0,
 
     /// <summary>
-    ///     子项沿逻辑块轴排列。
+    ///     Children are arranged along the logical block axis.
     /// </summary>
     BlockChildren = 1,
 }

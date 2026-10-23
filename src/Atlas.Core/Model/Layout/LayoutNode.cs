@@ -1,8 +1,8 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     布局树节点的抽象基类；树由 <see cref="GroupNode"/> 叶子与 <see cref="SplitNode"/> 分割组成，
-///     构造校验节点标识非默认值。
+///     Abstract base class of layout tree nodes; the tree consists of <see cref="GroupNode"/> leaves and
+///     <see cref="SplitNode"/> splits, and construction validates that the node identifier is not the default value.
 /// </summary>
 public abstract class LayoutNode
 {
@@ -19,7 +19,7 @@ public abstract class LayoutNode
     }
 
     /// <summary>
-    ///     工作区作用域内的节点标识。
+    ///     The node identifier within the workspace scope.
     /// </summary>
     public LayoutNodeId Id { get; }
 }

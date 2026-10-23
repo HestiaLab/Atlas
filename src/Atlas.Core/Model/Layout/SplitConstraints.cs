@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     定义分割的两个子项的最小与最大尺寸；解析时用于推导可行区间与钳制。
+///     Defines the minimum and maximum sizes of the two children of a split; used during resolution to derive the feasible range and to clamp.
 /// </summary>
 public readonly struct SplitConstraints : IEquatable<SplitConstraints>
 {
     /// <summary>
-    ///     构造约束集；最小值必须有限非负，最大值必须有限且不小于对应最小值。
+    ///     Constructs a constraint set; minimums must be finite and non-negative, and maximums must be finite and not less than the corresponding minimum.
     /// </summary>
-    /// <param name="firstMinimum">有限且非负的第一个子项最小尺寸。</param>
-    /// <param name="firstMaximum">可选的有限第一个子项最大尺寸。</param>
-    /// <param name="secondMinimum">有限且非负的第二个子项最小尺寸。</param>
-    /// <param name="secondMaximum">可选的有限第二个子项最大尺寸。</param>
+    /// <param name="firstMinimum">A finite, non-negative minimum size for the first child.</param>
+    /// <param name="firstMaximum">An optional finite maximum size for the first child.</param>
+    /// <param name="secondMinimum">A finite, non-negative minimum size for the second child.</param>
+    /// <param name="secondMaximum">An optional finite maximum size for the second child.</param>
     public SplitConstraints(
         double firstMinimum = 0d,
         double? firstMaximum = null,
@@ -28,22 +28,22 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    ///     第一个子项的最小尺寸（有限非负）。
+    ///     The minimum size of the first child (finite and non-negative).
     /// </summary>
     public double FirstMinimum { get; }
 
     /// <summary>
-    ///     第一个子项的最大尺寸；<see langword="null"/> 表示无上限。
+    ///     The maximum size of the first child; <see langword="null"/> means no upper bound.
     /// </summary>
     public double? FirstMaximum { get; }
 
     /// <summary>
-    ///     第二个子项的最小尺寸（有限非负）。
+    ///     The minimum size of the second child (finite and non-negative).
     /// </summary>
     public double SecondMinimum { get; }
 
     /// <summary>
-    ///     第二个子项的最大尺寸；<see langword="null"/> 表示无上限。
+    ///     The maximum size of the second child; <see langword="null"/> means no upper bound.
     /// </summary>
     public double? SecondMaximum { get; }
 
@@ -73,7 +73,7 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    ///     确定两个约束集是否相等。
+    ///     Determines whether two constraint sets are equal.
     /// </summary>
     public static bool operator ==(SplitConstraints left, SplitConstraints right)
     {
@@ -81,7 +81,7 @@ public readonly struct SplitConstraints : IEquatable<SplitConstraints>
     }
 
     /// <summary>
-    ///     确定两个约束集是否不相等。
+    ///     Determines whether two constraint sets are unequal.
     /// </summary>
     public static bool operator !=(SplitConstraints left, SplitConstraints right)
     {

@@ -61,7 +61,8 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     private int activeRestores;
 
     /// <summary>
-    ///     订阅工作区变更并启动防抖自动保存；防抖间隔缺省 500ms，不能为负。
+    ///     Subscribes to workspace changes and starts debounced automatic saves;
+    ///     the debounce interval defaults to 500ms and cannot be negative.
     /// </summary>
     public LayoutAutoPersistence(
         IAtlasWorkspace workspace,
@@ -87,9 +88,12 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     }
 
     /// <summary>
-    ///     加载已保存文档并经操作引擎原子恢复；从未保存过返回 NoChange，
-    ///     存储不可用或文档损坏返回诊断化失败，绝不强行恢复残缺布局。
-    ///     恢复期间的变更不会触发自动保存，避免覆盖存储中的目标文档。
+    ///     Loads the saved document and restores it atomically through the operation
+    ///     engine; returns NoChange when nothing was ever saved, and returns a
+    ///     diagnostic failure when the store is unavailable or the document is
+    ///     corrupt, never force-restoring a partial layout.
+    ///     Changes made during a restore do not trigger automatic saves, so the
+    ///     target document in the store is not overwritten.
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> RestoreIfAvailableAsync(
         CancellationToken cancellationToken = default)
@@ -154,8 +158,10 @@ public sealed class LayoutAutoPersistence : IAsyncDisposable
     }
 
     /// <summary>
-    ///     取消未决的防抖写入，等待在途保存结束后强制把当前快照落盘；
-    ///     force 跳过代际过期检查，保证即使排队期间有更新提交也会写入。
+    ///     Cancels pending debounced writes and, once in-flight saves complete,
+    ///     forces the current snapshot to be written; force skips the generation
+    ///     staleness check so the write happens even when newer commits were
+    ///     queued in the meantime.
     /// </summary>
     public async ValueTask<WorkspaceResult<bool>> FlushAsync(
         CancellationToken cancellationToken = default)

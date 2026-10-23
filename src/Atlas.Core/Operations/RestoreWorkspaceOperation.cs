@@ -3,12 +3,12 @@ using Atlas.Core.Persistence;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     原子地用经过验证的持久化文档替换已提交状态。
+///     Atomically replaces committed state with a validated persistent document.
 /// </summary>
 public sealed class RestoreWorkspaceOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化恢复请求。
+    ///     Initializes a restore request.
     /// </summary>
     public RestoreWorkspaceOperation(
         LayoutRestoreDocument document,
@@ -19,7 +19,7 @@ public sealed class RestoreWorkspaceOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取经过验证的恢复文档。
+    ///     Gets the validated restore document.
     /// </summary>
     public LayoutRestoreDocument Document { get; }
 }

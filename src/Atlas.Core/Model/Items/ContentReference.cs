@@ -1,8 +1,9 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-///     内容标识：Kind 选择渲染器或提供程序，ResourceId 定位其渲染的应用资源；
-///     两字段共同构成内容身份比较与去重判定的依据。
+///     Content identity: Kind selects the renderer or provider and ResourceId locates the application
+///     resource it renders; together the two fields form the basis for content identity comparison and
+///     deduplication decisions.
 /// </summary>
 public readonly struct ContentReference : IEquatable<ContentReference>
 {
@@ -13,10 +14,10 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     private readonly string? _resourceId;
 
     /// <summary>
-    ///     包装 (Kind, ResourceId) 内容引用；任一字段为 null 或空白时立即抛参数异常。
+    ///     Wraps a (Kind, ResourceId) content reference; throws an argument exception immediately when either field is null or whitespace.
     /// </summary>
-    /// <param name="kind">已注册的渲染器或提供程序种类。</param>
-    /// <param name="resourceId">应用程序资源标识。</param>
+    /// <param name="kind">A registered renderer or provider kind.</param>
+    /// <param name="resourceId">The application resource identifier.</param>
     public ContentReference(string kind, string resourceId)
     {
         _kind = IdentifierGuard.RequireValue(kind, nameof(kind));
@@ -24,19 +25,19 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    ///     内容种类：决定由哪个渲染器或提供程序呈现。
+    ///     Content kind: determines which renderer or provider presents the content.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    ///     该实例是默认的未初始化值。
+    ///     The instance is the default, uninitialized value.
     /// </exception>
     public string Kind => _kind
         ?? throw new InvalidOperationException("A default ContentReference does not have a kind.");
 
     /// <summary>
-    ///     应用资源标识：在 <c>Kind</c> 种类范围内定位具体内容。
+    ///     Application resource identifier: locates the specific content within the <c>Kind</c> kind.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    ///     该实例是默认的未初始化值。
+    ///     The instance is the default, uninitialized value.
     /// </exception>
     public string ResourceId => _resourceId
         ?? throw new InvalidOperationException("A default ContentReference does not have a resource identity.");
@@ -65,7 +66,7 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    ///     按两字段序数比较两个内容引用是否相等。
+    ///     Compares two content references for equality by ordinal comparison of both fields.
     /// </summary>
     public static bool operator ==(ContentReference left, ContentReference right)
     {
@@ -73,7 +74,7 @@ public readonly struct ContentReference : IEquatable<ContentReference>
     }
 
     /// <summary>
-    ///     按两字段序数比较两个内容引用是否不等。
+    ///     Compares two content references for inequality by ordinal comparison of both fields.
     /// </summary>
     public static bool operator !=(ContentReference left, ContentReference right)
     {

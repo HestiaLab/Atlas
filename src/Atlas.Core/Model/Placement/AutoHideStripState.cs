@@ -1,12 +1,12 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     一个工作区边缘的自动隐藏条：有序条目列表，条目标识不得重复。
+///     An auto-hide strip on one workspace edge: an ordered entry list whose item identifiers must be unique.
 /// </summary>
 public sealed class AutoHideStripState
 {
     /// <summary>
-    ///     构造自动隐藏条；边缘必须为已知值，条目不得为默认值且标识不得重复。
+    ///     Constructs an auto-hide strip; the edge must be a known value and entries must be non-default with unique identifiers.
     /// </summary>
     public AutoHideStripState(WorkspaceEdge edge, IEnumerable<AutoHideEntry> entries)
     {
@@ -34,12 +34,12 @@ public sealed class AutoHideStripState
     }
 
     /// <summary>
-    ///     该条挂靠的工作区边缘。
+    ///     The workspace edge this strip is attached to.
     /// </summary>
     public WorkspaceEdge Edge { get; }
 
     /// <summary>
-    ///     按显示顺序排列的自动隐藏条目（只读）。
+    ///     The auto-hide entries in display order (read-only).
     /// </summary>
     public IReadOnlyList<AutoHideEntry> Entries { get; }
 

@@ -1,12 +1,12 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     不可变的命名预设载荷：描述符元数据与序列化 XML。
+///     Immutable named preset payload: descriptor metadata and serialized XML.
 /// </summary>
 public sealed class LayoutPresetDocument
 {
     /// <summary>
-    ///     构造预设文档；XML 必须非空。
+    ///     Creates a preset document; the XML must be non-empty.
     /// </summary>
     public LayoutPresetDocument(LayoutPresetDescriptor descriptor, string xml)
     {
@@ -15,12 +15,12 @@ public sealed class LayoutPresetDocument
     }
 
     /// <summary>
-    ///     获取预设元数据。
+    ///     Gets the preset metadata.
     /// </summary>
     public LayoutPresetDescriptor Descriptor { get; }
 
     /// <summary>
-    ///     获取持久化的 XML。
+    ///     Gets the persisted XML.
     /// </summary>
     public string Xml { get; }
 }

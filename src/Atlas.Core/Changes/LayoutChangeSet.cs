@@ -3,7 +3,7 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Changes;
 
 /// <summary>
-///     描述一次已提交修订产生的精确渲染失效范围。
+///     Describes the exact rendering invalidation scope produced by a committed revision.
 /// </summary>
 public sealed class LayoutChangeSet
 {
@@ -44,62 +44,62 @@ public sealed class LayoutChangeSet
     }
 
     /// <summary>
-    ///     获取变更前观察到的修订。
+    ///     Gets the revision observed before the change.
     /// </summary>
     public long BeforeRevision { get; }
 
     /// <summary>
-    ///     获取变更产生的修订。
+    ///     Gets the revision produced by the change.
     /// </summary>
     public long AfterRevision { get; }
 
     /// <summary>
-    ///     获取变更的语义来源。
+    ///     Gets the semantic source of the change.
     /// </summary>
     public LayoutChangeKind ChangeKind { get; }
 
     /// <summary>
-    ///     获取变更新增的布局节点。
+    ///     Gets the layout nodes added by the change.
     /// </summary>
     public IReadOnlyList<LayoutNodeId> AddedNodes { get; }
 
     /// <summary>
-    ///     获取变更移除的布局节点。
+    ///     Gets the layout nodes removed by the change.
     /// </summary>
     public IReadOnlyList<LayoutNodeId> RemovedNodes { get; }
 
     /// <summary>
-    ///     获取状态已更改的布局节点。
+    ///     Gets the layout nodes whose state changed.
     /// </summary>
     public IReadOnlyList<LayoutNodeId> UpdatedNodes { get; }
 
     /// <summary>
-    ///     获取变更新增的停靠项。
+    ///     Gets the dock items added by the change.
     /// </summary>
     public IReadOnlyList<DockItemId> AddedItems { get; }
 
     /// <summary>
-    ///     获取变更移除的停靠项。
+    ///     Gets the dock items removed by the change.
     /// </summary>
     public IReadOnlyList<DockItemId> RemovedItems { get; }
 
     /// <summary>
-    ///     获取状态已更改的停靠项。
+    ///     Gets the dock items whose state changed.
     /// </summary>
     public IReadOnlyList<DockItemId> UpdatedItems { get; }
 
     /// <summary>
-    ///     获取工具栏可见性发生更改的逻辑侧。
+    ///     Gets the logical sides whose tool bar visibility changed.
     /// </summary>
     public IReadOnlyList<LogicalSide> UpdatedToolBars { get; }
 
     /// <summary>
-    ///     获取工具栏排序发生更改的逻辑区域。
+    ///     Gets the logical regions whose tool bar ordering changed.
     /// </summary>
     public IReadOnlyList<LogicalRegion> UpdatedToolBarOrders { get; }
 
     /// <summary>
-    ///     获取状态发生更改的自动隐藏条。
+    ///     Gets the auto-hide strips whose state changed.
     /// </summary>
     public IReadOnlyList<WorkspaceEdge> UpdatedAutoHideStrips { get; }
 

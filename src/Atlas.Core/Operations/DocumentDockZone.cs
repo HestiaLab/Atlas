@@ -1,32 +1,32 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     标识文档停靠操作的逻辑投放区域。
+///     Identifies the logical drop zone of a document dock operation.
 /// </summary>
 public enum DocumentDockZone
 {
     /// <summary>
-    ///     将文档追加到目标编辑器组。
+    ///     Appends the document to the target editor group.
     /// </summary>
     Center = 0,
 
     /// <summary>
-    ///     在行内轴上于目标之前创建编辑器组。
+    ///     Creates an editor group before the target on the inline axis.
     /// </summary>
     InlineStart = 1,
 
     /// <summary>
-    ///     在行内轴上于目标之后创建编辑器组。
+    ///     Creates an editor group after the target on the inline axis.
     /// </summary>
     InlineEnd = 2,
 
     /// <summary>
-    ///     在块轴上于目标之前创建编辑器组。
+    ///     Creates an editor group before the target on the block axis.
     /// </summary>
     BlockStart = 3,
 
     /// <summary>
-    ///     在块轴上于目标之后创建编辑器组。
+    ///     Creates an editor group after the target on the block axis.
     /// </summary>
     BlockEnd = 4,
 }

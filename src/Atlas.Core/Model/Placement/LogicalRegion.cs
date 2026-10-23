@@ -1,38 +1,39 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     IDE 布局预设中的稳定逻辑工具组槽位；
-///     工具组通过它声明挂靠位置（停靠侧上下区域与块结束停靠的内侧组）。
+///     Stable logical tool group slots in the IDE layout preset;
+///     tool groups use them to declare their attachment location (upper/lower areas of a dock side and the
+///     inner group of the block-end dock).
 /// </summary>
 public enum LogicalRegion
 {
     /// <summary>
-    ///     行内起始侧的上部组。
+    ///     The upper group on the inline-start side.
     /// </summary>
     InlineStartUpper = 0,
 
     /// <summary>
-    ///     行内起始侧的下部组。
+    ///     The lower group on the inline-start side.
     /// </summary>
     InlineStartLower = 1,
 
     /// <summary>
-    ///     行内结束侧的上部组。
+    ///     The upper group on the inline-end side.
     /// </summary>
     InlineEndUpper = 2,
 
     /// <summary>
-    ///     行内结束侧的下部组。
+    ///     The lower group on the inline-end side.
     /// </summary>
     InlineEndLower = 3,
 
     /// <summary>
-    ///     块结束停靠中的行内起始组。
+    ///     The inline-start group of the block-end dock.
     /// </summary>
     BlockEndInlineStart = 4,
 
     /// <summary>
-    ///     块结束停靠中的行内结束组。
+    ///     The inline-end group of the block-end dock.
     /// </summary>
     BlockEndInlineEnd = 5,
 }

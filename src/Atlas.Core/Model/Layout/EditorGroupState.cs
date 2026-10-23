@@ -1,13 +1,13 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     文档组的行为状态：标签页溢出模式、回退激活策略与最近访问顺序；
-///     访问列表头位即下次"最近访问"回退激活的首选候选。
+///     Behavioural state of a document group: tab overflow mode, fallback activation policy, and recent visit order;
+///     the head of the visit list is the preferred candidate for the next most-recently-visited fallback activation.
 /// </summary>
 public sealed class EditorGroupState
 {
     /// <summary>
-    ///     构造文档组状态；枚举越界、访问列表含默认标识或重复标识时抛参数异常。
+    ///     Constructs document group state; throws an argument exception when an enum value is out of range or the visit list contains a default or duplicate identifier.
     /// </summary>
     public EditorGroupState(
         EditorOverflowMode overflowMode = EditorOverflowMode.Scroll,
@@ -52,17 +52,17 @@ public sealed class EditorGroupState
     }
 
     /// <summary>
-    ///     标签页容纳不下时的呈现模式。
+    ///     The presentation mode used when the tabs do not fit.
     /// </summary>
     public EditorOverflowMode OverflowMode { get; }
 
     /// <summary>
-    ///     当前选中项关闭后回退激活的策略。
+    ///     The fallback activation policy used after the currently selected item is closed.
     /// </summary>
     public EditorActivationPolicy ActivationPolicy { get; }
 
     /// <summary>
-    ///     按最近访问优先排列的项标识（只读）；访问时新项插入头部。
+    ///     Item identifiers ordered by most recent visit (read-only); a newly visited item is inserted at the head.
     /// </summary>
     public IReadOnlyList<DockItemId> RecentlyVisitedIds { get; }
 }

@@ -1,12 +1,12 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     均衡现有分屏的两个子节点。
+///     Equalizes the two children of an existing split.
 /// </summary>
 public sealed class EqualizeSplitOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化 <see cref="EqualizeSplitOperation"/> 类的新实例。
+    ///     Initializes a new instance of the <see cref="EqualizeSplitOperation"/> class.
     /// </summary>
     public EqualizeSplitOperation(
         LayoutNodeId splitId,
@@ -24,7 +24,7 @@ public sealed class EqualizeSplitOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取要均衡的分屏。
+    ///     Gets the split to equalize.
     /// </summary>
     public LayoutNodeId SplitId { get; }
 }

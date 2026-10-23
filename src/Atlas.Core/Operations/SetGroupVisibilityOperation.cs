@@ -3,12 +3,12 @@ using Atlas.Core.Layout;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     更改工具组的已提交可见性。
+///     Changes the committed visibility of a tool group.
 /// </summary>
 public sealed class SetGroupVisibilityOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化组可见性操作。
+    ///     Initializes a group visibility operation.
     /// </summary>
     public SetGroupVisibilityOperation(
         LayoutNodeId groupId,
@@ -37,12 +37,12 @@ public sealed class SetGroupVisibilityOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取目标组。
+    ///     Gets the target group.
     /// </summary>
     public LayoutNodeId GroupId { get; }
 
     /// <summary>
-    ///     获取请求的已提交可见性。
+    ///     Gets the requested committed visibility.
     /// </summary>
     public GroupVisibility Visibility { get; }
 }

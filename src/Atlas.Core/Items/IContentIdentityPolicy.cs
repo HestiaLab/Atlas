@@ -1,12 +1,12 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-///     确定两个内容引用是否共享同一去重标识。
+///     Determines whether two content references share the same deduplication identity.
 /// </summary>
 public interface IContentIdentityPolicy
 {
     /// <summary>
-    ///     确定两个内容引用在去重时是否等价。
+    ///     Determines whether two content references are equivalent for deduplication.
     /// </summary>
     bool AreEquivalent(ContentReference left, ContentReference right);
 }

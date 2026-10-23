@@ -1,7 +1,7 @@
 namespace Atlas.Core;
 
 /// <summary>
-///     标识一个 Atlas 工作区。
+///     Identifies an Atlas workspace.
 /// </summary>
 public readonly struct WorkspaceId : IEquatable<WorkspaceId>
 {
@@ -9,19 +9,19 @@ public readonly struct WorkspaceId : IEquatable<WorkspaceId>
     private readonly string? _value;
 
     /// <summary>
-    ///     包装一个标识字符串；值为 null 或空白时立即抛参数异常。
+    ///     Wraps an identifier string; throws an argument exception immediately when the value is null or whitespace.
     /// </summary>
-    /// <param name="value">非空、非空白的标识符值。</param>
+    /// <param name="value">A non-null, non-whitespace identifier value.</param>
     public WorkspaceId(string value)
     {
         _value = IdentifierGuard.RequireValue(value, nameof(value));
     }
 
     /// <summary>
-    ///     构造时经 IdentifierGuard 校验的原始标识字符串。
+    ///     The raw identifier string validated by IdentifierGuard at construction time.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    ///     该实例是默认的未初始化值。
+    ///     The instance is the default, uninitialized value.
     /// </exception>
     public string Value => _value
         ?? throw new InvalidOperationException("A default WorkspaceId does not have a value.");
@@ -51,7 +51,7 @@ public readonly struct WorkspaceId : IEquatable<WorkspaceId>
     }
 
     /// <summary>
-    ///     按底层字符串序数比较两个工作区标识是否相等。
+    ///     Compares two workspace identifiers for equality by ordinal comparison of the underlying strings.
     /// </summary>
     public static bool operator ==(WorkspaceId left, WorkspaceId right)
     {
@@ -59,7 +59,7 @@ public readonly struct WorkspaceId : IEquatable<WorkspaceId>
     }
 
     /// <summary>
-    ///     按底层字符串序数比较两个工作区标识是否不等。
+    ///     Compares two workspace identifiers for inequality by ordinal comparison of the underlying strings.
     /// </summary>
     public static bool operator !=(WorkspaceId left, WorkspaceId right)
     {

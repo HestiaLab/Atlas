@@ -1,14 +1,14 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     工具项尺寸的受信任元数据：初始比例与最小/最大内容尺寸、折叠尺寸；
-///     由宿主声明，工作区据此初始化并约束工具组。
+///     Trusted metadata for tool item sizing: initial ratio, minimum/maximum content extent, and collapsed
+///     extent; declared by the host, and the workspace uses it to initialize and constrain tool groups.
 /// </summary>
 public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
 {
     /// <summary>
-    ///     构造尺寸定义；初始比例须在 (0, 1] 内、尺寸须有限非负、
-    ///     最大不得小于最小、折叠尺寸须有限非负。
+    ///     Constructs a sizing definition; the initial ratio must lie in (0, 1], extents must be finite and
+    ///     non-negative, the maximum must not be less than the minimum, and the collapsed extent must be finite and non-negative.
     /// </summary>
     public ToolSizingDefinition(
         double? initialRatio = null,
@@ -55,22 +55,22 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     工具组初始化与重置时使用的比例；<see langword="null"/> 表示不指定初始比例。
+    ///     The ratio used when initializing and resetting a tool group; <see langword="null"/> means no initial ratio is specified.
     /// </summary>
     public double? InitialRatio { get; }
 
     /// <summary>
-    ///     工具组的最小内容尺寸；<see langword="null"/> 表示不约束下限。
+    ///     The minimum content extent of a tool group; <see langword="null"/> means no lower bound.
     /// </summary>
     public double? MinExtent { get; }
 
     /// <summary>
-    ///     工具组的最大内容尺寸；<see langword="null"/> 表示不约束上限。
+    ///     The maximum content extent of a tool group; <see langword="null"/> means no upper bound.
     /// </summary>
     public double? MaxExtent { get; }
 
     /// <summary>
-    ///     工具组折叠时占据的尺寸；默认 0（完全收起）。
+    ///     The extent a tool group occupies when collapsed; defaults to 0 (fully collapsed).
     /// </summary>
     public double CollapsedExtent { get; }
 
@@ -96,7 +96,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     确定两个尺寸定义是否相等。
+    ///     Determines whether two sizing definitions are equal.
     /// </summary>
     public static bool operator ==(ToolSizingDefinition left, ToolSizingDefinition right)
     {
@@ -104,7 +104,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     确定两个尺寸定义是否不相等。
+    ///     Determines whether two sizing definitions are unequal.
     /// </summary>
     public static bool operator !=(ToolSizingDefinition left, ToolSizingDefinition right)
     {

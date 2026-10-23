@@ -7,7 +7,7 @@ using Atlas.Core.Results;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     协调命名预设的捕获、有序存储与原子恢复。
+///     Coordinates capture, ordered storage and atomic restoration of named presets.
 /// </summary>
 public sealed class LayoutPresetService
 {
@@ -33,7 +33,7 @@ public sealed class LayoutPresetService
     internal int ActiveWriterCount => writers.Count;
 
     /// <summary>
-    ///     为一个工作区初始化预设服务。
+    ///     Initializes the preset service for one workspace.
     /// </summary>
     public LayoutPresetService(
         IAtlasWorkspace workspace,
@@ -46,7 +46,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     捕获并保存当前快照。
+    ///     Captures and saves the current snapshot.
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutPresetDescriptor>> SaveAsync(
         string name,
@@ -125,7 +125,8 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     将命名预设作为单个恢复历史屏障应用；预设不存在时返回失败。
+    ///     Applies a named preset as a single restore history barrier; fails when the
+    ///     preset does not exist.
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ApplyAsync(
         string name,
@@ -172,7 +173,8 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     删除命名预设，不改变工作区状态；预设不存在时返回失败。
+    ///     Deletes a named preset without changing workspace state; fails when the
+    ///     preset does not exist.
     /// </summary>
     public async ValueTask<WorkspaceResult<bool>> DeleteAsync(
         string name,
@@ -229,7 +231,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     按序号名称顺序列出命名用户预设。
+    ///     Lists the named user presets ordered by ordinal name.
     /// </summary>
     public async ValueTask<WorkspaceResult<IReadOnlyList<LayoutPresetDescriptor>>> ListAsync(
         CancellationToken cancellationToken = default)

@@ -1,12 +1,12 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     将文档移入编辑器组或新的相邻分屏。
+///     Moves a document into an editor group or a new adjacent split.
 /// </summary>
 public sealed class DockDocumentOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化 <see cref="DockDocumentOperation"/> 类的新实例。
+    ///     Initializes a new instance of the <see cref="DockDocumentOperation"/> class.
     /// </summary>
     public DockDocumentOperation(
         DockItemId itemId,
@@ -69,27 +69,30 @@ public sealed class DockDocumentOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取要移动的文档。
+    ///     Gets the document to move.
     /// </summary>
     public DockItemId ItemId { get; }
 
     /// <summary>
-    ///     获取投放锚定的编辑器组：Center 分区并入该组，方向性分区以其为锚新建组与分割。
+    ///     Gets the editor group that anchors the drop: a center zone merges into this group,
+    ///     while a directional zone uses it as the anchor for a new group and split.
     /// </summary>
     public LayoutNodeId TargetGroupId { get; }
 
     /// <summary>
-    ///     获取逻辑投放区域。
+    ///     Gets the logical drop zone.
     /// </summary>
     public DocumentDockZone Zone { get; }
 
     /// <summary>
-    ///     获取方向性投放新建的编辑器组标识；Center 分区为 <see langword="null"/>。
+    ///     Gets the editor group identifier created by a directional drop;
+    ///     <see langword="null"/> for a center zone.
     /// </summary>
     public LayoutNodeId? NewGroupId { get; }
 
     /// <summary>
-    ///     获取方向性投放新建的分屏标识；Center 分区为 <see langword="null"/>。
+    ///     Gets the split identifier created by a directional drop;
+    ///     <see langword="null"/> for a center zone.
     /// </summary>
     public LayoutNodeId? NewSplitId { get; }
 }

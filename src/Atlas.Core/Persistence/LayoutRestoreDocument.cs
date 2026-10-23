@@ -1,8 +1,9 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     布局序列化器产出并经验证的不可变恢复候选：
-///     候选快照、源版本、非致命警告与策略处理结果（重映射/占位/剔除）。
+///     Immutable restore candidate produced and validated by the layout serializer:
+///     candidate snapshot, source version, non-fatal warnings and policy outcomes
+///     (remap/placeholder/drop).
 /// </summary>
 public sealed class LayoutRestoreDocument
 {
@@ -28,32 +29,35 @@ public sealed class LayoutRestoreDocument
     }
 
     /// <summary>
-    ///     获取经验证的候选快照。
+    ///     Gets the validated candidate snapshot.
     /// </summary>
     public WorkspaceSnapshot Snapshot { get; }
 
     /// <summary>
-    ///     获取源架构版本。
+    ///     Gets the source schema version.
     /// </summary>
     public string SourceSchemaVersion { get; }
 
     /// <summary>
-    ///     获取解析产生的非致命迁移警告；当前仅 V1 迁移会产出。
+    ///     Gets the non-fatal migration warnings produced by parsing; currently only
+    ///     the V1 migration produces warnings.
     /// </summary>
     public IReadOnlyList<string> Warnings { get; }
 
     /// <summary>
-    ///     获取应用到快照的标识重映射（规避目标工作区的保留标识冲突）。
+    ///     Gets the identity remaps applied to the snapshot (avoiding reserved
+    ///     identity conflicts in the target workspace).
     /// </summary>
     public IReadOnlyList<IdentityRemap> IdentityRemaps { get; }
 
     /// <summary>
-    ///     获取因内容未注册而被降为占位符保留的项。
+    ///     Gets the items retained as placeholders because their content is not
+    ///     registered.
     /// </summary>
     public IReadOnlyList<DockItemId> PlaceholderItems { get; }
 
     /// <summary>
-    ///     获取按策略移除的未注册项。
+    ///     Gets the unregistered items removed by policy.
     /// </summary>
     public IReadOnlyList<DockItemId> DroppedItems { get; }
 }

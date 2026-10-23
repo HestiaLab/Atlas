@@ -1,23 +1,26 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-///     工作区中不可变的工具项或文档项；
-///     构造时校验种类、能力集与文档状态的组合一致性，之后所有属性不可再变。
+///     An immutable tool item or document item in a workspace;
+///     the constructor validates the combination of kind, capability set, and document state, after which
+///     all properties are read-only.
 /// </summary>
 public sealed class DockItem
 {
     /// <summary>
-    ///     构造不可变项并校验组合约束：Id 与 Content 不得为默认值，kind 仅限工具/文档；
-    ///     Capabilities 必须属于该 kind 允许的能力子集（工具项不可拆分/固定，文档项不可自动隐藏），
-    ///     工具项禁止携带 DocumentState，固定文档必须声明 CanPinDocument，预览文档不得声明。
+    ///     Constructs an immutable item and validates the combination constraints: Id and Content must not
+    ///     be default values and kind is limited to tool/document; Capabilities must be a subset allowed for
+    ///     that kind (tool items cannot be split or pinned, document items cannot be auto-hidden); tool items
+    ///     must not carry DocumentState, a pinned document must declare CanPinDocument, and a preview document
+    ///     must not.
     /// </summary>
-    /// <param name="id">工作区作用域内的项标识。</param>
-    /// <param name="kind">项的行为种类。</param>
-    /// <param name="content">内容渲染器与资源标识。</param>
-    /// <param name="capabilities">项的稳定能力集；必须与 kind 匹配。</param>
-    /// <param name="title">显示标题；为 <see langword="null"/> 时使用项标识。</param>
-    /// <param name="iconKey">可选的与 UI 无关的图标标识。</param>
-    /// <param name="documentState">仅文档提交的状态；工具项传非 <see langword="null"/> 抛异常。</param>
+    /// <param name="id">The item identifier within the workspace scope.</param>
+    /// <param name="kind">The behavioural kind of the item.</param>
+    /// <param name="content">The content renderer and resource identifier.</param>
+    /// <param name="capabilities">The stable capability set of the item; must match the kind.</param>
+    /// <param name="title">The display title; when <see langword="null"/> the item identifier is used.</param>
+    /// <param name="iconKey">The optional UI-agnostic icon identifier.</param>
+    /// <param name="documentState">State committed by documents only; a tool item throws when a non-<see langword="null"/> value is passed.</param>
     public DockItem(
         DockItemId id,
         DockItemKind kind,
@@ -57,37 +60,37 @@ public sealed class DockItem
     }
 
     /// <summary>
-    ///     工作区作用域内的项标识。
+    ///     The item identifier within the workspace scope.
     /// </summary>
     public DockItemId Id { get; }
 
     /// <summary>
-    ///     项的行为种类：决定承载组与允许的能力集。
+    ///     The behavioural kind of the item: determines the hosting group and the allowed capability set.
     /// </summary>
     public DockItemKind Kind { get; }
 
     /// <summary>
-    ///     显示标题；构造时未提供则回退为 <see cref="Id"/> 的字符串值。
+    ///     The display title; falls back to the string value of <see cref="Id"/> when not supplied at construction.
     /// </summary>
     public string Title { get; }
 
     /// <summary>
-    ///     可选的与 UI 无关的图标标识；<see langword="null"/> 表示无图标。
+    ///     The optional UI-agnostic icon identifier; <see langword="null"/> means no icon.
     /// </summary>
     public string? IconKey { get; }
 
     /// <summary>
-    ///     内容引用：渲染种类与资源标识，也是内容身份比较与去重判定的依据。
+    ///     The content reference: renderer kind and resource identifier, also the basis for content identity comparison and deduplication decisions.
     /// </summary>
     public ContentReference Content { get; }
 
     /// <summary>
-    ///     项的稳定能力集：声明该项支持的用户操作，构造时按种类校验。
+    ///     The stable capability set of the item: declares the user operations the item supports and is validated against the kind at construction.
     /// </summary>
     public DockItemCapabilities Capabilities { get; }
 
     /// <summary>
-    ///     文档项的固定/预览状态；工具项恒为 <see langword="null"/>。
+    ///     The pinned/preview state of document items; always <see langword="null"/> for tool items.
     /// </summary>
     public DocumentState? DocumentState { get; }
 

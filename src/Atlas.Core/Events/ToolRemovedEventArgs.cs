@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     为工具移除事件提供数据。
+///     Provides data for the tool removed event.
 /// </summary>
 public sealed class ToolRemovedEventArgs : WorkspaceItemEventArgs
 {

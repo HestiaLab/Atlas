@@ -10,9 +10,11 @@ using Atlas.Core.Validation;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     实现严格的 Atlas V2 XML 持久化契约：
-///     写入前校验快照域不变量；读取时先按根形状分派 V1/V2（含 V1 迁移），
-///     再依次做架构校验、资源限制与域不变量验证，失败统一归一为诊断化错误。
+///     Implements the strict Atlas V2 XML persistence contract: snapshot domain
+///     invariants are validated before writing; on read the root shape dispatches
+///     V1/V2 first (including V1 migration), then schema validation, resource limits
+///     and domain invariant validation run in order, with every failure normalized
+///     into a diagnostic error.
 /// </summary>
 public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 {

@@ -1,12 +1,14 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     自动持久化写入存储的不可变文档：架构版本、捕获时的修订号与序列化 XML。
+///     Immutable document written to storage by automatic persistence: schema
+///     version, revision captured at the time, and serialized XML.
 /// </summary>
 public sealed class WorkspaceLayoutDocument
 {
     /// <summary>
-    ///     构造文档；修订号必须非负，架构版本与 XML 必须非空。
+    ///     Creates the document; the revision must be non-negative, and the schema
+    ///     version and XML must be non-empty.
     /// </summary>
     public WorkspaceLayoutDocument(
         string schemaVersion,
@@ -27,17 +29,17 @@ public sealed class WorkspaceLayoutDocument
     }
 
     /// <summary>
-    ///     获取架构版本。
+    ///     Gets the schema version.
     /// </summary>
     public string SchemaVersion { get; }
 
     /// <summary>
-    ///     获取捕获的运行时修订号。
+    ///     Gets the captured runtime revision.
     /// </summary>
     public long SavedRevision { get; }
 
     /// <summary>
-    ///     获取持久化的 XML。
+    ///     Gets the persisted XML.
     /// </summary>
     public string Xml { get; }
 }

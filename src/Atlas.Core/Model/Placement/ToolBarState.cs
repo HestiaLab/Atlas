@@ -1,12 +1,12 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     一个逻辑侧的工具栏已提交可见性（侧 + 展开/折叠）。
+///     The committed visibility of a tool bar on one logical side (side plus expanded/collapsed).
 /// </summary>
 public readonly struct ToolBarState
 {
     /// <summary>
-    ///     构造状态；侧与可见性必须是已知枚举值。
+    ///     Constructs a state; the side and visibility must be known enum values.
     /// </summary>
     public ToolBarState(LogicalSide side, ToolBarVisibility visibility)
     {
@@ -28,12 +28,12 @@ public readonly struct ToolBarState
     }
 
     /// <summary>
-    ///     该状态作用的逻辑侧。
+    ///     The logical side this state applies to.
     /// </summary>
     public LogicalSide Side { get; }
 
     /// <summary>
-    ///     已提交的可见性。
+    ///     The committed visibility.
     /// </summary>
     public ToolBarVisibility Visibility { get; }
 }

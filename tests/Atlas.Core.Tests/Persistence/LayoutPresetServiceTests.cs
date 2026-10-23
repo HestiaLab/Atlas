@@ -224,6 +224,33 @@ public sealed class LayoutPresetServiceTests
             () => service.ListAsync(cancellation.Token).AsTask());
     }
 
+    [Fact]
+    public async Task Invalid_preset_names_are_rejected_before_storage()
+    {
+        await using var workspace = CreateWorkspace();
+        var service = new LayoutPresetService(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new InMemoryLayoutPresetStore());
+        var names = new[] { " ", new string('a', 129), "../escape", "__atlas_reserved" };
+
+        foreach (var name in names)
+        {
+            var save = await service.SaveAsync(name);
+            var apply = await service.ApplyAsync(name);
+            var delete = await service.DeleteAsync(name);
+
+            Assert.Equal(WorkspaceResultStatus.Failure, save.Status);
+            Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);
+            Assert.Equal(WorkspaceResultStatus.Failure, delete.Status);
+            Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, save.Error!.Code);
+            Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, apply.Error!.Code);
+            Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, delete.Error!.Code);
+        }
+
+        Assert.Equal(0, service.ActiveWriterCount);
+    }
+
     private static IAtlasWorkspace CreateWorkspace()
     {
         var group = new GroupNode(

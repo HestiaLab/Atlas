@@ -9,8 +9,9 @@ using Atlas.Core.Results;
 namespace Atlas.Core;
 
 /// <summary>
-///     为工作区操作提供类型化便捷命令门面；
-///     每个命令构造不可变操作并经 ExecuteAsync 原子提交，行为与直接调用操作引擎一致。
+///     Provides a typed convenience command facade over workspace operations;
+///     each command builds an immutable operation and commits it atomically through ExecuteAsync,
+///     with the same behavior as calling the operation engine directly.
 /// </summary>
 public sealed class AtlasWorkspaceCommands
 {
@@ -18,7 +19,7 @@ public sealed class AtlasWorkspaceCommands
     private readonly IAtlasWorkspace workspace;
 
     /// <summary>
-    ///     为单个工作区构造命令门面。
+    ///     Initializes a command facade for a single workspace.
     /// </summary>
     public AtlasWorkspaceCommands(IAtlasWorkspace workspace)
     {
@@ -26,8 +27,9 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     在显式目标组中打开项；去重模式决定内容等价项的处理，
-    ///     baseRevision 与当前修订不一致时返回 Stale。
+    ///     Opens an item in an explicit target group; the deduplication mode decides how
+    ///     content-equivalent items are handled, and Stale is returned when baseRevision
+    ///     differs from the current revision.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> OpenItemAsync(
         DockItem item,
@@ -48,7 +50,8 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     按标识关闭项；baseRevision 与当前修订不一致时返回 Stale。
+    ///     Closes an item by identifier; Stale is returned when baseRevision differs from
+    ///     the current revision.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> CloseItemAsync(
         DockItemId itemId,
@@ -61,8 +64,9 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     激活项并更新所在组的选中状态；选中被折叠的工具组会展开它，
-    ///     baseRevision 与当前修订不一致时返回 Stale。
+    ///     Activates an item and updates the selection state of its group; selecting a
+    ///     collapsed tool group expands it, and Stale is returned when baseRevision differs
+    ///     from the current revision.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateItemAsync(
         DockItemId itemId,
@@ -75,7 +79,7 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     切换工具组的展开/折叠可见性。
+    ///     Toggles the expanded/collapsed visibility of a tool group.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> SetToolVisibilityAsync(
         LayoutNodeId groupId,
@@ -92,7 +96,7 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     更改逻辑工具栏的可见性。
+    ///     Changes the visibility of a logical tool bar.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> SetToolBarVisibilityAsync(
         LogicalSide side,
@@ -106,8 +110,9 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     原子地恢复已验证的持久化布局并返回其报告；
-    ///     报告中携带变更集与重映射/占位/剔除的处理结果。
+    ///     Atomically restores a validated persistent layout and returns its report;
+    ///     the report carries the change set and the outcome of remapping, placeholders,
+    ///     and removals.
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutRestoreResult>> RestoreAsync(
         LayoutRestoreDocument document,
@@ -130,7 +135,8 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     激活当前快照中首个匹配谓词的项；无匹配项时返回 NoChange。
+    ///     Activates the first item in the current snapshot that matches the predicate;
+    ///     returns NoChange when no item matches.
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateFirstAsync(
         Func<DockItem, bool> predicate,

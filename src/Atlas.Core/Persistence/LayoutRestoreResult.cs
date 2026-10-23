@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     报告一次成功提交的工作区恢复。
+///     Reports a successfully committed workspace restore.
 /// </summary>
 public sealed class LayoutRestoreResult
 {
@@ -21,37 +21,37 @@ public sealed class LayoutRestoreResult
     }
 
     /// <summary>
-    ///     获取唯一的原子恢复变更。
+    ///     Gets the single atomic restore change set.
     /// </summary>
     public LayoutChangeSet ChangeSet { get; }
 
     /// <summary>
-    ///     获取已提交的目标修订号。
+    ///     Gets the committed target revision.
     /// </summary>
     public long TargetRevision => ChangeSet.AfterRevision;
 
     /// <summary>
-    ///     获取源架构版本。
+    ///     Gets the source schema version.
     /// </summary>
     public string SourceSchemaVersion { get; }
 
     /// <summary>
-    ///     获取非致命的迁移警告。
+    ///     Gets the non-fatal migration warnings.
     /// </summary>
     public IReadOnlyList<string> Warnings { get; }
 
     /// <summary>
-    ///     获取提交前应用的标识重映射。
+    ///     Gets the identity remaps applied before the commit.
     /// </summary>
     public IReadOnlyList<IdentityRemap> IdentityRemaps { get; }
 
     /// <summary>
-    ///     获取恢复后以占位符保留的项。
+    ///     Gets the items retained as placeholders after the restore.
     /// </summary>
     public IReadOnlyList<DockItemId> PlaceholderItems { get; }
 
     /// <summary>
-    ///     获取按缺失内容策略移除的项。
+    ///     Gets the items removed by the missing content policy.
     /// </summary>
     public IReadOnlyList<DockItemId> DroppedItems { get; }
 }

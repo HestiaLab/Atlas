@@ -1,7 +1,7 @@
 namespace Atlas.Core.Changes;
 
 /// <summary>
-///     携带一次已提交变更的不可变事件载荷。
+///     Carries the immutable event payload of a committed change.
 /// </summary>
 public sealed class WorkspaceChangedEventArgs : EventArgs
 {
@@ -12,12 +12,12 @@ public sealed class WorkspaceChangedEventArgs : EventArgs
     }
 
     /// <summary>
-    ///     获取提交该变更的工作区。
+    ///     Gets the workspace that committed the change.
     /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
     /// <summary>
-    ///     获取不可变的已提交变更。
+    ///     Gets the immutable committed change set.
     /// </summary>
     public LayoutChangeSet ChangeSet { get; }
 }

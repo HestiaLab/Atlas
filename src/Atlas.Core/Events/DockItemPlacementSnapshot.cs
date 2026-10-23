@@ -3,7 +3,7 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     描述一个不可变的已提交项放置。
+///     Describes an immutable committed item placement.
 /// </summary>
 public sealed class DockItemPlacementSnapshot
 {
@@ -41,22 +41,22 @@ public sealed class DockItemPlacementSnapshot
     }
 
     /// <summary>
-    ///     获取放置种类。
+    ///     Gets the placement kind.
     /// </summary>
     public DockItemPlacementKind Kind { get; }
 
     /// <summary>
-    ///     获取组放置的组标识。
+    ///     Gets the group identifier for a group placement.
     /// </summary>
     public LayoutNodeId? GroupId { get; }
 
     /// <summary>
-    ///     获取自动隐藏放置的工作区边缘。
+    ///     Gets the workspace edge for an auto-hide placement.
     /// </summary>
     public WorkspaceEdge? AutoHideEdge { get; }
 
     /// <summary>
-    ///     获取放置中的从零开始的索引。
+    ///     Gets the zero-based index within the placement.
     /// </summary>
     public int Index { get; }
 

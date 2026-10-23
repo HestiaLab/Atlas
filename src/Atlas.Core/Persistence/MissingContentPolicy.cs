@@ -1,22 +1,22 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     控制未注册内容引用的恢复行为。
+///     Controls the restore behavior for unregistered content references.
 /// </summary>
 public enum MissingContentPolicy
 {
     /// <summary>
-    ///     保留放置，附带保守的占位符能力。
+    ///     Preserves the placement with conservative placeholder capabilities.
     /// </summary>
     PreservePlaceholder = 0,
 
     /// <summary>
-    ///     移除未注册的项及其放置。
+    ///     Removes unregistered items and their placements.
     /// </summary>
     DropUnknownItems = 1,
 
     /// <summary>
-    ///     拒绝整个恢复。
+    ///     Rejects the entire restore.
     /// </summary>
     FailRestore = 2,
 }

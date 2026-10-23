@@ -3,12 +3,12 @@ using Atlas.Core.Layout;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     为现有分屏提交已解析的尺寸基准。
+///     Commits a resolved size basis for an existing split.
 /// </summary>
 public sealed class ResizeSplitOperation : LayoutOperation
 {
     /// <summary>
-    ///     初始化分屏尺寸调整操作。
+    ///     Initializes a split resize operation.
     /// </summary>
     public ResizeSplitOperation(
         LayoutNodeId splitId,
@@ -19,7 +19,7 @@ public sealed class ResizeSplitOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     为历史合并创建一个键盘尺寸调整步骤。
+    ///     Creates a keyboard resize step for history merging.
     /// </summary>
     public static ResizeSplitOperation CreateKeyboard(
         LayoutNodeId splitId,
@@ -64,17 +64,18 @@ public sealed class ResizeSplitOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     获取要调整尺寸的分屏。
+    ///     Gets the split to resize.
     /// </summary>
     public LayoutNodeId SplitId { get; }
 
     /// <summary>
-    ///     获取要提交的已解析基准。
+    ///     Gets the resolved basis to commit.
     /// </summary>
     public SplitBasis Basis { get; }
 
     /// <summary>
-    ///     获取输入来源；键盘调整参与撤销历史合并，指针调整不参与。
+    ///     Gets the input source; keyboard resizes participate in undo history merging,
+    ///     pointer resizes do not.
     /// </summary>
     public ResizeSplitInputKind InputKind { get; }
 }

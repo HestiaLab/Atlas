@@ -1,7 +1,7 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     自动隐藏条中的一项：被隐藏的工具项标识 + 恢复用的 dock-back 书签。
+///     An entry in an auto-hide strip: the identifier of the hidden tool item plus the dock-back bookmark used to restore it.
 /// </summary>
 public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
 {
@@ -15,7 +15,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     private readonly bool _isInitialized;
 
     /// <summary>
-    ///     构造自动隐藏条目；项标识与书签均不得为默认值。
+    ///     Constructs an auto-hide entry; neither the item identifier nor the bookmark may be the default value.
     /// </summary>
     public AutoHideEntry(DockItemId itemId, DockBack dockBack)
     {
@@ -39,7 +39,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     被隐藏的工具项标识。
+    ///     The identifier of the hidden tool item.
     /// </summary>
     public DockItemId ItemId
     {
@@ -51,7 +51,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     恢复该条目时使用的 dock-back 书签。
+    ///     The dock-back bookmark used to restore this entry.
     /// </summary>
     public DockBack DockBack
     {
@@ -85,7 +85,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     确定两个自动隐藏条目是否相等。
+    ///     Determines whether two auto-hide entries are equal.
     /// </summary>
     public static bool operator ==(AutoHideEntry left, AutoHideEntry right)
     {
@@ -93,7 +93,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     确定两个自动隐藏条目是否不相等。
+    ///     Determines whether two auto-hide entries are unequal.
     /// </summary>
     public static bool operator !=(AutoHideEntry left, AutoHideEntry right)
     {

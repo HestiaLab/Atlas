@@ -4,23 +4,26 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     布局树中的叶子节点：承载一组有序项。
-///     文档组受文档行为状态约束且不可折叠；工具组必须挂靠语义工具栏区域。
+///     A leaf node in the layout tree: hosts an ordered set of items.
+///     Document groups are governed by document behaviour state and cannot be collapsed; tool groups must
+///     be attached to a semantic tool bar region.
 /// </summary>
 public sealed class GroupNode : LayoutNode
 {
     /// <summary>
-    ///     构造组节点并校验组合约束：文档组不可折叠、工具组不可携带编辑器状态且必须声明逻辑区域、
-    ///     项列表非空时必须有选中项且选中项属于该组、空组只允许 Persistent 保留策略。
+    ///     Constructs a group node and validates the combination constraints: document groups cannot be
+    ///     collapsed, tool groups cannot carry editor state and must declare a logical region, a non-empty
+    ///     item list must have a selected item that belongs to the group, and an empty group only allows the
+    ///     Persistent retention policy.
     /// </summary>
-    /// <param name="id">工作区作用域内的节点标识。</param>
-    /// <param name="kind">组接受的项种类。</param>
-    /// <param name="retentionPolicy">空组保留策略。</param>
-    /// <param name="visibility">已提交的组可见性。</param>
-    /// <param name="itemIds">有序的项标识。</param>
-    /// <param name="selectedItemId">选中的项标识；空组时为 null。</param>
-    /// <param name="editorState">仅文档组可携带的行为状态；缺省时使用默认值。</param>
-    /// <param name="logicalRegion">仅工具组必须携带的语义工具栏区域。</param>
+    /// <param name="id">The node identifier within the workspace scope.</param>
+    /// <param name="kind">The item kind accepted by the group.</param>
+    /// <param name="retentionPolicy">The retention policy for an empty group.</param>
+    /// <param name="visibility">The committed group visibility.</param>
+    /// <param name="itemIds">The ordered item identifiers.</param>
+    /// <param name="selectedItemId">The selected item identifier; null for an empty group.</param>
+    /// <param name="editorState">Behaviour state carried by document groups only; defaults are used when omitted.</param>
+    /// <param name="logicalRegion">The semantic tool bar region required for tool groups only.</param>
     public GroupNode(
         LayoutNodeId id,
         DockItemKind kind,
@@ -83,37 +86,37 @@ public sealed class GroupNode : LayoutNode
     }
 
     /// <summary>
-    ///     组接受的项种类。
+    ///     The item kind accepted by the group.
     /// </summary>
     public DockItemKind Kind { get; }
 
     /// <summary>
-    ///     组内最后一项离开后的处理策略。
+    ///     Policy for what happens after the last item leaves the group.
     /// </summary>
     public GroupRetentionPolicy RetentionPolicy { get; }
 
     /// <summary>
-    ///     已提交的组可见性。
+    ///     The committed group visibility.
     /// </summary>
     public GroupVisibility Visibility { get; }
 
     /// <summary>
-    ///     按显示顺序排列的项标识（只读）。
+    ///     Item identifiers in display order (read-only).
     /// </summary>
     public IReadOnlyList<DockItemId> ItemIds { get; }
 
     /// <summary>
-    ///     当前选中项的标识；空组为 null，非空组必有一个选中项（构造校验）。
+    ///     The identifier of the currently selected item; null for an empty group, while a non-empty group always has one selected item (validated at construction).
     /// </summary>
     public DockItemId? SelectedItemId { get; }
 
     /// <summary>
-    ///     文档组的编辑器行为状态；工具组恒为 <see langword="null"/>（构造校验）。
+    ///     The editor behaviour state of a document group; always <see langword="null"/> for tool groups (validated at construction).
     /// </summary>
     public EditorGroupState? EditorState { get; }
 
     /// <summary>
-    ///     工具组挂靠的语义工具栏区域；文档组恒为 <see langword="null"/>。
+    ///     The semantic tool bar region a tool group is attached to; always <see langword="null"/> for document groups.
     /// </summary>
     public LogicalRegion? LogicalRegion { get; }
 

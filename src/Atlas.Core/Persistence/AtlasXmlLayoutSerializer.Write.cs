@@ -7,7 +7,7 @@ using Atlas.Core.Layout;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     <see cref="AtlasXmlLayoutSerializer"/> 的写入成员（partial）。
+///     Write members of <see cref="AtlasXmlLayoutSerializer"/> (partial).
 /// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {

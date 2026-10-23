@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     当前选中项被关闭后，文档组选择回退激活项的策略。
+///     Policy for fallback activation of the selected item after the currently selected item is closed in a document group.
 /// </summary>
 public enum EditorActivationPolicy
 {
     /// <summary>
-    ///     选择被关闭项原索引位置的剩余项；原索引越界时取最后一项。
+    ///     Selects the remaining item at the original index of the closed item; when the index is out of range, the last item is chosen.
     /// </summary>
     Adjacent = 0,
 
     /// <summary>
-    ///     选择最近访问列表中仍存留的最靠前项。
+    ///     Selects the foremost item that still exists in the recently visited list.
     /// </summary>
     MostRecentlyVisited = 1,
 }

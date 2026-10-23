@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     为工具创建事件提供数据。
+///     Provides data for the tool created event.
 /// </summary>
 public sealed class ToolCreatedEventArgs : WorkspaceItemEventArgs
 {

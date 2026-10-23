@@ -1,18 +1,18 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     标识组的已提交可见性。
+///     Identifies the committed visibility of a group.
 /// </summary>
 public enum GroupVisibility
 {
     /// <summary>
-    ///     组参与正常的内容布局。
+    ///     The group participates in normal content layout.
     /// </summary>
     Expanded = 0,
 
     /// <summary>
-    ///     组保留在树中但不占用正常内容空间；
-    ///     仅工具组允许折叠（文档组构造校验禁止）。
+    ///     The group is retained in the tree but does not occupy normal content space;
+    ///     only tool groups may be collapsed (document groups are rejected by construction validation).
     /// </summary>
     Collapsed = 1,
 }

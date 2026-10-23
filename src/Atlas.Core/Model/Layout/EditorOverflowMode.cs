@@ -1,22 +1,22 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     文档组标签页超出标签页栏宽度时的呈现模式。
+///     Presentation mode of a document group when its tabs exceed the width of the tab bar.
 /// </summary>
 public enum EditorOverflowMode
 {
     /// <summary>
-    ///     标签页栏沿内联轴滚动。
+    ///     The tab bar scrolls along the inline axis.
     /// </summary>
     Scroll = 0,
 
     /// <summary>
-    ///     溢出的标签页通过菜单呈现。
+    ///     Overflowing tabs are presented through a menu.
     /// </summary>
     Menu = 1,
 
     /// <summary>
-    ///     标签页标题换行到额外的行。
+    ///     Tab titles wrap onto additional rows.
     /// </summary>
     Wrap = 2,
 }
