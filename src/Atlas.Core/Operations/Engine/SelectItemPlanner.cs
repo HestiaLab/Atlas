@@ -36,7 +36,18 @@ internal static class SelectItemPlanner
 
         var group = snapshot.Nodes.Values
             .OfType<GroupNode>()
-            .Single(node => node.ItemIds.Contains(operation.ItemId));
+            .SingleOrDefault(node => node.ItemIds.Contains(operation.ItemId));
+        if (group is null)
+        {
+            return WorkspacePlan.Failure(
+                new WorkspaceError(
+                    WorkspaceErrorCode.TargetRejectedByPolicy,
+                    operation.Kind,
+                    "ATLAS-SELECT-NO-GROUP",
+                    "Atlas.Select.NoGroup",
+                    itemId: operation.ItemId));
+        }
+
         var editorState = UpdateRecentVisits(group, operation.ItemId);
         var visibility = group.Kind == DockItemKind.Tool
             ? GroupVisibility.Expanded

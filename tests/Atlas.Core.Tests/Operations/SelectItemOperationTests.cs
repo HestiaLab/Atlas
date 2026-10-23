@@ -101,6 +101,60 @@ public sealed class SelectItemOperationTests
         Assert.Equal(0, workspace.Current.Revision);
     }
 
+    [Fact]
+    public async Task Selecting_auto_hidden_only_item_returns_typed_failure()
+    {
+        var autoHidden = CreateTool("auto-hidden");
+        var group = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            Array.Empty<DockItemId>(),
+            selectedItemId: null,
+            logicalRegion: LogicalRegion.InlineStartUpper);
+        var strip = new AutoHideStripState(
+            WorkspaceEdge.InlineStart,
+            new[]
+            {
+                new AutoHideEntry(
+                    autoHidden.Id,
+                    new DockBack(
+                        group.Id,
+                        preferredIndex: 0,
+                        fallbackEdge: WorkspaceEdge.InlineStart)),
+            });
+        var snapshot = new WorkspaceSnapshot(
+            new WorkspaceId("workspace"),
+            revision: 0,
+            group.Id,
+            new[] { new KeyValuePair<LayoutNodeId, LayoutNode>(group.Id, group) },
+            new[] { new KeyValuePair<DockItemId, DockItem>(autoHidden.Id, autoHidden) },
+            Array.Empty<KeyValuePair<LogicalSide, ToolBarState>>(),
+            new[]
+            {
+                new KeyValuePair<LogicalRegion, ToolBarOrderState>(
+                    LogicalRegion.InlineStartUpper,
+                    new ToolBarOrderState(
+                        LogicalRegion.InlineStartUpper,
+                        new[] { autoHidden.Id })),
+            },
+            new[]
+            {
+                new KeyValuePair<WorkspaceEdge, AutoHideStripState>(
+                    WorkspaceEdge.InlineStart,
+                    strip),
+            });
+        await using var workspace = new AtlasWorkspace(
+            snapshot,
+            new DefaultWorkspaceOperationPlanner());
+
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(autoHidden.Id));
+
+        Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, result.Error!.Code);
+        Assert.Equal(0, workspace.Current.Revision);
+    }
+
     private static AtlasWorkspace CreateWorkspace(
         GroupNode group,
         params DockItem[] items)

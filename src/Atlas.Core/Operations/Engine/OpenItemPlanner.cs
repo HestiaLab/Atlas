@@ -136,7 +136,9 @@ internal static class OpenItemPlanner
         var orders = snapshot.ToolBarOrders.ToDictionary(pair => pair.Key, pair => pair.Value);
         if (target.LogicalRegion is LogicalRegion region)
         {
-            var order = orders[region].ItemIds.ToList();
+            var order = orders.TryGetValue(region, out var currentOrder)
+                ? currentOrder.ItemIds.ToList()
+                : target.ItemIds.ToList();
             order.Insert(targetIndex, operation.Item.Id);
             orders[region] = new ToolBarOrderState(region, order);
         }

@@ -80,13 +80,14 @@ internal static class DockDocumentPlanner
         if (operation.Zone == DocumentDockZone.Center)
         {
             target = (GroupNode)nodes[target.Id];
-            var targetItems = target.ItemIds.Append(item.Id).ToArray();
+            var targetItems = target.ItemIds.ToList();
+            targetItems.Insert(CenterInsertionIndex(snapshot, target, item), item.Id);
             nodes[target.Id] = new GroupNode(
                 target.Id,
                 target.Kind,
                 target.RetentionPolicy,
                 target.Visibility,
-                targetItems,
+                targetItems.ToArray(),
                 item.Id,
                 UpdateRecentVisits(target.EditorState!, item.Id));
         }
@@ -126,6 +127,30 @@ internal static class DockDocumentPlanner
                 snapshot.ToolBars,
                 snapshot.ToolBarOrders,
                 snapshot.AutoHideStrips));
+    }
+
+    private static int CenterInsertionIndex(
+        WorkspaceSnapshot snapshot,
+        GroupNode target,
+        DockItem item)
+    {
+        if (item.DocumentState?.IsPinned != true)
+        {
+            return target.ItemIds.Count;
+        }
+
+        var pinnedPrefixLength = 0;
+        foreach (var itemId in target.ItemIds)
+        {
+            if (snapshot.Items[itemId].DocumentState?.IsPinned != true)
+            {
+                break;
+            }
+
+            pinnedPrefixLength++;
+        }
+
+        return pinnedPrefixLength;
     }
 
     private static void RemoveFromSource(

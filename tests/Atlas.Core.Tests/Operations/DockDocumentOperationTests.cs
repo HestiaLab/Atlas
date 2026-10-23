@@ -36,6 +36,104 @@ public sealed class DockDocumentOperationTests
         Assert.Equal(new[] { targetItem.Id, moved.Id }, Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
     }
 
+    [Fact]
+    public async Task Center_drop_of_pinned_document_inserts_before_unpinned_target_items()
+    {
+        var moved = CreatePinnedDocument("moved");
+        var sourceSibling = CreateDocument("source-sibling");
+        var targetUnpinned = CreateDocument("target-unpinned");
+        var source = CreateGroup("source", GroupRetentionPolicy.Persistent, moved, sourceSibling);
+        var target = CreateGroup("target", GroupRetentionPolicy.Persistent, targetUnpinned);
+        var root = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspace(
+            root.Id,
+            new LayoutNode[] { root, source, target },
+            moved,
+            sourceSibling,
+            targetUnpinned);
+
+        var result = await workspace.ExecuteAsync(
+            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
+        Assert.Equal(new[] { moved.Id, targetUnpinned.Id }, currentTarget.ItemIds);
+        Assert.Equal(moved.Id, currentTarget.SelectedItemId);
+
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(
+            new[] { moved.Id, sourceSibling.Id },
+            Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]).ItemIds);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(
+            new[] { moved.Id, targetUnpinned.Id },
+            Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
+    }
+
+    [Fact]
+    public async Task Center_drop_of_pinned_document_inserts_after_existing_pinned_prefix()
+    {
+        var moved = CreatePinnedDocument("moved");
+        var sourceSibling = CreateDocument("source-sibling");
+        var targetPinned = CreatePinnedDocument("target-pinned");
+        var targetUnpinned = CreateDocument("target-unpinned");
+        var source = CreateGroup("source", GroupRetentionPolicy.Persistent, moved, sourceSibling);
+        var target = CreateGroup(
+            "target",
+            GroupRetentionPolicy.Persistent,
+            targetPinned,
+            targetUnpinned);
+        var root = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspace(
+            root.Id,
+            new LayoutNode[] { root, source, target },
+            moved,
+            sourceSibling,
+            targetPinned,
+            targetUnpinned);
+
+        var result = await workspace.ExecuteAsync(
+            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
+        Assert.Equal(
+            new[] { targetPinned.Id, moved.Id, targetUnpinned.Id },
+            currentTarget.ItemIds);
+    }
+
+    [Fact]
+    public async Task Center_drop_of_unpinned_document_appends_after_existing_pinned_prefix()
+    {
+        var moved = CreateDocument("moved");
+        var sourceSibling = CreateDocument("source-sibling");
+        var targetPinned = CreatePinnedDocument("target-pinned");
+        var targetUnpinned = CreateDocument("target-unpinned");
+        var source = CreateGroup("source", GroupRetentionPolicy.Persistent, moved, sourceSibling);
+        var target = CreateGroup(
+            "target",
+            GroupRetentionPolicy.Persistent,
+            targetPinned,
+            targetUnpinned);
+        var root = CreateSplit("root", source.Id, target.Id);
+        await using var workspace = CreateWorkspace(
+            root.Id,
+            new LayoutNode[] { root, source, target },
+            moved,
+            sourceSibling,
+            targetPinned,
+            targetUnpinned);
+
+        var result = await workspace.ExecuteAsync(
+            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+
+        Assert.Equal(WorkspaceResultStatus.Success, result.Status);
+        var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
+        Assert.Equal(
+            new[] { targetPinned.Id, targetUnpinned.Id, moved.Id },
+            currentTarget.ItemIds);
+    }
+
     [Theory]
     [InlineData(DocumentDockZone.InlineStart, SplitAxis.InlineChildren, true)]
     [InlineData(DocumentDockZone.InlineEnd, SplitAxis.InlineChildren, false)]
@@ -184,5 +282,15 @@ public sealed class DockDocumentOperationTests
             DockItemKind.Document,
             new ContentReference("document", id),
             DockItemCapabilityPresets.Document);
+    }
+
+    private static DockItem CreatePinnedDocument(string id)
+    {
+        return new DockItem(
+            new DockItemId(id),
+            DockItemKind.Document,
+            new ContentReference("document", id),
+            DockItemCapabilityPresets.Document,
+            documentState: new DocumentState(isPinned: true, isPreview: false));
     }
 }
