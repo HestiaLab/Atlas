@@ -184,6 +184,19 @@ These files are more than implementation details:
 Changing these contracts requires syncing mirrors, fixtures, and tests; check
 ADR requirements first when compatibility policy is involved.
 
+Two additional implicit cross-boundary contracts are enforced by convention
+and documented in code comments at both ends:
+
+- `data-atlas-command-capabilities` carries the numeric value of the Core
+  `DockItemCapabilities` flags enum (frozen by ADR-0002). The TypeScript
+  controller tests bit `1 << 1` (`CanMove`); Core capability renumbering is a
+  public API change and must keep that bit stable.
+- The default keyboard binding list exists twice: C#
+  `AtlasKeyboardCommandMap.Default` is the authoritative map Host-driven
+  controllers send, while `ClientScripts/controller.ts`
+  `defaultKeyboardBindings` is a mirrored fallback for static browser
+  fixtures. The two lists must stay in sync.
+
 ## 7. Where To Continue Reading
 
 - Product behavior: [SRS](../SRS.md)

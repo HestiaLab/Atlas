@@ -137,6 +137,16 @@ Atlas.Core ← Atlas.Blazor ← Atlas.Showcase (teaching demo)
 
 修改这些合同必须同步修改 mirrors、fixtures 和测试；涉及兼容策略时先检查 ADR 要求。
 
+另有两条隐性跨边界合同按约定执行，并在两侧代码注释中记录：
+
+- `data-atlas-command-capabilities` 携带 Core `DockItemCapabilities` 标志枚举
+  （ADR-0002 冻结）的数值。TypeScript 控制器检测位 `1 << 1`（`CanMove`）；
+  Core 能力位重新编号属于公共 API 变更，必须保持该位稳定。
+- 默认键盘绑定列表存在两份：C# `AtlasKeyboardCommandMap.Default` 是
+  Host 驱动控制器下发的权威映射，而 `ClientScripts/controller.ts` 的
+  `defaultKeyboardBindings` 是静态浏览器夹具使用的镜像回退。两份列表必须
+  保持同步。
+
 ## 7. 从哪里继续阅读
 
 - 产品行为：[SRS](../SRS.md)

@@ -72,6 +72,13 @@ internal static class AtlasDefinitionReconciler
                     && target.Id == currentGroup.Id
                     && target.Kind == currentGroup.Kind))
             {
+                // ADR-0004 §5.5 names INVALID_LAYOUT_DATA for deleting or
+                // changing a group that still hosts runtime items. The merge
+                // rejects the candidate before any operation is submitted, so
+                // the observable contract (the whole reconciliation fails and
+                // nothing changes) holds, but the Host surfaces the safe
+                // AtlasHostErrorCode.DefinitionInvalid instead of the Core
+                // error code.
                 return false;
             }
 

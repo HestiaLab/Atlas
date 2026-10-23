@@ -161,6 +161,9 @@ internal sealed class AtlasGroupView : ComponentBase
         if (Group.SelectedItemId is not null)
         {
             var selected = Items.First(item => item.Id == Group.SelectedItemId.Value);
+            // aria-labelledby is only emitted for non-empty groups; the DOM
+            // metadata manifest lists it as required for the golden fixture,
+            // which renders populated groups only.
             builder.AddAttribute(
                 6,
                 "aria-labelledby",
@@ -357,6 +360,10 @@ internal sealed class AtlasGroupView : ComponentBase
                 10,
                 "data-atlas-insertion-index",
                 itemIndex.ToString(CultureInfo.InvariantCulture));
+            // Frozen capability contract: the numeric value of the Core
+            // DockItemCapabilities flags enum (ADR-0002); the TS controller
+            // tests bit 1<<1 (CanMove). The same contract applies to the
+            // panel header and toolbar entry projections.
             builder.AddAttribute(
                 11,
                 "data-atlas-command-capabilities",
@@ -373,7 +380,6 @@ internal sealed class AtlasGroupView : ComponentBase
 
         builder.CloseElement();
     }
-
     private void RenderToolHeader(RenderTreeBuilder builder)
     {
         // 工具组头部只呈现选中项：与文档标签条不同，工具面板

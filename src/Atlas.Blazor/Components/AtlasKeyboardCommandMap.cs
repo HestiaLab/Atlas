@@ -128,7 +128,9 @@ public sealed class AtlasKeyboardBinding
 public sealed class AtlasKeyboardCommandMap
 {
     // Built-in default command map: the common tab switch, close, and focus
-    // movement chords.
+    // movement chords. The TypeScript controller keeps a mirrored fallback
+    // copy (ClientScripts/controller.ts defaultKeyboardBindings) for
+    // static-fixture attachments; the two lists must stay in sync.
     private static readonly AtlasKeyboardBinding[] DefaultBindings =
     {
         new(new AtlasKeyboardChord("Tab", control: true), AtlasKeyboardCommand.NextTab),

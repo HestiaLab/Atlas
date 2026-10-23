@@ -37,6 +37,10 @@ import { SplitResizeSession } from "./split-resize-session";
 // reuse session ids the host already consumed, so the second drag would be
 // rejected as a duplicate (consumedDragSessions).
 let globalDragSequence = 0;
+// Built-in keyboard defaults. The C# AtlasKeyboardCommandMap.Default carries
+// the authoritative map for Host-driven controllers and always sends its
+// bindings; this copy only serves controllers attached directly by the
+// static browser fixtures. The two lists must stay in sync.
 const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("Tab", "next-tab", true),
   binding("Tab", "previous-tab", true, true),
@@ -606,6 +610,10 @@ export class AtlasInteractionController {
   }
 
   private canMove(source: HTMLElement): boolean {
+    // Frozen capability contract: data-atlas-command-capabilities carries
+    // the numeric value of the Core DockItemCapabilities flags enum
+    // (ADR-0002). Bit 1<<1 is CanMove; adding or renumbering capability
+    // flags in Core is a public API change that must keep this bit stable.
     const capabilities = Number(source.dataset.atlasCommandCapabilities);
     return Number.isSafeInteger(capabilities)
       && capabilities >= 0
