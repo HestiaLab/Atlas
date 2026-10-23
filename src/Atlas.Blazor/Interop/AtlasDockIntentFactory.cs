@@ -43,7 +43,7 @@ internal static class AtlasDockIntentFactory
             {
                 if (message.InsertionIndex is int insertionIndex)
                 {
-                    var sourceIndex = target.ItemIds.ToList().IndexOf(itemId);
+                    var sourceIndex = IndexOf(target.ItemIds, itemId);
                     if (sourceIndex < 0
                         || insertionIndex < 0
                         || insertionIndex > target.ItemIds.Count)
@@ -123,7 +123,7 @@ internal static class AtlasDockIntentFactory
                     return null;
                 }
 
-                var sourceIndex = targetOrder.ItemIds.ToList().IndexOf(itemId);
+                var sourceIndex = IndexOf(targetOrder.ItemIds, itemId);
                 var targetIndex = wireIndex > sourceIndex
                     ? wireIndex - 1
                     : wireIndex;
@@ -161,7 +161,7 @@ internal static class AtlasDockIntentFactory
                 return null;
             }
 
-            var sourceIndex = target.ItemIds.ToList().IndexOf(itemId);
+            var sourceIndex = IndexOf(target.ItemIds, itemId);
             if (sourceIndex >= 0)
             {
                 if (message.TargetKind != "toolbar-insertion"
@@ -174,8 +174,8 @@ internal static class AtlasDockIntentFactory
                 }
 
                 var targetItemId = new DockItemId(message.TargetItemId);
-                var targetItemIndex = target.ItemIds.ToList().IndexOf(targetItemId);
-                var targetToolBarIndex = targetOrder.ItemIds.ToList().IndexOf(targetItemId);
+                var targetItemIndex = IndexOf(target.ItemIds, targetItemId);
+                var targetToolBarIndex = IndexOf(targetOrder.ItemIds, targetItemId);
                 if (targetItemIndex < 0
                     || targetToolBarIndex < 0
                     || toolbarWireIndex < targetToolBarIndex
@@ -210,5 +210,18 @@ internal static class AtlasDockIntentFactory
         }
 
         return operation;
+    }
+
+    private static int IndexOf(IReadOnlyList<DockItemId> ids, DockItemId target)
+    {
+        for (var index = 0; index < ids.Count; index++)
+        {
+            if (ids[index] == target)
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 }

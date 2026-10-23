@@ -31,7 +31,11 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     private readonly AtlasFocusCoordinator focusCoordinator = new();
 
     // 已消费的拖拽会话标识；JS 消息可重放，须一次性消费。
+    // 队列保留消费顺序，超过上限时修剪最旧会话；被修剪的旧会话重放
+    // 仍会被 BaseRevision 过期检查拒绝，因此窗口裁剪不削弱防重放保证。
     private readonly HashSet<string> consumedDragSessions = new(StringComparer.Ordinal);
+    private readonly Queue<string> consumedDragSessionOrder = new();
+    private const int MaxConsumedDragSessions = 256;
 
     // 待清除的分割预览会话；渲染后统一通知控制器清理。
     private readonly HashSet<string> pendingSplitPreviewClears = new(StringComparer.Ordinal);
@@ -417,7 +421,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 }
 
                 failedInteractionConfiguration = interactionConfiguration;
-                await ReportErrorAsync(
+                await SetErrorAsync(
                     new AtlasHostError(
                         AtlasHostErrorCode.Unexpected,
                         "ATLAS-INTERACTION-ATTACH-FAILED",
@@ -480,6 +484,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         ownsActiveWorkspace = ownsWorkspace;
         interactionGeneration++;
         consumedDragSessions.Clear();
+        consumedDragSessionOrder.Clear();
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }

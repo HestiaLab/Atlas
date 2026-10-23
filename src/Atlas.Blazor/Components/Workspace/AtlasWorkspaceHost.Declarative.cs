@@ -39,7 +39,7 @@ public sealed partial class AtlasWorkspaceHost
             if (!string.Equals(processedFingerprint, fingerprint, StringComparison.Ordinal))
             {
                 processedFingerprint = fingerprint;
-                await ReportErrorAsync(DefinitionError(WorkspaceId));
+                await SetErrorAsync(DefinitionError(WorkspaceId));
                 await InvokeAsync(StateHasChanged);
             }
 
@@ -75,7 +75,7 @@ public sealed partial class AtlasWorkspaceHost
                 WorkspaceOptions);
             if (!result.Succeeded)
             {
-                await ReportErrorAsync(DefinitionError(WorkspaceId));
+                await SetErrorAsync(DefinitionError(WorkspaceId));
             }
             else
             {
@@ -99,7 +99,7 @@ public sealed partial class AtlasWorkspaceHost
                 declaredItemIds,
                 out var merged))
         {
-            await ReportErrorAsync(DefinitionError(WorkspaceId));
+            await SetErrorAsync(DefinitionError(WorkspaceId));
             await InvokeAsync(StateHasChanged);
             return;
         }
@@ -110,7 +110,7 @@ public sealed partial class AtlasWorkspaceHost
                 activeWorkspace.Current.Revision));
         if (reconcile.Status == WorkspaceResultStatus.Failure)
         {
-            await ReportErrorAsync(DefinitionError(WorkspaceId));
+            await SetErrorAsync(DefinitionError(WorkspaceId));
         }
         else
         {

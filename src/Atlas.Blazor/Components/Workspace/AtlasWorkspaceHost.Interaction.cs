@@ -238,9 +238,17 @@ public sealed partial class AtlasWorkspaceHost
 
         // 会话在此一次性消费：消息可能被 JS 重复投递，
         // 第二次 Add 返回 false 即被丢弃，保证一次拖拽至多提交一个操作。
-        if (operation is null || !consumedDragSessions.Add(message.SessionId))
+        if (operation is null || consumedDragSessions.Contains(message.SessionId))
         {
             return;
+        }
+
+        consumedDragSessions.Add(message.SessionId);
+        consumedDragSessionOrder.Enqueue(message.SessionId);
+        if (consumedDragSessionOrder.Count > MaxConsumedDragSessions
+            && consumedDragSessionOrder.TryDequeue(out var oldestSession))
+        {
+            consumedDragSessions.Remove(oldestSession);
         }
 
         await activeWorkspace.ExecuteAsync(operation);
@@ -330,19 +338,19 @@ public sealed partial class AtlasWorkspaceHost
             return null;
         }
 
-        var currentIndex = group.ItemIds.ToList().IndexOf(activeItemId);
+        var currentIndex = -1;
+        for (var index = 0; index < group.ItemIds.Count; index++)
+        {
+            if (group.ItemIds[index] == activeItemId)
+            {
+                currentIndex = index;
+                break;
+            }
+        }
+
         var nextIndex = (currentIndex + direction + group.ItemIds.Count)
             % group.ItemIds.Count;
         return new SelectItemOperation(group.ItemIds[nextIndex]);
-    }
-
-    private async Task ReportErrorAsync(AtlasHostError error)
-    {
-        hostError = error;
-        if (OnError.HasDelegate)
-        {
-            await OnError.InvokeAsync(error);
-        }
     }
 
     private async Task SetErrorAsync(AtlasHostError error)

@@ -399,7 +399,7 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(
             11,
             "data-atlas-insertion-index",
-            Group.ItemIds.ToList().IndexOf(selected.Id).ToString(CultureInfo.InvariantCulture));
+            IndexOf(Group.ItemIds, selected.Id).ToString(CultureInfo.InvariantCulture));
         RenderHeader(builder, selected, isSelected: true);
         builder.CloseElement();
     }
@@ -531,6 +531,19 @@ internal sealed class AtlasGroupView : ComponentBase
         var selectedId = Group.SelectedItemId
             ?? throw new InvalidOperationException("A non-empty group must select an item.");
         return Items.First(item => item.Id == selectedId);
+    }
+
+    private static int IndexOf(IReadOnlyList<DockItemId> ids, DockItemId target)
+    {
+        for (var index = 0; index < ids.Count; index++)
+        {
+            if (ids[index] == target)
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     private string GroupClass()

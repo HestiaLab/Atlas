@@ -253,17 +253,18 @@
   min-inline-size: 100%;
 }
 
-/* 放置高亮：非 document group 元素保持整块指示
-   （panel-header-insertion / toolbar-insertion / drop-scaffold /
-   toolbar-region / panel-region-center / tab 上的 document-center） */
+/* Drop highlight: non-document-group elements keep a whole-element
+   indicator (panel-header-insertion / toolbar-insertion / drop-scaffold /
+   toolbar-region / panel-region-center / document-center on a tab). */
 [data-atlas-drop-preview]:not([data-atlas-group-kind="document"]) {
   outline: var(--atlas-focus-ring-width) solid var(--atlas-accent);
   outline-offset: -2px;
   background: color-mix(in srgb, var(--atlas-accent) var(--atlas-drop-highlight-alpha-soft), transparent);
 }
 
-/* document group 本体不再整块上色；五区形状由 ::before 绘制。
-   形状带宽 25% 与 documentTargetKind 判定严格一致（所见即所得）。 */
+/* The document group body is not filled as a whole; the five zone shapes
+   are drawn by ::before. The 25% band widths must stay exactly consistent
+   with the documentTargetKind decision (what you see is what you get). */
 [data-atlas-group-kind="document"][data-atlas-drop-preview] {
   outline: none;
   background: transparent;
