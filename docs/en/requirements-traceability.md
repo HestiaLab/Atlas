@@ -13,6 +13,8 @@ implementation and verification. The normative source for design mapping is
 - Formal requirement blocks: 151 (REQ-F 142 + REQ-NF 9)
 - Current functional implementation status: see the P8 item-by-item audit;
   Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
+  (2026-10-24 re-review after ADR-0024~0034: all 151 rows re-checked, no
+  status changes — see the P8 audit's re-review note)
 - Latest measured gate baseline (2026-10-23, branch
   `main`, after Phase 0 correctness fixes and the
   Phase 1 structural-refactor slice and ADR-0024~0034 implementation):
@@ -20,9 +22,11 @@ implementation and verification. The normative source for design mapping is
   build/test and format pass; Core line coverage 91.25% / branch 81.07%.
   The TypeScript typecheck and 51 JS tests (50 protocol + 1 split-geometry
   fixture parity) pass; `build:js` regenerates the committed bundle. Release
-  build/test and Release pack also pass. The dual-Host
-  real-browser fixture was not re-run in this slice and remains recorded
-  from the pre-Phase-0 baseline. The P8 historical baseline
+  build/test and Release pack also pass. On 2026-10-24 the dual-Host
+  real-browser fixtures (P5/P7/P8) were re-run against the committed
+  atlas.js via a local static server: P5 same-host/cross-Host terminal
+  intents and toolbar-insertion, P7 sandbox boundary, and P8 reduced-motion/
+  splitter-FPS/dispose checks passed with no console errors. The P8 historical baseline
   (264 Core + 43 Blazor + 17 Node) is retained in its row below; the
   pre-refactor measurement was 275 Core + 114 Blazor + 43 JS
 - Completed engineering work: P0~P8 Verified; DEV-GATE-001~007 Closed

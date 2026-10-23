@@ -13,7 +13,8 @@
   151 = REQ-F 142 + REQ-NF 9
 - 正式需求块：151（REQ-F 142 + REQ-NF 9）
 - 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 18、In Progress 80、
-  Not Started 5、Deferred 2
+  Not Started 5、Deferred 2（2026-10-24 于 ADR-0024~0034 后复核：151 行全部
+  重新核对，状态无变更——见 P8 审计的复核说明）
 - 最新实测门禁基线（2026-10-23，分支 `main`，Phase 0
   正确性修复、Phase 1 结构重构切片与 ADR-0024~0034 实施后）：
   341 Core + 130 Blazor tests；Core 行覆盖率 91.25% / 分支覆盖率 81.07%；

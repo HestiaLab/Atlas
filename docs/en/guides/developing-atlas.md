@@ -130,7 +130,9 @@ Suppose the behavior also needs a new Razor projection. Then:
 
 If you add or change a public symbol:
 
-- Update the matching `PublicAPI.Unshipped.txt` baseline.
+- Add new entries to the matching `PublicAPI.Unshipped.txt`; the first stable
+  baseline lives in `PublicAPI.Shipped.txt` and breaking changes require a
+  major version plus a replacement ADR (ADR-0029).
 - Add a compile-time or behavior contract test.
 - Check whether an ADR is required (public API, package structure, protocol,
   persistence compatibility, or security boundaries).

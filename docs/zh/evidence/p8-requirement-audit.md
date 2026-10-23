@@ -180,3 +180,11 @@
 - Verified 仅用于已有明确 Phase Exit 与分层证据覆盖的合同；不会从 Designed 自动升级。
 - Implemented 表示代码存在，但仍需 P8 的逐 AC、可访问性或兼容性复核。
 - In Progress 明确表示只覆盖部分 AC；Not Started/Deferred 不伪装为完成。
+
+### 2026-10-24 复核
+
+ADR-0024~0034 实施批次与 `PublicAPI.Shipped` 基线迁移完成后，对照当前实现与
+测试证据（341 Core + 130 Blazor + 51 JS tests）复核了全部 151 行。状态无变更：
+每行 In Progress 仍只覆盖部分 AC；REQ-F-047（重置布局）保持 Not Started，
+因为 `ResetWorkspace` 按 ADR-0029 仍为保留值；Deferred 行保持 Deferred。
+升级为 Implemented/Verified 需先闭合各行记录的逐 AC 缺口。
