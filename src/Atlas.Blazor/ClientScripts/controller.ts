@@ -4,13 +4,22 @@ import {
   type AtlasControllerOptions,
   type AtlasDotNetReceiver,
   type AtlasDragSourceKind,
-  type AtlasDropTargetKind,
   type AtlasKeyboardCommand,
   type AtlasKeyboardBinding,
   type AtlasInteractionMessage,
   isValidControllerIdentity
 } from "./protocol";
 import domMetadata from "./dom-metadata-manifest.json";
+import { resolveDropTarget } from "./drop-target";
+import {
+  captureDocumentGeometry,
+  captureDocumentTabGeometry,
+  clearDropPreview,
+  createDragSession,
+  DragPreview,
+  previewDropTarget,
+  type DragSession
+} from "./drag-session";
 import { AtlasSandboxController } from "./sandbox";
 import {
   basisFor,
@@ -22,7 +31,6 @@ import {
 } from "./split-geometry";
 import { SplitResizeSession } from "./split-resize-session";
 
-const controllers = new Map<string, AtlasInteractionController>();
 // Monotonic drag-session counter shared across controller instances. Blazor
 // replaces the Host root element after a committed change, which disposes and
 // re-attaches the controller; a per-instance sequence would restart at 1 and
@@ -40,33 +48,6 @@ const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("ArrowDown", "focus-block-end", false, false, true)
 ];
 
-interface DropTarget {
-  readonly element: HTMLElement;
-  readonly kind: AtlasDropTargetKind;
-  readonly groupId: string;
-  readonly targetItemId?: string;
-  readonly logicalRegion?: string;
-  readonly insertionIndex?: number;
-}
-
-interface ActiveDrag {
-  readonly source: HTMLElement;
-  readonly pointerId: number;
-  readonly startX: number;
-  readonly startY: number;
-  readonly sessionId: string;
-  readonly generation: number;
-  readonly baseRevision: number;
-  readonly itemId: string;
-  readonly sourceKind: AtlasDragSourceKind;
-  readonly sourceGroupId?: string;
-  documentGeometry: ReadonlyMap<HTMLElement, DOMRect>;
-  documentTabGeometry: ReadonlyMap<HTMLElement, DOMRect>;
-  dragging: boolean;
-  preview: HTMLElement | undefined;
-  target?: DropTarget;
-}
-
 export class AtlasInteractionController {
   private keyboardStepPixels: number;
   private keyboardCommitDelayMilliseconds: number;
@@ -76,11 +57,9 @@ export class AtlasInteractionController {
   private readonly reducedMotionQuery: MediaQueryList | undefined;
   private readonly sandboxController: AtlasSandboxController;
   private readonly resizeSession: SplitResizeSession;
-  private activeDrag: ActiveDrag | undefined;
+  private readonly dragPreview: DragPreview;
+  private activeDrag: DragSession | undefined;
   private dragSequence = 0;
-  private dragPreviewFrame: number | undefined;
-  private pendingDragPreviewPosition:
-    { readonly preview: HTMLElement; readonly x: number; readonly y: number } | undefined;
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
   private keyboardRatio: number | undefined;
@@ -107,6 +86,7 @@ export class AtlasInteractionController {
     this.reducedMotionQuery = this.ownerWindow?.matchMedia(
       "(prefers-reduced-motion: reduce)");
     this.sandboxController = new AtlasSandboxController(root, identity);
+    this.dragPreview = new DragPreview(this.ownerDocument, this.ownerWindow);
     this.resizeSession = new SplitResizeSession({
       preview: (split, ratio) => this.preview(split, ratio),
       clearPreview: split => this.clearPreview(split),
@@ -211,7 +191,7 @@ export class AtlasInteractionController {
         this.resizeSession.cancel();
         globalDragSequence += 1;
         this.dragSequence = globalDragSequence;
-        this.activeDrag = {
+        this.activeDrag = createDragSession({
           source: dragSource,
           pointerId: event.pointerId,
           startX: event.clientX,
@@ -223,12 +203,8 @@ export class AtlasInteractionController {
           sourceKind,
           ...(sourceGroupId === undefined
             ? {}
-            : { sourceGroupId }),
-          documentGeometry: new Map(),
-          documentTabGeometry: new Map(),
-          dragging: false,
-          preview: undefined
-        };
+            : { sourceGroupId })
+        });
         dragSource.setPointerCapture?.(event.pointerId);
         event.preventDefault();
         return;
@@ -248,23 +224,33 @@ export class AtlasInteractionController {
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
       let previewCreated = false;
-      if (!drag.dragging
+      if (drag.phase === "pressed"
         && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 4) {
-        drag.documentGeometry = this.captureDocumentGeometry();
-        drag.documentTabGeometry = this.captureDocumentTabGeometry();
-        drag.dragging = true;
-        drag.preview = this.createDragPreview(drag, event.clientX, event.clientY);
+        drag.documentGeometry = captureDocumentGeometry(this.root);
+        drag.documentTabGeometry = captureDocumentTabGeometry(this.root);
+        drag.phase = "dragging";
+        drag.preview = this.dragPreview.create(
+          drag,
+          event.clientX,
+          event.clientY,
+          this.findOverlayRoot());
         previewCreated = true;
         this.root.dataset.atlasDragging = "true";
       }
 
-      if (drag.dragging) {
+      if (drag.phase === "dragging") {
         if (!previewCreated) {
-          this.positionDragPreview(drag.preview, event.clientX, event.clientY);
+          this.dragPreview.position(drag.preview, event.clientX, event.clientY);
         }
-        this.previewDropTarget(
+        previewDropTarget(
           drag,
-          this.resolveDropTarget(event.clientX, event.clientY, event.target, drag));
+          resolveDropTarget(
+            this.root,
+            this.ownerDocument,
+            event.clientX,
+            event.clientY,
+            event.target,
+            drag));
       }
       return;
     }
@@ -275,8 +261,10 @@ export class AtlasInteractionController {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
-      const target = drag.dragging
-        ? this.resolveDropTarget(
+      const target = drag.phase === "dragging"
+        ? resolveDropTarget(
+            this.root,
+            this.ownerDocument,
             event.clientX,
             event.clientY,
             event.target,
@@ -588,100 +576,10 @@ export class AtlasInteractionController {
       return;
     }
 
-    this.clearDropPreview(drag.target);
-    this.clearDragPreview(drag.preview);
+    clearDropPreview(drag.target);
+    this.dragPreview.clear(drag.preview, this.findOverlayRoot());
     this.root.removeAttribute("data-atlas-dragging");
     drag.source.releasePointerCapture?.(drag.pointerId);
-  }
-
-  private createDragPreview(
-    drag: ActiveDrag,
-    x: number,
-    y: number): HTMLElement | undefined {
-    const document = this.ownerDocument;
-    const overlayRoot = this.findOverlayRoot();
-    if (!document || !overlayRoot) {
-      return undefined;
-    }
-
-    overlayRoot.dataset.atlasDragSessionId = drag.sessionId;
-
-    const preview = document.createElement("div");
-    preview.className = "atlas-v2-drag-preview";
-    preview.dataset.atlasDragPreview = drag.sourceKind;
-    preview.setAttribute("aria-hidden", "true");
-    preview.setAttribute("role", "presentation");
-    preview.style.setProperty("pointer-events", "none");
-    this.writeDragPreviewPosition(preview, x, y);
-
-    const label = drag.source.getAttribute("aria-label")?.trim()
-      || drag.source.textContent?.trim()
-      || drag.itemId;
-
-    const iconKey = drag.source
-      .querySelector<HTMLElement>(".atlas-v2-item-icon[data-atlas-icon]")
-      ?.dataset.atlasIcon;
-    if (iconKey) {
-      const icon = document.createElement("span");
-      icon.className = "atlas-v2-item-icon";
-      icon.dataset.atlasIcon = iconKey;
-      preview.appendChild(icon);
-    }
-
-    const title = document.createElement("span");
-    title.className = "atlas-v2-drag-preview-title";
-    title.textContent = label;
-    preview.appendChild(title);
-
-    overlayRoot.appendChild(preview);
-    return preview;
-  }
-
-  private positionDragPreview(
-    preview: HTMLElement | undefined,
-    x: number,
-    y: number): void {
-    if (!preview) {
-      return;
-    }
-
-    this.pendingDragPreviewPosition = { preview, x, y };
-    if (this.dragPreviewFrame !== undefined) {
-      return;
-    }
-
-    const flush = (): void => {
-      this.dragPreviewFrame = undefined;
-      const pending = this.pendingDragPreviewPosition;
-      this.pendingDragPreviewPosition = undefined;
-      if (pending) {
-        this.writeDragPreviewPosition(pending.preview, pending.x, pending.y);
-      }
-    };
-
-    if (this.ownerWindow) {
-      this.dragPreviewFrame = this.ownerWindow.requestAnimationFrame(flush);
-    } else {
-      flush();
-    }
-  }
-
-  private writeDragPreviewPosition(preview: HTMLElement, x: number, y: number): void {
-    preview.style.setProperty(
-      "transform",
-      `translate3d(${x + 12}px, ${y + 12}px, 0)`);
-  }
-
-  private clearDragPreview(preview: HTMLElement | undefined): void {
-    if (this.dragPreviewFrame !== undefined) {
-      this.ownerWindow?.cancelAnimationFrame(this.dragPreviewFrame);
-      this.dragPreviewFrame = undefined;
-    }
-
-    this.pendingDragPreviewPosition = undefined;
-    const overlayRoot = this.findOverlayRoot();
-    preview?.remove();
-    overlayRoot?.removeAttribute("data-atlas-drag-session-id");
   }
 
   private findOverlayRoot(): HTMLElement | undefined {
@@ -701,198 +599,10 @@ export class AtlasInteractionController {
     return undefined;
   }
 
-  private previewDropTarget(drag: ActiveDrag, target: DropTarget | undefined): void {
-    if (drag.target?.element === target?.element && drag.target?.kind === target?.kind) {
-      return;
-    }
-
-    this.clearDropPreview(drag.target);
-    if (target) {
-      drag.target = target;
-      target.element.dataset.atlasDropPreview = target.kind;
-    } else {
-      delete drag.target;
-    }
-  }
-
-  private clearDropPreview(target: DropTarget | undefined): void {
-    target?.element.removeAttribute("data-atlas-drop-preview");
-  }
-
-  private resolveDropTarget(
-    x: number,
-    y: number,
-    eventTarget: EventTarget | null,
-    drag: ActiveDrag): DropTarget | undefined {
-    const hit = this.ownerDocument?.elementFromPoint(x, y)
-      ?? (eventTarget instanceof Element ? eventTarget : null);
-    if (!(hit instanceof Element)
-      || hit.closest<HTMLElement>(domMetadata.workspaceRoot.selector) !== this.root) {
-      return undefined;
-    }
-
-    if (drag.sourceKind === "document-tab") {
-      const group = hit.closest<HTMLElement>("[data-atlas-group-kind=document][data-atlas-group-id]");
-      const groupId = group?.dataset.atlasGroupId;
-      if (!group || !groupId) {
-        return undefined;
-      }
-
-      const tab = hit.closest<HTMLElement>("[data-atlas-drag-kind=document-tab]");
-      const tabIndex = readNonNegativeInteger(tab?.dataset.atlasInsertionIndex);
-      if (tab
-        && tabIndex !== undefined
-        && groupId === drag.sourceGroupId) {
-        const rect = drag.documentTabGeometry.get(tab) ?? tab.getBoundingClientRect();
-        return {
-          element: tab,
-          kind: "document-center",
-          groupId,
-          insertionIndex: tabIndex + (x >= rect.left + (rect.width / 2) ? 1 : 0)
-        };
-      }
-
-      if (tab) {
-        return { element: tab, kind: "document-center", groupId };
-      }
-
-      return {
-        element: group,
-        kind: documentTargetKind(
-          drag.documentGeometry.get(group) ?? group.getBoundingClientRect(),
-          x,
-          y),
-        groupId
-      };
-    }
-
-    const panelHeader = hit.closest<HTMLElement>("[data-atlas-panel-header]");
-    if (panelHeader?.dataset.atlasGroupId) {
-      if (panelHeader.dataset.atlasGroupId === drag.sourceGroupId) {
-        return undefined;
-      }
-
-      const headerIndex = readNonNegativeInteger(
-        panelHeader.dataset.atlasInsertionIndex) ?? 0;
-      const rect = panelHeader.getBoundingClientRect();
-      // Split before/after by the header's vertical half, matching the
-      // toolbar-entry resolver, so the release position agrees with the
-      // highlighted insertion slot.
-      const insertionIndex = rect.height > 0
-        && y >= rect.top + (rect.height / 2)
-        ? headerIndex + 1
-        : headerIndex;
-      return {
-        element: panelHeader,
-        kind: "panel-header-insertion",
-        groupId: panelHeader.dataset.atlasGroupId,
-        insertionIndex
-      };
-    }
-
-    // A visible tool group body is a valid Panel drop target (region-center):
-    // releasing there moves the dragged panel into the target group and
-    // activates it, mirroring the document-center semantic without creating a
-    // new split. ToolBar Entry drags keep the ToolBar-first enabled set.
-    const toolGroup = hit.closest<HTMLElement>(
-      "[data-atlas-group-kind=tool][data-atlas-group-id]");
-    if (drag.sourceKind === "panel-header"
-      && toolGroup?.dataset.atlasGroupId
-      && toolGroup.dataset.atlasGroupId !== drag.sourceGroupId) {
-      return {
-        element: toolGroup,
-        kind: "panel-region-center",
-        groupId: toolGroup.dataset.atlasGroupId
-      };
-    }
-
-    const toolbarEntry = hit.closest<HTMLElement>("[data-atlas-toolbar-entry]");
-    if (toolbarEntry?.dataset.atlasGroupId) {
-      const targetItemId = toolbarEntry.dataset.atlasItemId;
-      if (!targetItemId) {
-        return undefined;
-      }
-
-      const entryIndex = readNonNegativeInteger(
-        toolbarEntry.dataset.atlasInsertionIndex);
-      const rect = toolbarEntry.getBoundingClientRect();
-      const insertionIndex = entryIndex === undefined
-        ? 0
-        : rect.height > 0 && y >= rect.top + (rect.height / 2)
-          ? entryIndex + 1
-          : entryIndex;
-      return {
-        element: toolbarEntry,
-        kind: "toolbar-insertion",
-        groupId: toolbarEntry.dataset.atlasGroupId,
-        targetItemId,
-        ...(toolbarEntry.dataset.atlasToolbarRegion === undefined
-          ? {}
-          : { logicalRegion: toolbarEntry.dataset.atlasToolbarRegion }),
-        insertionIndex
-      };
-    }
-
-    const scaffold = hit.closest<HTMLElement>("[data-atlas-drop-scaffold=\"true\"]");
-    if (scaffold?.dataset.atlasGroupId) {
-      if (drag.sourceKind === "panel-header"
-        && scaffold.dataset.atlasGroupId === drag.sourceGroupId) {
-        return undefined;
-      }
-
-      const insertionIndex = readNonNegativeInteger(
-        scaffold.dataset.atlasInsertionIndex);
-      return {
-        element: scaffold,
-        kind: "drop-scaffold",
-        groupId: scaffold.dataset.atlasGroupId,
-        ...(scaffold.dataset.atlasToolbarRegion === undefined
-          ? {}
-          : { logicalRegion: scaffold.dataset.atlasToolbarRegion }),
-        ...(insertionIndex === undefined ? {} : { insertionIndex })
-      };
-    }
-
-    const toolbarRegion = hit.closest<HTMLElement>("[data-atlas-toolbar-region]");
-    if (toolbarRegion?.dataset.atlasGroupId) {
-      if (drag.sourceKind === "panel-header"
-        && toolbarRegion.dataset.atlasGroupId === drag.sourceGroupId) {
-        return undefined;
-      }
-
-      return {
-        element: toolbarRegion,
-        kind: "toolbar-region",
-        groupId: toolbarRegion.dataset.atlasGroupId,
-        ...(toolbarRegion.dataset.atlasToolbarRegion === undefined
-          ? {}
-          : { logicalRegion: toolbarRegion.dataset.atlasToolbarRegion })
-      };
-    }
-
-    return undefined;
-  }
-
   private dragSourceFrom(target: EventTarget | null): HTMLElement | null {
     return target instanceof Element
       ? target.closest<HTMLElement>("[data-atlas-drag-kind]")
       : null;
-  }
-
-  private captureDocumentGeometry(): ReadonlyMap<HTMLElement, DOMRect> {
-    return new Map(
-      Array.from(
-        this.root.querySelectorAll<HTMLElement>(
-          "[data-atlas-group-kind=document][data-atlas-group-id]"))
-        .map(group => [group, group.getBoundingClientRect()] as const));
-  }
-
-  private captureDocumentTabGeometry(): ReadonlyMap<HTMLElement, DOMRect> {
-    return new Map(
-      Array.from(
-        this.root.querySelectorAll<HTMLElement>(
-          "[data-atlas-drag-kind=document-tab][data-atlas-insertion-index]"))
-        .map(tab => [tab, tab.getBoundingClientRect()] as const));
   }
 
   private canMove(source: HTMLElement): boolean {
@@ -987,70 +697,6 @@ export class AtlasInteractionController {
 
 }
 
-export function attachAtlasController(
-  root: HTMLElement,
-  identity: AtlasControllerIdentity,
-  receiver: AtlasDotNetReceiver,
-  options?: AtlasControllerOptions): AtlasInteractionController {
-  if (identity.protocolVersion !== ATLAS_PROTOCOL_VERSION) {
-    throw new Error("ATLAS-INTERACTION-ATTACH-REJECTED");
-  }
-
-  const previous = controllers.get(identity.hostId);
-  if (previous !== undefined) {
-    disposeAtlasController(previous);
-  }
-
-  const controller = new AtlasInteractionController(
-    resolveHostElement(root, identity.hostId),
-    identity,
-    receiver,
-    options);
-  controllers.set(identity.hostId, controller);
-  return controller;
-}
-
-/**
- * Resolves the Host root element handed over by Blazor.
- *
- * Blazor's ElementReference reviver resolves `{__internalId: ...}` wrappers by
- * querying the element's `_bl_<id>` capture attribute. In WebAssembly the
- * reviver can run before the current render batch has applied that attribute,
- * which produces `null` even though the workspace element is about to appear
- * in the DOM. Fall back to the Host's stable identity attribute, and signal a
- * retry when neither lookup can find the element yet.
- */
-function resolveHostElement(root: HTMLElement, hostId: string): HTMLElement {
-  if (root instanceof HTMLElement) {
-    return root;
-  }
-
-  const host = document.querySelector(`[data-atlas-host-id="${hostId}"]`);
-  if (host instanceof HTMLElement) {
-    return host;
-  }
-
-  throw new Error("ATLAS-INTERACTION-ATTACH-RETRY");
-}
-
-export function updateAtlasController(
-  controller: AtlasInteractionController,
-  identity: AtlasControllerIdentity,
-  options?: AtlasControllerOptions): void {
-  controller.update(identity, options);
-}
-
-export function disposeAtlasController(
-  controller: AtlasInteractionController): void {
-  controller.dispose();
-  for (const [hostId, registered] of controllers) {
-    if (registered === controller) {
-      controllers.delete(hostId);
-      break;
-    }
-  }
-}
-
 /**
  * Confirms that a split resize commit's outcome is known: Blazor calls this
  * after an applied commit's render lands (a no-op because the new style
@@ -1109,22 +755,9 @@ function isDragSourceKind(value: string): value is AtlasDragSourceKind {
     || value === "toolbar-entry";
 }
 
-function readNonNegativeInteger(value: string | undefined): number | undefined {
-  const parsed = Number(value);
-  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : undefined;
-}
-
-export function documentTargetKind(rect: DOMRect, x: number, y: number): AtlasDropTargetKind {
-  const localX = x - rect.left;
-  const localY = y - rect.top;
-  const inlineBand = rect.width * 0.25;
-  const blockBand = rect.height * 0.25;
-  const distances = [
-    { kind: "document-inline-start" as const, distance: localX, enabled: localX < inlineBand },
-    { kind: "document-inline-end" as const, distance: rect.width - localX, enabled: localX > rect.width - inlineBand },
-    { kind: "document-block-start" as const, distance: localY, enabled: localY < blockBand },
-    { kind: "document-block-end" as const, distance: rect.height - localY, enabled: localY > rect.height - blockBand }
-  ].filter(candidate => candidate.enabled)
-    .sort((left, right) => left.distance - right.distance);
-  return distances[0]?.kind ?? "document-center";
-}
+export {
+  attachAtlasController,
+  disposeAtlasController,
+  updateAtlasController
+} from "./controller-registry";
+export { documentTargetKind } from "./drop-target";

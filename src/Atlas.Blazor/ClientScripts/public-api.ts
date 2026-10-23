@@ -20,11 +20,14 @@ export type {
 
 export {
   AtlasInteractionController,
+  clearAtlasSplitPreview
+} from "./controller";
+
+export {
   attachAtlasController,
-  clearAtlasSplitPreview,
   disposeAtlasController,
   updateAtlasController
-} from "./controller";
+} from "./controller-registry";
 
 export {
   ATLAS_SANDBOX_PROTOCOL_VERSION,
