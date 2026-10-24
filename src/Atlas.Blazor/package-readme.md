@@ -9,7 +9,7 @@ Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout 
 ## Install
 
 ```xml
-<PackageReference Include="Atlas.Blazor" Version="0.2.0" />
+<PackageReference Include="Atlas.Blazor" Version="0.3.0" />
 ```
 
 The package depends only on `Microsoft.AspNetCore.Components.Web`; `Atlas.Core` is embedded, so no additional Atlas references are needed.
