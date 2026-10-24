@@ -1,39 +1,36 @@
 ---
-name: Feature request
-about: Propose a user-facing capability or API
+name: 功能请求
+about: 提议面向用户的能力或 API
 title: "feat: "
 labels: enhancement
 assignees: ""
 ---
 
-## Problem
+## 问题
 
-Describe the user or developer problem this would solve.
+描述该请求要解决的用户或开发者问题。
 
-Reference relevant SRS requirements — see `docs/zh/SRS.md` (English mirror at
-`docs/en/SRS.md`).
+引用相关 SRS 需求——见 `docs/zh/SRS.md`。
 
-## Proposal
+## 提议
 
-Describe the behavior or API you want.
+描述期望的行为或 API。
 
-## Scope
+## 范围
 
-Describe what is included and what is intentionally out of scope.
+描述包含的内容与有意排除的内容。
 
-## Acceptance Criteria
+## 验收标准
 
-Given/When/Then format (follow `docs/zh/SRS.md` conventions).
+使用 Given/When/Then 格式（遵循 `docs/zh/SRS.md` 的约定）。
 
 - TODO
 
-## Alternatives
+## 备选方案
 
-Describe alternatives considered or why this should not stay out of scope.
+描述考虑过的备选方案，或说明为何不应排除在范围之外。
 
-## Compatibility
+## 兼容性
 
-Describe expected API, NuGet packaging, or documentation impact. For
-documentation changes, Chinese is authoritative under `docs/zh/`; keep the
-English mirror under `docs/en/` in sync, or mark the English mirror `Outdated`
-when a normative document changes without a synchronized mirror.
+描述预期的 API、NuGet 打包或文档影响。中文文档是 `docs/zh/` 下唯一维护的
+权威版本；不再维护英文镜像；国际入口为根目录 `README.en.md`。

@@ -1,8 +1,6 @@
 # ADR-0015：独立 Rider 风格示例应用
 
-> 简体中文（权威） | [English mirror](../../en/adr/0015-rider-style-example-application.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（历史决策记录，状态 Superseded）；本文为唯一维护版本（ADR-0036）。
 
 
 - 状态：Superseded by ADR-0016

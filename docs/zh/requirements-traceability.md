@@ -1,11 +1,9 @@
-# Requirements Traceability
+# 需求追溯矩阵
 
-> 简体中文（权威） | [English mirror](../en/requirements-traceability.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 本文件记录 SRS 正式需求从设计到实现和验证的状态。设计映射的规范来源是
-[HLD 附录 D](./HLD.md#附录-dsrs-hld-完整设计追溯矩阵)。
+[HLD 附录 D](./HLD.md#附录-dsrshld-完整设计追溯矩阵)。
 
 ## Baseline
 
@@ -27,8 +25,11 @@
 - 已完成工程工作：P0~P8 Verified；DEV-GATE-001~007 Closed
 - 不计入正式覆盖率：ADR-0014 所列 5 个历史删除编号及 9 个非规范性边界编号
 - 2026-10-24 语言政策迁移（ADR-0035）：代码注释、公共 XML 文档与权威文档转为
-  中文，英文镜像保留；本轮仅改语言，行为零变化。门禁实测 341 Core + 135 Blazor
-  + 51 JS 全绿（原记录的 130 Blazor 已更正为 135）。
+  中文；本轮仅改语言，行为零变化。当前实测基线为 341 Core + 135 Blazor + 51 JS
+  全绿（顶部 `135 Blazor` 已按本次实测更新；下方历史行保留当时的测试数）。
+- 2026-10-24 文档结构收敛（ADR-0036）：删除 `docs/en/` 全量英文镜像；`docs/zh/`
+  为唯一维护版本；保留根目录 `README.en.md` 作为国际入口；SECURITY 与 GitHub
+  模板中文化。
 
 在首个功能 work package 合并前，所有 151 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。

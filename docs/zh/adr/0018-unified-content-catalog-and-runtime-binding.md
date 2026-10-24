@@ -1,8 +1,6 @@
 # ADR-0018：统一 Content Catalog 与运行时绑定
 
-> 简体中文（权威） | [English mirror](../../en/adr/0018-unified-content-catalog-and-runtime-binding.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 - Status: Accepted
 - Date: 2026-08-03

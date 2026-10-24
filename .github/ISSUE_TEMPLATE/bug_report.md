@@ -1,27 +1,20 @@
-# Atlas: Blazor Dock Layout Component
-#
-# Maintainer: wubing7755
-# Language:   C# 10 (.NET 6), Razor, TypeScript
-# Testing:    xUnit + coverlet
-# CI:         GitHub Actions (ubuntu-latest, windows-latest)
-
 ---
-name: Bug report
-about: Report a reproducible defect
+name: Bug 报告
+about: 报告可复现的缺陷
 title: "bug: "
 labels: bug
 assignees: ""
 ---
 
-## Summary
+## 摘要
 
-Describe the defect.
+描述缺陷。
 
-## Reproduction
+## 复现步骤
 
 1. TODO
 
-## Affected Component
+## 受影响组件
 
 - [ ] AtlasLayout
 - [ ] DockPanel
@@ -32,20 +25,20 @@ Describe the defect.
 - [ ] DragService
 - [ ] LayoutSerializer
 
-## Environment
+## 环境
 
-- OS / Browser:
-- .NET version:
-- Atlas version (or commit):
+- 操作系统 / 浏览器：
+- .NET 版本：
+- Atlas 版本（或提交）：
 
-## Actual Behavior
+## 实际行为
 
-Describe what happened.
+描述发生了什么。
 
-## Expected Behavior
+## 期望行为
 
-Describe what should happen instead.
+描述应当发生什么。
 
-## Additional Context
+## 附加信息
 
-Add screenshots, console output, or test failures.
+添加截图、控制台输出或测试失败信息。

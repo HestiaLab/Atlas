@@ -1,8 +1,6 @@
 # ADR-0008：P5 Drag Protocol 与 Document Docking API
 
-> 简体中文（权威） | [English mirror](../../en/adr/0008-p5-drag-protocol-and-document-docking-api.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 
 - 状态：Accepted

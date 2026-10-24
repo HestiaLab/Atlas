@@ -1,8 +1,6 @@
 # Atlas 测试指南
 
-> 简体中文（权威） | [English mirror](../../en/guides/testing-guide.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet consumer。单一测试层不能覆盖全部合同。本指南说明每层验证什么，以及改动后如何选择最小但充分的测试集合。
 

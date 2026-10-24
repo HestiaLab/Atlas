@@ -1,6 +1,6 @@
 # 贡献指南
 
-> 简体中文（权威） | [English mirror](CONTRIBUTING.en.md)
+> 简体中文（权威） | [English introduction](README.en.md)
 
 Atlas 采用聚焦、可审查的改动。每个改动都必须追溯到 SRS 需求——见
 `docs/zh/SRS.md`。
@@ -10,11 +10,11 @@ Atlas 采用聚焦、可审查的改动。每个改动都必须追溯到 SRS 需
 
 ## 文档语言与权威性
 
-中文是每个文档语言对的权威版本。中文文档位于 `docs/zh/`，英文镜像位于
-`docs/en/`；`docs/zh/` 下的文档是权威版本。
+中文是唯一维护的文档语言。文档位于 `docs/zh/`；不再维护 `docs/en/` 英文镜像。
+根目录 `README.en.md` 是唯一的英文入口，`package-readme.md` 保持英文作为
+NuGet 国际入口（ADR-0036）。
 
-- 当规范文档（SRS、HLD、追溯矩阵）变化时，在同一 PR 中更新英文镜像，或
-  显式标记英文镜像为 `Outdated`；不得让过期翻译看起来仍然同步。
+- 规范文档（SRS、HLD、追溯矩阵）只维护中文版本；不再需要英文镜像同步。
 - 翻译时不得改变契约语义：保留需求与设计 ID、Actor/Priority/Source、AC
   数量与顺序、代码标识符、数值约束，以及 must/should/may 的强度。
 
@@ -27,7 +27,7 @@ ADR-0035 定义中文优先的注释政策：
   这些稳定标识。运行时可见文本（异常消息、日志、诊断、UI 文案）本轮不翻译。
 - 内部注释与内部 XML 文档使用中文。
 - 新增公共成员必须从首次提交起提供中文 XML 文档。
-- 文档以 `docs/zh/` 为权威，`docs/en/` 为英文镜像。
+- 文档以 `docs/zh/` 为唯一维护版本；英文入口仅为 `README.en.md`。
 
 ## 本地检查
 
@@ -84,7 +84,7 @@ docs(srs): update REQ-F-055 acceptance criteria
 - 运行 `dotnet format` 确保代码风格一致。
 - 填写 PR 模板中适用的章节。
 - 引用相关的 SRS 需求（`REQ-F-xxx`）。
-- 实现变化时更新 `docs/zh/requirements-traceability.md`，并同步英文镜像。
+- 实现变化时更新 `docs/zh/requirements-traceability.md`（中文唯一维护版本）。
 - 行为变化时增加测试。
 - 不要在功能或修复 PR 中混入无关清理。
 

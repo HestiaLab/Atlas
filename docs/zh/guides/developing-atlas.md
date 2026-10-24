@@ -1,8 +1,6 @@
 # 开发 Atlas：一个完整示例
 
-> 简体中文（权威） | [English mirror](../../en/guides/developing-atlas.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 本指南端到端走一遍 Atlas 的真实改动：选择需求、找到所属设计、修改代码、并用测试证明。它与[开发指南](./development-guide.md)（解释规则）互补，展示一个完整改动实际长什么样。场景做了简化，但严格遵循仓库期望的工作流。
 
@@ -20,7 +18,7 @@ SRS 需求（REQ-F-xxx）
 → 所属代码和测试
 ```
 
-对于关闭/选择改动，`docs/requirements-traceability.md` 指向 `CloseItemOperationTests` 和 `Atlas.Core/Operations/Engine` 中的所属 planner。关闭选择的 HLD 条目是 §4 中的 `DES-OP-001` / `DES-OP-004`。
+对于关闭/选择改动，`docs/zh/requirements-traceability.md` 指向 `CloseItemOperationTests` 和 `Atlas.Core/Operations/Engine` 中的所属 planner。关闭选择的 HLD 条目是 §4 中的 `DES-OP-001` / `DES-OP-004`。
 
 ## 2. 找到所属模块
 

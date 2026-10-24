@@ -20,7 +20,7 @@ public sealed class RequirementsBaselineTests
     public void Srs_formal_blocks_and_appendix_define_the_same_151_requirements()
     {
         var root = RepositoryRoot();
-        var srs = File.ReadAllText(Path.Combine(root, "docs", "en", "SRS.md"));
+        var srs = File.ReadAllText(Path.Combine(root, "docs", "zh", "SRS.md"));
         var indexStart = srs.IndexOf(RequirementsIndexStart, StringComparison.Ordinal);
         var indexEnd = srs.IndexOf(RequirementsIndexEnd, StringComparison.Ordinal);
 
@@ -48,9 +48,9 @@ public sealed class RequirementsBaselineTests
     public void P8_audit_has_one_evidence_status_for_every_formal_requirement()
     {
         var root = RepositoryRoot();
-        var srs = File.ReadAllText(Path.Combine(root, "docs", "en", "SRS.md"));
+        var srs = File.ReadAllText(Path.Combine(root, "docs", "zh", "SRS.md"));
         var audit = File.ReadAllText(
-            Path.Combine(root, "docs", "en", "evidence", "p8-requirement-audit.md"));
+            Path.Combine(root, "docs", "zh", "evidence", "p8-requirement-audit.md"));
         var formalIds = FormalRequirement.Matches(srs)
             .Select(match => match.Value.Split(' ')[0])
             .OrderBy(id => id, StringComparer.Ordinal)

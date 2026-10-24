@@ -1,8 +1,6 @@
-# P8 System Hardening Evidence
+# P8 系统加固验证证据
 
-> 简体中文（权威） | [English mirror](../../en/evidence/p8-system-hardening.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（历史证据，记录当时验证结果）；本文为唯一维护版本（ADR-0036）。
 
 
 > 历史证据说明：20 Panel 测量所用 `Atlas.Demo` 页面已按 ADR-0016 删除。以下测量记录保持为

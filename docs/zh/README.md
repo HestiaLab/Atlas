@@ -1,21 +1,17 @@
 # Atlas 开发文档
 
-> 简体中文（权威） | [English mirror](../en/README.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 本目录面向参与 Atlas 框架开发、维护和审查的开发者。文档按“规范、指南、决策、实施记录、验证证据、安全”分类；不同类别承担不同责任，不能互相替代。
 
-## 从这里开始
+## 按角色选择阅读路径
 
-第一次接触项目时，建议依次阅读：
-
-1. [架构概览](./guides/architecture-overview.md)：先建立代码和运行时心智模型。
-2. [开发指南](./guides/development-guide.md)：了解目录职责、改动路径和协作规则。
-3. [测试指南](./guides/testing-guide.md)：根据改动范围选择验证层。
-4. [SRS](./SRS.md)：确认用户可观察行为。
-5. [HLD](./HLD.md)：确认内部设计合同和模块边界。
-6. [需求追溯矩阵](./requirements-traceability.md)：确认当前实现与验证状态。
+| 角色 | 阅读顺序 | 说明 |
+|------|----------|------|
+| 集成开发者 | 根 [README](../../README.md) → [使用 Atlas](./guides/using-atlas.md) → [SRS](./SRS.md) → [样式与主题定制](./theming.md) | 只消费 NuGet 包；先了解能做什么，再查需求细节 |
+| 框架开发者 | [架构概览](./guides/architecture-overview.md) → [开发指南](./guides/development-guide.md) → [测试指南](./guides/testing-guide.md) → [HLD](./HLD.md) → [ADR 索引](./adr/README.md) → [需求追溯矩阵](./requirements-traceability.md) | 修改 Core、Blazor 或 TypeScript 前建立完整心智模型 |
+| 审查者 | [SRS](./SRS.md) → [需求追溯矩阵](./requirements-traceability.md) → [验证证据](./evidence/README.md) → [ADR 索引](./adr/README.md) → [测试指南](./guides/testing-guide.md) | 区分规范、当前实现状态与历史证据 |
+| 发布维护者 | [CONTRIBUTING 发布章节](../../CONTRIBUTING.md#发布) → [测试指南](./guides/testing-guide.md) → [SECURITY](../../SECURITY.md) → [package-readme](../../src/Atlas.Blazor/package-readme.md) | 版本提升、打包、consumer 边界与安全政策 |
 
 仓库级提交、分支和本地检查规则见 [`CONTRIBUTING.md`](../../CONTRIBUTING.md)。AI Agent 的额外约束见 [`AGENTS.md`](../../AGENTS.md)。
 

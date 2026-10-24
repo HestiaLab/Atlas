@@ -1,8 +1,6 @@
 # Atlas 开发指南
 
-> 简体中文（权威） | [English mirror](../../en/guides/development-guide.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 本文说明如何在不破坏 Atlas 架构边界和兼容合同的前提下修改框架。分支、提交和 PR 基本规则见 [`CONTRIBUTING.md`](../../../CONTRIBUTING.md)。
 

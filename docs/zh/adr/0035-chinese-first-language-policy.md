@@ -1,13 +1,12 @@
 # ADR-0035：中文优先的文档与代码注释语言政策
 
-> 简体中文（权威） | [English mirror](../../en/adr/0035-chinese-first-language-policy.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 - **状态**：Accepted
 - **日期**：2026-10-24
 - **决策人**：Atlas 维护者（2026-10-24 批准）
 - **取代**：[ADR-0026](./0026-code-comment-language-policy.md)；`AGENTS.md` 与 `CONTRIBUTING.md` 中的英文权威条款
+- **部分修订**：英文镜像条款由 [ADR-0036](./0036-chinese-only-documentation.md) 修订（中文优先决策保留）
 - **相关**：AGENTS.md、CONTRIBUTING.md；质量发现 CORE-P2-20、BLAZOR-01（反向迁移）
 
 ## 背景

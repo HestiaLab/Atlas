@@ -1,8 +1,6 @@
 # ADR-0030：公共值类型 default 语义与 GroupNode 命名
 
-> 简体中文（权威） | [English mirror](../../en/adr/0030-public-value-type-default-semantics.md)
->
-> 状态：Accepted（维护者已于 2026-10-23 批准）。本文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 - **状态**：Accepted
 - **日期**：2026-10-23

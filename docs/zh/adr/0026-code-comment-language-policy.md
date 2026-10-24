@@ -1,6 +1,6 @@
 # ADR-0026：代码注释与 XML 文档语言政策
 
-> 简体中文（权威） | [English mirror](../../en/adr/0026-code-comment-language-policy.md)
+> 简体中文（历史决策记录，状态 Superseded）；本文为唯一维护版本（ADR-0036）。
 
 - **状态**：Superseded（由 [ADR-0035](./0035-chinese-first-language-policy.md) 取代）
 - **日期**：2026-10-23

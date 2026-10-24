@@ -1,37 +1,31 @@
-# Security Policy
+# 安全政策
 
-## Reporting
+> 简体中文（权威） | [English introduction](README.en.md)
 
-Report vulnerabilities privately to the project maintainer. Do not open public
-issues for exploitable security bugs until a fix is available.
+## 报告
 
-## Supported Versions
+请私下向项目维护者报告漏洞。在修复可用之前，不要为可利用的安全缺陷提交公开 issue。
 
-The default policy is to support the current `main` branch unless the project
-publishes versioned NuGet releases with a separate support table.
+安全边界、内容信任模型与威胁模型见 [`docs/zh/security/`](docs/zh/security/README.md)。
 
-Atlas currently targets .NET 6.0 by explicit maintainer decision. .NET 6 is
-outside Microsoft support, so consumers must treat the runtime lifecycle as an
-accepted compatibility risk. Atlas dependency and input-validation checks must
-remain enabled; the EOL runtime is not a reason to suppress security findings.
+## 受支持版本
 
-## Dependency Handling
+默认政策是支持当前 `main` 分支；除非项目发布带独立支持表的版本化 NuGet 版本。
 
-- Prefer framework types (`Microsoft.AspNetCore.Components`) over third-party
-  NuGet packages.
-- Document dependency sources and update procedures.
-- Use Dependabot for NuGet, npm, and GitHub Actions updates.
-- Do not vendor large dependencies without maintainer approval.
-- Run `dotnet test` after dependency updates.
+Atlas 目前按维护者明确决定面向 .NET 6.0。.NET 6 已超出 Microsoft 支持范围，消费者必须将运行时生命周期视为已接受的兼容性风险。Atlas 的依赖与输入校验检查必须保持启用；EOL 运行时不是压制安全发现的理由。
 
-## Blazor Security Considerations
+## 依赖处理
 
-- Trusted Blazor content shares the application DOM and DI scope and is not a
-  security sandbox. Do not claim REQ-NF-006 malicious-content isolation until
-  DEV-GATE-004 approves and verifies a SandboxedFrame design.
-- Do not expose internal layout state to content components.
-- JS interop calls must validate parameters before invoking native APIs.
-- Event callbacks from JS interop must not trust caller-provided data without
-  validation.
-- XML persistence must disable DTD/external entities and enforce documented
-  size, depth and collection limits.
+- 优先使用框架类型（`Microsoft.AspNetCore.Components`）而非第三方 NuGet 包。
+- 记录依赖来源与更新流程。
+- 使用 Dependabot 更新 NuGet、npm 与 GitHub Actions。
+- 未经维护者批准，不得内置大型依赖。
+- 依赖更新后运行 `dotnet test`。
+
+## Blazor 安全注意事项
+
+- 可信 Blazor 内容共享应用 DOM 与 DI 作用域，不是安全沙箱。在 DEV-GATE-004 批准并验证 SandboxedFrame 设计之前，不得声称具备 REQ-NF-006 的恶意内容隔离。
+- 不得向内容组件暴露内部布局状态。
+- JS interop 调用必须在调用原生 API 前校验参数。
+- 来自 JS interop 的事件回调不得在没有校验的情况下信任调用方提供的数据。
+- XML 持久化必须禁用 DTD/外部实体，并强制执行文档化的大小、深度与集合限制。

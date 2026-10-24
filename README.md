@@ -1,6 +1,6 @@
 # Atlas
 
-简体中文（权威） | [English mirror](README.en.md)
+简体中文（权威） | [English introduction](README.en.md)
 
 **面向 Blazor 的可停靠工作区组件库。**
 
@@ -21,8 +21,7 @@ Atlas 为 IDE、设计器、管理后台等复杂 Web 应用提供工具面板�
 - 内容承载与 SandboxedFrame 安全边界
 - 多 Workspace 隔离、ARIA、焦点协调与 reduced-motion
 
-产品行为以 [`docs/zh/SRS.md`](docs/zh/SRS.md) 为准（中文权威版本；英文镜像见
-[`docs/en/SRS.md`](docs/en/SRS.md)）。
+产品行为以 [`docs/zh/SRS.md`](docs/zh/SRS.md) 为准（中文唯一维护版本）。
 
 ## 项目组成
 
@@ -66,21 +65,22 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 文档
 
-中文文档位于 `docs/zh/`，是权威版本；英文镜像位于 `docs/en/`。
+中文文档位于 `docs/zh/`，是唯一维护的权威版本；国际入口见
+[`README.en.md`](README.en.md)。
 
 | 文档                                              | 内容              |
 | ----------------------------------------------- | --------------- |
-| [开发文档入口](docs/zh/README.md)                     | 文档分类与按任务阅读路径    |
+| [开发文档入口](docs/zh/README.md)                     | 文档分类、角色与任务阅读路径  |
 | [架构概览](docs/zh/guides/architecture-overview.md) | 分层、状态所有权与运行时数据流 |
 | [SRS](docs/zh/SRS.md)                           | 用户可观察行为与非功能需求   |
 | [HLD](docs/zh/HLD.md)                           | 内部架构与设计合同       |
+| [需求追溯矩阵](docs/zh/requirements-traceability.md)    | 需求到实现与测试证据的状态   |
 | [测试指南](docs/zh/guides/testing-guide.md)         | 测试分层与验证命令       |
 | [ADR 索引](docs/zh/adr/README.md)                 | 已接受的架构决策        |
 
 ## 参与开发
 
-提交前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)（中文权威版本；英文镜像见
-[`CONTRIBUTING.en.md`](CONTRIBUTING.en.md)）。安全与受支持版本说明见
+提交前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。安全与受支持版本说明见
 [`SECURITY.md`](SECURITY.md)。
 
 ## 许可证

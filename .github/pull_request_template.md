@@ -1,32 +1,30 @@
-## Summary
+## 摘要
 
-- What changed:
-- Why:
+- 变更内容：
+- 原因：
 
-## SRS Coverage
+## SRS 追溯
 
-- Relevant SRS requirements (`docs/zh/SRS.md`, English mirror at `docs/en/SRS.md`): REQ-F-xxx
-- New SRS requirements (if any): REQ-F-xxx
+- 相关 SRS 需求（`docs/zh/SRS.md`）：REQ-F-xxx
+- 新增 SRS 需求（如有）：REQ-F-xxx
 
-## Validation
+## 验证
 
-- [ ] `dotnet build Atlas.sln` — all projects
-- [ ] `dotnet test Atlas.sln` — all xUnit tests pass
-- [ ] `dotnet format Atlas.sln --verify-no-changes` — no style violations
-- [ ] `npm ci && npm run typecheck && npm run test:js && npm run build:js` in `src/Atlas.Blazor`
-- [ ] Not run; reason:
+- [ ] `dotnet build Atlas.sln` — 所有项目
+- [ ] `dotnet test Atlas.sln` — 全部 xUnit 测试通过
+- [ ] `dotnet format Atlas.sln --verify-no-changes` — 无格式违规
+- [ ] 在 `src/Atlas.Blazor` 中执行 `npm ci && npm run typecheck && npm run test:js && npm run build:js`
+- [ ] 文档改动：相对链接与锚点检查通过（0 断链）
+- [ ] 未运行；原因：
 
-## Impact
+## 影响
 
-- Public API impact (`Atlas.Core` / `Atlas.Blazor`):
-- NuGet packaging or dependency impact:
-- Documentation impact (`docs/`): Chinese is authoritative under `docs/zh/`;
-  keep the English mirror under `docs/en/` in sync for the bilingual list, or
-  mark the English mirror `Outdated` when a normative document changes without
-  a synchronized mirror.
-- TypeScript / JS interop impact:
+- 公共 API 影响（`Atlas.Core` / `Atlas.Blazor`）：
+- NuGet 打包或依赖影响：
+- 文档影响（`docs/`）：中文文档是 `docs/zh/` 下唯一维护的权威版本；不再维护英文镜像；国际入口为根目录 `README.en.md`。
+- TypeScript / JS interop 影响：
 
-## AI Assistance
+## AI 协助
 
-- [ ] AI assistance was used and disclosed — docs read, validation run, human verification recorded.
-- [ ] No meaningful AI assistance was used.
+- [ ] 使用了 AI 协助并已披露——阅读文档、运行验证、记录人工验证。
+- [ ] 未使用有意义的 AI 协助。

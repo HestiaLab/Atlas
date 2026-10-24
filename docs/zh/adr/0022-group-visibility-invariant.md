@@ -1,8 +1,6 @@
 # ADR-0022: Group 可见性不变量
 
-> 简体中文（权威） | [English mirror](../../en/adr/0022-group-visibility-invariant.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 - Status: Accepted
 - Date: 2026-08-05

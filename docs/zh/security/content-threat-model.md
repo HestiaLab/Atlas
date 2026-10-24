@@ -1,8 +1,6 @@
-# Atlas Content Threat Model
+# Atlas 内容威胁模型
 
-> 简体中文（权威） | [English mirror](../../en/security/content-threat-model.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 ## Scope
 
