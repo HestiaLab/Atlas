@@ -477,7 +477,7 @@ public sealed partial class AtlasWorkspaceHost
                 "id",
                 AtlasDomIdentity.ControlId(hostId, item.Id, "tool-tab"));
             builder.AddAttribute(4, "aria-label", item.Title);
-            builder.AddAttribute(5, "aria-selected", isActive);
+            builder.AddAttribute(5, "aria-selected", isActive ? "true" : "false");
             builder.AddAttribute(
                 6,
                 "aria-controls",

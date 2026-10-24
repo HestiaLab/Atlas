@@ -519,6 +519,54 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Toolbar_and_document_tabs_render_aria_selected_as_strings()
+    {
+        await using var toolbarWorkspace = CreateWorkspace(TwoToolEntriesDefinition());
+        var toolbarCut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, toolbarWorkspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var toolEntries = toolbarCut.FindAll("[data-atlas-toolbar-entry]");
+        Assert.Equal(2, toolEntries.Count);
+        Assert.Equal("true", toolEntries[0].GetAttribute("aria-selected"));
+        Assert.Equal("false", toolEntries[1].GetAttribute("aria-selected"));
+        Assert.True(toolEntries[1].HasAttribute("aria-selected"));
+
+        await toolbarWorkspace.ExecuteAsync(
+            new SelectItemOperation(new DockItemId("second-tool")));
+        toolbarCut.WaitForAssertion(
+            () =>
+            {
+                var entries = toolbarCut.FindAll("[data-atlas-toolbar-entry]");
+                Assert.Equal("false", entries[0].GetAttribute("aria-selected"));
+                Assert.Equal("true", entries[1].GetAttribute("aria-selected"));
+            });
+
+        await using var documentWorkspace = CreateWorkspace(TwoTabsDefinition());
+        var documentCut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, documentWorkspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var documentTabs = documentCut.FindAll("[data-atlas-drag-kind='document-tab']");
+        Assert.Equal(2, documentTabs.Count);
+        Assert.Equal("true", documentTabs[0].GetAttribute("aria-selected"));
+        Assert.Equal("false", documentTabs[1].GetAttribute("aria-selected"));
+        Assert.True(documentTabs[1].HasAttribute("aria-selected"));
+
+        await documentWorkspace.ExecuteAsync(
+            new SelectItemOperation(new DockItemId("second")));
+        documentCut.WaitForAssertion(
+            () =>
+            {
+                var tabs = documentCut.FindAll("[data-atlas-drag-kind='document-tab']");
+                Assert.Equal("false", tabs[0].GetAttribute("aria-selected"));
+                Assert.Equal("true", tabs[1].GetAttribute("aria-selected"));
+            });
+    }
+
+    [Fact]
     public async Task ToolBar_entry_projects_the_standard_item_icon_for_drag_preview()
     {
         await using var workspace = CreateWorkspace(ProjectionDefinition("tool-icon"));
@@ -2676,6 +2724,45 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             split.Id,
             new LayoutNode[] { split, leftGroup, rightGroup },
             new[] { left, right });
+    }
+
+    private static AtlasWorkspaceDefinition TwoToolEntriesDefinition()
+    {
+        var first = new DockItem(
+            new DockItemId("first-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "first-tool-resource"),
+            DockItemCapabilityPresets.Tool,
+            "First Tool");
+        var second = new DockItem(
+            new DockItemId("second-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "second-tool-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Second Tool");
+        var group = new GroupNode(
+            new LayoutNodeId("tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { first.Id, second.Id },
+            first.Id,
+            toolbarRegion: LogicalRegion.InlineStartUpper);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("aria-tools"),
+            group.Id,
+            new LayoutNode[] { group },
+            new[] { first, second },
+            toolBars: new[]
+            {
+                new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    new[] { first.Id, second.Id }),
+            });
     }
 
     private static AtlasWorkspaceDefinition TwoTabsDefinition()
