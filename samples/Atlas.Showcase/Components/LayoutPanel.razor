@@ -1,33 +1,16 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="声明式布局"
-                  Requirement="REQ-F-001 · REQ-F-002"
-                  CodeSnippet="@Code">
+    <TeachingCard Requirement="REQ-F-001 · REQ-F-002 · REQ-F-099"
+                  Source="等价示例：ShowcaseWorkspaceDefinition.cs"
+                  CodeSnippet="@ShowcaseSnippets.DeclarativeLayout">
         <p>Atlas 布局使用 Razor 组件声明。分割（Split）、分组（Group）、
         工具面板和编辑器标签页都是普通组件——宿主收集它们并构建
         经过验证的工作区。</p>
         <p>本演示工作区使用 <code>ShowcaseWorkspaceDefinition.cs</code>
         中的程序化 API 构建（以便顶部快捷菜单能够访问工作区）。
-        下面的声明式写法产生相同的结构。</p>
+        下面的声明式写法使用同一组必填参数，产生相同的结构。</p>
         <p><span class="showcase-tag accent">试一试</span> 拖动面板标题到
         其他区域，或拖动编辑器标签页拆分编辑器。</p>
     </TeachingCard>
 </div>
-
-@code {
-    private const string Code = @"<AtlasWorkspaceHost WorkspaceId=""demo"">
-  <TopToolbarContent>…</TopToolbarContent>
-  <StatusBarContent>…</StatusBarContent>
-  <ChildContent>
-    <AtlasSplitDefinition Axis=""SplitAxis.BlockChildren"">
-      <AtlasToolGroupDefinition LogicalRegion=""LogicalRegion.InlineStartUpper"">
-        <AtlasToolItemDefinition ContentKind=""explorer"" Title=""Explorer"" />
-      </AtlasToolGroupDefinition>
-      <AtlasDocumentGroupDefinition>
-        <AtlasDocumentItemDefinition ContentKind=""markdown"" Title=""Readme.md"" />
-      </AtlasDocumentGroupDefinition>
-    </AtlasSplitDefinition>
-  </ChildContent>
-</AtlasWorkspaceHost>";
-}

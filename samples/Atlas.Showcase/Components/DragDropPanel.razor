@@ -1,26 +1,14 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="拖拽与停靠"
-                  Requirement="REQ-F-050 · REQ-F-055 · REQ-F-058"
-                  CodeSnippet="@Code">
+    <TeachingCard Requirement="REQ-F-050 · REQ-F-055 · REQ-F-058"
+                  Source="ShowcaseWorkspaceDefinition.cs"
+                  CodeSnippet="@ShowcaseSnippets.DragDrop">
         <p>Atlas 实现指针拖拽，不使用浏览器原生拖拽图。将文档标签页拖到
         编辑器边缘可在新方向停靠，拖到中心则追加到现有组。放置区域会以
         强调色高亮。</p>
-        <p><span class="showcase-tag accent">试一试</span> 将
+        <p><span class="showcase-tag accent">试一试</span> 把
         <strong>使用指南</strong> 标签页拖到编辑器左边缘，或从工具栏
         拖动面板标题到某个区域。</p>
     </TeachingCard>
 </div>
-
-@code {
-    private const string Code = @"// 无需配置：EnableInteractions=""true"" 时 AtlasWorkspaceHost
-// 自动接线拖拽会话。
-<AtlasWorkspaceHost Workspace=""workspace"" EnableInteractions=""true"">
-  …
-</AtlasWorkspaceHost>
-
-// 程序化停靠（Core）：
-await workspace.ExecuteAsync(new DockDocumentOperation(
-    itemId, targetGroupId, DocumentDockZone.InlineStart));";
-}

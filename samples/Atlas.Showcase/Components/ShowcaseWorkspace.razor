@@ -1,40 +1,57 @@
 @namespace Atlas.Showcase.Components
-@implements IAsyncDisposable
 @using Atlas.Blazor.Components
 @using Atlas.Blazor.Content
-@using Atlas.Core
-@using Atlas.Core.Changes
-@using Atlas.Core.Items
-@using Atlas.Core.Operations
-@using Atlas.Showcase.Components
 
-<section class="showcase-shell" aria-label="Atlas Showcase teaching workspace">
-    @if (workspace is null)
+<section class="showcase-shell" aria-label="Atlas 演示教学工作区">
+    @{
+        var panelViews = BuildPanelViews();
+    }
+    @if (initializationError is not null)
     {
-        <div class="showcase-loading" role="status">Preparing Atlas Showcase…</div>
+        <div class="showcase-loading showcase-init-error" role="alert">
+            <p>Atlas 演示初始化失败。</p>
+            <code>@initializationError</code>
+            <button type="button" class="showcase-action" @onclick="RetryAsync">重试</button>
+        </div>
+    }
+    else if (workspace is null)
+    {
+        <div class="showcase-loading" role="status">正在准备 Atlas 演示…</div>
     }
     else
     {
-        <AtlasWorkspaceHost Workspace="@workspace"
+        <AtlasWorkspaceHost @key="workspace"
+                            Workspace="@workspace"
                             WorkspaceOwnership="WorkspaceOwnership.External"
                             EnableInteractions="true">
             <TopToolbarContent>
-                <ShowcaseTopToolbar CanUndo="@(workspace?.CanUndo == true)"
-                                    CanRedo="@(workspace?.CanRedo == true)"
-                                    Panels="@Panels"
-                                    IsPanelVisible="@IsPanelVisible"
-                                    OnTogglePanel="TogglePanelAsync"
-                                    OnMovePanel="MovePanelAsync"
-                                    OnUndo="UndoAsync"
-                                    OnRedo="RedoAsync" />
+                <ShowcaseTopToolbar CanUndo="@workspace.CanUndo"
+                                    CanRedo="@workspace.CanRedo"
+                                    Panels="@panelViews"
+                                    Groups="@MoveGroups"
+                                    IsCompact="@isCompact"
+                                    ShowVerificationLink="@ShowVerificationLink"
+                                    OnActivatePanel="panel => OpenPanelAsync(panel)"
+                                    OnToggleGroup="view => ToggleGroupAsync(view)"
+                                    OnMovePanel="(panel, target) => MovePanelAsync(panel, target)"
+                                    OnReset="() => ResetWorkspaceAsync()"
+                                    OnToggleCompact="() => ToggleCompactAsync()"
+                                    OnOpenGuide="() => OpenGuideAsync()"
+                                    OnOpenCatalog="() => OpenCatalogAsync()"
+                                    OnOpenTheme="() => OpenThemeAsync()"
+                                    OnOpenVerification="() => OpenVerificationAsync()"
+                                    OnUndo="() => UndoAsync()"
+                                    OnRedo="() => RedoAsync()" />
             </TopToolbarContent>
             <StatusBarContent>
-                <ShowcaseStatusBar OperationStatus="@operationStatus" />
+                <ShowcaseStatusBar OperationStatus="@operationStatus"
+                                   Revision="@revision"
+                                   Tone="@statusTone" />
             </StatusBarContent>
             <ContentRoutes>
                 <AtlasContentRoute Kind="@ShowcaseContentKinds.Catalog">
                     <ChildContent Context="content">
-                        <TeachingCatalogPanel Items="@CatalogItems" />
+                        <TeachingCatalogPanel Items="@panelViews" OnSelect="panel => OpenPanelAsync(panel)" />
                     </ChildContent>
                 </AtlasContentRoute>
                 <AtlasContentRoute Kind="@ShowcaseContentKinds.Layout">
@@ -76,13 +93,15 @@
                 </AtlasContentRoute>
                 <AtlasContentRoute Kind="@ShowcaseContentKinds.Guide">
                     <ChildContent Context="content">
-                        <GuidePanel />
+                        <GuidePanel ResourceId="@content.Reference.ResourceId" />
                     </ChildContent>
                 </AtlasContentRoute>
             </ContentRoutes>
 
             <ErrorTemplate Context="content">
-                @content.Code
+                <div class="showcase-host-error">
+                    内容渲染失败：<code>@content.Code</code>
+                </div>
             </ErrorTemplate>
         </AtlasWorkspaceHost>
     }

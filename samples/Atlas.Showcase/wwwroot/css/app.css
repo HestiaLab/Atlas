@@ -27,6 +27,7 @@
     --showcase-hover: #e2f0fb;
     --showcase-selection: #cfe4f7;
     --showcase-ok: #1e7e34;
+    --showcase-error: #b3261e;
     --showcase-code-bg: #f6f8fa;
     background: var(--showcase-bg);
     color: var(--showcase-ink);
@@ -48,6 +49,7 @@
         --showcase-hover: #2e4257;
         --showcase-selection: #274a6b;
         --showcase-ok: #4cd07d;
+        --showcase-error: #ff8a80;
         --showcase-code-bg: #1a2026;
         background: var(--showcase-bg);
         color: var(--showcase-ink);
@@ -84,6 +86,24 @@ button { font: inherit; }
     place-items: center;
     background: var(--showcase-bg);
     color: var(--showcase-muted);
+}
+
+.showcase-init-error {
+    align-content: center;
+    gap: 0.6rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.showcase-init-error p { margin: 0; color: var(--showcase-error); font-weight: 700; }
+.showcase-init-error code {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.75rem;
+}
+
+.showcase-host-error {
+    padding: 0.75rem;
+    color: var(--showcase-error);
 }
 
 /* ============================================================
@@ -269,18 +289,31 @@ button { font: inherit; }
 
 .showcase-history button:disabled { color: var(--showcase-muted); opacity: 0.5; }
 .showcase-actions { margin-inline-start: auto; }
-
-/* Quick menu (hide/move panels) */
-.showcase-quickmenu {
-    position: relative;
+.showcase-branch {
+    color: var(--showcase-chrome-ink);
+    opacity: 0.65;
+    font-size: 0.75rem;
+    white-space: nowrap;
 }
 
-.showcase-quickmenu-popup {
+/* Panel manager (visibility / move / layout mode) */
+.showcase-quickmenu {
+    position: relative;
+    z-index: 41;
+}
+
+.showcase-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+}
+
+.showcase-panel-manager {
     position: absolute;
     top: calc(100% + 0.25rem);
     right: 0;
     z-index: 40;
-    min-width: 13rem;
+    width: min(30rem, calc(100vw - 1rem));
     max-height: 70vh;
     overflow: auto;
     border: 1px solid var(--showcase-border);
@@ -288,41 +321,115 @@ button { font: inherit; }
     background: var(--showcase-surface);
     color: var(--showcase-ink);
     box-shadow: 0 0.375rem 0.75rem rgb(0 0 0 / 18%);
-    padding: 0.25rem;
+    padding: 0.4rem;
     font-size: 0.875rem;
 }
 
-.showcase-quickmenu-group {
-    padding: 0.3rem 0.4rem 0.15rem;
-    color: var(--showcase-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.showcase-quickmenu-row {
+.showcase-panel-manager-header,
+.showcase-panel-manager-actions {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.3rem 0.4rem;
-    border-radius: 0.125rem;
-    cursor: pointer;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.3rem;
 }
 
-.showcase-quickmenu-row:hover { background: var(--showcase-hover); }
-.showcase-quickmenu-row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.showcase-quickmenu-row .hint { color: var(--showcase-muted); font-size: 0.75rem; }
-.showcase-quickmenu-row button {
+.showcase-panel-manager-header {
+    border-bottom: 1px solid var(--showcase-border);
+}
+
+.showcase-panel-manager-header h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.showcase-panel-manager-actions {
+    justify-content: flex-start;
+    border-bottom: 1px solid var(--showcase-border);
+}
+
+.showcase-panel-manager-close,
+.showcase-panel-manager-actions button,
+.showcase-panel-manager-row-actions button {
     border: 1px solid var(--showcase-border);
     border-radius: 0.125rem;
     background: transparent;
     color: var(--showcase-muted);
-    padding: 0.1rem 0.3rem;
-    font-size: 0.6875rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 600;
     cursor: pointer;
 }
-.showcase-quickmenu-row button:hover { color: var(--showcase-accent); border-color: var(--showcase-accent); }
+
+.showcase-panel-manager-close:hover,
+.showcase-panel-manager-actions button:hover,
+.showcase-panel-manager-row-actions button:not(:disabled):hover {
+    color: var(--showcase-accent);
+    border-color: var(--showcase-accent);
+    background: var(--showcase-hover);
+}
+
+.showcase-panel-manager-row-actions button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.showcase-panel-manager-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.showcase-panel-manager-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.45rem 0.3rem;
+    border-bottom: 1px solid var(--showcase-border);
+}
+
+.showcase-panel-manager-row:last-child {
+    border-bottom: 0;
+}
+
+.showcase-panel-manager-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.showcase-panel-manager-main .name {
+    font-weight: 700;
+}
+
+.showcase-panel-manager-main .state,
+.showcase-panel-manager-note {
+    color: var(--showcase-muted);
+    font-size: 0.75rem;
+}
+
+.showcase-panel-manager-row-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.showcase-panel-manager-row-actions select {
+    min-width: 7rem;
+    border: 1px solid var(--showcase-border);
+    border-radius: 0.125rem;
+    background: var(--showcase-surface);
+    color: var(--showcase-ink);
+    padding: 0.15rem 0.25rem;
+    font-size: 0.75rem;
+}
+
+.showcase-panel-manager-note {
+    margin: 0.4rem 0.3rem 0;
+    line-height: 1.5;
+}
 
 /* Status bar */
 .showcase-statusbar {
@@ -339,8 +446,14 @@ button { font: inherit; }
 }
 
 .showcase-status-spacer { flex: 1; }
+.showcase-status-revision {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.6875rem;
+    opacity: 0.8;
+}
 .showcase-ok { color: var(--showcase-ok); }
 .showcase-warn { color: var(--showcase-warning); }
+.showcase-error { color: var(--showcase-error); }
 
 /* ============================================================
    Teaching panels — showcase-owned styles.
@@ -370,6 +483,15 @@ button { font: inherit; }
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.03em;
+}
+
+.showcase-req-line .source {
+    margin-inline-start: auto;
+    color: var(--showcase-muted);
+    font-size: 0.6875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .showcase-card-title {
@@ -494,17 +616,32 @@ button { font: inherit; }
 }
 
 .showcase-list li {
-    padding: 0.35rem 0.6rem;
     border-bottom: 1px solid var(--showcase-border);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
 }
 
 .showcase-list li:last-child { border-bottom: 0; }
-.showcase-list li:hover { background: var(--showcase-hover); }
-.showcase-list li.active { background: var(--showcase-selection); color: var(--showcase-ink); }
+
+.showcase-list-button {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    border: 0;
+    padding: 0.35rem 0.6rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.showcase-list-button:hover { background: var(--showcase-hover); }
+.showcase-list-button:focus-visible {
+    outline: 2px solid var(--showcase-accent);
+    outline-offset: -2px;
+}
+.showcase-list .title { flex: 1; min-width: 0; }
+.showcase-list .state { color: var(--showcase-muted); font-size: 0.6875rem; }
 .showcase-list .idx { color: var(--showcase-accent); font-family: "Cascadia Code", Consolas, monospace; font-size: 0.6875rem; }
 
 .showcase-editor-text {
@@ -553,9 +690,56 @@ button { font: inherit; }
 .showcase-tag.ok { color: var(--showcase-ok); border-color: var(--showcase-ok); }
 
 /* Verification page */
+.showcase-verification-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--showcase-bg);
+}
+
+.showcase-verification-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--showcase-chrome);
+    border-bottom: 1px solid var(--showcase-border);
+    color: var(--showcase-chrome-ink);
+}
+
+.showcase-verification-header h1 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.showcase-verification-header p {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.showcase-verification-header button {
+    border: 1px solid var(--showcase-border);
+    border-radius: 0.125rem;
+    padding: 0.2rem 0.5rem;
+    background: var(--showcase-surface);
+    color: var(--showcase-ink);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.showcase-verification-header button:hover,
+.showcase-verification-header button:focus-visible {
+    color: var(--showcase-accent);
+    border-color: var(--showcase-accent);
+}
+
 .showcase-verification {
-    width: 100vw;
-    height: 100vh;
+    flex: 1;
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.25rem;
@@ -569,14 +753,39 @@ button { font: inherit; }
     overflow: hidden;
 }
 
+.showcase-not-found {
+    min-height: 100%;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.showcase-not-found h1 { margin: 0; font-size: 1.25rem; }
+.showcase-not-found p { margin: 0; color: var(--showcase-muted); }
+.showcase-not-found a { color: var(--showcase-accent); }
+
 @media (max-width: 900px) {
-    .showcase-menu button:nth-last-child(-n + 3),
-    .showcase-quickmenu .name { display: none; }
+    .showcase-branch { display: none; }
+    .showcase-panel-manager {
+        position: fixed;
+        inset-inline: 0.5rem;
+        bottom: 0.5rem;
+        top: auto;
+        width: auto;
+        max-height: 80vh;
+    }
 }
 
 @media (max-width: 620px) {
-    .showcase-menu { display: none; }
     .showcase-topbar { gap: 0.15rem; padding-inline: 0.25rem; }
+    .showcase-menu button { padding-inline: 0.35rem; }
     .showcase-statusbar span:nth-last-child(-n + 3) { display: none; }
     .showcase-verification { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+    .showcase-verify { display: none; }
 }

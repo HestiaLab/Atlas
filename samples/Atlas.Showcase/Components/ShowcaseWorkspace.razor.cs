@@ -2,143 +2,314 @@ using Atlas.Blazor.Components;
 using Atlas.Blazor.Content;
 using Atlas.Core;
 using Atlas.Core.Changes;
-using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Items;
 using Atlas.Core.Operations;
 using Atlas.Core.Persistence;
-using Atlas.Core.Placement;
+using Atlas.Core.Results;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 
 namespace Atlas.Showcase.Components;
 
-/// <summary>
-///     描述顶栏快捷菜单中的一个示例工具面板。
-/// </summary>
-public sealed record ShowcasePanelEntry(
-    string Key,
-    string Title,
-    DockItemId ItemId,
-    LayoutNodeId GroupId,
-    LogicalRegion Region);
-
 public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 {
+    private readonly AtlasXmlLayoutSerializer serializer = new();
     private IAtlasWorkspace? workspace;
     private string operationStatus = "就绪";
+    private string statusTone = "ok";
     private string? persistenceEvent;
-    private readonly AtlasXmlLayoutSerializer serializer = new();
+    private string? initializationError;
+    private long revision;
+    private bool isCompact;
+    private bool disposed;
 
     [Inject]
     private IAtlasWorkspaceFactory Factory { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
 
     [Parameter]
     public string WorkspaceName { get; set; } = "atlas-showcase";
 
     /// <summary>
-    ///     快捷菜单的固定面板目录（隐藏/移动操作）。
+    ///     验证页每个 Host 只占半屏，强制使用紧凑布局。
     /// </summary>
-    internal static readonly ShowcasePanelEntry[] Panels =
-    {
-        new("catalog", "教学目录", new DockItemId("showcase-catalog"), new LayoutNodeId("left-upper"), LogicalRegion.InlineStartUpper),
-        new("layout", "声明式布局", new DockItemId("showcase-layout"), new LayoutNodeId("left-lower"), LogicalRegion.InlineStartLower),
-        new("content", "内容注册", new DockItemId("showcase-content"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
-        new("dragdrop", "拖拽与停靠", new DockItemId("showcase-dragdrop"), new LayoutNodeId("right-upper"), LogicalRegion.InlineEndUpper),
-        new("keyboard", "键盘操作", new DockItemId("showcase-keyboard"), new LayoutNodeId("right-lower"), LogicalRegion.InlineEndLower),
-        new("splitter", "分割条", new DockItemId("showcase-splitter"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
-        new("theme", "主题定制", new DockItemId("showcase-theme"), new LayoutNodeId("bottom-left"), LogicalRegion.BlockEndInlineStart),
-        new("persistence", "持久化", new DockItemId("showcase-persistence"), new LayoutNodeId("bottom-right"), LogicalRegion.BlockEndInlineEnd),
-    };
+    [Parameter]
+    public bool ForceCompact { get; set; }
 
-    internal static readonly ShowcaseCatalogItem[] CatalogItems =
-    {
-        new("catalog", "教学目录", "01"),
-        new("layout", "声明式布局", "02"),
-        new("content", "内容注册", "03"),
-        new("dragdrop", "拖拽与停靠", "04"),
-        new("splitter", "分割条", "05"),
-        new("keyboard", "键盘操作", "06"),
-        new("theme", "主题定制", "07"),
-        new("persistence", "持久化", "08"),
-    };
+    [Parameter]
+    public bool ShowVerificationLink { get; set; } = true;
 
-    protected override void OnInitialized()
+    private IReadOnlyList<ShowcaseGroupDescriptor> MoveGroups => isCompact
+        ? Array.Empty<ShowcaseGroupDescriptor>()
+        : ShowcasePanels.Groups;
+
+    protected override async Task OnInitializedAsync()
     {
-        var result = Factory.Create(ShowcaseWorkspaceDefinition.Create(WorkspaceName));
+        if (ForceCompact)
+        {
+            isCompact = true;
+        }
+        else
+        {
+            try
+            {
+                isCompact = await JS.InvokeAsync<bool>("atlasShowcaseIsCompact");
+            }
+            catch (JSException)
+            {
+                isCompact = false;
+            }
+        }
+
+        await CreateWorkspaceAsync(refresh: false);
+    }
+
+    private async Task CreateWorkspaceAsync(bool refresh = true)
+    {
+        await DisposeWorkspaceAsync();
+        initializationError = null;
+
+        var result = Factory.Create(ShowcaseWorkspaceDefinition.Create(WorkspaceName, isCompact));
         if (!result.Succeeded || result.Value is null)
         {
-            throw new InvalidOperationException(result.Error?.DiagnosticId ?? "Atlas Showcase initialization failed.");
+            initializationError = result.Error?.DiagnosticId ?? "ATLAS-SHOWCASE-INIT-FAILED";
+            workspace = null;
+            revision = 0;
         }
-
-        workspace = result.Value;
-        workspace.Changed += OnWorkspaceChanged;
-    }
-
-    private bool IsPanelVisible(ShowcasePanelEntry panel)
-    {
-        if (workspace is null)
+        else
         {
-            return false;
+            workspace = result.Value;
+            workspace.Changed += OnWorkspaceChanged;
+            revision = workspace.Current.Revision;
         }
 
-        return workspace.Current.Nodes.TryGetValue(panel.GroupId, out var node)
-            && node is GroupNode group
-            && group.Visibility == GroupVisibility.Expanded
-            && group.ItemIds.Contains(panel.ItemId);
+        if (refresh)
+        {
+            await RefreshAsync();
+        }
     }
 
-    private async Task TogglePanelAsync(ShowcasePanelEntry panel)
+    private async Task DisposeWorkspaceAsync()
     {
         if (workspace is null)
         {
             return;
         }
 
-        var target = IsPanelVisible(panel) ? GroupVisibility.Collapsed : GroupVisibility.Expanded;
-        await RunOperationAsync(
-            new SetGroupVisibilityOperation(panel.GroupId, target),
-            $"{(target == GroupVisibility.Expanded ? "已显示" : "已隐藏")} {panel.Title}");
+        var current = workspace;
+        workspace = null;
+        current.Changed -= OnWorkspaceChanged;
+        await current.DisposeAsync();
     }
 
-    private async Task MovePanelAsync(ShowcasePanelEntry panel, LogicalRegion targetRegion)
+    private IReadOnlyList<ShowcasePanelView> BuildPanelViews()
+    {
+        if (workspace is null)
+        {
+            return Array.Empty<ShowcasePanelView>();
+        }
+
+        var groups = workspace.Current.Nodes.Values.OfType<GroupNode>().ToArray();
+        return ShowcasePanels.CatalogOrder
+            .Select(panel =>
+            {
+                var group = groups.FirstOrDefault(
+                    candidate => candidate.ItemIds.Contains(panel.ItemId));
+                return group is null
+                    ? new ShowcasePanelView(
+                        panel,
+                        default,
+                        GroupVisibility.Collapsed,
+                        IsSelected: false,
+                        Exists: false)
+                    : new ShowcasePanelView(
+                        panel,
+                        group.Id,
+                        group.Visibility,
+                        group.SelectedItemId == panel.ItemId,
+                        Exists: true);
+            })
+            .ToArray();
+    }
+
+    private GroupNode? FindGroup(DockItemId itemId)
+    {
+        return workspace?.Current.Nodes.Values
+            .OfType<GroupNode>()
+            .FirstOrDefault(group => group.ItemIds.Contains(itemId));
+    }
+
+    private async Task OpenPanelAsync(ShowcasePanelDescriptor panel)
     {
         if (workspace is null)
         {
             return;
         }
 
-        // 将目标区域映射到所属工具组。
-        var targetGroupId = RegionToGroupId(targetRegion);
-        if (targetGroupId is null || targetGroupId.Value == panel.GroupId)
+        var group = FindGroup(panel.ItemId);
+        if (group is null)
         {
+            SetStatus($"{panel.Title} 当前不存在，请重置布局", "warn");
+            await RefreshAsync();
             return;
         }
 
-        await RunOperationAsync(
-            new MoveToolOperation(panel.ItemId, targetGroupId.Value),
-            $"已将 {panel.Title} 移动到 {targetRegion}");
+        if (group.Visibility != GroupVisibility.Expanded)
+        {
+            var expand = await workspace.ExecuteAsync(
+                new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded));
+            if (!expand.Succeeded)
+            {
+                SetStatus(Failure($"展开 {panel.Title} 失败", expand), "warn");
+                await RefreshAsync();
+                return;
+            }
+        }
+
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(panel.ItemId));
+        SetStatus(
+            result.Succeeded ? $"已打开 {panel.Title}" : Failure($"打开 {panel.Title} 失败", result),
+            result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
     }
 
-    private static LayoutNodeId? RegionToGroupId(LogicalRegion region) => region switch
-    {
-        LogicalRegion.InlineStartUpper => new LayoutNodeId("left-upper"),
-        LogicalRegion.InlineStartLower => new LayoutNodeId("left-lower"),
-        LogicalRegion.InlineEndUpper => new LayoutNodeId("right-upper"),
-        LogicalRegion.InlineEndLower => new LayoutNodeId("right-lower"),
-        LogicalRegion.BlockEndInlineStart => new LayoutNodeId("bottom-left"),
-        LogicalRegion.BlockEndInlineEnd => new LayoutNodeId("bottom-right"),
-        _ => null,
-    };
+    private async Task OpenGuideAsync() => await OpenDocumentAsync(ShowcaseDocuments.Guide);
 
-    private async Task RunOperationAsync(LayoutOperation operation, string successMessage)
+    private Task OpenCatalogAsync() => OpenPanelAsync(ShowcasePanels.Catalog);
+
+    private Task OpenThemeAsync() => OpenPanelAsync(ShowcasePanels.Theme);
+
+    private async Task OpenDocumentAsync(ShowcaseDocumentDescriptor document)
     {
         if (workspace is null)
         {
             return;
         }
 
-        var result = await workspace.ExecuteAsync(operation);
-        operationStatus = result.Succeeded ? successMessage : $"无变化: {result.Error?.DiagnosticId ?? "未知"}";
-        await InvokeAsync(StateHasChanged);
+        var group = FindGroup(document.ItemId);
+        if (group is null)
+        {
+            SetStatus($"{document.Title} 已关闭，请使用“重置布局”恢复", "warn");
+            await RefreshAsync();
+            return;
+        }
+
+        if (group.Visibility != GroupVisibility.Expanded)
+        {
+            var expand = await workspace.ExecuteAsync(
+                new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded));
+            if (!expand.Succeeded)
+            {
+                SetStatus(Failure($"展开 {document.Title} 失败", expand), "warn");
+                await RefreshAsync();
+                return;
+            }
+        }
+
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(document.ItemId));
+        SetStatus(
+            result.Succeeded ? $"已打开 {document.Title}" : Failure($"打开 {document.Title} 失败", result),
+            result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
+    }
+
+    private async Task ToggleGroupAsync(ShowcasePanelView view)
+    {
+        if (workspace is null || !view.Exists)
+        {
+            return;
+        }
+
+        var target = view.GroupVisible
+            ? GroupVisibility.Collapsed
+            : GroupVisibility.Expanded;
+        var result = await workspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(view.GroupId, target));
+        var label = ShowcasePanels.Groups
+            .FirstOrDefault(group => group.Id == view.GroupId)?.Label ?? "分组";
+        SetStatus(
+            result.Succeeded
+                ? (target == GroupVisibility.Expanded
+                    ? $"已展开{label}分组"
+                    : $"已折叠{label}分组")
+                : Failure("切换分组可见性失败", result),
+            result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
+    }
+
+    private async Task MovePanelAsync(
+        ShowcasePanelDescriptor panel,
+        LayoutNodeId targetGroupId)
+    {
+        if (workspace is null)
+        {
+            return;
+        }
+
+        var group = FindGroup(panel.ItemId);
+        if (group is null)
+        {
+            SetStatus($"{panel.Title} 当前不存在", "warn");
+            await RefreshAsync();
+            return;
+        }
+
+        if (group.Id == targetGroupId)
+        {
+            SetStatus($"{panel.Title} 已在目标区域", "ok");
+            await RefreshAsync();
+            return;
+        }
+
+        var result = await workspace.ExecuteAsync(
+            new MoveToolOperation(panel.ItemId, targetGroupId));
+        var label = ShowcasePanels.Groups
+            .FirstOrDefault(target => target.Id == targetGroupId)?.Label ?? targetGroupId.Value;
+        SetStatus(
+            result.Succeeded
+                ? $"已将 {panel.Title} 移动到{label}"
+                : Failure($"移动 {panel.Title} 失败", result),
+            result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
+    }
+
+    private async Task ResetWorkspaceAsync()
+    {
+        await CreateWorkspaceAsync(refresh: false);
+        SetStatus("已重置布局", "ok");
+        await RefreshAsync();
+    }
+
+    private async Task ToggleCompactAsync()
+    {
+        isCompact = !isCompact;
+        await CreateWorkspaceAsync(refresh: false);
+        SetStatus(
+            isCompact
+                ? "已切换到紧凑布局；布局历史已重置"
+                : "已切换到标准布局；布局历史已重置",
+            "ok");
+        await RefreshAsync();
+    }
+
+    private async Task RetryAsync()
+    {
+        await CreateWorkspaceAsync(refresh: false);
+        SetStatus("已重新初始化工作区", "ok");
+        await RefreshAsync();
+    }
+
+    private Task OpenVerificationAsync()
+    {
+        Navigation.NavigateTo("verification");
+        return Task.CompletedTask;
     }
 
     private async Task<string?> CaptureLayoutAsync()
@@ -150,7 +321,8 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 
         var xml = serializer.Serialize(workspace.Current);
         persistenceEvent = "布局已捕获为 XML";
-        await InvokeAsync(StateHasChanged);
+        SetStatus("布局已捕获", "ok");
+        await RefreshAsync();
         return xml;
     }
 
@@ -161,19 +333,25 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
             return;
         }
 
-        var deserialize = serializer.Deserialize(xml, workspace.Id);
+        var options = new LayoutRestoreOptions(
+            isContentRegistered: reference => ShowcaseContentKinds.All.Contains(reference.Kind),
+            missingContentPolicy: MissingContentPolicy.PreservePlaceholder);
+        var deserialize = serializer.DeserializeWithOptions(xml, workspace.Id, options);
         if (!deserialize.Succeeded || deserialize.Value is null)
         {
-            persistenceEvent = $"Deserialize failed: {deserialize.Error?.DiagnosticId ?? "unknown"}";
-            await InvokeAsync(StateHasChanged);
+            persistenceEvent = $"反序列化失败：{deserialize.Error?.DiagnosticId ?? "未知错误"}";
+            SetStatus(persistenceEvent, "warn");
+            await RefreshAsync();
             return;
         }
 
-        var result = await workspace.ExecuteAsync(new RestoreWorkspaceOperation(deserialize.Value));
+        var result = await workspace.ExecuteAsync(
+            new RestoreWorkspaceOperation(deserialize.Value));
         persistenceEvent = result.Succeeded
             ? "布局已恢复"
-            : $"恢复失败: {result.Error?.DiagnosticId ?? "未知"}";
-        await InvokeAsync(StateHasChanged);
+            : $"恢复失败：{result.Error?.DiagnosticId ?? "未知错误"}";
+        SetStatus(persistenceEvent, result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
     }
 
     private async Task UndoAsync()
@@ -184,8 +362,8 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.UndoAsync();
-        operationStatus = result.Succeeded ? "已撤销上次更改" : "无可撤销";
-        await InvokeAsync(StateHasChanged);
+        SetStatus(result.Succeeded ? "已撤销上次更改" : "无可撤销", result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
     }
 
     private async Task RedoAsync()
@@ -196,25 +374,49 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.RedoAsync();
-        operationStatus = result.Succeeded ? "已重做上次更改" : "无可重做";
-        await InvokeAsync(StateHasChanged);
+        SetStatus(result.Succeeded ? "已重做上次更改" : "无可重做", result.Succeeded ? "ok" : "warn");
+        await RefreshAsync();
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
     {
-        operationStatus = $"Revision {args.ChangeSet.AfterRevision} — {args.ChangeSet.ChangeKind}";
-        _ = InvokeAsync(StateHasChanged);
+        revision = args.ChangeSet.AfterRevision;
+        _ = RefreshAsync();
     }
 
-    public async ValueTask DisposeAsync()
+    private async Task RefreshAsync()
     {
-        if (workspace is null)
+        if (disposed)
         {
             return;
         }
 
-        workspace.Changed -= OnWorkspaceChanged;
-        await workspace.DisposeAsync();
-        workspace = null;
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ObjectDisposedException)
+        {
+            // 组件释放与最后一次工作区通知竞争时，忽略已失效的渲染请求。
+        }
+    }
+
+    private void SetStatus(string message, string tone)
+    {
+        operationStatus = message;
+        statusTone = tone;
+    }
+
+    private static string Failure(
+        string action,
+        WorkspaceResult<LayoutChangeSet> result)
+    {
+        return $"{action}：{result.Error?.DiagnosticId ?? "未知错误"}";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        await DisposeWorkspaceAsync();
     }
 }

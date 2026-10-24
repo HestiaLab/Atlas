@@ -1,0 +1,128 @@
+namespace Atlas.Showcase.Components;
+
+/// <summary>
+///     教学面板共享的代码片段。修改公共 API 时先同步这里，
+///     再检查 <c>GuidePanel</c> 与各面板是否仍引用同一常量。
+/// </summary>
+internal static class ShowcaseSnippets
+{
+    internal const string Install = @"// csproj
+<PackageReference Include=""Atlas.Blazor"" Version=""0.3.0"" />
+
+// Program.cs（Blazor WASM）
+builder.Services.AddAtlasWorkspace();";
+
+    internal const string DeclarativeLayout = @"@* _Imports.razor
+   @using Atlas.Blazor.Components
+   @using Atlas.Core
+   @using Atlas.Core.Items
+   @using Atlas.Core.Layout *@
+<AtlasWorkspaceHost WorkspaceId=""@(new WorkspaceId(""demo""))"">
+  <AtlasSplitDefinition Id=""@(new LayoutNodeId(""root""))""
+                        Axis=""SplitAxis.InlineChildren"">
+    <AtlasToolGroupDefinition Id=""@(new LayoutNodeId(""tools""))""
+                              LogicalRegion=""LogicalRegion.InlineStartUpper"">
+      <AtlasToolItemDefinition Id=""@(new DockItemId(""explorer""))""
+                               ContentKind=""explorer""
+                               ResourceId=""explorer""
+                               Title=""Explorer"" />
+    </AtlasToolGroupDefinition>
+    <AtlasDocumentGroupDefinition Id=""@(new LayoutNodeId(""documents""))"">
+      <AtlasDocumentItemDefinition Id=""@(new DockItemId(""readme""))""
+                                   ContentKind=""markdown""
+                                   ResourceId=""readme""
+                                   Title=""Readme.md"" />
+    </AtlasDocumentGroupDefinition>
+  </AtlasSplitDefinition>
+</AtlasWorkspaceHost>";
+
+    internal const string CreateWorkspace = @"var result = Factory.Create(
+    ShowcaseWorkspaceDefinition.Create(""atlas-showcase""));
+if (!result.Succeeded || result.Value is null)
+{
+    throw new InvalidOperationException(
+        result.Error?.DiagnosticId ?? ""Init failed."");
+}
+
+var workspace = result.Value;
+workspace.Changed += OnWorkspaceChanged;";
+
+    internal const string ContentRoute = @"<AtlasContentRoute Kind=""explorer"">
+  <ChildContent Context=""content"">
+    <ExplorerPanel />
+  </ChildContent>
+</AtlasContentRoute>
+
+// 另一种方式：Program.cs 中 DI 注册
+builder.Services.AddAtlasContent<ExplorerPanel>(""explorer"");";
+
+    internal const string Interaction = @"<AtlasWorkspaceHost Workspace=""workspace"" EnableInteractions=""true"">
+  …
+</AtlasWorkspaceHost>";
+
+    internal const string DragDrop = @"// 无需配置：EnableInteractions=""true"" 时 AtlasWorkspaceHost
+// 自动接线拖拽会话。
+<AtlasWorkspaceHost Workspace=""workspace"" EnableInteractions=""true"">
+  …
+</AtlasWorkspaceHost>
+
+// 程序化停靠（Core）：
+await workspace.ExecuteAsync(new DockDocumentOperation(
+    itemId, targetGroupId, DocumentDockZone.InlineStart));";
+
+    internal const string SplitNode = @"var split = new SplitNode(
+    new LayoutNodeId(""main""),
+    SplitAxis.InlineChildren,
+    SplitBasis.Proportional(0.5),
+    new SplitConstraints(firstMinimum: 150, firstMaximum: 380),
+    firstId,
+    secondId);
+
+// 调整大小提交（Core）：
+await workspace.ExecuteAsync(new ResizeSplitOperation(
+    splitId, SplitBasis.FixedPixels(240, SplitAnchor.First)));";
+
+    internal const string KeyboardBinding = @"// 默认绑定（子集）
+AtlasKeyboardCommand.NextTab             -> Ctrl+Tab
+AtlasKeyboardCommand.CloseActiveDocument -> Ctrl+W / Ctrl+F4
+
+// 自定义绑定：
+var bindings = new[]
+{
+    new AtlasKeyboardBinding(
+        new AtlasKeyboardChord(""KeyQ"", control: true),
+        AtlasKeyboardCommand.CloseActiveDocument),
+};
+var map = new AtlasKeyboardCommandMap(bindings);
+
+// Razor
+<AtlasWorkspaceHost KeyboardCommands=""@map"">…</AtlasWorkspaceHost>";
+
+    internal const string Theme = @"/* app.css —— 在 atlas.css 之后加载 */
+.atlas-v2-workspace {
+  --atlas-accent: #0b6bcb;      /* 放置区域、焦点、拖拽预览 */
+  --atlas-surface: #ffffff;     /* 面板背景 */
+  --atlas-text: #26303a;        /* 标签 */
+  --atlas-splitter-size: 5px;
+  --atlas-radius: 0.125rem;
+}
+
+/* 暗色调色板通过 color-scheme 跟随操作系统：
+   :root { color-scheme: light dark } */";
+
+    internal const string Persistence = @"var serializer = new AtlasXmlLayoutSerializer();
+string xml = serializer.Serialize(workspace.Current);
+
+var options = new LayoutRestoreOptions(
+    isContentRegistered: reference => IsRegistered(reference.Kind),
+    missingContentPolicy: MissingContentPolicy.PreservePlaceholder);
+var document = serializer.DeserializeWithOptions(
+    xml, workspace.Id, options);
+if (!document.Succeeded || document.Value is null)
+{
+    return;
+}
+
+await workspace.ExecuteAsync(
+    new RestoreWorkspaceOperation(document.Value));";
+}

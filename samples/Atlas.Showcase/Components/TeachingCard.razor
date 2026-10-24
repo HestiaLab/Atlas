@@ -1,30 +1,42 @@
 @namespace Atlas.Showcase.Components
 
-@* Shared teaching card: requirement tag + body + optional code view.
-   The panel title is rendered by the Atlas framework header, so this
-   component deliberately does not repeat it. *@
+@* 共享教学卡片：需求标签 + 正文 + 可选 API 代码。
+   Atlas 框架头已渲染面板标题，因此这里不重复标题。 *@
 <div class="showcase-card">
     <div class="showcase-req-line">
         <span class="req">@Requirement</span>
+        @if (!string.IsNullOrWhiteSpace(Source))
+        {
+            <span class="source">@Source</span>
+        }
     </div>
     <div class="showcase-card-body">
         @ChildContent
     </div>
-    @if (ShowCode)
+    @if (!string.IsNullOrWhiteSpace(CodeSnippet))
     {
-        <pre class="showcase-code">@CodeSnippet</pre>
+        <button class="showcase-code-toggle"
+                type="button"
+                aria-expanded="@(ShowCode ? "true" : "false")"
+                aria-controls="@CodeId"
+                @onclick="() => ShowCode = !ShowCode">
+            @(ShowCode ? "收起 API 代码" : "查看 API 代码")
+        </button>
+        @if (ShowCode)
+        {
+            <pre id="@CodeId" class="showcase-code" tabindex="0">@CodeSnippet</pre>
+        }
     }
-    <button class="showcase-code-toggle" type="button" @onclick="() => ShowCode = !ShowCode">
-        @(ShowCode ? "Hide API code" : "View API code")
-    </button>
 </div>
 
 @code {
-    [Parameter]
-    public string Title { get; set; } = "";
+    private readonly string CodeId = $"showcase-code-{Guid.NewGuid():N}";
 
     [Parameter]
     public string Requirement { get; set; } = "";
+
+    [Parameter]
+    public string Source { get; set; } = "";
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
