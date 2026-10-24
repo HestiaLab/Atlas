@@ -1,15 +1,13 @@
 # Atlas 安全文档
 
-> 简体中文（权威） | [English mirror](../../en/security/README.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 本目录记录 Atlas 的内容信任模型和安全边界。仓库级漏洞报告、受支持版本和依赖策略见 [`SECURITY.md`](../../../SECURITY.md)。
 
 ## 当前文档
 
 - [Content Threat Model](./content-threat-model.md)：Trusted Blazor content、SandboxedFrame、消息协议、攻击面和验证责任。
-- [ADR-0013](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
+- [ADR-0013](../adr/0013-content-trust-and-sandboxed-frame.md)：内容信任与 SandboxedFrame 的已接受架构决策。
 
 ## 必须保持的边界
 

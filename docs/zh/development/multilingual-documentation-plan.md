@@ -1,12 +1,13 @@
 # Atlas 多语言文档改造方案
 
 > **状态：Superseded（历史记录）**。本文描述 2026-08 的“英文权威 + 中文镜像”
-> 方案，已由 [ADR-0035](../adr/0035-chinese-first-language-policy.md) 取代。
-> 保留作为历史记录，不再维护。
-
-> 简体中文（历史记录） | [English mirror](../../en/development/multilingual-documentation-plan.md)
+> 方案，已由 [ADR-0035](../adr/0035-chinese-first-language-policy.md) 取代；其中
+> 英文镜像相关安排随后由
+> [ADR-0036](../adr/0036-chinese-only-documentation.md) 收敛为中文唯一文档。
+> 保留作为历史记录，不再维护。正文中的 `docs/en/`、`README.zh.md` 等均为
+> 历史示例，不代表当前仓库结构。
 >
-> 状态：Superseded（由 ADR-0035 取代）。
+> 简体中文（历史记录）；本文已由 ADR-0035 与 ADR-0036 取代，不再维护。
 
 - 状态：Superseded
 - 日期：2026-08-02

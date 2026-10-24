@@ -1,8 +1,6 @@
-# Architecture Decision Records
+# 架构决策记录（ADR）
 
-> 简体中文（权威） | [English mirror](../../en/adr/README.md)
->
-> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 
 Atlas 使用 ADR 记录会影响公共 API、包结构、跨语言协议、持久化兼容性或安全边界的架构决策。
@@ -15,6 +13,12 @@ Atlas 使用 ADR 记录会影响公共 API、包结构、跨语言协议、持�
 - `Rejected`：明确不采用
 
 Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架构选择批准为 Accepted。
+
+## 如何阅读
+
+- 先读与当前改动相关、状态为 Accepted 的最新 ADR；`Superseded` 条目仅用于理解历史。
+- 修改公共 API、交互协议、持久化 schema 或包边界前，同时阅读索引中的取代关系。
+- ADR-0035 的中文优先决策继续有效；其英文镜像条款已由 ADR-0036 修订。
 
 ## 记录索引
 
@@ -54,9 +58,12 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0032](./0032-unwired-public-api-disposition.md) | Accepted | 未接线公共类型与未使用错误码的处置（CORE-P2-15） |
 | [ADR-0033](./0033-split-geometry-single-source.md) | Accepted | Core 参考语义 + C#/TS 共享黄金向量（CORE-P2-16） |
 | [ADR-0034](./0034-core-boundary-dependencies-and-autohide-relocation.md) | Accepted | Operations→Persistence 单向分层与自动隐藏书签确定清理（CORE-P2-01/P1-05） |
-| [ADR-0035](./0035-chinese-first-language-policy.md) | Accepted | 中文优先语言政策：代码注释、公共 XML 文档与权威文档使用中文，保留英文镜像；取代 ADR-0026 |
+| [ADR-0035](./0035-chinese-first-language-policy.md) | Accepted | 中文优先语言政策：代码注释、公共 XML 文档与权威文档使用中文；取代 ADR-0026；英文镜像条款由 ADR-0036 修订 |
+| [ADR-0036](./0036-chinese-only-documentation.md) | Accepted | 中文唯一文档：删除 docs/en 全量镜像，只保留 README.en.md 作为国际入口；修订 ADR-0035 镜像条款 |
 
 ## 编写约定
 
-每份 ADR 至少包含 Context、Decision、Alternatives、Consequences、Verification 和 Supersession。
+每份 ADR 至少包含背景、决策、备选方案、后果、验证和取代关系；历史 ADR 可保留
+对应的英文节名（Context、Decision、Alternatives、Consequences、Verification、
+Supersession）。
 改变 Accepted ADR 时创建新的 ADR，不直接重写原决策历史。

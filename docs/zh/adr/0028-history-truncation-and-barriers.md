@@ -1,8 +1,6 @@
 # ADR-0028：历史截断警告与屏障语义
 
-> 简体中文（权威） | [English mirror](../../en/adr/0028-history-truncation-and-barriers.md)
->
-> 状态：Accepted（维护者已于 2026-10-23 批准）。本文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+> 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 - **状态**：Accepted
 - **日期**：2026-10-23

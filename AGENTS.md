@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> 简体中文（权威） | [English mirror](AGENTS.en.md)
+> 简体中文（权威） | [English introduction](README.en.md)
 
 面向在 Atlas（Blazor Dock 布局组件）上工作的 AI Agent 的仓库级说明。
 
@@ -9,7 +9,7 @@
 修改文件前，请阅读：
 
 - `CONTRIBUTING.md`
-- `docs/zh/SRS.md` — 软件需求规范（中文权威版本；英文镜像见 `docs/en/SRS.md`）
+- `docs/zh/SRS.md` — 软件需求规范（中文唯一维护版本）
 
 涉及架构敏感的改动，还需阅读：
 
@@ -22,9 +22,10 @@
 
 ## 文档语言与权威性
 
-中文是默认文档语言，也是每个语言对的权威版本。中文文档位于 `docs/zh/`，
-英文镜像位于 `docs/en/`。`docs/zh/` 下的文档是权威版本；`docs/en/` 是按
-ADR-0035 维护的英文镜像。
+中文是唯一维护的文档语言。文档位于 `docs/zh/`；不再维护 `docs/en/` 英文镜像。
+根目录 `README.en.md` 是唯一的英文入口，简要介绍项目并链接中文权威文档；
+`package-readme.md` 保持英文作为 NuGet 国际入口。详见
+`docs/zh/adr/0036-chinese-only-documentation.md`。
 
 - 翻译时不得静默改写契约语义；保留 ID、Actor/Priority/Source 字段、AC 数量与
   顺序、代码标识符、数值约束，以及 must/should/may 的强度。
@@ -32,7 +33,8 @@ ADR-0035 维护的英文镜像。
   作为稳定兼容入口，指向中文权威版本。
 - 代码注释与公共 XML 文档使用中文；标识符、错误码、消息键和协议字符串保持
   ASCII 不变。运行时可见文本（异常消息、日志、诊断、UI 文案）暂不翻译。详见
-  `docs/zh/adr/0035-chinese-first-language-policy.md`。
+  `docs/zh/adr/0035-chinese-first-language-policy.md` 与
+  `docs/zh/adr/0036-chinese-only-documentation.md`。
 
 ## 项目结构
 
