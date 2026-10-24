@@ -1,8 +1,8 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     Bookmark for restoring (docking back) an auto-hidden item: preferably back to the original group and
-///     index, falling back to an edge when the original group no longer exists.
+///     用于恢复（回停）自动隐藏条目的书签：优先回到原 Group 与原索引，原 Group
+///     不存在时回退到边缘。
 /// </summary>
 public readonly struct DockBack : IEquatable<DockBack>
 {
@@ -19,7 +19,8 @@ public readonly struct DockBack : IEquatable<DockBack>
     private readonly bool _isInitialized;
 
     /// <summary>
-    ///     Constructs a bookmark; the preferred group identifier must not be default, the index must not be negative, and the fallback edge must be known.
+    ///     构造书签；首选 Group 标识符不得为默认值，索引不得为负数，回退边缘
+    ///     必须是已知值。
     /// </summary>
     public DockBack(
         LayoutNodeId preferredGroupId,
@@ -50,7 +51,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     The group to return to first when restoring.
+    ///     恢复时优先返回的 Group。
     /// </summary>
     public LayoutNodeId PreferredGroupId
     {
@@ -62,7 +63,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     The index at which to insert when restoring within the group (non-negative).
+    ///     在 Group 内恢复时插入的位置索引（非负）。
     /// </summary>
     public int PreferredIndex
     {
@@ -74,7 +75,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     The fallback placement edge used when the preferred group is missing.
+    ///     首选 Group 缺失时使用的回退放置边缘。
     /// </summary>
     public WorkspaceEdge FallbackEdge
     {
@@ -86,7 +87,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    ///     获取一个值，指示该实例是否为默认的未初始化值。
     /// </summary>
     public bool IsDefault => !_isInitialized;
 
@@ -116,7 +117,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     Determines whether two dock-back bookmarks are equal.
+    ///     判断两个 dock-back 书签是否相等。
     /// </summary>
     public static bool operator ==(DockBack left, DockBack right)
     {
@@ -124,7 +125,7 @@ public readonly struct DockBack : IEquatable<DockBack>
     }
 
     /// <summary>
-    ///     Determines whether two dock-back bookmarks are unequal.
+    ///     判断两个 dock-back 书签是否不相等。
     /// </summary>
     public static bool operator !=(DockBack left, DockBack right)
     {

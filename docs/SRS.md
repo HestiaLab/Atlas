@@ -1,9 +1,8 @@
-# Software Requirements Specification (SRS)
+# 软件需求规范（SRS）
 
-> This is a stable compatibility entry point. The canonical English document
-> has moved to [docs/en/SRS.md](./en/SRS.md). The Chinese translation lives
-> at [docs/zh/SRS.md](./zh/SRS.md).
+> 本文件是稳定兼容入口。中文权威版本位于
+> [docs/zh/SRS.md](./zh/SRS.md)；英文镜像位于
+> [docs/en/SRS.md](./en/SRS.md)。
 >
-> This stub intentionally contains only the migration notice and links; it
-> does not duplicate the specification body. Bookmarked deep links into this
-> old path cannot be automatically redirected.
+> 本 stub 仅保留迁移说明与链接，不复制规范正文。指向旧路径的书签深层链接
+> 无法自动重定向。

@@ -1,72 +1,72 @@
 namespace Atlas.Core.Results;
 
 /// <summary>
-///     Identifies a stable expected workspace failure.
+///     标识稳定的预期工作区失败。
 /// </summary>
 public enum WorkspaceErrorCode
 {
     /// <summary>
-    ///     The stored layout uses an unsupported schema version.
+    ///     存储的布局使用了不支持的 schema 版本。
     /// </summary>
     LayoutVersionIncompatible = 1,
 
     /// <summary>
-    ///     The supplied layout data is invalid.
+    ///     提供的布局数据无效。
     /// </summary>
     InvalidLayoutData = 3,
 
     /// <summary>
-    ///     The supplied state contains duplicate tab identifiers.
+    ///     提供的状态包含重复的标签页标识符。
     /// </summary>
     DuplicateTabId = 4,
 
     /// <summary>
-    ///     The requested dock item does not exist.
+    ///     请求的停靠条目不存在。
     /// </summary>
     ItemNotFound = 5,
 
     /// <summary>
-    ///     The operation targets a stale workspace revision.
+    ///     操作针对过期的工作区修订号。
     /// </summary>
     StaleOperation = 6,
 
     /// <summary>
-    ///     The requested content identifier is not registered.
+    ///     请求的内容标识符未注册。
     /// </summary>
     ContentNotRegistered = 7,
 
     /// <summary>
-    ///     The target is rejected by the placement policy.
+    ///     目标被放置策略拒绝。
     /// </summary>
     TargetRejectedByPolicy = 8,
 
     /// <summary>
-    ///     The item capability set forbids the operation.
+    ///     条目的能力集禁止该操作。
     /// </summary>
     CapabilityRejected = 9,
 
     /// <summary>
-    ///     The asynchronous close guard cancelled the operation.
+    ///     异步关闭守卫取消了操作。
     /// </summary>
     CloseCancelledByGuard = 10,
 
     /// <summary>
-    ///     The configured persistence provider is unavailable.
+    ///     配置的持久化提供程序不可用。
     /// </summary>
     PersistenceUnavailable = 11,
 
     /// <summary>
-    ///     The workspace is faulted and cannot continue.
+    ///     工作区已故障，无法继续。
     /// </summary>
     WorkspaceFaulted = 12,
 
     /// <summary>
-    ///     The requested layout target does not exist.
+    ///     请求的布局目标不存在。
     /// </summary>
     TargetNotFound = 15,
 
     /// <summary>
-    ///     The requested content identity duplicates an existing workspace item.
+    ///     请求的内容身份与现有工作区条目重复。
     /// </summary>
     DuplicateContentIdentity = 16,
 }

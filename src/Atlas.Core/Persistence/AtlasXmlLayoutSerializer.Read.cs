@@ -9,7 +9,7 @@ using Atlas.Core.Validation;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Read members of <see cref="AtlasXmlLayoutSerializer"/> (partial).
+///     <see cref="AtlasXmlLayoutSerializer"/> 的读取成员（partial）。
 /// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {

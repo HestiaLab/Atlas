@@ -1,7 +1,7 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     Pure result value of split resolution: the final sizes of both children, the effective constraints, and whether the result was clamped.
+///     分割解析的纯结果值：两个子项的最终尺寸、生效约束，以及结果是否被钳制。
 /// </summary>
 public readonly struct ResolvedSplitLayout
 {
@@ -18,28 +18,27 @@ public readonly struct ResolvedSplitLayout
     }
 
     /// <summary>
-    ///     The resolved size of the first child (CSS pixels).
+    ///     第一个子项的解析尺寸（CSS 像素）。
     /// </summary>
     public double FirstExtent { get; }
 
     /// <summary>
-    ///     The resolved size of the second child (CSS pixels).
+    ///     第二个子项的解析尺寸（CSS 像素）。
     /// </summary>
     public double SecondExtent { get; }
 
     /// <summary>
-    ///     The constraint set in effect for this resolution, identical to the constraints passed to Resolve (resolution does not modify the constraints).
+    ///     本次解析生效的约束集，与传给 Resolve 的约束相同（解析不会修改约束）。
     /// </summary>
     public SplitConstraints EffectiveConstraints { get; }
 
     /// <summary>
-    ///     Whether the preferred size was corrected by constraints or container bounds; false means it renders strictly by preference.
+    ///     偏好尺寸是否被约束或容器边界修正；false 表示严格按偏好渲染。
     /// </summary>
     public bool IsClamped { get; }
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is the default value
-    ///     (zero extents, default constraints, not clamped).
+    ///     获取一个值，指示该实例是否为默认值（尺寸为零、默认约束、未被钳制）。
     /// </summary>
     public bool IsDefault =>
         FirstExtent == 0d

@@ -1,10 +1,14 @@
 # Atlas 多语言文档改造方案
 
-> [English](../../en/development/multilingual-documentation-plan.md) | 简体中文
->
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> **状态：Superseded（历史记录）**。本文描述 2026-08 的“英文权威 + 中文镜像”
+> 方案，已由 [ADR-0035](../adr/0035-chinese-first-language-policy.md) 取代。
+> 保留作为历史记录，不再维护。
 
-- 状态：Proposed
+> 简体中文（历史记录） | [English mirror](../../en/development/multilingual-documentation-plan.md)
+>
+> 状态：Superseded（由 ADR-0035 取代）。
+
+- 状态：Superseded
 - 日期：2026-08-02
 - 范围：仓库根目录 README、`docs/`、文档引用、文档协作规则，以及直接读取文档的验证测试
 - 不包含：产品运行时代码、产品行为、公共 API、NuGet 包结构或构建行为变更
@@ -156,8 +160,8 @@ docs/
 ```markdown
 # Atlas Documentation
 
-- [English](./en/README.md) — canonical after cutover
-- [简体中文](./zh/README.md) — Chinese source/translation; see status table
+- [English](../../en/README.md) — canonical after cutover
+- [简体中文](../README.md) — Chinese source/translation; see status table
 ```
 
 ## 5. 文件映射

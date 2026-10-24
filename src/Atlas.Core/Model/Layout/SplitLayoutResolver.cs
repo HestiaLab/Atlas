@@ -1,22 +1,22 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     Pure resolver for split layouts: resolves the container extent, the committed basis, and the constraints into a deterministic result without modifying the basis.
+///     分割布局的纯解析器：把容器尺寸、已提交基准与约束解析为确定性结果，
+///     且不修改基准。
 /// </summary>
 public static class SplitLayoutResolver
 {
     /// <summary>
-    ///     Resolves a two-child split: first computes the preferred sizes from the basis (proportional = share,
-    ///     fixed = anchored value), then clamps the preferred values to the feasible range derived from both
-    ///     sides' constraints; when the combined minimums exceed the container or the combined maximums fall
-    ///     short of it there is no feasible solution, so the bound values are returned directly and flagged as
-    ///     clamped.
+    ///     解析双子项分割：先根据基准计算偏好尺寸（比例 = 占比，固定 = 锚定
+    ///     值），再把偏好值钳制到由双方约束推导出的可行区间；当双方最小值之和
+    ///     超过容器、或双方最大值之和小于容器时无可行解，直接返回边界值并标记
+    ///     为已钳制。
     /// </summary>
-    /// <param name="availableExtent">A finite, non-negative container extent.</param>
-    /// <param name="basis">The committed split basis.</param>
-    /// <param name="constraints">The child size constraints; used to derive the feasible range.</param>
+    /// <param name="availableExtent">有限且非负的容器尺寸。</param>
+    /// <param name="basis">已提交的分割基准。</param>
+    /// <param name="constraints">子项尺寸约束；用于推导可行区间。</param>
     /// <returns>
-    ///     The resolved child sizes and clamping state.
+    ///     解析后的子项尺寸与钳制状态。
     /// </returns>
     public static ResolvedSplitLayout Resolve(
         double availableExtent,

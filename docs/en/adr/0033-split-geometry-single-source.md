@@ -1,6 +1,6 @@
 # ADR-0033: Split Geometry Single Source of Truth
 
-> English (canonical) | [简体中文](../../zh/adr/0033-split-geometry-single-source.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0033-split-geometry-single-source.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

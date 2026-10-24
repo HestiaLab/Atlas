@@ -1,6 +1,6 @@
 # ADR-0013: Content Trust and SandboxedFrame Security Boundary
 
-> English (canonical) | [简体中文](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0013-content-trust-and-sandboxed-frame.md)
 
 - Status: Accepted
 - Date: 2026-07-31

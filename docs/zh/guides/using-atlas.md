@@ -1,8 +1,8 @@
 # 使用 Atlas：一个完整示例
 
-> [English](../../en/guides/using-atlas.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/guides/using-atlas.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例取自 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 教学演示；下面的每一段代码都来自真实运行的程序。
 

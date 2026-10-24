@@ -1,6 +1,6 @@
 # ADR-0008: P5 Drag Protocol and Document Docking API
 
-> English (canonical) | [简体中文](../../zh/adr/0008-p5-drag-protocol-and-document-docking-api.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0008-p5-drag-protocol-and-document-docking-api.md)
 
 - Status: Accepted
 - Date: 2026-07-31

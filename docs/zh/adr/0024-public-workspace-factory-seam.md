@@ -1,6 +1,8 @@
 # ADR-0024：公共工作区工厂接缝
 
-> [English (canonical)](../../en/adr/0024-public-workspace-factory-seam.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0024-public-workspace-factory-seam.md)
+>
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 - **状态**：Accepted
 - **日期**：2026-10-23

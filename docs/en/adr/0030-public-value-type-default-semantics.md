@@ -1,6 +1,6 @@
 # ADR-0030: Public Value-Type Default Semantics and GroupNode Naming
 
-> English (canonical) | [简体中文](../../zh/adr/0030-public-value-type-default-semantics.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0030-public-value-type-default-semantics.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

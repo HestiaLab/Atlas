@@ -161,9 +161,8 @@ internal sealed class AtlasGroupView : ComponentBase
         if (Group.SelectedItemId is not null)
         {
             var selected = Items.First(item => item.Id == Group.SelectedItemId.Value);
-            // aria-labelledby is only emitted for non-empty groups; the DOM
-            // metadata manifest lists it as required for the golden fixture,
-            // which renders populated groups only.
+            // aria-labelledby 只为非空 Group 输出；DOM 元数据清单将其列为
+            // 黄金夹具的必需项，而该夹具只渲染有内容的 Group。
             builder.AddAttribute(
                 6,
                 "aria-labelledby",
@@ -360,10 +359,9 @@ internal sealed class AtlasGroupView : ComponentBase
                 10,
                 "data-atlas-insertion-index",
                 itemIndex.ToString(CultureInfo.InvariantCulture));
-            // Frozen capability contract: the numeric value of the Core
-            // DockItemCapabilities flags enum (ADR-0002); the TS controller
-            // tests bit 1<<1 (CanMove). The same contract applies to the
-            // panel header and toolbar entry projections.
+            // 冻结的能力契约：Core DockItemCapabilities 标志枚举的数值
+            // （ADR-0002）；TS 控制器测试 1<<1 位（CanMove）。同一契约适用于
+            // 面板标题与工具栏条目投影。
             builder.AddAttribute(
                 11,
                 "data-atlas-command-capabilities",

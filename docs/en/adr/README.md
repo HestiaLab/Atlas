@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-> English (canonical) | [简体中文](../../zh/adr/README.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/README.md)
 
 Atlas uses ADRs to record architecture decisions that affect the public API,
 package structure, cross-language protocol, persistence compatibility, or
@@ -45,7 +45,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0023](./0023-css-variable-theming.md) | Accepted | CSS variable theming contract: tokenize atlas.css `--atlas-*` variables for consumer customization |
 | [ADR-0024](./0024-public-workspace-factory-seam.md) | Accepted | Public workspace factory seam; publish `AtlasWorkspaceFactory` while keeping planners/workspace internal (CORE-P2-02) |
 | [ADR-0025](./0025-toolbar-order-insertion-semantics.md) | Accepted | Toolbar order insertion by group neighbor anchor instead of numeric group index (CORE-P2-12) |
-| [ADR-0026](./0026-code-comment-language-policy.md) | Accepted | Tiered code-comment language policy: English public XML docs/messages, incremental internal comments (CORE-P2-20) |
+| [ADR-0026](./0026-code-comment-language-policy.md) | Superseded | Tiered code-comment language policy: English public XML docs/messages, incremental internal comments (CORE-P2-20); superseded by ADR-0035 |
 | [ADR-0027](./0027-subscriber-fault-diagnostics.md) | Accepted | Optional `SubscriberFaultSink` reports subscriber exceptions without changing event isolation (CORE-P2-17) |
 | [ADR-0028](./0028-history-truncation-and-barriers.md) | Accepted | History truncation outcome on the change set and history-barrier semantics (CORE-P1-03) |
 | [ADR-0029](./0029-public-operation-api-baseline.md) | Accepted | Supported/reserved operation set, error context kinds, command mapping and shipped baseline (CORE-P2-04/P3-06) |
@@ -54,6 +54,7 @@ maintainer can approve an architecture choice as Accepted.
 | [ADR-0032](./0032-unwired-public-api-disposition.md) | Accepted | Disposition of unwired public types and unused error codes (CORE-P2-15) |
 | [ADR-0033](./0033-split-geometry-single-source.md) | Accepted | Core reference semantics with shared C#/TS golden vectors (CORE-P2-16) |
 | [ADR-0034](./0034-core-boundary-dependencies-and-autohide-relocation.md) | Accepted | One-way Operations→Persistence layering and deterministic auto-hide bookmark cleanup (CORE-P2-01/P1-05) |
+| [ADR-0035](./0035-chinese-first-language-policy.md) | Accepted | Chinese-first language policy: Chinese code comments, public XML docs, and authoritative docs with English mirrors; supersedes ADR-0026 |
 
 ## Writing Conventions
 

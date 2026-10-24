@@ -1,47 +1,47 @@
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     Identifies semantic workspace keyboard commands.
+///     标识语义化工作区键盘命令。
 /// </summary>
 public enum AtlasKeyboardCommand
 {
     /// <summary>
-    ///     Activates the next document tab.
+    ///     激活下一个文档标签页。
     /// </summary>
     NextTab = 0,
     /// <summary>
-    ///     Activates the previous document tab.
+    ///     激活上一个文档标签页。
     /// </summary>
     PreviousTab = 1,
     /// <summary>
-    ///     Closes the active document.
+    ///     关闭活动文档。
     /// </summary>
     CloseActiveDocument = 2,
     /// <summary>
-    ///     Moves focus toward inline-start.
+    ///     将焦点移向行内起始侧。
     /// </summary>
     FocusInlineStart = 3,
     /// <summary>
-    ///     Moves focus toward inline-end.
+    ///     将焦点移向行内结束侧。
     /// </summary>
     FocusInlineEnd = 4,
     /// <summary>
-    ///     Moves focus toward block-start.
+    ///     将焦点移向块起始侧。
     /// </summary>
     FocusBlockStart = 5,
     /// <summary>
-    ///     Moves focus toward block-end.
+    ///     将焦点移向块结束侧。
     /// </summary>
     FocusBlockEnd = 6,
 }
 
 /// <summary>
-///     Describes a physical key combination using <c>KeyboardEvent.code</c>.
+///     使用 <c>KeyboardEvent.code</c> 描述物理按键组合。
 /// </summary>
 public sealed class AtlasKeyboardChord
 {
     /// <summary>
-    ///     Initializes a physical key combination.
+    ///     初始化物理按键组合。
     /// </summary>
     public AtlasKeyboardChord(
         string code,
@@ -63,34 +63,34 @@ public sealed class AtlasKeyboardChord
     }
 
     /// <summary>
-    ///     Gets the physical <c>KeyboardEvent.code</c>.
+    ///     获取物理 <c>KeyboardEvent.code</c>。
     /// </summary>
     public string Code { get; }
     /// <summary>
-    ///     Gets whether Control must be pressed.
+    ///     获取是否必须按下 Control。
     /// </summary>
     public bool Control { get; }
     /// <summary>
-    ///     Gets whether Shift must be pressed.
+    ///     获取是否必须按下 Shift。
     /// </summary>
     public bool Shift { get; }
     /// <summary>
-    ///     Gets whether Alt must be pressed.
+    ///     获取是否必须按下 Alt。
     /// </summary>
     public bool Alt { get; }
     /// <summary>
-    ///     Gets whether Meta must be pressed.
+    ///     获取是否必须按下 Meta。
     /// </summary>
     public bool Meta { get; }
 }
 
 /// <summary>
-///     Binds a physical key combination to a semantic command.
+///     把物理按键组合绑定到语义命令。
 /// </summary>
 public sealed class AtlasKeyboardBinding
 {
     /// <summary>
-    ///     Initializes a keyboard binding.
+    ///     初始化键盘绑定。
     /// </summary>
     public AtlasKeyboardBinding(
         AtlasKeyboardChord chord,
@@ -109,28 +109,28 @@ public sealed class AtlasKeyboardBinding
     }
 
     /// <summary>
-    ///     Gets the key combination.
+    ///     获取按键组合。
     /// </summary>
     public AtlasKeyboardChord Chord { get; }
     /// <summary>
-    ///     Gets the semantic command.
+    ///     获取语义命令。
     /// </summary>
     public AtlasKeyboardCommand Command { get; }
     /// <summary>
-    ///     Gets whether the binding also fires inside editable controls.
+    ///     获取绑定是否在可编辑控件内也会触发。
     /// </summary>
     public bool IsGlobal { get; }
 }
 
 /// <summary>
-///     Provides an immutable keyboard binding set for a single Host.
+///     为单个 Host 提供不可变键盘绑定集。
 /// </summary>
 public sealed class AtlasKeyboardCommandMap
 {
-    // Built-in default command map: the common tab switch, close, and focus
-    // movement chords. The TypeScript controller keeps a mirrored fallback
-    // copy (ClientScripts/controller.ts defaultKeyboardBindings) for
-    // static-fixture attachments; the two lists must stay in sync.
+    // 内置默认命令映射：常用的标签页切换、关闭与焦点移动组合键。
+    // TypeScript 控制器保留一份镜像回退副本
+    // （ClientScripts/controller.ts defaultKeyboardBindings）用于静态夹具挂载；
+    // 两份列表必须保持同步。
     private static readonly AtlasKeyboardBinding[] DefaultBindings =
     {
         new(new AtlasKeyboardChord("Tab", control: true), AtlasKeyboardCommand.NextTab),
@@ -158,8 +158,8 @@ public sealed class AtlasKeyboardCommandMap
     };
 
     /// <summary>
-    ///     Initializes a keyboard command map; the same key combination (code
-    ///     and modifiers) can only be bound once, and duplicates throw.
+    ///     初始化键盘命令映射；同一按键组合（code 与修饰键）只能绑定一次，
+    ///     重复项会抛出异常。
     /// </summary>
     public AtlasKeyboardCommandMap(IEnumerable<AtlasKeyboardBinding> bindings)
     {
@@ -187,12 +187,12 @@ public sealed class AtlasKeyboardCommandMap
     }
 
     /// <summary>
-    ///     Gets the default Atlas command map.
+    ///     获取默认 Atlas 命令映射。
     /// </summary>
     public static AtlasKeyboardCommandMap Default { get; } = new(DefaultBindings);
 
     /// <summary>
-    ///     Gets the bindings in matching order.
+    ///     获取按匹配顺序排列的绑定。
     /// </summary>
     public IReadOnlyList<AtlasKeyboardBinding> Bindings { get; }
 }

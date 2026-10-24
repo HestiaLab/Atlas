@@ -4,12 +4,12 @@ using Atlas.Core.Results;
 namespace Atlas.Core;
 
 /// <summary>
-///     Creates fully validated, isolated Atlas workspaces.
+///     创建经过完整验证的隔离 Atlas 工作区。
 /// </summary>
 public interface IAtlasWorkspaceFactory
 {
     /// <summary>
-    ///     Creates a workspace from an immutable definition.
+    ///     从不可变定义创建工作区。
     /// </summary>
     WorkspaceResult<IAtlasWorkspace> Create(
         AtlasWorkspaceDefinition definition,

@@ -1,8 +1,8 @@
 # Atlas 安全文档
 
-> [English](../../en/security/README.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/security/README.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本目录记录 Atlas 的内容信任模型和安全边界。仓库级漏洞报告、受支持版本和依赖策略见 [`SECURITY.md`](../../../SECURITY.md)。
 

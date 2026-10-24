@@ -223,10 +223,9 @@ public sealed class LayoutAutoPersistenceTests
 
     private static IAtlasWorkspace CreateWorkspace()
     {
-        // The group is non-empty so its Expanded visibility is a legal
-        // committed state: the empty-Persistent-group collapse invariant
-        // (GroupVisibilityInvariant) is exercised by the dedicated invariant
-        // tests, not by the persistence tests.
+        // 该 Group 非空，因此其 Expanded 可见性是合法的已提交状态：
+        // 空 Persistent 工具 Group 的折叠不变量（GroupVisibilityInvariant）
+        // 由专门的不变量测试覆盖，而不是持久化测试。
         var tool = new DockItem(
             new DockItemId("tool"),
             DockItemKind.Tool,

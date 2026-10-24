@@ -1,17 +1,18 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-///     Identifies the behavioural kind of a dock item; determines the hosting group, the allowed capability set, and the document state rules.
+///     标识停靠条目的行为种类；决定承载它的 Group、允许的能力集与文档状态
+///     规则。
 /// </summary>
 public enum DockItemKind
 {
     /// <summary>
-    ///     A tool window item hosted by a tool group.
+    ///     由工具 Group 承载的工具窗口条目。
     /// </summary>
     Tool = 0,
 
     /// <summary>
-    ///     A document item hosted by a document group.
+    ///     由文档 Group 承载的文档条目。
     /// </summary>
     Document = 1,
 }

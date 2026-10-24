@@ -1,6 +1,6 @@
 # Atlas Architecture Overview
 
-> English (canonical) | [简体中文](../../zh/guides/architecture-overview.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/guides/architecture-overview.md)
 
 This document helps framework developers quickly build a mental model of
 Atlas's code and runtime. It is a concise tour of the [HLD](../HLD.md) and

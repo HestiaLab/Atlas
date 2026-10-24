@@ -1,6 +1,8 @@
 # Development Implementation Records
 
-> English (canonical) | [简体中文](../../zh/development/README.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/development/README.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 This directory stores Atlas's phase implementation records and major fix
 retrospectives. They help developers understand the implementation process,

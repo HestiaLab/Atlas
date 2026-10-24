@@ -9,9 +9,8 @@ using Atlas.Core.Results;
 namespace Atlas.Core;
 
 /// <summary>
-///     Provides a typed convenience command facade over workspace operations;
-///     each command builds an immutable operation and commits it atomically through ExecuteAsync,
-///     with the same behavior as calling the operation engine directly.
+///     为工作区操作提供带类型的便捷命令门面；每个命令构造不可变操作，并通过
+///     ExecuteAsync 原子提交，行为与直接调用操作引擎一致。
 /// </summary>
 public sealed class AtlasWorkspaceCommands
 {
@@ -19,7 +18,7 @@ public sealed class AtlasWorkspaceCommands
     private readonly IAtlasWorkspace workspace;
 
     /// <summary>
-    ///     Initializes a command facade for a single workspace.
+    ///     为单个工作区初始化命令门面。
     /// </summary>
     public AtlasWorkspaceCommands(IAtlasWorkspace workspace)
     {
@@ -27,9 +26,8 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Opens an item in an explicit target group; the deduplication mode decides how
-    ///     content-equivalent items are handled, and Stale is returned when baseRevision
-    ///     differs from the current revision.
+    ///     在显式目标 Group 中打开条目；去重模式决定如何处理内容等价的条目；
+    ///     当 baseRevision 与当前 revision 不一致时返回 Stale。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> OpenItemAsync(
         DockItem item,
@@ -50,8 +48,7 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Closes an item by identifier; Stale is returned when baseRevision differs from
-    ///     the current revision.
+    ///     按标识符关闭条目；当 baseRevision 与当前 revision 不一致时返回 Stale。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> CloseItemAsync(
         DockItemId itemId,
@@ -64,11 +61,10 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Activates an item and updates the selection state of its group; selecting a
-    ///     collapsed tool group expands it, and Stale is returned when baseRevision differs
-    ///     from the current revision.
+    ///     激活条目并更新其 Group 的选择状态；选择已折叠的工具 Group 会将其展开；
+    ///     当 baseRevision 与当前 revision 不一致时返回 Stale。
     /// </summary>
-    /// <remarks>Maps to <c>SelectItemOperation</c>.</remarks>
+    /// <remarks>映射到 <c>SelectItemOperation</c>。</remarks>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateItemAsync(
         DockItemId itemId,
         long? baseRevision = null,
@@ -80,9 +76,9 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Toggles the expanded/collapsed visibility of a tool group.
+    ///     切换工具 Group 的展开/折叠可见性。
     /// </summary>
-    /// <remarks>Maps to <c>SetGroupVisibilityOperation</c>.</remarks>
+    /// <remarks>映射到 <c>SetGroupVisibilityOperation</c>。</remarks>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> SetToolVisibilityAsync(
         LayoutNodeId groupId,
         bool visible,
@@ -98,7 +94,7 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Changes the visibility of a logical tool bar.
+    ///     改变逻辑工具栏的可见性。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> SetToolBarVisibilityAsync(
         LogicalSide side,
@@ -112,9 +108,8 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Atomically restores a validated persistent layout and returns its report;
-    ///     the report carries the change set and the outcome of remapping, placeholders,
-    ///     and removals.
+    ///     原子恢复已验证的持久化布局并返回报告；报告包含变更集以及重映射、
+    ///     占位符和移除的结果。
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutRestoreResult>> RestoreAsync(
         LayoutRestoreDocument document,
@@ -137,8 +132,7 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
-    ///     Activates the first item in the current snapshot that matches the predicate;
-    ///     returns NoChange when no item matches.
+    ///     激活当前快照中第一个匹配谓词的条目；没有条目匹配时返回 NoChange。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateFirstAsync(
         Func<DockItem, bool> predicate,

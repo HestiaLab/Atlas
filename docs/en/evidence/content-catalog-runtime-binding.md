@@ -1,5 +1,9 @@
 # Content Catalog and Runtime Binding Verification Evidence
 
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/content-catalog-runtime-binding.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
+
 - Date: 2026-08-03
 - Branch: `feature/content-catalog`
 - Commits: `44502b4` (frozen contract) → `ca100bc` (catalog + routes) →

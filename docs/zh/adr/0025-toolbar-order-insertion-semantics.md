@@ -1,6 +1,8 @@
 # ADR-0025：工具栏顺序插入语义
 
-> [English (canonical)](../../en/adr/0025-toolbar-order-insertion-semantics.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0025-toolbar-order-insertion-semantics.md)
+>
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 - **状态**：Accepted
 - **日期**：2026-10-23

@@ -1,8 +1,8 @@
 # ADR-0026：代码注释与 XML 文档语言政策
 
-> [English (canonical)](../../en/adr/0026-code-comment-language-policy.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0026-code-comment-language-policy.md)
 
-- **状态**：Accepted
+- **状态**：Superseded（由 [ADR-0035](./0035-chinese-first-language-policy.md) 取代）
 - **日期**：2026-10-23
 - **决策人**：Atlas 维护者（2026-10-23 批准）
 - **相关**：AGENTS.md、CONTRIBUTING.md；质量发现 CORE-P2-20
@@ -81,5 +81,5 @@
 
 ## 取代关系
 
-无。补充现有英文权威文档政策在代码注释层的规则；不取代 AGENTS.md 或
-multilingual documentation plan。
+由 [ADR-0035](./0035-chinese-first-language-policy.md) 取代（2026-10-24 接受）。
+原决策与历史理由保留作为记录，不再作为现行政策。

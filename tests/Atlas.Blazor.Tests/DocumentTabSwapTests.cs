@@ -28,10 +28,9 @@ public sealed class DocumentTabSwapTests : TestContext
     [Fact]
     public async Task Incremental_tab_reorder_preserves_tab_attributes()
     {
-        // Regression: after a same-group document tab reorder every tab must
-        // keep its drag metadata and click binding (real-browser incremental
-        // DOM application drops attributes on SetKey sibling swaps; see
-        // ada-blazor-interaction-pitfalls Pitfall 6).
+        // 回归：同 Group 文档标签页重排后，每个标签页都必须保留其拖拽元数据与
+        // 点击绑定（真实浏览器增量 DOM 应用在 SetKey 兄弟节点交换时会丢失属性；
+        // 参见 ada-blazor-interaction-pitfalls 陷阱 6）。
         var (workspace, first, second) = CreateWorkspace();
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters.Add(component => component.Workspace, workspace));

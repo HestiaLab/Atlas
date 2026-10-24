@@ -1,6 +1,6 @@
 # ADR-0029: Public Operation API Baseline
 
-> English (canonical) | [简体中文](../../zh/adr/0029-public-operation-api-baseline.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0029-public-operation-api-baseline.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

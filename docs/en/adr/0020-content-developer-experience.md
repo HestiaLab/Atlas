@@ -1,6 +1,6 @@
 # ADR-0020: Content Developer Experience
 
-> English (canonical) | [简体中文](../../zh/adr/0020-content-developer-experience.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0020-content-developer-experience.md)
 
 - Status: Accepted
 - Date: 2026-08-05

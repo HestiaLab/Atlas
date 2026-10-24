@@ -233,8 +233,8 @@ public sealed class AtlasDefinitionReconcilerCultureTests
                 new LayoutNode[] { split, first, second },
                 Array.Empty<DockItem>());
 
-            // de-DE formats 0.5 as "0,5"; a culture-sensitive fingerprint
-            // would make the declaration look changed on every render.
+            // de-DE 将 0.5 格式化为 "0,5"；文化敏感的指纹
+            // 会让声明在每次渲染时都看起来已变化。
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             var invariantFingerprint = AtlasDefinitionReconciler.Fingerprint(definition);
             CultureInfo.CurrentCulture = new CultureInfo("de-DE");

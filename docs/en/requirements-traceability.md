@@ -1,6 +1,6 @@
 # Requirements Traceability
 
-> English (canonical) | [简体中文](../zh/requirements-traceability.md)
+> English mirror (Chinese authoritative) | [简体中文](../zh/requirements-traceability.md)
 
 This file records the status of SRS formal requirements from design through
 implementation and verification. The normative source for design mapping is
@@ -10,6 +10,11 @@ implementation and verification. The normative source for design mapping is
 
 - Baseline date: 2026-07-31; baseline count updated to 151 = REQ-F 142 +
   REQ-NF 9 on 2026-08-06 when REQ-NF-009 was added via ADR-0023
+- 2026-10-24 language-policy migration (ADR-0035): code comments, public XML
+  documentation, and authoritative documents become Chinese-first with English
+  mirrors retained; language-only change, zero behavior change. Measured gates:
+  341 Core + 135 Blazor + 51 JS all pass (the earlier 130 Blazor count is
+  corrected to 135).
 - Formal requirement blocks: 151 (REQ-F 142 + REQ-NF 9)
 - Current functional implementation status: see the P8 item-by-item audit;
   Verified 46, Implemented 18, In Progress 80, Not Started 5, Deferred 2
@@ -18,7 +23,7 @@ implementation and verification. The normative source for design mapping is
 - Latest measured gate baseline (2026-10-23, branch
   `main`, after Phase 0 correctness fixes and the
   Phase 1 structural-refactor slice and ADR-0024~0034 implementation):
-  341 Core + 130 Blazor tests; Debug
+  341 Core + 135 Blazor tests; Debug
   build/test and format pass; Core line coverage 91.25% / branch 81.07%.
   The TypeScript typecheck and 51 JS tests (50 protocol + 1 split-geometry
   fixture parity) pass; `build:js` regenerates the committed bundle. Release

@@ -1,14 +1,13 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Persistence metadata for a named workspace snapshot.
+///     命名工作区快照的持久化元数据。
 /// </summary>
 public sealed class LayoutPresetDescriptor
 {
     /// <summary>
-    ///     Creates the preset metadata; the name is validated as a storage key
-    ///     (rejecting null, control characters, path separators and reserved
-    ///     prefixes), and the revision must be non-negative.
+    ///     创建预设元数据；名称会作为存储键校验（拒绝 null、控制字符、路径
+    ///     分隔符与保留前缀），修订号必须非负。
     /// </summary>
     public LayoutPresetDescriptor(
         string name,
@@ -31,22 +30,22 @@ public sealed class LayoutPresetDescriptor
     }
 
     /// <summary>
-    ///     Gets the ordinal preset name.
+    ///     获取序数预设名称。
     /// </summary>
     public string Name { get; }
 
     /// <summary>
-    ///     Gets the persisted schema version.
+    ///     获取持久化的 schema 版本。
     /// </summary>
     public string SchemaVersion { get; }
 
     /// <summary>
-    ///     Gets the captured runtime revision.
+    ///     获取捕获时的运行时修订号。
     /// </summary>
     public long SavedRevision { get; }
 
     /// <summary>
-    ///     Gets the optional capture timestamp.
+    ///     获取可选的捕获时间戳。
     /// </summary>
     public DateTimeOffset? SavedAt { get; }
 

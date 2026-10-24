@@ -1,6 +1,8 @@
 # Verification Evidence Index
 
-> English (canonical) | [简体中文](../../zh/evidence/README.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/README.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 This directory stores Atlas verification records for specific phases,
 branches, build artifacts, and environments. Evidence documents "what was

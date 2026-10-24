@@ -3,14 +3,13 @@ using Atlas.Core.Items;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Configures parsing limits, content registration checks, the missing content
-///     policy and reserved identities used during restore.
+///     配置恢复期间使用的解析限制、内容注册检查、缺失内容策略与保留标识。
 /// </summary>
 public sealed class LayoutRestoreOptions
 {
     /// <summary>
-    ///     Creates the options; the missing content policy must be a defined
-    ///     enumeration value, and reserved identities must be non-default and unique.
+    ///     创建选项；缺失内容策略必须是已定义的枚举值，保留标识必须非默认且
+    ///     唯一。
     /// </summary>
     public LayoutRestoreOptions(
         LayoutPersistenceLimits? limits = null,
@@ -41,22 +40,22 @@ public sealed class LayoutRestoreOptions
     }
 
     /// <summary>
-    ///     Gets the parser resource limits.
+    ///     获取解析器资源限制。
     /// </summary>
     public LayoutPersistenceLimits Limits { get; }
 
     /// <summary>
-    ///     Gets the optional side-effect-free content registration predicate.
+    ///     获取可选的、无副作用的内容注册谓词。
     /// </summary>
     public Func<ContentReference, bool>? IsContentRegistered { get; }
 
     /// <summary>
-    ///     Gets the missing content behavior.
+    ///     获取缺失内容行为。
     /// </summary>
     public MissingContentPolicy MissingContentPolicy { get; }
 
     /// <summary>
-    ///     Gets the identities in the target scope that must be preserved.
+    ///     获取目标作用域中必须保留的标识。
     /// </summary>
     public IReadOnlyList<DockItemId> ReservedItemIds { get; }
 }

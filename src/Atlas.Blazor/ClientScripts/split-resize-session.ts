@@ -99,11 +99,10 @@ export class SplitResizeSession {
     state.split.removeAttribute("data-atlas-resizing");
     state.splitter.releasePointerCapture?.(event.pointerId);
     if (state.currentRatio !== state.startRatio) {
-      // Keep the preview (the drag position) in place while the commit
-      // round-trips to Blazor. Clearing it synchronously here would let the
-      // split fall back to the previous ratio until Blazor re-renders with
-      // the committed ratio — the visible bounce on release. Blazor confirms
-      // the clear via clearAtlasSplitPreview once the commit result is known.
+      // 在提交往返 Blazor 期间保持预览（拖拽位置）不动。若在此同步清除，
+      // 分割会退回先前比例，直到 Blazor 用已提交比例重新渲染——这就是释放
+      // 时可见的跳动。Blazor 在提交结果可知后通过 clearAtlasSplitPreview
+      // 确认清除。
       this.callbacks.commit(
         state.split,
         state.currentRatio,

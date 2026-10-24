@@ -1,6 +1,6 @@
 # ADR-0012: Content Lifetime and State Preservation
 
-> English (canonical) | [简体中文](../../zh/adr/0012-content-lifetime-and-state-preservation.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0012-content-lifetime-and-state-preservation.md)
 
 - Status: Accepted
 - Date: 2026-07-31

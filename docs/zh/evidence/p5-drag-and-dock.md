@@ -1,8 +1,8 @@
 # P5 Drag & Dock Verification Evidence
 
-> [English](../../en/evidence/p5-drag-and-dock.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/evidence/p5-drag-and-dock.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 
 - 日期：2026-07-31

@@ -3,12 +3,12 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Reorders tool bar entries without changing item placement.
+///     在不改变条目放置位置的情况下重排工具栏条目。
 /// </summary>
 public sealed class ReorderToolBarEntryOperation : LayoutOperation
 {
     /// <summary>
-    ///     Initializes a tool bar only reorder operation.
+    ///     初始化仅工具栏的重排操作。
     /// </summary>
     public ReorderToolBarEntryOperation(
         DockItemId itemId,
@@ -47,17 +47,17 @@ public sealed class ReorderToolBarEntryOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     Gets the tool item behind the entry.
+    ///     获取条目背后的工具项。
     /// </summary>
     public DockItemId ItemId { get; }
 
     /// <summary>
-    ///     Gets the logical tool bar region.
+    ///     获取逻辑工具栏区域。
     /// </summary>
     public LogicalRegion LogicalRegion { get; }
 
     /// <summary>
-    ///     Gets the target entry index.
+    ///     获取目标条目索引。
     /// </summary>
     public int TargetIndex { get; }
 }

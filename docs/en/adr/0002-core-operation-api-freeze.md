@@ -1,6 +1,6 @@
 # ADR-0002: Core Operation API Freeze
 
-> English (canonical) | [简体中文](../../zh/adr/0002-core-operation-api-freeze.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0002-core-operation-api-freeze.md)
 
 - **Status**: Accepted
 - **Date**: 2026-07-31

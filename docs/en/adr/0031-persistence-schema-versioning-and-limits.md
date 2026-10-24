@@ -1,6 +1,6 @@
 # ADR-0031: Persistence Schema Versioning and Limits Alignment
 
-> English (canonical) | [简体中文](../../zh/adr/0031-persistence-schema-versioning-and-limits.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0031-persistence-schema-versioning-and-limits.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

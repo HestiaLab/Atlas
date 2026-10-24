@@ -1,22 +1,22 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Categorizes persistence degradations without exposing document content.
+///     对持久化降级分类，且不暴露文档内容。
 /// </summary>
 public enum WorkspacePersistenceDiagnosticKind
 {
     /// <summary>
-    ///     The configured storage adapter is unavailable.
+    ///     配置的存储适配器不可用。
     /// </summary>
     StorageUnavailable = 0,
 
     /// <summary>
-    ///     The stored document fails validation.
+    ///     存储的文档未通过验证。
     /// </summary>
     CorruptDocument = 1,
 
     /// <summary>
-    ///     The current snapshot cannot be serialized.
+    ///     当前快照无法序列化。
     /// </summary>
     SerializationFailure = 2,
 }

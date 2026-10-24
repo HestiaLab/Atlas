@@ -1,6 +1,6 @@
 # Atlas Development Guide
 
-> English (canonical) | [简体中文](../../zh/guides/development-guide.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/guides/development-guide.md)
 
 This document explains how to modify the Atlas framework without breaking its
 architecture boundaries and compatibility contracts. Branch, commit, and PR

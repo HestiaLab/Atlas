@@ -1,12 +1,12 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Moves a tool item to an explicit target tool group.
+///     把工具条目移动到显式目标工具 Group。
 /// </summary>
 public sealed class MoveToolOperation : LayoutOperation
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="MoveToolOperation"/> class.
+    ///     初始化 <see cref="MoveToolOperation"/> 类的新实例。
     /// </summary>
     public MoveToolOperation(
         DockItemId itemId,
@@ -43,18 +43,17 @@ public sealed class MoveToolOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     Gets the tool item to move.
+    ///     获取要移动的工具条目。
     /// </summary>
     public DockItemId ItemId { get; }
 
     /// <summary>
-    ///     Gets the target tool group.
+    ///     获取目标工具 Group。
     /// </summary>
     public LayoutNodeId TargetGroupId { get; }
 
     /// <summary>
-    ///     Gets the optional target insertion index; when null, appends to the end of the
-    ///     target group.
+    ///     获取可选的目标插入索引；为 null 时追加到目标 Group 末尾。
     /// </summary>
     public int? TargetIndex { get; }
 }

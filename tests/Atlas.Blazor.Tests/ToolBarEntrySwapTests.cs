@@ -29,10 +29,9 @@ public sealed class ToolBarEntrySwapTests : TestContext
     [Fact]
     public async Task Incremental_swap_preserves_entry_attributes()
     {
-        // Regression: after a same-region ToolBar entry swap (Reorder) every
-        // entry must keep its drag metadata. Rendered through the incremental
-        // sequence (render -> move -> render -> reorder -> render) because the
-        // real-browser failure only shows up in incremental DOM application.
+        // 回归：同区域 ToolBar 条目交换（Reorder）后，每个条目都必须保留其
+        // 拖拽元数据。通过增量序列（渲染 -> 移动 -> 渲染 -> 重排 -> 渲染）
+        // 验证，因为真实浏览器失败只在增量 DOM 应用中显现。
         var (workspace, tree, property) = CreateWorkspace();
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters.Add(component => component.Workspace, workspace));
@@ -40,7 +39,7 @@ public sealed class ToolBarEntrySwapTests : TestContext
         cut.WaitForAssertion(
             () => Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry]").Count));
 
-        // Step 1: cross-region move (right-upper -> left-upper, index 1).
+        // 步骤 1：跨区域移动（right-upper -> left-upper，索引 1）。
         var move = await workspace.ExecuteAsync(
             new MoveToolOperation(property.Id, new LayoutNodeId("left-upper"), targetIndex: 1));
         Assert.True(move.Succeeded, move.Error?.DiagnosticId ?? move.Error?.MessageKey);
@@ -51,7 +50,7 @@ public sealed class ToolBarEntrySwapTests : TestContext
                     "[data-atlas-group-id='left-upper'][data-atlas-toolbar-region='InlineStartUpper'][data-atlas-toolbar-entry]")
                     .Count));
 
-        // Step 2: same-region reorder to the end (swap).
+        // 步骤 2：同区域重排到末尾（交换）。
         var reorder = await workspace.ExecuteAsync(
             new ReorderToolBarEntryOperation(tree.Id, LogicalRegion.InlineStartUpper, targetIndex: 1));
         Assert.True(reorder.Succeeded, reorder.Error?.DiagnosticId ?? reorder.Error?.MessageKey);

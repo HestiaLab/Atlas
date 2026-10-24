@@ -1,12 +1,12 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     The committed visibility of a tool bar on one logical side (side plus expanded/collapsed).
+///     某一逻辑侧工具栏的已提交可见性（侧 + 展开/折叠）。
 /// </summary>
 public readonly struct ToolBarState
 {
     /// <summary>
-    ///     Constructs a state; the side and visibility must be known enum values.
+    ///     构造状态；侧与可见性必须是已知枚举值。
     /// </summary>
     public ToolBarState(LogicalSide side, ToolBarVisibility visibility)
     {
@@ -28,19 +28,19 @@ public readonly struct ToolBarState
     }
 
     /// <summary>
-    ///     The logical side this state applies to.
+    ///     该状态适用的逻辑侧。
     /// </summary>
     public LogicalSide Side { get; }
 
     /// <summary>
-    ///     The committed visibility.
+    ///     已提交的可见性。
     /// </summary>
     public ToolBarVisibility Visibility { get; }
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is the default state
-    ///     (<see cref="LogicalSide.InlineStart"/> + <see cref="ToolBarVisibility.Expanded"/>).
-    ///     The default state is a legal value.
+    ///     获取一个值，指示该实例是否为默认状态
+    ///     （<see cref="LogicalSide.InlineStart"/> +
+    ///     <see cref="ToolBarVisibility.Expanded"/>）。默认状态是合法值。
     /// </summary>
     public bool IsDefault =>
         Side == LogicalSide.InlineStart && Visibility == ToolBarVisibility.Expanded;

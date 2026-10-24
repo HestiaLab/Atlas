@@ -1,8 +1,8 @@
 # ADR-0013：Content Trust 与 SandboxedFrame 安全边界
 
-> [English](../../en/adr/0013-content-trust-and-sandboxed-frame.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0013-content-trust-and-sandboxed-frame.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 
 - 状态：Accepted

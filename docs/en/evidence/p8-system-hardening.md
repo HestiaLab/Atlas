@@ -1,6 +1,8 @@
 # P8 System Hardening Evidence
 
-> English (canonical) | [简体中文](../../zh/evidence/p8-system-hardening.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/p8-system-hardening.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 > Historical evidence note: the `Atlas.Demo` page used for the 20-Panel
 > measurements was deleted per ADR-0016. The measurements below remain as

@@ -1,8 +1,8 @@
 # Atlas 架构概览
 
-> [English](../../en/guides/architecture-overview.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/guides/architecture-overview.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本文帮助框架开发者快速建立 Atlas 的代码和运行时心智模型。它是 [HLD](../HLD.md) 的简明导览，不替代 HLD、[SRS](../SRS.md) 或 ADR。
 

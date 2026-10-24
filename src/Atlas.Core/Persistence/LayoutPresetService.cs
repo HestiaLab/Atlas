@@ -7,7 +7,7 @@ using Atlas.Core.Results;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Coordinates capture, ordered storage and atomic restoration of named presets.
+///     协调命名预设的捕获、有序存储与原子恢复。
 /// </summary>
 public sealed class LayoutPresetService
 {
@@ -28,12 +28,12 @@ public sealed class LayoutPresetService
     private readonly object writerGate = new();
 
     /// <summary>
-    ///     Gets the number of currently retained per-key writer states.
+    ///     获取当前保留的按键写入状态数量。
     /// </summary>
     internal int ActiveWriterCount => writers.Count;
 
     /// <summary>
-    ///     Initializes the preset service for one workspace.
+    ///     为一个工作区初始化预设服务。
     /// </summary>
     public LayoutPresetService(
         IAtlasWorkspace workspace,
@@ -46,7 +46,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     Captures and saves the current snapshot.
+    ///     捕获并保存当前快照。
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutPresetDescriptor>> SaveAsync(
         string name,
@@ -125,8 +125,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     Applies a named preset as a single restore history barrier; fails when the
-    ///     preset does not exist.
+    ///     把命名预设作为单次恢复历史屏障应用；预设不存在时失败。
     /// </summary>
     public async ValueTask<WorkspaceResult<LayoutChangeSet>> ApplyAsync(
         string name,
@@ -173,8 +172,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     Deletes a named preset without changing workspace state; fails when the
-    ///     preset does not exist.
+    ///     删除命名预设且不改变工作区状态；预设不存在时失败。
     /// </summary>
     public async ValueTask<WorkspaceResult<bool>> DeleteAsync(
         string name,
@@ -231,7 +229,7 @@ public sealed class LayoutPresetService
     }
 
     /// <summary>
-    ///     Lists the named user presets ordered by ordinal name.
+    ///     按序数名称列出命名用户预设。
     /// </summary>
     public async ValueTask<WorkspaceResult<IReadOnlyList<LayoutPresetDescriptor>>> ListAsync(
         CancellationToken cancellationToken = default)

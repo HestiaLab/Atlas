@@ -1,6 +1,6 @@
 # ADR-0022: Group Visibility Invariant
 
-> English (canonical) | [简体中文](../../zh/adr/0022-group-visibility-invariant.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0022-group-visibility-invariant.md)
 
 - Status: Accepted
 - Date: 2026-08-05

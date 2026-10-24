@@ -1,13 +1,13 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Maps a persisted item identifier to its restored identifier.
+///     把持久化条目标识符映射为恢复后的标识符。
 /// </summary>
 public sealed class IdentityRemap
 {
     /// <summary>
-    ///     Creates a remap entry; both identifiers must be non-default and distinct,
-    ///     and the reason must be a defined enumeration value.
+    ///     创建重映射条目；两个标识符都必须非默认且不同，原因必须是已定义的
+    ///     枚举值。
     /// </summary>
     public IdentityRemap(
         DockItemId oldItemId,
@@ -30,17 +30,17 @@ public sealed class IdentityRemap
     }
 
     /// <summary>
-    ///     Gets the persisted identifier.
+    ///     获取持久化标识符。
     /// </summary>
     public DockItemId OldItemId { get; }
 
     /// <summary>
-    ///     Gets the restored identifier.
+    ///     获取恢复后的标识符。
     /// </summary>
     public DockItemId NewItemId { get; }
 
     /// <summary>
-    ///     Gets the remap reason.
+    ///     获取重映射原因。
     /// </summary>
     public IdentityRemapReason Reason { get; }
 }

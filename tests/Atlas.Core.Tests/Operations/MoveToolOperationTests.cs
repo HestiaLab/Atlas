@@ -225,9 +225,8 @@ public sealed class MoveToolOperationTests
             new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
-        // The Persistent source group stays in the tree (unlike Dynamic), but
-        // an empty tool group must collapse so it does not keep occupying
-        // layout space after its final panel moved away (REQ-F-154).
+        // Persistent 源 Group 会留在树中（不同于 Dynamic），但空的工具 Group
+        // 必须折叠，以免最后一个面板移走后仍占用布局空间（REQ-F-154）。
         Assert.Contains(source.Id, workspace.Current.Nodes);
         var sourceAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]);
         Assert.Empty(sourceAfter.ItemIds);

@@ -3,7 +3,7 @@ using Atlas.Core.Placement;
 namespace Atlas.Core.Changes;
 
 /// <summary>
-///     Describes the exact rendering invalidation scope produced by a committed revision.
+///     描述一次已提交修订产生的精确渲染失效范围。
 /// </summary>
 public sealed class LayoutChangeSet
 {
@@ -48,75 +48,74 @@ public sealed class LayoutChangeSet
     }
 
     /// <summary>
-    ///     Gets the revision observed before the change.
+    ///     获取变更前观察到的修订号。
     /// </summary>
     public long BeforeRevision { get; }
 
     /// <summary>
-    ///     Gets the revision produced by the change.
+    ///     获取变更产生的修订号。
     /// </summary>
     public long AfterRevision { get; }
 
     /// <summary>
-    ///     Gets the semantic source of the change.
+    ///     获取变更的语义来源。
     /// </summary>
     public LayoutChangeKind ChangeKind { get; }
 
     /// <summary>
-    ///     Gets the layout nodes added by the change.
+    ///     获取变更新增的布局节点。
     /// </summary>
     public IReadOnlyList<LayoutNodeId> AddedNodes { get; }
 
     /// <summary>
-    ///     Gets the layout nodes removed by the change.
+    ///     获取变更移除的布局节点。
     /// </summary>
     public IReadOnlyList<LayoutNodeId> RemovedNodes { get; }
 
     /// <summary>
-    ///     Gets the layout nodes whose state changed.
+    ///     获取状态发生变化的布局节点。
     /// </summary>
     public IReadOnlyList<LayoutNodeId> UpdatedNodes { get; }
 
     /// <summary>
-    ///     Gets the dock items added by the change.
+    ///     获取变更新增的停靠条目。
     /// </summary>
     public IReadOnlyList<DockItemId> AddedItems { get; }
 
     /// <summary>
-    ///     Gets the dock items removed by the change.
+    ///     获取变更移除的停靠条目。
     /// </summary>
     public IReadOnlyList<DockItemId> RemovedItems { get; }
 
     /// <summary>
-    ///     Gets the dock items whose state changed.
+    ///     获取状态发生变化的停靠条目。
     /// </summary>
     public IReadOnlyList<DockItemId> UpdatedItems { get; }
 
     /// <summary>
-    ///     Gets the logical sides whose tool bar visibility changed.
+    ///     获取工具栏可见性发生变化的逻辑侧。
     /// </summary>
     public IReadOnlyList<LogicalSide> UpdatedToolBars { get; }
 
     /// <summary>
-    ///     Gets the logical regions whose tool bar ordering changed.
+    ///     获取工具栏顺序发生变化的逻辑区域。
     /// </summary>
     public IReadOnlyList<LogicalRegion> UpdatedToolBarOrders { get; }
 
     /// <summary>
-    ///     Gets the auto-hide strips whose state changed.
+    ///     获取状态发生变化的自动隐藏条。
     /// </summary>
     public IReadOnlyList<WorkspaceEdge> UpdatedAutoHideStrips { get; }
 
     /// <summary>
-    ///     Gets a value indicating whether the commit was retained in undo history.
-    ///     <see langword="false"/> means the commit succeeded but cannot be undone.
+    ///     获取一个值，指示提交是否保留在撤销历史中。
+    ///     <see langword="false"/> 表示提交成功但无法撤销。
     /// </summary>
     public bool HistoryRecorded { get; }
 
     /// <summary>
-    ///     Gets a value indicating whether this commit started a new history
-    ///     segment, either because the operation is an explicit barrier or
-    ///     because an oversized entry cleared the retained history.
+    ///     获取一个值，指示本次提交是否开启新的历史段：操作是显式屏障，或
+    ///     超大条目清空了保留历史。
     /// </summary>
     public bool IsHistoryBarrier { get; }
 

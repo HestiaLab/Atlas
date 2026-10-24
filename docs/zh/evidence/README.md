@@ -1,8 +1,8 @@
 # 验证证据索引
 
-> [English](../../en/evidence/README.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/evidence/README.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 
 本目录保存 Atlas 在特定阶段、分支、构建产物和环境中的验证记录。Evidence 用于审计“当时验证了什么”，不等同于当前分支持续成立的测试结果。

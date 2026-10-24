@@ -1,50 +1,45 @@
 # Atlas
 
-English | [简体中文](README.zh.md)
+简体中文（权威） | [English mirror](README.en.md)
 
-**A dockable workspace component library for Blazor.**
+**面向 Blazor 的可停靠工作区组件库。**
 
-Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout
-persistence for IDEs, designers, admin consoles, and other complex web
-applications. The layout domain model, Blazor rendering, and browser
-interaction are separated into layers, so the UI never keeps a second copy of
-layout state.
+Atlas 为 IDE、设计器、管理后台等复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。布局领域模型、Blazor 渲染与浏览器交互分层，UI 层不维护第二份布局状态。
 
-> **Packages:** [Atlas.Blazor on NuGet.org](https://www.nuget.org/packages/Atlas.Blazor)
-> (single package embedding `Atlas.Core`) · [GitHub Packages](https://github.com/users/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
+> **NuGet 包：** [NuGet.org 上的 Atlas.Blazor](https://www.nuget.org/packages/Atlas.Blazor)
+> （单包内嵌 `Atlas.Core`）· [GitHub Packages](https://github.com/users/HestiaLab/packages/nuget/package/Atlas.Blazor) ·
 > [Releases](https://github.com/HestiaLab/Atlas/releases)
 
-## Features
+## 核心能力
 
-- Tool panels and document tabs
-- Panel/tab drag-and-drop, docking, and cross-Group moves, with five-zone drop preview
-- Splitter mouse/keyboard resizing with elastic-absorb sizing
-- Layout history with undo and redo
-- XML layout persistence, restore, and presets
-- CSS variable theming (`--atlas-*` tokens, see [theming guide](docs/en/theming.md))
-- Content hosting with a SandboxedFrame security boundary
-- Multi-Workspace isolation, ARIA, focus coordination, reduced-motion support
+- 工具面板与文档标签页
+- 面板/标签页拖放、停靠与跨 Group 移动，含五区放置预览
+- Splitter 鼠标/键盘调整，弹性吸收（elastic-absorb）尺寸
+- 布局历史、撤销与重做
+- XML 布局持久化、恢复与预设
+- CSS 变量主题（`--atlas-*` token，见[主题指南](docs/zh/theming.md)）
+- 内容承载与 SandboxedFrame 安全边界
+- 多 Workspace 隔离、ARIA、焦点协调与 reduced-motion
 
-Product behavior is defined in [`docs/en/SRS.md`](docs/en/SRS.md).
+产品行为以 [`docs/zh/SRS.md`](docs/zh/SRS.md) 为准（中文权威版本；英文镜像见
+[`docs/en/SRS.md`](docs/en/SRS.md)）。
 
-## Project Structure
+## 项目组成
 
 ```text
 Atlas.Core ← Atlas.Blazor ← Application
 ```
 
-| Project | Responsibility |
-|---------|----------------|
-| `Atlas.Core` | UI-independent layout model, operation engine, history, invariants, persistence |
-| `Atlas.Blazor` | Blazor rendering, content hosting, CSS, and browser interaction |
+| 项目             | 职责                           |
+| -------------- | ---------------------------- |
+| `Atlas.Core`   | 与 UI 无关的布局模型、操作引擎、历史、不变量和持久化 |
+| `Atlas.Blazor` | Blazor 渲染、内容承载、CSS 和浏览器交互    |
 
-`Atlas.Core` has no Blazor or JavaScript dependency. Browser input is converted
-by TypeScript into structured intents, committed through Core operations into
-an immutable snapshot, and projected into the DOM by Blazor.
+`Atlas.Core` 不依赖 Blazor 或 JavaScript。浏览器输入由 TypeScript 转换为结构化 intent，经 Core operation 提交为 immutable snapshot，再由 Blazor 投影到 DOM。
 
-## Build
+## 构建
 
-Requirements: .NET 6 SDK, Node.js 24 LTS, npm.
+环境要求：.NET 6 SDK、Node.js 24 LTS、npm。
 
 ```sh
 dotnet restore Atlas.sln
@@ -61,31 +56,33 @@ dotnet test Atlas.sln --no-build --no-restore
 dotnet format Atlas.sln --verify-no-changes --no-restore
 ```
 
-The full Release pack, real-browser, and independent consumer verification
-workflow is described in the [testing guide](docs/en/guides/testing-guide.md).
+完整的 Release pack、真实浏览器与独立 consumer 验证流程见[测试指南](docs/zh/guides/testing-guide.md)。
 
-## Samples
+## 示例项目
 
-- [`samples/Atlas.Showcase`](samples/Atlas.Showcase/) — in-repo teaching demo of the public API; every panel shows the real API code behind it.
-- [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) — a DBC file viewer consuming the published `Atlas.Blazor` package.
-- [`HestiaLab/Penelopa`](https://github.com/HestiaLab/Penelopa) — a Blazor WebAssembly primitive alignment editor (SkiaSharp canvas in a six-region dock), [live demo](https://HestiaLab.github.io/Penelopa/).
+- [`samples/Atlas.Showcase`](samples/Atlas.Showcase/)——仓库内教学演示，展示公共 API 用法，每个面板附真实 API 代码。
+- [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)——基于 Atlas 的 DBC 文件查看器，消费已发布的 `Atlas.Blazor` 包。
+- [`HestiaLab/Penelopa`](https://github.com/HestiaLab/Penelopa)——Blazor WebAssembly 图元对齐编辑器（六区域停靠工作区 + SkiaSharp 画布），[在线演示](https://HestiaLab.github.io/Penelopa/)。
 
-## Documentation
+## 文档
 
-| Document | Content |
-|----------|---------|
-| [Documentation index](docs/en/README.md) | Document categories and task-oriented reading paths |
-| [Architecture overview](docs/en/guides/architecture-overview.md) | Layers, state ownership, and runtime data flow |
-| [SRS](docs/en/SRS.md) | User-observable behavior and non-functional requirements |
-| [HLD](docs/en/HLD.md) | Internal architecture and design contracts |
-| [Testing guide](docs/en/guides/testing-guide.md) | Test layers and verification commands |
-| [ADR index](docs/en/adr/README.md) | Accepted architecture decisions |
+中文文档位于 `docs/zh/`，是权威版本；英文镜像位于 `docs/en/`。
 
-## Contributing
+| 文档                                              | 内容              |
+| ----------------------------------------------- | --------------- |
+| [开发文档入口](docs/zh/README.md)                     | 文档分类与按任务阅读路径    |
+| [架构概览](docs/zh/guides/architecture-overview.md) | 分层、状态所有权与运行时数据流 |
+| [SRS](docs/zh/SRS.md)                           | 用户可观察行为与非功能需求   |
+| [HLD](docs/zh/HLD.md)                           | 内部架构与设计合同       |
+| [测试指南](docs/zh/guides/testing-guide.md)         | 测试分层与验证命令       |
+| [ADR 索引](docs/zh/adr/README.md)                 | 已接受的架构决策        |
 
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting changes. Security
-and supported-version notes are in [`SECURITY.md`](SECURITY.md).
+## 参与开发
 
-## License
+提交前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)（中文权威版本；英文镜像见
+[`CONTRIBUTING.en.md`](CONTRIBUTING.en.md)）。安全与受支持版本说明见
+[`SECURITY.md`](SECURITY.md)。
 
-[MIT](LICENSE).
+## 许可证
+
+[MIT](LICENSE)。

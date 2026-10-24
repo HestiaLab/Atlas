@@ -116,7 +116,7 @@ public sealed class PlannerMutationCharacterizationTests
 
         var serializer = new AtlasXmlLayoutSerializer();
         var xml = serializer.Serialize(workspace.Current);
-        // XmlWriter emits platform newlines; normalize so the golden hash is portable.
+        // XmlWriter 会输出平台换行符；统一规范化，使黄金哈希可移植。
         var normalized = xml.Replace("\r\n", "\n", StringComparison.Ordinal);
         var hash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));

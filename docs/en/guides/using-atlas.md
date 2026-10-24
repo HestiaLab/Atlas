@@ -1,6 +1,6 @@
 # Using Atlas: A Worked Example
 
-> English (canonical) | [简体中文](../../zh/guides/using-atlas.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/guides/using-atlas.md)
 
 This guide shows you how to build a real IDE-style workspace with Atlas,
 step by step. It complements the [architecture overview](./architecture-overview.md)

@@ -1,7 +1,7 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Provides an isolated in-memory ordinal preset store.
+///     提供隔离的内存序数预设存储。
 /// </summary>
 public sealed class InMemoryLayoutPresetStore : ILayoutPresetStore
 {

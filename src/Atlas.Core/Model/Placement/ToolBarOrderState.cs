@@ -1,12 +1,12 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     The tool bar item order of one logical region; item identifiers must be unique.
+///     一个逻辑区域的工具栏条目顺序；条目标识符必须唯一。
 /// </summary>
 public sealed class ToolBarOrderState
 {
     /// <summary>
-    ///     Constructs an order; the region must be a known value and item identifiers must be neither default nor duplicate.
+    ///     构造顺序；区域必须是已知值，条目标识符不得为默认值或重复。
     /// </summary>
     public ToolBarOrderState(LogicalRegion region, IEnumerable<DockItemId> itemIds)
     {
@@ -33,12 +33,12 @@ public sealed class ToolBarOrderState
     }
 
     /// <summary>
-    ///     The logical region this order applies to.
+    ///     该顺序适用的逻辑区域。
     /// </summary>
     public LogicalRegion Region { get; }
 
     /// <summary>
-    ///     The item order of the region (read-only).
+    ///     该区域的条目顺序（只读）。
     /// </summary>
     public IReadOnlyList<DockItemId> ItemIds { get; }
 

@@ -1,6 +1,6 @@
 # ADR-0021: Elastic-Absorb Split Sizing
 
-> English (canonical) | [简体中文](../../zh/adr/0021-elastic-absorb-split-sizing.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0021-elastic-absorb-split-sizing.md)
 
 - Status: Accepted
 - Date: 2026-08-05

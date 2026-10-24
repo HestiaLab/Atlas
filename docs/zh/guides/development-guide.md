@@ -1,8 +1,8 @@
 # Atlas 开发指南
 
-> [English](../../en/guides/development-guide.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/guides/development-guide.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本文说明如何在不破坏 Atlas 架构边界和兼容合同的前提下修改框架。分支、提交和 PR 基本规则见 [`CONTRIBUTING.md`](../../../CONTRIBUTING.md)。
 

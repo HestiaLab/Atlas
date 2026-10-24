@@ -1,6 +1,6 @@
 # ADR-0010: Persistence V2 Schema and V1 Narrow Compatibility Contract
 
-> English (canonical) | [简体中文](../../zh/adr/0010-persistence-schema-and-v1-compatibility.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0010-persistence-schema-and-v1-compatibility.md)
 
 - Status: Accepted
 - Date: 2026-07-31

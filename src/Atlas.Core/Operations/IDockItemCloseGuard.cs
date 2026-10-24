@@ -3,13 +3,12 @@ using Atlas.Core.Items;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Asks the consumer for an asynchronous release decision before an item closes;
-///     the close is cancelled when the guard returns false.
+///     在条目关闭前向消费者请求异步释放决策；守卫返回 false 时取消关闭。
 /// </summary>
 public interface IDockItemCloseGuard
 {
     /// <summary>
-    ///     Determines whether the requested item can be closed.
+    ///     判断请求的条目是否可以关闭。
     /// </summary>
     ValueTask<bool> CanCloseAsync(
         DockItemCloseContext context,
@@ -17,8 +16,7 @@ public interface IDockItemCloseGuard
 }
 
 /// <summary>
-///     Captures the immutable context required for a single close decision:
-///     the workspace snapshot at guard evaluation time and the target item.
+///     捕获单次关闭决策所需的不可变上下文：守卫求值时的工作区快照与目标条目。
 /// </summary>
 public sealed class DockItemCloseContext
 {
@@ -31,23 +29,23 @@ public sealed class DockItemCloseContext
     }
 
     /// <summary>
-    ///     Gets the immutable snapshot captured before the guard ran.
+    ///     获取守卫运行前捕获的不可变快照。
     /// </summary>
     public WorkspaceSnapshot Snapshot { get; }
 
     /// <summary>
-    ///     Gets the item requested for closing.
+    ///     获取请求关闭的条目。
     /// </summary>
     public DockItem Item { get; }
 }
 
 /// <summary>
-///     Resolves an optional close guard per item; items without a guard are closed directly.
+///     按条目解析可选的关闭守卫；没有守卫的条目直接关闭。
 /// </summary>
 public interface IDockItemCloseGuardResolver
 {
     /// <summary>
-    ///     Resolves the guard for an item; null when no guard is required.
+    ///     解析条目的守卫；不需要守卫时返回 null。
     /// </summary>
     IDockItemCloseGuard? Resolve(DockItem item);
 }

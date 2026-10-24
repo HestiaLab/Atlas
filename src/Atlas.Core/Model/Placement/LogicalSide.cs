@@ -1,17 +1,17 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     A logical side independent of text direction; used for state stored per side, such as tool bar visibility.
+///     与文本方向无关的逻辑侧；用于按侧存储状态，例如工具栏可见性。
 /// </summary>
 public enum LogicalSide
 {
     /// <summary>
-    ///     The inline-start side.
+    ///     行内起始侧。
     /// </summary>
     InlineStart = 0,
 
     /// <summary>
-    ///     The inline-end side.
+    ///     行内结束侧。
     /// </summary>
     InlineEnd = 1,
 }

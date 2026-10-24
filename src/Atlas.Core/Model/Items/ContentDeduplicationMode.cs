@@ -1,29 +1,29 @@
 namespace Atlas.Core.Items;
 
 /// <summary>
-///     Policy for handling duplicate content identity when opening an item (determined by the content
-///     identity policy based on <c>ContentReference</c>); the open planner uses it to decide whether to
-///     activate the existing item, create a new instance, replace in place, or fail with a typed error.
+///     打开条目时处理重复内容身份的策略（由内容身份策略基于
+///     <c>ContentReference</c> 决定）；打开规划器据此决定激活现有条目、创建
+///     新实例、原地替换，还是以类型化错误失败。
 /// </summary>
 public enum ContentDeduplicationMode
 {
     /// <summary>
-    ///     Activates the already open item when a duplicate is found; no new instance is created.
+    ///     发现重复项时激活已打开的条目；不创建新实例。
     /// </summary>
     ActivateExisting = 0,
 
     /// <summary>
-    ///     The same content may be referenced by multiple item instances, each independent of the others.
+    ///     同一内容可由多个条目实例引用，彼此独立。
     /// </summary>
     AllowMultiple = 1,
 
     /// <summary>
-    ///     Keeps the existing item identifier and placement and only refreshes the content with the requested content.
+    ///     保留现有条目标识符与放置位置，仅用请求的内容刷新内容。
     /// </summary>
     ReplaceExisting = 2,
 
     /// <summary>
-    ///     Rejects the open with a typed failure without producing any layout change.
+    ///     以类型化失败拒绝打开，不产生任何布局变更。
     /// </summary>
     RejectDuplicate = 3,
 }

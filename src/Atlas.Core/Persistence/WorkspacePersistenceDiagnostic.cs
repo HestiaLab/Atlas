@@ -1,16 +1,14 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Structurally describes one persistence degradation: the affected workspace,
-///     failure category and stable diagnostic ID; it exposes only the category, never
-///     the document content.
+///     结构化描述一次持久化降级：受影响的工作区、失败类别与稳定诊断 ID；只
+///     暴露类别，绝不暴露文档内容。
 /// </summary>
 public sealed class WorkspacePersistenceDiagnostic
 {
     /// <summary>
-    ///     Creates the diagnostic; the workspace identity must be non-default, the
-    ///     category must be a defined enumeration value, and the diagnostic ID must
-    ///     be non-empty.
+    ///     创建诊断；工作区标识必须非默认，类别必须是已定义的枚举值，诊断 ID
+    ///     不得为空。
     /// </summary>
     public WorkspacePersistenceDiagnostic(
         WorkspaceId workspaceId,
@@ -33,17 +31,17 @@ public sealed class WorkspacePersistenceDiagnostic
     }
 
     /// <summary>
-    ///     Gets the identifier of the affected workspace.
+    ///     获取受影响工作区的标识符。
     /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
     /// <summary>
-    ///     Gets the degradation category.
+    ///     获取降级类别。
     /// </summary>
     public WorkspacePersistenceDiagnosticKind Kind { get; }
 
     /// <summary>
-    ///     Gets the stable diagnostic identifier.
+    ///     获取稳定诊断标识符。
     /// </summary>
     public string DiagnosticId { get; }
 }

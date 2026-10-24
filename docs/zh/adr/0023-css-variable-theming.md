@@ -1,10 +1,12 @@
 # ADR-0023：CSS 变量主题契约
 
-> [English](../../en/adr/0023-css-variable-theming.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0023-css-variable-theming.md)
+>
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
-- Status: Accepted
-- Date: 2026-08-06
-- Decision maker: Maintainer
+- **状态**：Accepted
+- **日期**：2026-08-06
+- **决策人**：维护者
 
 ## Context
 
@@ -98,7 +100,7 @@ Atlas 以单个样式表（`wwwroot/atlas-v2/atlas.css`，286 行）作为 Razor
 
 - **行为**：无功能变化；纯样式接缝。
 - **契约**：变量清单成为已发布 API；未来版本不得删除变量。
-- **文档**：主题指南（`docs/en/theming.md`）记录变量清单、两条定制路径与工作示例。
+- **文档**：主题指南（`docs/zh/theming.md`）记录变量清单、两条定制路径与工作示例。
 - **测试**：默认外观 golden 覆盖（真实浏览器）加变量覆盖检查（`--atlas-accent` 改变放置高亮/焦点）。
 - **范围**：仅 `atlas.css`——无 C#、无 TypeScript、无协议改动。
 

@@ -11,7 +11,7 @@ using Atlas.Core.Validation;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Helper members of <see cref="AtlasXmlLayoutSerializer"/> (partial).
+///     <see cref="AtlasXmlLayoutSerializer"/> 的辅助成员（partial）。
 /// </summary>
 public sealed partial class AtlasXmlLayoutSerializer
 {

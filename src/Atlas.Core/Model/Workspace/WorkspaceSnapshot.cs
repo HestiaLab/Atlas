@@ -6,8 +6,9 @@ using Atlas.Core.Placement;
 namespace Atlas.Core;
 
 /// <summary>
-///     Immutable committed snapshot of a workspace: layout nodes, items, tool bars, and auto-hide placement
-///     are all indexed by identifier; tool group visibility is normalized through GroupVisibilityInvariant at construction.
+///     工作区的不可变已提交快照：布局节点、条目、工具栏与自动隐藏放置均按
+///     标识符索引；工具 Group 可见性在构造时通过 GroupVisibilityInvariant
+///     规范化。
 /// </summary>
 public sealed class WorkspaceSnapshot
 {
@@ -71,43 +72,43 @@ public sealed class WorkspaceSnapshot
     }
 
     /// <summary>
-    ///     The workspace identifier.
+    ///     工作区标识符。
     /// </summary>
     public WorkspaceId Id { get; }
 
     /// <summary>
-    ///     The monotonically increasing revision: incremented on every commit and also the baseline for
-    ///     optimistic concurrency - operations carry a BaseRevision and are rejected with an expected failure when it does not match the current revision.
+    ///     单调递增的修订号：每次提交递增，也是乐观并发的基线——操作携带
+    ///     BaseRevision，与当前修订不一致时以预期失败拒绝。
     /// </summary>
     public long Revision { get; }
 
     /// <summary>
-    ///     The identifier of the layout tree root node; <see langword="null"/> represents the single empty layout.
+    ///     布局树根节点标识符；<see langword="null"/> 表示唯一的空布局。
     /// </summary>
     public LayoutNodeId? RootNodeId { get; }
 
     /// <summary>
-    ///     Layout tree nodes indexed by node identifier (read-only).
+    ///     按节点标识符索引的布局树节点（只读）。
     /// </summary>
     public IReadOnlyDictionary<LayoutNodeId, LayoutNode> Nodes { get; }
 
     /// <summary>
-    ///     Open dock items indexed by item identifier (read-only).
+    ///     按条目标识符索引的已打开停靠条目（只读）。
     /// </summary>
     public IReadOnlyDictionary<DockItemId, DockItem> Items { get; }
 
     /// <summary>
-    ///     Committed tool bar states indexed by logical side (read-only).
+    ///     按逻辑侧索引的已提交工具栏状态（只读）。
     /// </summary>
     public IReadOnlyDictionary<LogicalSide, ToolBarState> ToolBars { get; }
 
     /// <summary>
-    ///     Tool bar orders indexed by logical region (read-only).
+    ///     按逻辑区域索引的工具栏顺序（只读）。
     /// </summary>
     public IReadOnlyDictionary<LogicalRegion, ToolBarOrderState> ToolBarOrders { get; }
 
     /// <summary>
-    ///     Auto-hide placement indexed by workspace edge (read-only).
+    ///     按工作区边缘索引的自动隐藏放置（只读）。
     /// </summary>
     public IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> AutoHideStrips { get; }
 

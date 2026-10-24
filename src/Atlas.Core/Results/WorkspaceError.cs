@@ -3,7 +3,7 @@ using Atlas.Core.Operations;
 namespace Atlas.Core.Results;
 
 /// <summary>
-///     Describes an expected workspace failure without exposing exceptions.
+///     描述一次预期的工作区失败，且不暴露异常。
 /// </summary>
 public sealed class WorkspaceError
 {
@@ -30,32 +30,32 @@ public sealed class WorkspaceError
     }
 
     /// <summary>
-    ///     Gets the stable machine-readable error code.
+    ///     获取稳定的机器可读错误码。
     /// </summary>
     public WorkspaceErrorCode Code { get; }
 
     /// <summary>
-    ///     Gets the operation kind that produced this failure.
+    ///     获取产生该失败的操作种类。
     /// </summary>
     public LayoutOperationKind OperationKind { get; }
 
     /// <summary>
-    ///     Gets the non-localized diagnostic correlation identifier.
+    ///     获取非本地化的诊断关联标识符。
     /// </summary>
     public string DiagnosticId { get; }
 
     /// <summary>
-    ///     Gets the localized message key.
+    ///     获取本地化消息键。
     /// </summary>
     public string MessageKey { get; }
 
     /// <summary>
-    ///     Gets the related node identifier; null when no node is involved.
+    ///     获取相关节点标识符；不涉及节点时为 null。
     /// </summary>
     public LayoutNodeId? NodeId { get; }
 
     /// <summary>
-    ///     Gets the related item identifier; null when no item is involved.
+    ///     获取相关条目标识符；不涉及条目时为 null。
     /// </summary>
     public DockItemId? ItemId { get; }
 }

@@ -1,6 +1,8 @@
 # P5 Drag & Dock Verification Evidence
 
-> English (canonical) | [简体中文](../../zh/evidence/p5-drag-and-dock.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/p5-drag-and-dock.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 - Date: 2026-07-31
 - Branch: `chore/dev-gate-001-baseline`

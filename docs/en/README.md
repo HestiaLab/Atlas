@@ -1,6 +1,6 @@
 # Atlas Developer Documentation
 
-> English (canonical) | [简体中文](../zh/README.md)
+> English mirror (Chinese authoritative) | [简体中文](../zh/README.md)
 
 This directory is for developers who build, maintain, and review the Atlas
 framework. Documentation is organized into specifications, guides, decisions,
@@ -36,8 +36,9 @@ agents are in [`AGENTS.md`](../../AGENTS.md).
 | [HLD](./HLD.md) | Internal architecture, state model, failure semantics, and design contracts | When implementation design or architecture contracts change |
 | [Requirements traceability](./requirements-traceability.md) | Current state of requirements to implementation and test evidence | When implementation or verification status changes |
 
-Core specifications stay at the `docs/` root to keep links stable and to
-emphasize their authority.
+Chinese documents under `docs/zh/` are authoritative. The `docs/` root keeps
+stable compatibility entry points that point at the Chinese authoritative
+versions; English documents under `docs/en/` are mirrors.
 
 ### Developer Guides
 

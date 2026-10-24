@@ -1,6 +1,6 @@
 # ADR-0005: Interaction Protocol v1 and P4 Public API
 
-> English (canonical) | [简体中文](../../zh/adr/0005-interaction-protocol-and-p4-api.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0005-interaction-protocol-and-p4-api.md)
 
 - Status: Accepted
 - Date: 2026-07-31

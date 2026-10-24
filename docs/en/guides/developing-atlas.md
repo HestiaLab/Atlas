@@ -1,6 +1,6 @@
 # Developing Atlas: A Worked Example
 
-> English (canonical) | [简体中文](../../zh/guides/developing-atlas.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/guides/developing-atlas.md)
 
 This guide walks through a real change to Atlas end to end: picking a
 requirement, finding the owning design, changing the code, and proving it with

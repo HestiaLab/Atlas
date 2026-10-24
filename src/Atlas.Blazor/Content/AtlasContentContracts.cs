@@ -9,17 +9,16 @@ using Microsoft.AspNetCore.Components;
 namespace Atlas.Blazor.Content;
 
 /// <summary>
-///     Provides request commands bound to a fixed item for rendered content.
-///     Each command submits the corresponding LayoutOperation to the
-///     workspace atomically; expected failures return as WorkspaceResult
-///     status values and never throw.
+///     为已渲染内容提供绑定到固定条目的请求命令。每个命令都会把对应的
+///     LayoutOperation 原子提交到工作区；预期失败以 WorkspaceResult 状态
+///     返回，绝不抛出异常。
 /// </summary>
 public sealed class AtlasContentCommands
 {
-    // The workspace the commands commit against.
+    // 命令提交的目标工作区。
     private readonly IAtlasWorkspace workspace;
 
-    // The fixed item the commands act on.
+    // 命令作用的固定条目。
     private readonly DockItemId itemId;
 
     internal AtlasContentCommands(IAtlasWorkspace workspace, DockItemId itemId)
@@ -29,8 +28,8 @@ public sealed class AtlasContentCommands
     }
 
     /// <summary>
-    ///     Submits a SelectItemOperation: selects this item, making it the
-    ///     active item of its group.
+    ///     提交 SelectItemOperation：选中该条目，使其成为所属 Group 的活动
+    ///     条目。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> ActivateAsync(
         CancellationToken cancellationToken = default)
@@ -39,9 +38,8 @@ public sealed class AtlasContentCommands
     }
 
     /// <summary>
-    ///     Submits a CloseItemOperation: whether the close proceeds is decided
-    ///     by the workspace from the CanClose capability and any close guard;
-    ///     rejections return a failure result.
+    ///     提交 CloseItemOperation：是否继续关闭由工作区根据 CanClose 能力与
+    ///     关闭守卫决定；拒绝时返回失败结果。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> CloseAsync(
         CancellationToken cancellationToken = default)
@@ -50,9 +48,8 @@ public sealed class AtlasContentCommands
     }
 
     /// <summary>
-    ///     Submits an UpdateItemPresentationOperation for the title and icon
-    ///     metadata; a null title restores the identity default and a null
-    ///     iconKey clears the icon.
+    ///     提交 UpdateItemPresentationOperation 以更新标题与图标元数据；null
+    ///     标题恢复身份默认值，null iconKey 清除图标。
     /// </summary>
     public ValueTask<WorkspaceResult<LayoutChangeSet>> UpdatePresentationAsync(
         string? title,
@@ -66,14 +63,12 @@ public sealed class AtlasContentCommands
 }
 
 /// <summary>
-///     The immutable content context handed to outlet renderers: carries the
-///     workspace and item identity, the immutable item snapshot, the bound
-///     commands, and the per-reference business-state accessor.
+///     交给出口渲染器的不可变内容上下文：携带工作区与条目身份、不可变条目
+///     快照、绑定命令，以及按引用访问业务状态的访问器。
 /// </summary>
 public sealed class AtlasContentContext
 {
-    // Per-item business-state scope; when null, state access falls back to
-    // running the factory on every call.
+    // 按条目的业务状态作用域；为 null 时每次调用都回退为运行工厂。
     private readonly IAtlasContentStateScope? stateScope;
 
     internal AtlasContentContext(IAtlasWorkspace workspace, DockItem item)
@@ -95,35 +90,34 @@ public sealed class AtlasContentContext
     }
 
     /// <summary>
-    ///     Gets the Host workspace scope used to partition shared state.
+    ///     获取用于分区共享状态的 Host 工作区作用域。
     /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
     /// <summary>
-    ///     Gets the concrete view identity of this outlet.
+    ///     获取该出口的具体视图身份。
     /// </summary>
     public DockItemId ItemId { get; }
 
     /// <summary>
-    ///     Gets the renderer and resource identity.
+    ///     获取渲染器与资源身份。
     /// </summary>
     public ContentReference Reference { get; }
 
     /// <summary>
-    ///     Gets the immutable item at the rendered revision.
+    ///     获取渲染修订处的不可变条目。
     /// </summary>
     public DockItem Item { get; }
 
     /// <summary>
-    ///     Gets the commands bound to this item.
+    ///     获取绑定到该条目的命令。
     /// </summary>
     public AtlasContentCommands Commands { get; }
 
     /// <summary>
-    ///     Gets the per-item business state resolved for
-    ///     <see cref="Reference"/>, or <see langword="null"/> when no state
-    ///     has been created or no state scope is available. Queries never
-    ///     create state.
+    ///     获取为 <see cref="Reference"/> 解析的按条目业务状态；未创建状态
+    ///     或没有可用状态作用域时为 <see langword="null"/>。查询绝不会创建
+    ///     状态。
     /// </summary>
     public TState? GetState<TState>()
         where TState : class
@@ -137,10 +131,9 @@ public sealed class AtlasContentContext
     }
 
     /// <summary>
-    ///     Gets the per-item business state resolved for
-    ///     <see cref="Reference"/>, creating it through
-    ///     <paramref name="factory"/> when needed. Without a state scope the
-    ///     factory runs on every call (backward-compatible fallback).
+    ///     获取为 <see cref="Reference"/> 解析的按条目业务状态，需要时通过
+    ///     <paramref name="factory"/> 创建。没有状态作用域时每次调用都会
+    ///     运行工厂（向后兼容回退）。
     /// </summary>
     public TState GetOrCreateState<TState>(Func<TState> factory)
         where TState : class
@@ -160,17 +153,14 @@ public sealed class AtlasContentContext
 }
 
 /// <summary>
-///     Base class for content resolved through the Atlas content providers;
-///     the Content parameter is injected automatically by the outlet for
-///     both DI and Map sources, so derived components never fetch it
-///     themselves.
+///     通过 Atlas 内容提供程序解析的内容基类；出口会为 DI 与 Map 两种来源
+///     自动注入 Content 参数，因此派生组件无需自行获取。
 /// </summary>
 public abstract class AtlasContentComponent : ComponentBase
 {
     /// <summary>
-    ///     The item context injected by the outlet at render time;
-    ///     [EditorRequired] marks it as supplied by the Atlas render pipeline
-    ///     rather than an optional parameter.
+    ///     出口在渲染时注入的条目上下文；[EditorRequired] 表示它由 Atlas
+    ///     渲染管线提供，而不是可选参数。
     /// </summary>
     [Parameter]
     [EditorRequired]
@@ -178,7 +168,7 @@ public abstract class AtlasContentComponent : ComponentBase
 }
 
 /// <summary>
-///     Provides an immutable context for group empty states.
+///     为 Group 空状态提供不可变上下文。
 /// </summary>
 public sealed class AtlasEmptyStateContext
 {
@@ -195,28 +185,28 @@ public sealed class AtlasEmptyStateContext
     }
 
     /// <summary>
-    ///     Gets the workspace identifier.
+    ///     获取工作区标识符。
     /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
     /// <summary>
-    ///     Gets the empty group identifier.
+    ///     获取空 Group 标识符。
     /// </summary>
     public LayoutNodeId GroupId { get; }
 
     /// <summary>
-    ///     Gets the group item kind.
+    ///     获取 Group 条目种类。
     /// </summary>
     public DockItemKind GroupKind { get; }
 
     /// <summary>
-    ///     Gets the group retention policy.
+    ///     获取 Group 保留策略。
     /// </summary>
     public GroupRetentionPolicy RetentionPolicy { get; }
 }
 
 /// <summary>
-///     Provides immutable item data to header templates.
+///     为标题模板提供不可变条目数据。
 /// </summary>
 public sealed class AtlasItemHeaderContext
 {
@@ -227,12 +217,12 @@ public sealed class AtlasItemHeaderContext
     }
 
     /// <summary>
-    ///     Gets the rendered item.
+    ///     获取已渲染条目。
     /// </summary>
     public DockItem Item { get; }
 
     /// <summary>
-    ///     Gets whether the item is selected in its group.
+    ///     获取条目是否在其 Group 中选中。
     /// </summary>
     public bool IsSelected { get; }
 }

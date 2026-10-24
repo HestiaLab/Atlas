@@ -1,5 +1,9 @@
 # 内容目录与运行时绑定验证证据
 
+> 简体中文（权威） | [English mirror](../../en/evidence/content-catalog-runtime-binding.md)
+>
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
+
 - 日期：2026-08-03
 - 分支：`feature/content-catalog`
 - 提交：`44502b4`（冻结合同）→ `ca100bc`（catalog + routes）→

@@ -1,13 +1,12 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Version constants for the Atlas workspace persistence schema.
+///     Atlas 工作区持久化 schema 的版本常量。
 /// </summary>
 public static class LayoutSchemaVersion
 {
     /// <summary>
-    ///     The schema version written by the current serializer and the only
-    ///     version accepted by the current reader.
+    ///     当前序列化器写出的 schema 版本，也是当前读取器唯一接受的版本。
     /// </summary>
     public static string Current { get; } = "2.0";
 }

@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     Provides data for the document closed event.
+///     为文档关闭事件提供数据。
 /// </summary>
 public sealed class ItemClosedEventArgs : WorkspaceItemEventArgs
 {

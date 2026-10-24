@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     Provides data for the document opened event.
+///     为文档打开事件提供数据。
 /// </summary>
 public sealed class ItemOpenedEventArgs : WorkspaceItemEventArgs
 {

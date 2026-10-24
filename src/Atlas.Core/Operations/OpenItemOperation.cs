@@ -3,12 +3,12 @@ using Atlas.Core.Items;
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Opens an item in an explicit target group using the declared deduplication mode.
+///     使用声明的去重模式在显式目标 Group 中打开条目。
 /// </summary>
 public sealed class OpenItemOperation : LayoutOperation
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="OpenItemOperation"/> class.
+    ///     初始化 <see cref="OpenItemOperation"/> 类的新实例。
     /// </summary>
     public OpenItemOperation(
         DockItem item,
@@ -49,23 +49,23 @@ public sealed class OpenItemOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     Gets the immutable item to open.
+    ///     获取要打开的不可变条目。
     /// </summary>
     public DockItem Item { get; }
 
     /// <summary>
-    ///     Gets the explicit target group.
+    ///     获取显式目标 Group。
     /// </summary>
     public LayoutNodeId TargetGroupId { get; }
 
     /// <summary>
-    ///     Gets the content identity deduplication mode.
+    ///     获取内容身份去重模式。
     /// </summary>
     public ContentDeduplicationMode DeduplicationMode { get; }
 
     /// <summary>
-    ///     Gets the optional target insertion index; when null, the planner derives the
-    ///     default position from the fixed-prefix rule.
+    ///     获取可选的目标插入索引；为 null 时规划器根据固定前缀规则推导默认
+    ///     位置。
     /// </summary>
     public int? TargetIndex { get; }
 }

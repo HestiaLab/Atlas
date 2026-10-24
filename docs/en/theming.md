@@ -1,6 +1,6 @@
 # Atlas Styling and Theming
 
-> English (canonical) | [简体中文](../zh/theming.md)
+> English mirror (Chinese authoritative) | [简体中文](../zh/theming.md)
 
 Atlas ships one stylesheet (`_content/Atlas.Blazor/atlas-v2/atlas.css`) and
 exposes its visual style through documented CSS custom properties prefixed

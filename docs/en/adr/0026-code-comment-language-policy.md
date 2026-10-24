@@ -1,8 +1,8 @@
 # ADR-0026: Code Comment and XML Documentation Language Policy
 
-> English (canonical) | [简体中文](../../zh/adr/0026-code-comment-language-policy.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0026-code-comment-language-policy.md)
 
-- **Status**: Accepted
+- **Status**: Superseded by [ADR-0035](./0035-chinese-first-language-policy.md)
 - **Date**: 2026-10-23
 - **Decision maker**: Atlas Maintainer (approved 2026-10-23)
 - **Related**: AGENTS.md, CONTRIBUTING.md; quality finding CORE-P2-20
@@ -100,6 +100,6 @@ for now; use review and contribution guidance.
 
 ## Supersession
 
-None. Supplements the existing English-canonical documentation policy for the
-code-comment layer; it does not replace AGENTS.md or the multilingual
-documentation plan.
+Superseded by [ADR-0035](./0035-chinese-first-language-policy.md) (accepted
+2026-10-24). The original decision and historical rationale are preserved as a
+record and are no longer the current policy.

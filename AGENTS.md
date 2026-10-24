@@ -1,72 +1,71 @@
 # AGENTS.md
 
-Repository-specific instructions for AI agents working on Atlas, the Blazor
-Dock Layout component.
+> 简体中文（权威） | [English mirror](AGENTS.en.md)
 
-## Required Reading
+面向在 Atlas（Blazor Dock 布局组件）上工作的 AI Agent 的仓库级说明。
 
-Before changing files, read:
+## 必读文档
+
+修改文件前，请阅读：
 
 - `CONTRIBUTING.md`
-- `docs/en/SRS.md` — the software requirements specification
+- `docs/zh/SRS.md` — 软件需求规范（中文权威版本；英文镜像见 `docs/en/SRS.md`）
 
-For architecture-sensitive changes, also read:
+涉及架构敏感的改动，还需阅读：
 
-- `docs/en/adr/README.md`
-- `docs/en/requirements-traceability.md` — implementation status per SRS
+- `docs/zh/adr/README.md`
+- `docs/zh/requirements-traceability.md` — 按 SRS 的实现状态
 
-For build, CI, packaging, or dependency work, also read:
+涉及构建、CI、打包或依赖的改动，还需阅读：
 
 - `SECURITY.md`
 
-## Documentation Language And Authority
+## 文档语言与权威性
 
-English is the default documentation language and the canonical version of
-every language pair. Chinese translations live under `docs/zh/` and English
-documents under `docs/en/`. The English document under `docs/en/` is the
-authority for each language pair.
+中文是默认文档语言，也是每个语言对的权威版本。中文文档位于 `docs/zh/`，
+英文镜像位于 `docs/en/`。`docs/zh/` 下的文档是权威版本；`docs/en/` 是按
+ADR-0035 维护的英文镜像。
 
-- Do not silently rewrite contract semantics while translating; preserve IDs,
-  Actor/Priority/Source fields, AC counts and order, code identifiers, numeric
-  constraints, and must/should/may strength.
-- Keep `docs/SRS.md`, `docs/HLD.md` and `docs/requirements-traceability.md`
-  as stable compatibility entry points that point at the canonical English
-  versions.
+- 翻译时不得静默改写契约语义；保留 ID、Actor/Priority/Source 字段、AC 数量与
+  顺序、代码标识符、数值约束，以及 must/should/may 的强度。
+- 保持 `docs/SRS.md`、`docs/HLD.md` 和 `docs/requirements-traceability.md`
+  作为稳定兼容入口，指向中文权威版本。
+- 代码注释与公共 XML 文档使用中文；标识符、错误码、消息键和协议字符串保持
+  ASCII 不变。运行时可见文本（异常消息、日志、诊断、UI 文案）暂不翻译。详见
+  `docs/zh/adr/0035-chinese-first-language-policy.md`。
 
-## Project Shape
+## 项目结构
 
-Atlas is a **.NET 6 Blazor** component library that provides dockable tool
-windows, editor split views, and panel switching for web applications. The
-repository uses Node.js 24 LTS and npm for TypeScript interop.
+Atlas 是 **.NET 6 Blazor** 组件库，为 Web 应用提供可停靠工具窗口、编辑器
+分屏和面板切换能力。仓库使用 Node.js 24 LTS 与 npm 处理 TypeScript interop。
 
 ```text
-src/Atlas.Core/           Pure C# domain and operation engine (packable project;
-                          embedded into the Atlas.Blazor package, ADR-0019)
-src/Atlas.Blazor/         Razor Class Library and JS interop (NuGet: Atlas.Blazor)
-  Components/             Public Razor components
-  Interop/                C# JS interop boundary
-  ClientScripts/          TypeScript source
-  wwwroot/atlas-v2/       Generated static assets
-tests/Atlas.Core.Tests/   Core xUnit tests
-tests/Atlas.Blazor.Tests/ Blazor/architecture xUnit tests
-tests/browser/            Static real-browser verification fixtures
-samples/Atlas.Showcase/   Teaching demo (in Atlas.sln, source references)
-docs/                     SRS, HLD, traceability and ADRs
+src/Atlas.Core/           纯 C# 领域与操作引擎（可打包项目；
+                          嵌入 Atlas.Blazor 包，ADR-0019）
+src/Atlas.Blazor/         Razor 类库与 JS interop（NuGet：Atlas.Blazor）
+  Components/             公共 Razor 组件
+  Interop/                C# JS interop 边界
+  ClientScripts/          TypeScript 源码
+  wwwroot/atlas-v2/       生成的静态资源
+tests/Atlas.Core.Tests/   Core xUnit 测试
+tests/Atlas.Blazor.Tests/ Blazor/架构 xUnit 测试
+tests/browser/            静态真实浏览器验证夹具
+samples/Atlas.Showcase/   教学演示（在 Atlas.sln 中，源码引用）
+docs/                     SRS、HLD、追溯矩阵与 ADR
 ```
 
-The NuGet consumer showcase (the DBC viewer application) lives in the
-standalone repository [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
-and is not part of `Atlas.sln`. The in-repo `samples/Atlas.Showcase` is a
-teaching demo of the framework's public API; unlike DbcView it references
-Atlas source projects so CI covers it with the main solution.
+NuGet consumer 展示项目（DBC 查看器应用）位于独立仓库
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)，不属于
+`Atlas.sln`。仓库内的 `samples/Atlas.Showcase` 是框架公共 API 的教学演示；
+与 DbcView 不同，它引用 Atlas 源码项目，因此 CI 会随主解决方案覆盖它。
 
-## Build And Verification
+## 构建与验证
 
 ```sh
-# Restore NuGet dependencies
+# 还原 NuGet 依赖
 dotnet restore Atlas.sln
 
-# Install, type-check, test and bundle TypeScript
+# 安装、类型检查、测试并打包 TypeScript
 cd src/Atlas.Blazor
 npm ci
 npm run typecheck
@@ -74,90 +73,86 @@ npm run test:js
 npm run build:js
 cd ../..
 
-# Build all projects
+# 构建所有项目
 dotnet build Atlas.sln --no-restore
 
-# Run tests
+# 运行测试
 dotnet test Atlas.sln --no-build --no-restore
 
-# Format check
+# 格式检查
 dotnet format Atlas.sln --verify-no-changes --no-restore
 
-# Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
+# 验证 NuGet 打包（ADR-0019：单包 Atlas.Blazor 内嵌 Atlas.Core.dll）
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 
-# The NuGet consumer showcase lives in the standalone HestiaLab/DbcView
-# repository; it consumes the published package and verifies itself.
+# NuGet consumer 展示项目位于独立 HestiaLab/DbcView 仓库；
+# 它消费已发布包并独立验证自身。
 ```
 
-## Ownership Rules
+## 所有权规则
 
-- Public component APIs belong in `src/Atlas.Blazor/Components/` and must be documented
-  against `docs/en/SRS.md`.
-- Domain models and operations belong in `src/Atlas.Core/`.
-- Blazor rendering and JS interop belong in `src/Atlas.Blazor/`.
-- `samples/Atlas.Showcase` is the in-repo teaching demo; it references Atlas
-  source projects and is part of `Atlas.sln`. The business DBC viewer
-  showcase lives in the standalone `HestiaLab/DbcView` repository and is not
-  part of `Atlas.sln`.
-- `Atlas.Core` must not reference Blazor, JS interop, or `Atlas.Blazor`.
-- Tests should cover behaviour, not accidental implementation details.
-- Keep NuGet dependency graph narrow — prefer framework types over third-party packages.
-- Do not add new global state without a documented reason.
-- Do not weaken tests, formatting, or CI to make a change pass.
-- Changes to Target Framework, package topology, Node/npm baseline, or public API
-  compatibility policy require maintainer approval and an ADR.
+- 公共组件 API 位于 `src/Atlas.Blazor/Components/`，并必须按
+  `docs/zh/SRS.md` 记录文档。
+- 领域模型与操作位于 `src/Atlas.Core/`。
+- Blazor 渲染与 JS interop 位于 `src/Atlas.Blazor/`。
+- `samples/Atlas.Showcase` 是仓库内教学演示；它引用 Atlas 源码项目，属于
+  `Atlas.sln`。业务 DBC 查看器展示项目位于独立 `HestiaLab/DbcView` 仓库，
+  不属于 `Atlas.sln`。
+- `Atlas.Core` 不得引用 Blazor、JS interop 或 `Atlas.Blazor`。
+- 测试应覆盖行为，而不是偶然的实现细节。
+- 保持 NuGet 依赖图精简——优先使用框架类型而非第三方包。
+- 没有文档化理由时，不得新增全局状态。
+- 不得为了让改动通过而削弱测试、格式检查或 CI。
+- 修改 Target Framework、包拓扑、Node/npm 基线或公共 API 兼容策略，需要
+  维护者批准并新增 ADR。
 
-## AI Agent Policy
+## AI Agent 政策
 
-AI agents may help with development when their changes are scoped, reviewed,
-and verified like any other contribution.
+AI Agent 可以在改动范围明确、经过审查并按其他贡献同样验证的前提下协助开发。
 
-### Appropriate Uses
+### 适用场景
 
-- Focused bug fixes.
-- Test additions.
-- Documentation updates (SRS, ADRs, guides).
-- Build and CI maintenance.
-- Mechanical refactors that preserve behaviour.
+- 聚焦的缺陷修复。
+- 增加测试。
+- 文档更新（SRS、ADR、指南）。
+- 构建与 CI 维护。
+- 保持行为不变的机械式重构。
 
-### Restricted Uses
+### 受限场景
 
-AI agents should not independently:
+AI Agent 不得擅自：
 
-- Redesign core architecture without maintainer direction.
-- Weaken tests, formatting, static analysis, or CI.
-- Add large NuGet dependencies or generated code without approval.
-- Publish releases, rotate credentials, or change repository permissions.
+- 在没有维护者指导的情况下重新设计核心架构。
+- 削弱测试、格式检查、静态分析或 CI。
+- 未经批准增加大型 NuGet 依赖或生成代码。
+- 发布版本、轮换凭据或修改仓库权限。
 
-### Disclosure
+### 披露
 
-Pull requests should disclose meaningful AI assistance: list the required docs
-read, summarise what the agent did, and record the human verification performed.
+Pull Request 应披露有意义的 AI 协助：列出阅读过的必需文档、概述 Agent 所做的
+工作，并记录人工验证内容。
 
-### Playbooks
+### 操作手册
 
-**General workflow:** Read AGENTS.md and relevant docs, inspect the smallest
-relevant file set, make focused changes, run `dotnet build && dotnet test`, summarise.
+**通用流程：** 阅读 AGENTS.md 与相关文档，检查最小相关文件集，做聚焦改动，
+运行 `dotnet build && dotnet test`，最后总结。
 
-**Bug fix:** Reproduce or identify the failing behaviour, add a regression test
-when practical, fix the smallest owning module, run `dotnet test` covering touched modules.
+**缺陷修复：** 复现或定位失败行为，在可行时增加回归测试，修复最小归属模块，
+运行覆盖受影响模块的 `dotnet test`。
 
-**Refactor:** Define behaviour that must remain unchanged, stay within module
-boundaries, avoid mixing feature behaviour with refactor work, run tests covering
-touched modules.
+**重构：** 明确必须保持不变的行为，保持在模块边界内，避免把功能行为与重构
+混在一起，运行覆盖受影响模块的测试。
 
-**CI or build fix:** Inspect the failing check and logs, reproduce locally when
-practical, fix the project cause rather than masking the check.
+**CI 或构建修复：** 检查失败的检查项与日志，在可行时本地复现，修复项目根因
+而不是掩盖检查。
 
-## SRS Traceability
+## SRS 追溯
 
-Every functional change must be traceable to a `REQ-F-xxx` or `REQ-NF-xxx`
-requirement in `docs/en/SRS.md`. The traceability matrix is maintained in
-`docs/en/requirements-traceability.md`.
+每个功能改动都必须追溯到 `docs/zh/SRS.md` 中的 `REQ-F-xxx` 或 `REQ-NF-xxx`
+需求。追溯矩阵维护在 `docs/zh/requirements-traceability.md`。
 
-## Documentation
+## 文档
 
-Update `docs/en/requirements-traceability.md` when implementations change.
-Update `docs/en/SRS.md` when requirements change.
-Create `docs/en/adr/` entries for architecture decisions.
+实现变化时更新 `docs/zh/requirements-traceability.md`。
+需求变化时更新 `docs/zh/SRS.md`。
+架构决策在 `docs/zh/adr/` 新增条目。

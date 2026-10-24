@@ -1,6 +1,6 @@
 # ADR-0034: Core Boundary Dependencies and Auto-Hide Relocation
 
-> English (canonical) | [简体中文](../../zh/adr/0034-core-boundary-dependencies-and-autohide-relocation.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0034-core-boundary-dependencies-and-autohide-relocation.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

@@ -1,6 +1,8 @@
 # P7 Content Lifetime & Security Evidence
 
-> English (canonical) | [简体中文](../../zh/evidence/p7-content-lifetime-security.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/p7-content-lifetime-security.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 > Historical evidence note: the `Atlas.Demo` host that carried this page's
 > browser verification was deleted per ADR-0016. The results below record the

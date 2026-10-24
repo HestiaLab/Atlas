@@ -1,8 +1,8 @@
 # ADR-0010：Persistence V2 Schema 与 V1 窄兼容契约
 
-> [English](../../en/adr/0010-persistence-schema-and-v1-compatibility.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0010-persistence-schema-and-v1-compatibility.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 
 - 状态：Accepted

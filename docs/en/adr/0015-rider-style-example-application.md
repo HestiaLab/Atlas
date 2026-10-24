@@ -1,6 +1,6 @@
 # ADR-0015: Standalone Rider-Style Example Application
 
-> English (canonical) | [简体中文](../../zh/adr/0015-rider-style-example-application.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0015-rider-style-example-application.md)
 
 - Status: Superseded by ADR-0016
 - Date: 2026-07-31

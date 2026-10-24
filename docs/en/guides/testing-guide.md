@@ -1,6 +1,6 @@
 # Atlas Testing Guide
 
-> English (canonical) | [简体中文](../../zh/guides/testing-guide.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/guides/testing-guide.md)
 
 Atlas correctness spans Core, Blazor, TypeScript, real browsers, and the NuGet
 consumer. No single test layer covers every contract. This guide explains what

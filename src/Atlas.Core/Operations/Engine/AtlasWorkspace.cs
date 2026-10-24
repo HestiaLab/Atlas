@@ -383,9 +383,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
             return new HistoryAppendResult(bounded.ToArray(), Recorded: true, IsBarrier: false);
         }
 
-        // Retain newest entries until the approximate byte budget is exhausted.
-        // If the newest entry alone exceeds the budget, the commit becomes a
-        // history barrier: the history is cleared and the entry is not recorded.
+        // 保留最新条目，直到近似字节预算耗尽。
+        // 如果仅最新条目就超出预算，则本次提交成为历史屏障：
+        // 历史被清空，且该条目不被记录。
         var keepFrom = bounded.Count;
         long retainedBytes = 0;
         for (var index = bounded.Count - 1; index >= 0; index--)

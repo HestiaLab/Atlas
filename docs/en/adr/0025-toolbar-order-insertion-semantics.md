@@ -1,6 +1,6 @@
 # ADR-0025: Toolbar Order Insertion Semantics
 
-> English (canonical) | [简体中文](../../zh/adr/0025-toolbar-order-insertion-semantics.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0025-toolbar-order-insertion-semantics.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

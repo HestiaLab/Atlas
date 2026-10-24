@@ -1,6 +1,6 @@
 # ADR-0001: Runtime, Package Structure, and Frontend Toolchain Baseline
 
-> English (canonical) | [简体中文](../../zh/adr/0001-runtime-and-package-baseline.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0001-runtime-and-package-baseline.md)
 
 - **Status**: Accepted
 - **Date**: 2026-07-30

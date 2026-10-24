@@ -1,6 +1,6 @@
 # ADR-0028: History Truncation Warnings and Barriers
 
-> English (canonical) | [简体中文](../../zh/adr/0028-history-truncation-and-barriers.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0028-history-truncation-and-barriers.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

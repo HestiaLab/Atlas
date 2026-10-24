@@ -1,112 +1,112 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Identifies the stable Atlas workspace operation kinds.
+///     标识稳定的 Atlas 工作区操作种类。
 /// </summary>
 public enum LayoutOperationKind
 {
     /// <summary>
-    ///     Opens an item.
+    ///     打开条目。
     /// </summary>
     OpenItem = 0,
 
     /// <summary>
-    ///     Closes an item.
+    ///     关闭条目。
     /// </summary>
     CloseItem = 1,
 
     /// <summary>
-    ///     Selects an item within its group.
+    ///     在所属 Group 内选中条目。
     /// </summary>
     SelectItem = 2,
 
     /// <summary>
-    ///     Moves an item to a different placement.
+    ///     把条目移动到不同放置位置。
     /// </summary>
     MoveItem = 3,
 
     /// <summary>
-    ///     Reorders an item within its current placement.
+    ///     在当前放置位置内重排条目。
     /// </summary>
     ReorderItem = 4,
 
     /// <summary>
-    ///     Creates a split placement for an item.
+    ///     为条目创建分割放置。
     /// </summary>
     SplitItem = 5,
 
     /// <summary>
-    ///     Resizes an existing split.
+    ///     调整现有分割的尺寸。
     /// </summary>
     ResizeSplit = 6,
 
     /// <summary>
-    ///     Changes the visibility of a group.
+    ///     改变 Group 的可见性。
     /// </summary>
     SetGroupVisibility = 7,
 
     /// <summary>
-    ///     Reserved; no operation or planner is implemented yet.
+    ///     保留；尚未实现操作或规划器。
     /// </summary>
     SetAutoHide = 8,
 
     /// <summary>
-    ///     Reserved; no operation or planner is implemented yet.
+    ///     保留；尚未实现操作或规划器。
     /// </summary>
     RestoreAutoHiddenItem = 9,
 
     /// <summary>
-    ///     Updates the presentation metadata of an item.
+    ///     更新条目的呈现元数据。
     /// </summary>
     UpdateItemPresentation = 10,
 
     /// <summary>
-    ///     Reserved; no operation or planner is implemented yet.
+    ///     保留；尚未实现操作或规划器。
     /// </summary>
     ReplaceContentReference = 11,
 
     /// <summary>
-    ///     Reserved; no operation or planner is implemented yet.
+    ///     保留；尚未实现操作或规划器。
     /// </summary>
     ResetWorkspace = 12,
 
     /// <summary>
-    ///     Restores persisted workspace state.
+    ///     恢复持久化的工作区状态。
     /// </summary>
     RestoreWorkspace = 13,
 
     /// <summary>
-    ///     Changes tool bar visibility for a logical side.
+    ///     改变某一逻辑侧的工具栏可见性。
     /// </summary>
     SetToolBarVisibility = 14,
 
     /// <summary>
-    ///     Reorders tool bar entries within a logical region.
+    ///     在逻辑区域内重排工具栏条目。
     /// </summary>
     ReorderToolBarEntry = 15,
 
     /// <summary>
-    ///     Reconciles committed state with a declarative definition.
+    ///     将已提交状态与声明式定义对账。
     /// </summary>
     ReconcileDefinition = 16,
 
     /// <summary>
-    ///     Equalizes the two children of an existing split.
+    ///     均分现有分割的两个子项。
     /// </summary>
     EqualizeSplit = 17,
 
     /// <summary>
-    ///     Error context for persistence failures; not a callable operation.
+    ///     持久化失败的错误上下文；不是可调用操作。
     /// </summary>
     Persistence = 20,
 
     /// <summary>
-    ///     Error context for workspace factory failures; not a callable operation.
+    ///     工作区工厂失败的错误上下文；不是可调用操作。
     /// </summary>
     Factory = 21,
 
     /// <summary>
-    ///     Error context for history failures; not a callable operation.
+    ///     历史失败的错误上下文；不是可调用操作。
     /// </summary>
     History = 22,
 }
