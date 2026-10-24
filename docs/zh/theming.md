@@ -67,6 +67,12 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-tab-bg-active` | `transparent` | 激活 Tab 背景 |
 | `--atlas-tab-bg-hover` | `transparent` | 悬停 Tab 背景 |
 | `--atlas-splitter-color` | `currentColor` | 分割条颜色 |
+| `--atlas-popup-bg` | `Canvas` | 标签页菜单 / 自动隐藏 Flyout 背景 |
+| `--atlas-popup-text` | `CanvasText` | 标签页菜单 / 自动隐藏 Flyout 文字 |
+| `--atlas-popup-border` | `currentColor` | 弹出菜单与 Flyout 边框 |
+| `--atlas-popup-shadow` | `0 0.25rem 0.75rem rgb(0 0 0 / 28%)` | 弹出菜单阴影 |
+| `--atlas-popup-backdrop` | `transparent` | 弹出菜单外部点击遮罩 |
+| `--atlas-flyout-shadow` | `0 0.25rem 0.75rem rgb(0 0 0 / 28%)` | 自动隐藏 Flyout 阴影 |
 
 ### 尺寸
 
@@ -82,6 +88,13 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-border-width` | `1px` | 细边框（toolbar 分隔线、拖拽预览） |
 | `--atlas-focus-ring-width` | `2px` | 焦点环与放置区域 outline 宽度 |
 | `--atlas-drag-preview-max-width` | `min(20rem, calc(100vw - 1rem))` | 拖拽预览上限 |
+| `--atlas-popup-inline-size` | `14rem` | 标签页菜单宽度 |
+| `--atlas-popup-max-block-size` | `12rem` | 标签页菜单最大高度 |
+| `--atlas-popup-item-padding` | `0.375rem 0.625rem` | 菜单项内边距 |
+| `--atlas-popup-item-radius` | `var(--atlas-radius-sm)` | 菜单项圆角 |
+| `--atlas-flyout-inline-size` | `min(22rem, 50vw)` | 自动隐藏 Flyout 宽度 |
+| `--atlas-flyout-block-size` | `min(24rem, 60vh)` | 自动隐藏 Flyout 高度 |
+| `--atlas-tab-overflow-button-inline-size` | `var(--atlas-chrome-height)` | 溢出菜单按钮宽度 |
 
 ### 层级
 
@@ -90,6 +103,8 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-layer-content` | `0` |
 | `--atlas-layer-chrome` | `10` |
 | `--atlas-layer-drag` | `30` |
+| `--atlas-layer-popup-backdrop` | `39` |
+| `--atlas-layer-popup` | `40` |
 
 ### 透明度
 
@@ -103,6 +118,7 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-drop-highlight-alpha-strong` | `22%` | 区域形状放置高亮混色比例 |
 | `--atlas-toolbar-divider-opacity` | `0.25` | Toolbar 分隔线 |
 | `--atlas-drag-preview-opacity` | `0.92` | 拖拽预览 |
+| `--atlas-popup-disabled-opacity` | `0.45` | 菜单禁用项 |
 
 ## 4. 深度定制（复制样式表）
 

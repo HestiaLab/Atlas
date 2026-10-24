@@ -1330,27 +1330,28 @@ Title
 拖拽目标区域悬浮层高亮指示器
 
 Description
-系统应在 Panel 或 ToolBar Entry 拖拽过程中，仅在 ToolBar 中显示有效放置目标预览。
-ToolBar 是 Dock Panel 放置与排序的主交互目标；六个 Dock Region 不作为 Panel 的直接释放目标，也不显示 Dock 区域可停靠预览。
+系统应在 Panel 或 ToolBar Entry 拖拽过程中显示有效放置目标预览。
+ToolBar 是 Dock Panel 放置与排序的主交互目标。依据 ADR-0007，仅当拖拽 Panel Header 时，可见 Tool Group 的内容区（RegionBody）作为 RegionCenter 直接释放目标；ToolBar Entry 拖拽保持 ToolBar-only。六个 Dock Region 的其他区域表面不作为直接释放目标，也不显示 Dock 区域可停靠预览。
 Left / Right ToolBar 各包含两个停靠预览区域：UpperArea（连续承载 Upper Dock 与 Lower Dock 两个逻辑槽位）和 BottomArea（单独承载 Bottom Dock 槽位）。
 
 Acceptance Criteria
 
-AC1：ToolBar-only 停靠预览
+AC1：ToolBar 与 Panel Header 停靠预览
 
-Given 用户正在拖拽 Panel 或 ToolBar Entry
+Given 用户正在拖拽 Panel Header 或 ToolBar Entry
 When 拖拽预览进入某个 ToolBar Entry 或 ToolBar 区域槽位
 Then ToolBar 中显示对应的插入预览
-And Dock Region 中不显示可停靠预览区域
+And 拖拽 Panel Header 进入可见 Tool Group 内容区时显示 RegionCenter 预览
+And 其他 Dock Region 表面不显示可停靠预览区域
 And 高亮样式为半透明主题色底 + 主题色边框
-And 拖拽离开 ToolBar 有效目标后高亮消失
+And 拖拽离开有效目标后高亮消失
 
-AC2：Dock Region 不作为直接释放目标
+AC2：Panel Header 在可见 RegionBody 上直接释放
 
-Given 用户正在拖拽 Panel 或 ToolBar Entry，且当前位于某 Dock Region 上方
-When 用户在 Dock Region 内释放
-Then 系统不应将该 Dock Region 作为直接释放目标
-And 拖拽操作取消，Panel/ToolBar Entry 回到原位置
+Given 用户正在拖拽 Panel Header 且当前位于某可见 Tool Group 内容区上方
+When 用户在该内容区释放
+Then 系统应将该 Panel 移入目标 Group 并激活
+And 不创建新的分割
 
 AC3：ToolBar 内条目间位置高亮
 
@@ -1376,6 +1377,14 @@ Given 拖拽悬浮层正在显示
 When 用户按下 ESC
 Then 所有高亮悬浮层立即消失
 And 拖拽操作取消，Panel/ToolBar Entry 回到原位置
+
+AC6：ToolBar Entry 的 ToolBar-only 释放规则
+
+Given 用户正在拖拽 ToolBar Entry
+When 拖拽预览位于可见 Dock Region 内容区上方
+Then 系统不应显示 RegionCenter 可停靠预览
+And 用户在该内容区释放时系统不应移动该 ToolBar Entry
+And 拖拽操作取消，ToolBar Entry 回到原位置
 ```
 
 ```
@@ -5059,7 +5068,8 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | REQ-F-147     | Layout Instance 销毁                         | 新增     | 销毁接口 + DOM/事件清理 + 重复销毁 + 销毁后操作拒绝                                                                           |
 | REQ-F-148     | 容器尺寸变化时布局自适应                               | 新增     | 容器 resize 按比例自适应，含最小尺寸约束冲突处理                                                                               |
 | REQ-F-153     | ToolBar 拖拽投放交互稳定性                          | 新增     | 根据实机测试反馈新增 ToolBar 拖拽稳定性约束：拖拽预览不跳跃、Divider 不占常驻槽位、空逻辑槽位拖拽可达、拖拽渲染与注册过程无 Blazor crit 级错误                     |
-| REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；可见 RegionBody 不作为直接释放目标 |
+| REQ-F-069、REQ-F-140、REQ-F-150、REQ-F-155 | Panel Drop Policy | 修改 | 2026-07-31 依据 ADR-0007 统一为 ToolBar-first + hidden Scaffold；Panel Header 的可见 RegionBody 目标见 2026-10-24 行 |
+| REQ-F-150 | 拖拽目标区域悬浮层高亮指示器 | 修改 | 2026-10-24 依据 ADR-0007 与 P0 验收裁定：AC1/AC2 对齐“ToolBar-first + Panel Header RegionCenter”；新增 AC6 固定 ToolBar Entry 的 ToolBar-only 规则 |
 | REQ-F-085~088 | Persistence Schema | 修改 | 2026-07-31 依据 ADR-0010 固定 V2 namespace、`2.0` 版本、strict unknown policy、完整 committed topology；任意对象参数不持久化；无真实 V1 样本时仅支持已冻结窄兼容输入 |
 | REQ-F-070 | Content Lifetime | 修改 | 2026-07-31 依据 ADR-0012 将状态保持明确为 ResourceId/DockItemId 外置的用户可观察业务/视图状态；跨 Group 允许组件 remount，不承诺实例身份 |
 | REQ-NF-006 | Content Trust | 修改 | 2026-07-31 依据 ADR-0013 区分 TrustedComponent 异常隔离与 SandboxedFrame 恶意脚本安全边界 |

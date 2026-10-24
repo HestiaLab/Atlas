@@ -6,13 +6,18 @@ import {
   isValidControllerIdentity,
   isSupportedProtocolVersion
 } from "../ClientScripts/protocol";
-import { AtlasInteractionController, documentTargetKind } from "../ClientScripts/controller";
+import {
+  AtlasInteractionController,
+  documentTargetKind,
+  isTabClipped,
+  tabOverflowWheelDelta
+} from "../ClientScripts/controller";
 import { attachAtlasController as attachAtlasControllerFromController } from "../ClientScripts/controller";
 import {
+  documentTabInsertionIndex,
   resolveDropTarget,
   type DropTargetDragContext
-} from "../ClientScripts/drop-target";
-import {
+} from "../ClientScripts/drop-target";import {
   basisFor,
   clamp,
   readLimits,
@@ -125,6 +130,55 @@ test("protocol version is explicit and rejects unknown versions", () => {
   assert.equal(ATLAS_PROTOCOL_VERSION, 1);
   assert.equal(isSupportedProtocolVersion(ATLAS_PROTOCOL_VERSION), true);
   assert.equal(isSupportedProtocolVersion(ATLAS_PROTOCOL_VERSION + 1), false);
+});
+
+test("tab overflow wheel delta follows writing direction", () => {
+  assert.equal(tabOverflowWheelDelta(60, "ltr"), 60);
+  assert.equal(tabOverflowWheelDelta(60, "rtl"), -60);
+  assert.equal(tabOverflowWheelDelta(-25, "rtl"), 25);
+  assert.equal(tabOverflowWheelDelta(0, "ltr"), 0);
+  assert.equal(tabOverflowWheelDelta(Number.NaN, "ltr"), 0);
+});
+
+test("tab clipping uses physical geometry with subpixel tolerance", () => {
+  const strip = { left: 100, right: 300, width: 200 };
+  assert.equal(
+    isTabClipped({ left: 100, right: 200, width: 100 }, strip),
+    false);
+  assert.equal(
+    isTabClipped({ left: 200, right: 300.4, width: 100.4 }, strip),
+    false);
+  assert.equal(
+    isTabClipped({ left: 200, right: 301, width: 101 }, strip),
+    true);
+  assert.equal(
+    isTabClipped({ left: 99, right: 200, width: 101 }, strip),
+    true);
+  assert.equal(
+    isTabClipped({ left: 0, right: 0, width: 0 }, strip),
+    false);
+  assert.equal(
+    isTabClipped({ left: 100, right: 200, width: 100 }, { left: 0, right: 0, width: 0 }),
+    false);
+});
+
+test("document drop zones mirror inline edges in RTL", () => {
+  const rect = { left: 100, top: 50, right: 500, bottom: 250, width: 400, height: 200 };
+  assert.equal(documentTargetKind(rect as DOMRect, 120, 150), "document-inline-start");
+  assert.equal(documentTargetKind(rect as DOMRect, 480, 150), "document-inline-end");
+  assert.equal(documentTargetKind(rect as DOMRect, 120, 150, "rtl"), "document-inline-end");
+  assert.equal(documentTargetKind(rect as DOMRect, 480, 150, "rtl"), "document-inline-start");
+  assert.equal(documentTargetKind(rect as DOMRect, 300, 150, "rtl"), "document-center");
+  assert.equal(documentTargetKind(rect as DOMRect, 300, 60, "rtl"), "document-block-start");
+  assert.equal(documentTargetKind(rect as DOMRect, 300, 240, "rtl"), "document-block-end");
+});
+
+test("same-group tab insertion mirrors the inline half in RTL", () => {
+  const rect = { left: 100, top: 50, right: 300, bottom: 80, width: 200, height: 30 };
+  assert.equal(documentTabInsertionIndex(rect as DOMRect, 250, 2), 3);
+  assert.equal(documentTabInsertionIndex(rect as DOMRect, 150, 2), 2);
+  assert.equal(documentTabInsertionIndex(rect as DOMRect, 250, 2, "rtl"), 2);
+  assert.equal(documentTabInsertionIndex(rect as DOMRect, 150, 2, "rtl"), 3);
 });
 
 test("shared interaction protocol fixture matches TypeScript v1 union", () => {
@@ -385,6 +439,27 @@ class FakeElement extends EventTarget {
       return this.dataset.atlasToolbarRegion ? this as unknown as T : null;
     }
 
+    if (selector === "[data-atlas-auto-hide-owner]") {
+      let current: FakeElement | null = this;
+      while (current) {
+        if (current.dataset.atlasAutoHideOwner) {
+          return current as unknown as T;
+        }
+
+        current = current.parentElement;
+      }
+
+      return null;
+    }
+
+    if (selector === "[data-atlas-auto-hide-entry]") {
+      return this.dataset.atlasAutoHideEntry ? this as unknown as T : null;
+    }
+
+    if (selector === "[data-atlas-auto-hide-flyout]") {
+      return this.dataset.atlasAutoHideFlyout ? this as unknown as T : null;
+    }
+
     if (selector === "[data-atlas-drop-scaffold=\"true\"]") {
       return this.dataset.atlasDropScaffold === "true" ? this as unknown as T : null;
     }
@@ -444,10 +519,53 @@ class FakeElement extends EventTarget {
         && child.dataset.atlasIcon) ?? null) as T | null;
     }
 
+    if (selector === ".atlas-v2-item-title") {
+      return (this.children.find(child =>
+        child.className.split(" ").includes("atlas-v2-item-title")) ?? null) as T | null;
+    }
+
+    const autoHideSelector = selector === "[data-atlas-auto-hide-entry]"
+      ? "atlasAutoHideEntry"
+      : selector === "[data-atlas-auto-hide-flyout]"
+        ? "atlasAutoHideFlyout"
+        : undefined;
+    if (autoHideSelector) {
+      const findAutoHide = (element: FakeElement): FakeElement | undefined => {
+        for (const child of element.children) {
+          if (child.dataset[autoHideSelector]) {
+            return child;
+          }
+
+          const nested = findAutoHide(child);
+          if (nested) {
+            return nested;
+          }
+        }
+
+        return undefined;
+      };
+      return (findAutoHide(this) ?? null) as T | null;
+    }
+
     return this as unknown as T;
   }
 
   public querySelectorAll<T extends Element>(selector: string): T[] {
+    if (selector === "[data-atlas-auto-hide-owner]") {
+      const found: FakeElement[] = [];
+      const collect = (element: FakeElement): void => {
+        if (element.dataset.atlasAutoHideOwner) {
+          found.push(element);
+        }
+
+        for (const child of element.children) {
+          collect(child);
+        }
+      };
+      collect(this);
+      return found as unknown as T[];
+    }
+
     const documentGroup = selector === "[data-atlas-group-kind=document][data-atlas-group-id]"
       && this.dataset.atlasGroupKind === "document"
       && this.dataset.atlasGroupId;
@@ -477,6 +595,28 @@ class FakeElement extends EventTarget {
     this.children.push(child);
     return child;
   }
+
+  public contains(candidate: Node | null): boolean {
+    let current = candidate as unknown as FakeElement | null;
+    while (current) {
+      if (current === this) {
+        return true;
+      }
+
+      current = current.parentElement;
+    }
+
+    return false;
+  }
+
+  public focus(): void {
+    this.focusCount += 1;
+    if (this.ownerDocument) {
+      this.ownerDocument.activeElement = this;
+    }
+  }
+
+  public focusCount = 0;
 
   public remove(): void {
     const siblings = this.parentElement?.children;
@@ -573,6 +713,131 @@ function controllerFixture(delay = 1000): {
 async function flushCallbacks(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 0));
 }
+
+function sleep(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+function targetedEvent(
+  type: string,
+  target: FakeElement,
+  values: Record<string, unknown> = {}): Event {
+  const event = interactionEvent(type, values);
+  Object.defineProperty(event, "target", { value: target });
+  return event;
+}
+
+function autoHideFixture(): {
+  controller: AtlasInteractionController;
+  root: FakeElement;
+  owner: FakeElement;
+  entry: FakeElement;
+  flyout: FakeElement;
+} {
+  const root = new FakeElement();
+  const ownerDocument = new FakeDocument();
+  ownerDocument.defaultView = new FakeWindow() as unknown as Window;
+  root.ownerDocument = ownerDocument;
+  root.dataset.atlasHostId = "auto-hide-host";
+  root.dataset.atlasWorkspaceId = "auto-hide-workspace";
+  const owner = new FakeElement();
+  owner.ownerDocument = ownerDocument;
+  owner.dataset.atlasAutoHideOwner = "true";
+  const entry = new FakeElement();
+  entry.ownerDocument = ownerDocument;
+  entry.dataset.atlasAutoHideEntry = "true";
+  entry.setAttribute("aria-expanded", "false");
+  const flyout = new FakeElement();
+  flyout.ownerDocument = ownerDocument;
+  flyout.dataset.atlasAutoHideFlyout = "true";
+  flyout.setAttribute("aria-hidden", "true");
+  flyout.setAttribute("inert", "");
+  owner.appendChild(entry);
+  owner.appendChild(flyout);
+  root.appendChild(owner);
+  const controller = new AtlasInteractionController(
+    root as unknown as HTMLElement,
+    {
+      hostId: "auto-hide-host",
+      workspaceId: "auto-hide-workspace",
+      generation: 1,
+      protocolVersion: ATLAS_PROTOCOL_VERSION
+    },
+    { invokeMethodAsync: async () => undefined });
+  return { controller, root, owner, entry, flyout };
+}
+
+test("auto hide flyout opens on hover and closes after the 300ms grace period", async () => {
+  const fixture = autoHideFixture();
+  fixture.root.dispatchEvent(targetedEvent("pointerover", fixture.entry));
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, "true");
+  assert.equal(fixture.entry.getAttribute("aria-expanded"), "true");
+  assert.equal(fixture.flyout.getAttribute("aria-hidden"), "false");
+  assert.equal(fixture.flyout.getAttribute("inert"), null);
+
+  // Moving from the entry into its flyout keeps the flyout open.
+  fixture.root.dispatchEvent(targetedEvent(
+    "pointerout",
+    fixture.entry,
+    { relatedTarget: fixture.flyout }));
+  await sleep(350);
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, "true");
+
+  fixture.root.dispatchEvent(targetedEvent(
+    "pointerout",
+    fixture.flyout,
+    { relatedTarget: fixture.root }));
+  await sleep(150);
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, "true");
+
+  // Re-entering cancels the pending close.
+  fixture.root.dispatchEvent(targetedEvent("pointerover", fixture.entry));
+  await sleep(250);
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, "true");
+
+  fixture.root.dispatchEvent(targetedEvent(
+    "pointerout",
+    fixture.entry,
+    { relatedTarget: fixture.root }));
+  await sleep(350);
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, undefined);
+  assert.equal(fixture.entry.getAttribute("aria-expanded"), "false");
+  assert.equal(fixture.flyout.getAttribute("aria-hidden"), "true");
+  assert.equal(fixture.flyout.getAttribute("inert"), "");
+  fixture.controller.dispose();
+});
+
+test("auto hide flyout supports keyboard open escape and focus return", () => {
+  const fixture = autoHideFixture();
+  fixture.root.dispatchEvent(targetedEvent(
+    "keydown",
+    fixture.entry,
+    { code: "Enter", ctrlKey: false, shiftKey: false, altKey: false }));
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, "true");
+
+  fixture.root.dispatchEvent(targetedEvent(
+    "keydown",
+    fixture.flyout,
+    { code: "Escape", ctrlKey: false, shiftKey: false, altKey: false }));
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, undefined);
+  assert.equal(fixture.entry.focusCount, 1);
+  fixture.controller.dispose();
+});
+
+test("dispose clears pending auto hide timers and ignores later hover", async () => {
+  const fixture = autoHideFixture();
+  fixture.root.dispatchEvent(targetedEvent("pointerover", fixture.entry));
+  fixture.root.dispatchEvent(targetedEvent(
+    "pointerout",
+    fixture.entry,
+    { relatedTarget: fixture.root }));
+  fixture.controller.dispose();
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, undefined);
+
+  fixture.root.dispatchEvent(targetedEvent("pointerover", fixture.entry));
+  await sleep(350);
+  assert.equal(fixture.owner.dataset.atlasAutoHideOpen, undefined);
+});
 
 test("pointer preview stays local and pointerup commits exactly once", async () => {
   const fixture = controllerFixture();
@@ -1169,6 +1434,30 @@ function performToolbarDrag(root: FakeElement, pointerId: number): void {
   }));
 }
 
+// 在 ownerDocument 上派发 click，模拟浏览器对拖拽源的原生点击。
+// target/composedPath 由测试显式提供，FakeDocument 不实现真实 DOM 传播。
+function dispatchAtlasClick(
+  document: FakeDocument,
+  target: FakeElement,
+  path: readonly FakeElement[] = [target]): Event {
+  const event = interactionEvent("click", {
+    target,
+    composedPath: () => [...path]
+  });
+  document.dispatchEvent(event);
+  return event;
+}
+
+// 覆盖没有 composedPath 的假对象/旧环境：控制器应退化为 root.contains。
+// 显式把 composedPath 覆盖为 undefined，屏蔽 Node Event 的原生空路径。
+function dispatchAtlasClickWithoutPath(
+  document: FakeDocument,
+  target: FakeElement): Event {
+  const event = interactionEvent("click", { target, composedPath: undefined });
+  document.dispatchEvent(event);
+  return event;
+}
+
 test("controller registry rejects unsupported versions and replaces same-host controllers", async () => {
   const identity = {
     hostId: "registry-host",
@@ -1353,6 +1642,31 @@ test("document drag preview preserves the standard source icon", () => {
   assert.equal(dragOverlay(fixture)?.dataset.atlasDragSessionId, undefined);
 });
 
+test("panel header drag preview labels only the item title", () => {
+  const fixture = dragFixture("panel-header");
+  const title = new FakeElement();
+  title.className = "atlas-v2-item-title";
+  title.textContent = "Content";
+  fixture.root.appendChild(title);
+  const close = new FakeElement();
+  close.className = "atlas-v2-panel-close";
+  close.textContent = "×";
+  fixture.root.appendChild(close);
+
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 39, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 39, clientX: 5, clientY: 0
+  }));
+
+  const preview = dragPreview(fixture)!;
+  const label = preview.children.find(
+    child => child.className === "atlas-v2-drag-preview-title");
+  assert.equal(label?.textContent, "Content");
+  fixture.controller.dispose();
+});
+
 test("page visibility invalidation clears the drag preview without committing", () => {
   const fixture = dragFixture("toolbar-entry");
   fixture.root.dispatchEvent(interactionEvent("pointerdown", {
@@ -1368,6 +1682,95 @@ test("page visibility invalidation clears the drag preview without committing", 
 
   assert.equal(dragPreview(fixture), undefined);
   assert.equal(dragOverlay(fixture)?.dataset.atlasDragSessionId, undefined);
+  assert.equal(fixture.messages.length, 0);
+  fixture.controller.dispose();
+});
+
+test("page visible after a hidden cancellation leaves no session and allows a new drag", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 35, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 35, clientX: 20, clientY: 20
+  }));
+  assert.notEqual(dragPreview(fixture), undefined);
+
+  fixture.document.hidden = true;
+  fixture.document.dispatchEvent(new Event("visibilitychange"));
+  fixture.document.hidden = false;
+  fixture.document.dispatchEvent(new Event("visibilitychange"));
+
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(fixture.root.dataset.atlasDragging, undefined);
+  assert.equal(dragOverlay(fixture)?.dataset.atlasDragSessionId, undefined);
+  assert.equal(fixture.messages.length, 0);
+
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 36, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 36, clientX: 20, clientY: 20
+  }));
+  assert.notEqual(dragPreview(fixture), undefined);
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 36, clientX: 20, clientY: 20
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 1);
+  fixture.controller.dispose();
+});
+
+test("escape cancels a drag when focus is outside the controller root", async () => {
+  const fixture = dragFixture("panel-header");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 37, clientX: 10, clientY: 10, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 37, clientX: 20, clientY: 20
+  }));
+  assert.notEqual(dragPreview(fixture), undefined);
+  assert.equal(fixture.root.dataset.atlasDragging, "true");
+
+  fixture.document.dispatchEvent(interactionEvent("keydown", {
+    code: "Escape", ctrlKey: false, shiftKey: false, altKey: false, metaKey: false
+  }));
+
+  assert.equal(dragPreview(fixture), undefined);
+  assert.equal(fixture.root.dataset.atlasDragging, undefined);
+  assert.equal(fixture.root.dataset.atlasDropPreview, undefined);
+  assert.equal(fixture.root.releasedPointer, 37);
+
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 37, clientX: 20, clientY: 20
+  }));
+  await flushCallbacks();
+
+  assert.equal(fixture.messages.length, 0);
+  fixture.controller.dispose();
+});
+
+test("escape cancels a splitter resize when focus is outside the controller root", () => {
+  const fixture = controllerFixture();
+  fixture.splitter.children.push(fixture.split);
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerdown",
+    { pointerId: 38, clientX: 10, clientY: 0, button: 0, isPrimary: true }));
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointermove",
+    { pointerId: 38, clientX: 30, clientY: 0 }));
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), "0.7");
+
+  const document = fixture.splitter.ownerDocument!;
+  document.dispatchEvent(interactionEvent("keydown", {
+    code: "Escape", ctrlKey: false, shiftKey: false, altKey: false, metaKey: false
+  }));
+
+  assert.equal(fixture.split.style.get("--atlas-split-preview"), undefined);
+  fixture.splitter.dispatchEvent(interactionEvent(
+    "pointerup",
+    { pointerId: 38, clientX: 50, clientY: 0 }));
   assert.equal(fixture.messages.length, 0);
   fixture.controller.dispose();
 });
@@ -1949,6 +2352,155 @@ test("panel drag rejects its same-group header while threshold click remains unt
   await flushCallbacks();
   assert.equal(drag.messages.length, 0);
   drag.controller.dispose();
+});
+
+test("click below the drag threshold is not suppressed", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 70, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 70, clientX: 3, clientY: 0
+  }));
+  await flushCallbacks();
+
+  const click = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(click.defaultPrevented, false);
+  fixture.controller.dispose();
+});
+
+test("successful drag suppresses only the next native click", async () => {
+  const fixture = dragFixture("toolbar-entry");
+  performToolbarDrag(fixture.root, 71);
+  // click 必须在 pointerup 同一任务内派发；await 会先触发 setTimeout(0)
+  // 兜底清理，掩盖真实的浏览器时序。
+  const first = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(first.defaultPrevented, true);
+  const second = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(second.defaultPrevented, false);
+
+  await flushCallbacks();
+  assert.equal(fixture.messages.length, 1);
+  assert.equal(fixture.root.dataset.atlasRevision, "12");
+  fixture.controller.dispose();
+});
+
+test("rejected drop suppresses the click and leaves revision and source group unchanged", () => {
+  const fixture = dragFixture("panel-header");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 72, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 72, clientX: 5, clientY: 0
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 72, clientX: 5, clientY: 0
+  }));
+
+  assert.equal(fixture.messages.length, 0);
+  assert.equal(fixture.root.dataset.atlasGroupId, "tools");
+  assert.equal(fixture.root.dataset.atlasRevision, "12");
+  assert.equal(fixture.root.dataset.atlasDragging, undefined);
+  const click = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(click.defaultPrevented, true);
+  assert.equal(fixture.root.dataset.atlasRevision, "12");
+  fixture.controller.dispose();
+});
+
+test("escape cancel suppresses the pending click once", async () => {
+  const fixture = dragFixture("panel-header");
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 73, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+  fixture.root.dispatchEvent(interactionEvent("pointermove", {
+    pointerId: 73, clientX: 5, clientY: 0
+  }));
+  fixture.root.dispatchEvent(interactionEvent("keydown", {
+    code: "Escape", ctrlKey: false, shiftKey: false, altKey: false, metaKey: false
+  }));
+  assert.equal(fixture.root.dataset.atlasDragging, undefined);
+
+  // ESC 时指针仍按下：抑制必须保持到 release，而不是被 setTimeout(0) 提前清理。
+  await flushCallbacks();
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 73, clientX: 5, clientY: 0
+  }));
+  const first = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(first.defaultPrevented, true);
+  const second = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(second.defaultPrevented, false);
+  fixture.controller.dispose();
+});
+
+test("a new pointerdown clears a pending click suppression", () => {
+  const fixture = dragFixture("toolbar-entry");
+  performToolbarDrag(fixture.root, 74);
+  fixture.root.dispatchEvent(interactionEvent("pointerdown", {
+    pointerId: 75, clientX: 0, clientY: 0, button: 0, isPrimary: true
+  }));
+
+  const click = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(click.defaultPrevented, false);
+  fixture.root.dispatchEvent(interactionEvent("pointerup", {
+    pointerId: 75, clientX: 0, clientY: 0
+  }));
+  fixture.controller.dispose();
+});
+
+test("another host click is not suppressed by this controller", () => {
+  const fixture = dragFixture("toolbar-entry");
+  const otherRoot = new FakeElement();
+  otherRoot.ownerDocument = fixture.document;
+  otherRoot.dataset.atlasHostId = "other-host";
+  otherRoot.dataset.atlasWorkspaceId = "drag-workspace";
+  otherRoot.dataset.atlasRevision = "12";
+  const otherMessages: AtlasInteractionMessage[] = [];
+  const other = new AtlasInteractionController(
+    otherRoot as unknown as HTMLElement,
+    {
+      hostId: "other-host",
+      workspaceId: "drag-workspace",
+      generation: 5,
+      protocolVersion: ATLAS_PROTOCOL_VERSION
+    },
+    { invokeMethodAsync: async (_method, message) => { otherMessages.push(message); } });
+
+  performToolbarDrag(fixture.root, 76);
+  const foreign = dispatchAtlasClick(fixture.document, otherRoot, [otherRoot]);
+  assert.equal(foreign.defaultPrevented, false);
+  const own = dispatchAtlasClick(fixture.document, fixture.root);
+  assert.equal(own.defaultPrevented, true);
+  other.dispose();
+  fixture.controller.dispose();
+});
+
+test("click suppression falls back to root containment without composedPath", () => {
+  const fixture = dragFixture("toolbar-entry");
+  performToolbarDrag(fixture.root, 77);
+  const click = dispatchAtlasClickWithoutPath(fixture.document, fixture.root);
+  assert.equal(click.defaultPrevented, true);
+  fixture.controller.dispose();
+});
+
+test("splitter double click and keyboard resize do not suppress clicks", async () => {
+  const fixture = controllerFixture();
+  fixture.splitter.dispatchEvent(interactionEvent("dblclick", {}));
+  fixture.splitter.dispatchEvent(interactionEvent("keydown", {
+    code: "ArrowRight",
+    ctrlKey: false,
+    shiftKey: false,
+    altKey: false,
+    metaKey: false
+  }));
+  await flushCallbacks();
+  assert.equal(fixture.messages.length, 2);
+  assert.equal(fixture.messages[1]?.type, "resize-split");
+
+  const click = dispatchAtlasClick(
+    fixture.splitter.ownerDocument!,
+    fixture.splitter);
+  assert.equal(click.defaultPrevented, false);
+  fixture.controller.dispose();
 });
 
 test("same-group panel header drag targets a toolbar entry while the reverse drag stays rejected", async () => {

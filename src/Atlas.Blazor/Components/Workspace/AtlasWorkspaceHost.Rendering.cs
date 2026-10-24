@@ -93,11 +93,17 @@ public sealed partial class AtlasWorkspaceHost
         builder.CloseRegion();
 
         builder.OpenRegion(25);
+        // 中央列使用显式容器并固定 grid-column: 2：两侧 ToolBar 可以缺席，
+        // 若把根节点直接作为 grid 子项，CSS 自动放置会把它放进第一个 auto 列，
+        // 使仅声明 Editor Area 的工作区无法占满容器（REQ-F-002 AC2）。
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-work-area-center");
+        builder.AddAttribute(2, "data-atlas-work-area-center", "true");
         if (snapshot.RootNodeId is null)
         {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "atlas-v2-workspace-empty");
-            builder.AddContent(2, "No layout content");
+            builder.OpenElement(3, "div");
+            builder.AddAttribute(4, "class", "atlas-v2-workspace-empty");
+            builder.AddContent(5, "No layout content");
             builder.CloseElement();
         }
         else
@@ -105,6 +111,7 @@ public sealed partial class AtlasWorkspaceHost
             RenderNode(builder, snapshot, snapshot.RootNodeId.Value);
         }
 
+        builder.CloseElement();
         builder.CloseRegion();
 
         builder.OpenRegion(26);
@@ -341,7 +348,23 @@ public sealed partial class AtlasWorkspaceHost
                 && AtlasDefinitionCollector.SideFor(group.ToolbarRegion.Value) == side)
             .OrderBy(group => group.ToolbarRegion)
             .Select(
-                group => (Group: group, Items: OrderedItems(snapshot, group).ToArray()))
+                group =>
+                {
+                    var autoHidden = AutoHiddenItems(snapshot, group);
+                    var items = OrderedItems(snapshot, group).ToList();
+                    foreach (var item in autoHidden)
+                    {
+                        if (items.All(existing => existing.Id != item.Id))
+                        {
+                            items.Add(item);
+                        }
+                    }
+
+                    return (
+                        Group: group,
+                        Items: items.ToArray(),
+                        AutoHiddenIds: autoHidden.Select(item => item.Id).ToHashSet());
+                })
             .ToArray();
         if (regions.Length == 0)
         {
@@ -372,11 +395,21 @@ public sealed partial class AtlasWorkspaceHost
             .Select(region => region.Group.SelectedItemId)
             .FirstOrDefault(itemId => itemId is not null);
         // 漫游焦点项：展开组的选中项，无展开组时退回首个工具项，作为标签 tabindex 定位点。
+        // 自动隐藏条目默认不参与漫游，除非区域内没有普通条目。
         var rovingItemId = activeItemId
             ?? regions
+                .SelectMany(
+                    region => region.Items.Where(
+                        item => !region.AutoHiddenIds.Contains(item.Id)))
+                .Select(item => item.Id)
+                .FirstOrDefault();
+        if (rovingItemId == default)
+        {
+            rovingItemId = regions
                 .SelectMany(region => region.Items)
                 .Select(item => item.Id)
                 .FirstOrDefault();
+        }
 
         var hasUpperContent = upperRegions.Any(region => region.Items.Length != 0);
         var hasBottomContent = bottomRegions.Any(region => region.Items.Length != 0);
@@ -441,9 +474,107 @@ public sealed partial class AtlasWorkspaceHost
         builder.CloseElement();
     }
 
+    private static IReadOnlyList<DockItem> AutoHiddenItems(
+        WorkspaceSnapshot snapshot,
+        GroupNode group)
+    {
+        // 自动隐藏条目仍属于其 dock-back 组所在的工具栏区域；
+        // 组本身可能为空（条目已收起），因此不能只从 group.ItemIds 取条目。
+        return snapshot.AutoHideStrips.Values
+            .SelectMany(strip => strip.Entries)
+            .Where(entry => entry.DockBack.PreferredGroupId == group.Id
+                && snapshot.Items.ContainsKey(entry.ItemId))
+            .Select(entry => snapshot.Items[entry.ItemId])
+            .GroupBy(item => item.Id)
+            .Select(items => items.First())
+            .ToArray();
+    }
+
+    private void RenderAutoHideEntry(
+        RenderTreeBuilder builder,
+        GroupNode group,
+        DockItem item,
+        int itemIndex,
+        DockItemId rovingItemId)
+    {
+        builder.OpenElement(0, "div");
+        builder.SetKey((item.Id, "auto-hide"));
+        builder.AddAttribute(1, "class", "atlas-v2-auto-hide-owner");
+        builder.AddAttribute(2, "data-atlas-auto-hide-owner", "true");
+        builder.AddAttribute(3, "data-atlas-item-id", item.Id.Value);
+
+        var controlId = AtlasDomIdentity.ControlId(hostId, item.Id, "tool-tab");
+        var panelId = AtlasDomIdentity.PanelId(hostId, item.Id);
+        builder.OpenElement(4, "button");
+        builder.SetKey((item.Id, "auto-hide-entry"));
+        builder.AddAttribute(5, "type", "button");
+        builder.AddAttribute(6, "id", controlId);
+        builder.AddAttribute(7, "role", "tab");
+        builder.AddAttribute(8, "class", "atlas-v2-auto-hide-entry");
+        builder.AddAttribute(9, "aria-label", item.Title);
+        builder.AddAttribute(10, "aria-selected", "false");
+        builder.AddAttribute(11, "aria-expanded", "false");
+        builder.AddAttribute(12, "aria-controls", panelId);
+        builder.AddAttribute(13, "tabindex", item.Id == rovingItemId ? "0" : "-1");
+        builder.AddAttribute(14, "data-atlas-auto-hide-entry", "true");
+        builder.AddAttribute(15, "data-atlas-item-id", item.Id.Value);
+        builder.AddAttribute(16, "data-atlas-item-kind", "tool");
+        builder.AddAttribute(17, "data-atlas-group-id", group.Id.Value);
+        builder.AddAttribute(
+            18,
+            "data-atlas-toolbar-region",
+            group.ToolbarRegion!.Value.ToString());
+        builder.AddAttribute(
+            19,
+            "data-atlas-insertion-index",
+            itemIndex.ToString(CultureInfo.InvariantCulture));
+        if (item.IconKey is not null)
+        {
+            builder.OpenElement(20, "span");
+            builder.AddAttribute(21, "class", "atlas-v2-item-icon");
+            builder.AddAttribute(22, "data-atlas-icon", item.IconKey);
+            builder.AddAttribute(23, "aria-hidden", "true");
+            builder.CloseElement();
+        }
+
+        builder.AddContent(24, item.Title);
+        builder.CloseElement();
+
+        // Flyout 内容始终挂载，由控制器切换 owner 的 data-atlas-auto-hide-open
+        // 与 aria-hidden/inert；这样鼠标移入浮层时无需服务端往返。
+        builder.OpenElement(25, "div");
+        builder.AddAttribute(26, "class", "atlas-v2-auto-hide-flyout");
+        builder.AddAttribute(27, "data-atlas-auto-hide-flyout", "true");
+        builder.AddAttribute(28, "role", "region");
+        builder.AddAttribute(29, "aria-label", item.Title);
+        builder.AddAttribute(30, "aria-hidden", "true");
+        builder.AddAttribute(31, "inert", true);
+        var context = new AtlasContentContext(activeWorkspace!, item, effectiveStateScope);
+        var resolution = (effectiveCatalog ?? AtlasContentCatalog.Empty)
+            .TryResolve(item.Content.Kind, out var descriptor);
+        builder.OpenComponent<AtlasContentOutlet>(32);
+        builder.SetKey((item.Id, "auto-hide-outlet"));
+        builder.AddAttribute(33, "Content", context);
+        builder.AddAttribute(34, "Resolution", resolution);
+        builder.AddAttribute(35, "Descriptor", descriptor);
+        builder.AddAttribute(36, "IsSelected", true);
+        builder.AddAttribute(37, "PanelId", panelId);
+        builder.AddAttribute(38, "LabelledById", controlId);
+        builder.AddAttribute(
+            39,
+            "RecoveryKey",
+            (SandboxedFrameResolver, descriptor?.Revision ?? 0, "auto-hide"));
+        builder.AddAttribute(40, "OnError", OnError);
+        builder.AddAttribute(41, "SandboxedFrameResolver", SandboxedFrameResolver);
+        builder.AddAttribute(42, "Generation", interactionGeneration);
+        builder.CloseComponent();
+        builder.CloseElement();
+        builder.CloseElement();
+    }
+
     private void RenderToolBarRegion(
         RenderTreeBuilder builder,
-        (GroupNode Group, DockItem[] Items) region,
+        (GroupNode Group, DockItem[] Items, HashSet<DockItemId> AutoHiddenIds) region,
         DockItemId rovingItemId)
     {
         builder.OpenElement(0, "section");
@@ -464,6 +595,17 @@ public sealed partial class AtlasWorkspaceHost
         for (var itemIndex = 0; itemIndex < region.Items.Length; itemIndex++)
         {
             var item = region.Items[itemIndex];
+            if (region.AutoHiddenIds.Contains(item.Id))
+            {
+                RenderAutoHideEntry(
+                    builder,
+                    region.Group,
+                    item,
+                    itemIndex,
+                    rovingItemId);
+                continue;
+            }
+
             var isActive = region.Group.Visibility == GroupVisibility.Expanded
                 && region.Group.SelectedItemId == item.Id;
             // 集合项在每次迭代中复用相同的序列组，

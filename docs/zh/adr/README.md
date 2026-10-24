@@ -60,6 +60,8 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0034](./0034-core-boundary-dependencies-and-autohide-relocation.md) | Accepted | Operations→Persistence 单向分层与自动隐藏书签确定清理（CORE-P2-01/P1-05） |
 | [ADR-0035](./0035-chinese-first-language-policy.md) | Accepted | 中文优先语言政策：代码注释、公共 XML 文档与权威文档使用中文；取代 ADR-0026；英文镜像条款由 ADR-0036 修订 |
 | [ADR-0036](./0036-chinese-only-documentation.md) | Accepted | 中文唯一文档：删除 docs/en 全量镜像，只保留 README.en.md 作为国际入口；修订 ADR-0035 镜像条款 |
+| [ADR-0037](./0037-optional-item-identity-on-open.md) | Accepted | 打开条目可选标识符：`OpenItemRequest` + 工作区生成 GUID，结果返回实际标识符（REQ-F-028） |
+| [ADR-0038](./0038-reset-operation-and-serious-error-recovery.md) | Accepted | `ResetWorkspaceOperation` 解除保留状态；严重错误检测、稳定诊断日志与原子回退初始布局（REQ-F-047/127） |
 
 ## 编写约定
 

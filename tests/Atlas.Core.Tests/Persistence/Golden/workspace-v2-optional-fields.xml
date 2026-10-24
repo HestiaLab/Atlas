@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AtlasWorkspace xmlns="urn:atlas:workspace:2" schemaVersion="2.0" workspaceId="main">
+  <Items>
+    <Item id="document-42" kind="Document" title="Document 42" capabilities="27">
+      <Content kind="document-editor" resourceId="42" />
+    </Item>
+    <Item id="explorer" kind="Tool" title="Explorer" capabilities="7">
+      <Content kind="explorer" resourceId="main-solution" />
+    </Item>
+  </Items>
+  <Layout>
+    <Split id="root" axis="InlineChildren" basisKind="FixedPixels" basisValue="280" basisAnchor="First" firstMinimum="160" secondMinimum="240">
+      <First>
+        <Group id="left-tools" kind="Tool" retentionPolicy="Persistent" visibility="Expanded" selectedItemId="explorer" logicalRegion="InlineStartUpper">
+          <ItemRef id="explorer" />
+        </Group>
+      </First>
+      <Second>
+        <Group id="documents" kind="Document" retentionPolicy="Persistent" visibility="Expanded" selectedItemId="document-42">
+          <ItemRef id="document-42" />
+        </Group>
+      </Second>
+    </Split>
+  </Layout>
+  <ToolBars>
+    <ToolBar side="InlineStart" visibility="Expanded" />
+    <RegionOrder region="InlineStartUpper">
+      <ItemRef id="explorer" />
+    </RegionOrder>
+  </ToolBars>
+  <AutoHide />
+</AtlasWorkspace>

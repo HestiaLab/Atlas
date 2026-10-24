@@ -30,6 +30,15 @@
 - 2026-10-24 文档结构收敛（ADR-0036）：删除 `docs/en/` 全量英文镜像；`docs/zh/`
   为唯一维护版本；保留根目录 `README.en.md` 作为国际入口；SECURITY 与 GitHub
   模板中文化。
+- 2026-10-24 P0 验收修复（ADR-0037/0038 Accepted）：当前实测基线为
+  352 Core + 139 Blazor + 9 Showcase + 55 JS 全绿；Release build/test/format/pack
+  通过；修复 REQ-F-002、F-027、F-028、F-050、F-127、F-141、F-150 的 P0 缺口，
+  详见 `artifacts/reports/fix-verification-2026-10-24.md`。
+- 2026-10-24 P1/P2 收口：当前实测基线为 **361 Core + 156 Blazor + 9 Showcase
+  + 70 JS** 全绿；Release build/test/format/pack 通过；Chrome 155 / Firefox 157 /
+  Edge 156 三浏览器矩阵通过；详见
+  `artifacts/reports/phase-p1-p2-2026-10-24.md` 与
+  `artifacts/reports/phase-p1-p2-2026-10-24-evidence/`。
 
 在首个功能 work package 合并前，所有 151 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
@@ -137,6 +146,23 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | — | DES-ARCH-001~004、DES-OP-001~009、DES-PER-001~008 | P9 / Phase 2 | `Atlas.Core` | 326 Core + 130 Blazor tests；完整 `WorkspaceDiagnostics` 目录（60 个 ID/36 个 message key）、dispatcher 逐通知异常保护与可选 `SubscriberFaultSink`（ADR-0027）、能力掩码统一、快照注释修正、序列化器 partial 职责/using 整理、持久化边界测试、Preset writer 回收、重复内容确定性激活、Core 公共 API（工厂、操作、模型、事件、持久化、结果、选项与查询）的英文 XML 文档、持久化契约边界测试 | In Progress | 2026-10-23 诊断/P3 与文档清理；公共 API 新增仅限 `AtlasWorkspaceOptions.SubscriberFaultSink`（ADR-0027）；未改变 JS 协议、DOM metadata 或 XML schema；剩余：P3-02/P3-05/P3-06 已由 ADR-0030/0029 解决（见上行） |
 | REQ-F-015~016、REQ-F-038~040、REQ-F-100、REQ-F-128、REQ-NF-007 | DES-OP-008、DES-RND-008、DES-NFR-003 | P9 / Phase 0（Blazor） | `Atlas.Blazor/Components/Workspace`、`tests/Atlas.Blazor.Tests` | `AtlasDefinitionReconcilerTests`（跨文化指纹稳定、约束变化、编辑状态变化）、`ContentErrorDiagnosticTests`（日志详情与 DiagnosticId 关联）；341 Core + 134 Blazor + 51 JS；build/test/format/typecheck/bundle 全绿 | In Progress | 2026-10-24 Blazor 审计 Phase 0 正确性修复：声明指纹文化不敏感并纳入 `SplitConstraints`/`EditorGroupState`（BLAZOR-03/17，修复约束与溢出模式声明被静默丢弃）、内容渲染失败日志携带异常类型与消息并与 DiagnosticId 关联（F-128 AC2，BLAZOR-04）、FixedPixels 分割条由恒 50 的 `aria-valuenow` 改为锚点感知 `aria-valuetext`（BLAZOR-08）、状态作用域文档如实化（BLAZOR-05）与指南对齐（BLAZOR-06）；公共 C# API、JS 协议、DOM metadata 与 XML schema 形态未变；需求状态不升级 |
 | REQ-NF-007 | DES-NFR-003 | P9 / 可访问性 | `Atlas.Blazor/Components/Workspace` | `Toolbar_and_document_tabs_render_aria_selected_as_strings`：工具 tab 与文档 tab 的激活/未激活项均输出字符串 `"true"`/`"false"`，切换后值翻转；341 Core + 136 Blazor + 7 Showcase + 51 JS；Debug/Release build、test、format、typecheck、bundle、Showcase publish 全绿 | Implemented | 2026-10-24 修复 Blazor 将 `bool` 属性渲染为 `aria-selected=""` 或缺失、导致 `[aria-selected="true"]` 永不匹配的问题；未改变公共 C# API、JS 协议、DOM metadata、XML schema 或包拓扑；REQ-NF-007 的 AC 数量与顺序未变，状态不升级 |
+| REQ-F-002 | DES-ARCH-001、DES-DOM-002~003、DES-OP-008 | P0 验收修复 | `Atlas.Blazor/Components/Workspace`、`wwwroot/atlas-v2/atlas.css` | `Work_area_renders_an_explicit_center_column_without_toolbars`：无 ToolBar 时中央容器携带 `data-atlas-work-area-center` 并承载文档 Group；真实浏览器 900×500 editor-only harness 中文档组占满工作区中央列 | Verified | 2026-10-24 修复工作区 grid 自动放置：中央节点固定 `grid-column: 2`；完整布局几何不变。证据见 `artifacts/reports/fix-verification-2026-10-24.md` |
+| REQ-F-027、REQ-F-028、REQ-F-047、REQ-F-127 | DES-DOM-005、DES-DOM-007、DES-OP-001、DES-OP-009、DES-PER-008、DES-RND-005 | P0 验收修复 | `Atlas.Core/Operations`、`Atlas.Core/Operations/Engine`、`Atlas.Core/Results`、`Atlas.Blazor/wwwroot/atlas-v2/atlas.css` | `OpenItemRequestTests`：未指定 ID 生成 GUID、结果/`ItemOpened` 一致、生成 ID 可 Activate/Close、并发唯一、显式 ID 保留、去重返回既有 ID；`WorkspaceRecoveryTests`：Reset 恢复初始布局并清空历史；`Document_tab_title_exposes_full_text_and_tooltip_attribute` 与真实浏览器计算样式验证省略号；PublicAPI analyzer | Verified | 2026-10-24 依据 ADR-0037（可选标识符/工作区生成 GUID）与 ADR-0038（ResetWorkspace + 严重错误回退）；F-027 库默认 CSS 增加 `max-inline-size:100% + overflow hidden + ellipsis + nowrap`，保留完整 `title` 与滚动溢出模式 |
+| REQ-F-050、REQ-F-141、REQ-F-150 | DES-DOM-009~010、DES-INT-001~003、DES-INT-006、DES-OP-009、DES-PRJ-003、DES-RND-006 | P0 验收修复 | `Atlas.Blazor/Components/Workspace`、`ClientScripts/controller.ts`、`ClientScripts/dom-metadata-manifest.json` | Node：document 级 Escape 取消拖拽/分割调整、隐藏后恢复前台无残留并可重新拖拽；bUnit：Header 关闭按钮可访问名称、点击收起且 ToolBar Entry 保留；真实浏览器：Panel Header RegionCenter、ToolBar Entry ToolBar-only、ESC 取消、隐藏/恢复 | Verified | 2026-10-24 依据 ADR-0007 与验收裁定同步 SRS F-150（AC1/AC2 修订、新增 AC6）；关闭按钮复用 `SetGroupVisibilityOperation`，未新增旁路状态 |
+
+## 2026-10-24 P1/P2 收口
+
+| Requirement | DES | Phase | Owner | Test evidence | Status | Notes |
+|-------------|-----|-------|-------|---------------|--------|-------|
+| REQ-F-023 | DES-DOM-009、DES-INT-001~003、DES-INT-008 | P1 | `Atlas.Blazor/Components/Workspace`、`ClientScripts`、`atlas.css` | `AutoHideFlyoutTests`：条目/图标/标题、隐藏 Flyout、ARIA 关系、manifest 契约；Node：悬停打开、移入 Flyout 保持、300ms 延迟收起、键盘 Enter/Escape、dispose；真实浏览器三浏览器：悬停/移入/移出、300ms、覆盖相邻面板、双 Host 隔离、焦点返回 | Verified | 复用 `AutoHideStrips`/`DockBack` 与现有 overlay 层；未新增旁路放置状态、协议消息或公共 API；DOM metadata 新增 `autoHideOwner/Entry/Flyout` 并同步 manifest/渲染/选择器 |
+| REQ-F-038、REQ-F-042、REQ-F-043、REQ-F-044、REQ-F-138 | DES-DOM-010~011、DES-INT-001~003 | P1 | `Atlas.Blazor/Components/Workspace`、`ClientScripts/controller.ts`、`drop-target.ts`、`atlas.css` | `TabOverflowTests`（9）：三种模式、溢出按钮/菜单项、右键四项/禁用、关闭其他/右侧/全部、Escape、manifest；Node：滚轮方向、裁剪判定、RTL 插入；真实浏览器三浏览器：菜单仅列 13 个未完全可见标签、点击激活、右键四项、非可关闭全禁用、Close Others、滚轮横向滚动、换行全部可见 | Verified | 默认滚动模式保持；菜单模式按钮由 `ResizeObserver`/`MutationObserver` 驱动；`tabBar` 包裹层与菜单为内部投影；不新增批量关闭 API（复用 `CloseItemOperation`），失败经 `OnError` 上报稳定诊断 `ATLAS-TAB-CLOSE-FAILED` |
+| REQ-F-125 | DES-OP-001~002、DES-OP-009、DES-DOM-002 | P1 | `Atlas.Core/Operations/Engine` | `WorkspaceSelfRepairTests`（4）：MissingItem 移除并继续请求、孤立条目移除、普通 typed failure 不修复、不可修复拓扑继续 F-127 Reset；事件为 `Reset` 历史屏障、Revision +1、日志含 `ATLAS-WORKSPACE-REPAIR`/工作区/违规 | Verified | 在 `Execute/Undo/Redo` 严重错误检测前定向修复；修复原子提交并清空历史，无法定向修复时回退初始布局；未新增公共 API 或 `LayoutChangeKind`，复用 `Reset` 语义 |
+| REQ-F-126 | DES-DOM-002、DES-OP-009、DES-PER-001~008 | P1 | `Atlas.Core/Persistence`、`Atlas.Core/Operations/Engine` | `LayoutAutoPersistenceTests`：写入失败降级后可继续折叠/展开、诊断 `ATLAS-AUTO-WRITE`；`OptionalFieldCompatibilityTests`（4）：可选字段默认值、普通化回写、缺失 `selectedItemId`/`basisAnchor` typed failure、失败不改变工作区；`workspace-v2-optional-fields.xml` golden | Verified | 仅对 XSD 真正可缺省字段填默认值（文档 `DocumentState`、文档组 `EditorState`）；`iconKey`/约束上限/结构关键字段保持缺省语义或 typed failure；V2 XSD 未修改 |
+| REQ-NF-001 | DES-NFR-001、DES-NFR-003 | P1 | `Atlas.Blazor/Components/Workspace`、`tests/Atlas.Blazor.Tests` | `WorkspaceMemoryTests`（2）：关闭文档标签/工具面板后内容销毁、DOM 子树移除、事件订阅归零；真实浏览器 5 次预热 + 20 次关闭/打开：DOM 元素稳定 31、CDP nodes 100（基线 236，周期样本 255 恒定）、jsEventListeners 50（基线 58）、workspace 监听器 12 恒定、JS heap 增量 108 KB（容差 2 MB） | Verified | 浏览器测量使用 CDP `Memory.getDOMCounters`、`DOMDebugger.getEventListeners`、`Performance.getMetrics` + GC；小样本存在约 3 KB/周期的堆噪声，未达到泄漏判定阈值，残余风险见报告 |
+| REQ-NF-002 | DES-NFR-002、DES-PRJ-002 | P1 | `Atlas.Blazor`、浏览器夹具 | Chrome 155.0.8059.85 / Edge 156.0.4314.42 / Firefox 157.0：Showcase 点击/Ctrl+Tab/Ctrl+W/分割条拖拽/RTL；overflow menu、auto-hide、P5 drag、P7 sandbox、P8 hardening；console error 0 | Blocked | AC1–AC3 Verified；AC4 Safari 15+ 未验证（本机 Windows 无 Safari），需 macOS/云浏览器发布前补验，不伪造通过 |
+| REQ-NF-009 | DES-NFR-005 | P1 | `wwwroot/atlas-v2/atlas.css`、`docs/zh/theming.md` | `CssTokenContractTests`（2）：文档化 token 与 CSS 定义/使用双向一致、无 `!important`、示例仅声明 `--atlas-*`；真实浏览器：默认 focus `rgb(0,120,215)`、splitter 4px/0.18；仅覆盖 token 后 focus 红、splitter 8px/0.9、拖拽预览边框与放置形状变红 | Verified | AC2 焦点环改由 `--atlas-accent` 表达；新增 popup/flyout token 并登记 theming.md；未要求内部选择器覆盖 |
+| REQ-F-024 | DES-INT-008、DES-NFR-002 | P2 | `atlas.css`、`ClientScripts/drop-target.ts` | Node：`documentTargetKind`/`documentTabInsertionIndex` LTR/RTL 镜像；真实浏览器三浏览器：Showcase `dir=rtl` 下 inline-start ToolBar 位于右侧、inline-end 位于左侧、激活标签在右侧；RTL 内联分割条拖拽 Rev 2→3；RTL 右侧拖拽释放得到 `document-inline-start`、预览 `right:0px`、Rev 3→4；LTR 分割条拖拽 5→6 | Verified | 使用 CSS Grid direction + logical properties；document 放置区按写入方向镜像，修正了预览与提交侧不一致；未使用 left/right 布局绕过 |
+| REQ-F-152 | DES-INT-005 | P2 | — | — | Deferred | SRS 明示预留；本阶段不实现，不作为本阶段失败项 |
 
 ## 更新规则
 

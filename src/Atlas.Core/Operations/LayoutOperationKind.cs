@@ -66,7 +66,7 @@ public enum LayoutOperationKind
     ReplaceContentReference = 11,
 
     /// <summary>
-    ///     保留；尚未实现操作或规划器。
+    ///     把工作区恢复至创建时的初始布局定义。
     /// </summary>
     ResetWorkspace = 12,
 

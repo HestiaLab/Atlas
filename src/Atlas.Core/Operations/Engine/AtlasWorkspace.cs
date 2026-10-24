@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Atlas.Core.Diagnostics;
 using Atlas.Core.Changes;
 using Atlas.Core.Events;
@@ -44,6 +45,9 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
 
     // 引擎状态槽：当前快照 + 撤销/重做栈，整体替换，读写经 Volatile 保证可见性。
     private WorkspaceStoreState state;
+
+    // 创建时的初始快照：不可变，作为严重错误恢复与显式重置的重建蓝图（REQ-F-127）。
+    private readonly WorkspaceSnapshot initialSnapshot;
 
     // 上次提交的 resize 合并键；与当前键相同且落在窗口内时合并历史。
     private ResizeHistoryKey? lastResizeHistoryKey;
@@ -99,6 +103,7 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         }
 
         state = new WorkspaceStoreState(initialSnapshot);
+        this.initialSnapshot = initialSnapshot;
         maxHistoryEntries = history.MaxEntries;
         approximateMaxHistoryBytes = history.ApproximateMaxBytes;
         resizeCoalescingWindow = history.ResizeCoalescingWindow;
@@ -137,16 +142,33 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            // 定向自修复先于严重错误回退（REQ-F-125）：仅处理可安全移除的
+            // 无效引用/孤立条目，修复提交后本次操作继续针对修复后的状态规划。
+            var repairedFromRevision = TryRepairCommittedState(
+                operation.Kind,
+                out var repairedRevision)
+                ? repairedRevision
+                : -1;
+            // 严重错误恢复先于任何规划：已提交快照违反结构不变式时，
+            // 记录稳定诊断并原子回退初始布局，本次操作不执行（REQ-F-127）。
+            if (TryRecoverFromCorruptedState(operation.Kind, out var recoveryFailure))
+            {
+                return recoveryFailure;
+            }
+
             var captured = Current;
             if (operation.BaseRevision is long requestedRevision
-                && requestedRevision != captured.Revision)
+                && requestedRevision != captured.Revision
+                && requestedRevision != repairedFromRevision)
             {
                 return Stale(operation.Kind);
             }
 
-            var plan = await planner
-                .PlanAsync(captured, operation, cancellationToken)
-                .ConfigureAwait(false);
+            var plan = operation is ResetWorkspaceOperation reset
+                ? ResetWorkspacePlanner.Plan(captured, reset, initialSnapshot)
+                : await planner
+                    .PlanAsync(captured, operation, cancellationToken)
+                    .ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
 
             if (plan.Error is not null)
@@ -300,6 +322,18 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (TryRepairCommittedState(LayoutOperationKind.History, out _))
+            {
+                // 历史屏障清空撤销/重做栈；遍历将以无变更结果结束。
+            }
+
+            if (TryRecoverFromCorruptedState(
+                LayoutOperationKind.History,
+                out var recoveryFailure))
+            {
+                return ValueTask.FromResult(recoveryFailure);
+            }
+
             LayoutChangeSet? changeSet = null;
             WorkspaceSnapshot? before = null;
             WorkspaceSnapshot? after = null;
@@ -363,6 +397,202 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
         {
             EndOperation();
         }
+    }
+
+    /// <summary>
+    ///     替换已提交状态以模拟布局树损坏，仅供测试构造确定性恢复场景。
+    /// </summary>
+    /// <param name="snapshot">绕过不变式校验的损坏快照。</param>
+    internal void InjectCorruptedCommittedStateForTests(WorkspaceSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        lock (transactionGate)
+        {
+            ThrowIfDisposed();
+            Volatile.Write(ref state, new WorkspaceStoreState(snapshot));
+        }
+    }
+
+    // 检测并原子修复可定向处理的不一致；返回 false 时交由严重错误回退处理。
+    // repairedFromRevision 是调用方观察到的损坏版本，用于放宽本次操作的
+    // BaseRevision 校验（修复本身会推进 Revision）。
+    private bool TryRepairCommittedState(
+        LayoutOperationKind kind,
+        out long repairedFromRevision)
+    {
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var snapshot = Volatile.Read(ref state).Snapshot;
+            var violations = WorkspaceInvariantValidator.Validate(snapshot);
+            if (violations.Count == 0)
+            {
+                repairedFromRevision = -1;
+                return false;
+            }
+
+            if (!WorkspaceRepair.TryRepair(snapshot, out var repaired, out violations))
+            {
+                repairedFromRevision = -1;
+                return false;
+            }
+
+            lock (transactionGate)
+            {
+                ThrowIfDisposed();
+                var current = Volatile.Read(ref state).Snapshot;
+                if (!ReferenceEquals(current, snapshot))
+                {
+                    // 并发提交已替换状态；重新读取后再判断。
+                    continue;
+                }
+
+                var committed = repaired!.WithRevision(
+                    checked(snapshot.Revision + 1));
+                EnsureValid(committed);
+                var patch = WorkspacePatch.Create(snapshot, repaired);
+                var changeSet = patch
+                    .Describe(snapshot, committed, LayoutChangeKind.Reset)
+                    .WithHistoryOutcome(historyRecorded: false, isHistoryBarrier: true);
+                // 修复是历史屏障：清空撤销/重做，避免旧补丁把已移除的
+                // 引用或条目重新带回已提交状态。
+                Volatile.Write(ref state, new WorkspaceStoreState(committed));
+                lastResizeHistoryKey = null;
+                eventDispatcher.Enqueue(
+                    Changed,
+                    domainEvents,
+                    this,
+                    snapshot,
+                    committed,
+                    changeSet);
+                ReportRepair(snapshot, violations, kind);
+                repairedFromRevision = snapshot.Revision;
+                return true;
+            }
+        }
+
+        repairedFromRevision = -1;
+        return false;
+    }
+
+    private static void ReportRepair(
+        WorkspaceSnapshot corrupted,
+        IReadOnlyList<InvariantViolation> violations,
+        LayoutOperationKind kind)
+    {
+        var details = string.Join("; ", violations.Select(item => item.ToString()));
+        var exception = new InvalidOperationException(
+            $"Committed workspace state was repaired: {details}");
+        Trace.TraceError(
+            "{0} workspace={1} revision={2} operation={3}: {4}",
+            WorkspaceDiagnostics.Ids.WorkspaceRepair,
+            corrupted.Id.Value,
+            corrupted.Revision,
+            kind,
+            exception);
+    }
+
+    // 检测已提交状态的严重错误；发现损坏时在事务锁内原子恢复初始布局。
+    // 返回 true 时 recoveryFailure 描述本次未执行的请求。
+    private bool TryRecoverFromCorruptedState(
+        LayoutOperationKind kind,
+        out WorkspaceResult<LayoutChangeSet> recoveryFailure)
+    {
+        // 并发恢复可能已修复状态：允许少量重试重新读取，避免在过期快照上规划。
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var snapshot = Volatile.Read(ref state).Snapshot;
+            var violations = WorkspaceInvariantValidator.Validate(snapshot);
+            if (violations.Count == 0)
+            {
+                recoveryFailure = null!;
+                return false;
+            }
+
+            if (TryRecover(kind, out recoveryFailure))
+            {
+                return true;
+            }
+        }
+
+        recoveryFailure = WorkspaceResult<LayoutChangeSet>.Failure(
+            new WorkspaceError(
+                WorkspaceErrorCode.WorkspaceFaulted,
+                kind,
+                WorkspaceDiagnostics.Ids.WorkspaceReset,
+                WorkspaceDiagnostics.Messages.WorkspaceResetToInitial));
+        return true;
+    }
+
+    private bool TryRecover(
+        LayoutOperationKind kind,
+        out WorkspaceResult<LayoutChangeSet> recoveryFailure)
+    {
+        lock (transactionGate)
+        {
+            ThrowIfDisposed();
+            var currentState = Volatile.Read(ref state);
+            var violations = WorkspaceInvariantValidator.Validate(currentState.Snapshot);
+            if (violations.Count == 0)
+            {
+                // 另一个提交已修复状态；让调用方重新捕获后正常规划。
+                recoveryFailure = null!;
+                return false;
+            }
+
+            var corrupted = currentState.Snapshot;
+            // 重置蓝图来自创建时保存的不可变快照；WithState 只替换内容，
+            // 保留工作区标识与历史语义（本次提交清空撤销/重做栈）。
+            var restored = corrupted.WithState(
+                initialSnapshot.RootNodeId,
+                initialSnapshot.Nodes,
+                initialSnapshot.Items,
+                initialSnapshot.ToolBars,
+                initialSnapshot.ToolBarOrders,
+                initialSnapshot.AutoHideStrips);
+            var committed = restored.WithRevision(
+                checked(corrupted.Revision + 1));
+            EnsureValid(committed);
+            var patch = WorkspacePatch.Create(corrupted, restored);
+            var changeSet = patch
+                .Describe(corrupted, committed, LayoutChangeKind.Reset)
+                .WithHistoryOutcome(historyRecorded: false, isHistoryBarrier: true);
+            Volatile.Write(ref state, new WorkspaceStoreState(committed));
+            lastResizeHistoryKey = null;
+            eventDispatcher.Enqueue(
+                Changed,
+                domainEvents,
+                this,
+                corrupted,
+                committed,
+                changeSet);
+
+            ReportSeriousError(corrupted, violations, kind);
+            recoveryFailure = WorkspaceResult<LayoutChangeSet>.Failure(
+                new WorkspaceError(
+                    WorkspaceErrorCode.WorkspaceFaulted,
+                    kind,
+                    WorkspaceDiagnostics.Ids.WorkspaceReset,
+                    WorkspaceDiagnostics.Messages.WorkspaceResetToInitial));
+            return true;
+        }
+    }
+
+    private static void ReportSeriousError(
+        WorkspaceSnapshot corrupted,
+        IReadOnlyList<InvariantViolation> violations,
+        LayoutOperationKind kind)
+    {
+        // 稳定 DiagnosticId + 完整违规与异常详情，便于生产诊断定位。
+        var details = string.Join("; ", violations.Select(item => item.ToString()));
+        var exception = new InvalidOperationException(
+            $"Committed workspace state violated invariants: {details}");
+        Trace.TraceError(
+            "{0} workspace={1} revision={2} operation={3}: {4}",
+            WorkspaceDiagnostics.Ids.WorkspaceReset,
+            corrupted.Id.Value,
+            corrupted.Revision,
+            kind,
+            exception);
     }
 
     private readonly record struct HistoryAppendResult(

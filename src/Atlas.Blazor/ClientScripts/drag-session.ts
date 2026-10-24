@@ -82,7 +82,11 @@ export class DragPreview {
     preview.style.setProperty("pointer-events", "none");
     this.writePosition(preview, x, y);
 
-    const label = drag.source.getAttribute("aria-label")?.trim()
+    // 面板头部同时承载关闭按钮；预览标签必须只取条目标题，
+    // 不能把内嵌控件的字形拼进拖拽预览。
+    const label = drag.source
+      .querySelector<HTMLElement>(".atlas-v2-item-title")?.textContent?.trim()
+      || drag.source.getAttribute("aria-label")?.trim()
       || drag.source.textContent?.trim()
       || drag.itemId;
 

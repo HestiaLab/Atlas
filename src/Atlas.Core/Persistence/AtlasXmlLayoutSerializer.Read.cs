@@ -264,4 +264,67 @@ public sealed partial class AtlasXmlLayoutSerializer
                             ParseEnum<WorkspaceEdge>(Required(value, "fallbackEdge"))))));
     }
 
+    /// <summary>
+    ///     为 XSD 中真正可缺省的字段填入领域默认值（REQ-F-126 AC2）。
+    /// </summary>
+    /// <remarks>
+    ///     可选字段盘点（V2 XSD）：
+    ///     <list type="bullet">
+    ///       <item>Item/DocumentState：文档默认未固定、非预览；工具条目不写状态。</item>
+    ///       <item>Group/EditorState：文档组默认 Scroll + Adjacent + 空访问记录；
+    ///         工具组不得携带编辑器状态。</item>
+    ///       <item>Item/@iconKey：无默认图标，保持 null。</item>
+    ///       <item>Split/@firstMaximum、@secondMaximum：缺省表示无上限，不能填入数值。</item>
+    ///       <item>Split/@basisAnchor：仅 FixedPixels 需要；缺失仍是 typed failure。</item>
+    ///       <item>Group/@selectedItemId：非空组必须显式指定；缺失仍是 typed failure。</item>
+    ///       <item>Group/@logicalRegion：工具组必须显式指定；缺失仍是 typed failure。</item>
+    ///       <item>空的可选集合（ToolBar、RegionOrder、Strip、ItemRef 等）：保持为空集合。</item>
+    ///     </list>
+    /// </remarks>
+    private static void NormalizeOptionalFields(XDocument document)
+    {
+        var root = document.Root;
+        if (root is null)
+        {
+            return;
+        }
+
+        foreach (var item in root.Element(Namespace + "Items")!
+            .Elements(Namespace + "Item"))
+        {
+            if (string.Equals(
+                    (string?)item.Attribute("kind"),
+                    nameof(DockItemKind.Document),
+                    StringComparison.Ordinal)
+                && item.Element(Namespace + "DocumentState") is null)
+            {
+                item.Add(
+                    new XElement(
+                        Namespace + "DocumentState",
+                        new XAttribute("isPinned", "false"),
+                        new XAttribute("isPreview", "false")));
+            }
+        }
+
+        foreach (var group in root.Descendants(Namespace + "Group"))
+        {
+            if (string.Equals(
+                    (string?)group.Attribute("kind"),
+                    nameof(DockItemKind.Document),
+                    StringComparison.Ordinal)
+                && group.Element(Namespace + "EditorState") is null)
+            {
+                // GroupType 的内容顺序是 EditorState? 后接 ItemRef*；
+                // AddFirst 保持 XSD 序列顺序。
+                group.AddFirst(
+                    new XElement(
+                        Namespace + "EditorState",
+                        new XAttribute("overflowMode", nameof(EditorOverflowMode.Scroll)),
+                        new XAttribute(
+                            "activationPolicy",
+                            nameof(EditorActivationPolicy.Adjacent))));
+            }
+        }
+    }
+
 }

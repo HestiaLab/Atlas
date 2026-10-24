@@ -33,6 +33,9 @@
   "collapseControl": {
     "selector": "[data-atlas-collapse-child]"
   },
+  "panelClose": {
+    "selector": "[data-atlas-close-panel]"
+  },
   "group": {
     "selector": "[data-atlas-group-id]"
   },
@@ -71,6 +74,60 @@
       "aria-selected",
       "aria-controls",
       "tabindex"
+    ]
+  },
+  "tabStrip": {
+    "selector": "[data-atlas-overflow-mode]",
+    "requiredAttributes": [
+      "data-atlas-overflow-mode",
+      "role"
+    ]
+  },
+  "tabBar": {
+    "selector": "[data-atlas-tab-bar]"
+  },
+  "tabOverflowButton": {
+    "selector": "[data-atlas-overflow-menu-button]",
+    "requiredAttributes": [
+      "aria-haspopup",
+      "aria-expanded",
+      "aria-controls"
+    ]
+  },
+  "tabMenu": {
+    "selector": "[data-atlas-tab-menu]",
+    "requiredAttributes": [
+      "role"
+    ]
+  },
+  "tabContextMenu": {
+    "selector": "[data-atlas-tab-context-menu]",
+    "requiredAttributes": [
+      "role"
+    ]
+  },
+  "autoHideOwner": {
+    "selector": "[data-atlas-auto-hide-owner]"
+  },
+  "autoHideEntry": {
+    "selector": "[data-atlas-auto-hide-entry]",
+    "requiredAttributes": [
+      "id",
+      "role",
+      "aria-label",
+      "aria-selected",
+      "aria-expanded",
+      "aria-controls",
+      "tabindex",
+      "data-atlas-item-id",
+      "data-atlas-toolbar-region"
+    ]
+  },
+  "autoHideFlyout": {
+    "selector": "[data-atlas-auto-hide-flyout]",
+    "requiredAttributes": [
+      "role",
+      "aria-hidden"
     ]
   },
   "panelHeader": {
