@@ -366,7 +366,7 @@ internal sealed class AtlasGroupView : ComponentBase
                 11,
                 "data-atlas-command-capabilities",
                 ((int)item.Capabilities).ToString(CultureInfo.InvariantCulture));
-            builder.AddAttribute(12, "aria-selected", selected);
+            builder.AddAttribute(12, "aria-selected", selected ? "true" : "false");
             builder.AddAttribute(13, "tabindex", selected ? "0" : "-1");
             builder.AddAttribute(
                 14,

@@ -1,7 +1,9 @@
+using Atlas.Blazor.Components;
 using Atlas.Blazor.DependencyInjection;
 using Atlas.Core;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
+using Atlas.Core.Operations;
 using Atlas.Showcase.Components;
 using Bunit;
 using Microsoft.AspNetCore.Components.Web;
@@ -104,6 +106,36 @@ public sealed class ShowcaseWorkspaceTests : TestContext
                 "已打开 内容注册",
                 cut.Find(".showcase-statusbar").TextContent,
                 StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task External_layout_change_reports_status_and_command_message_wins()
+    {
+        var cut = RenderComponent<ShowcaseWorkspace>();
+        cut.WaitForAssertion(
+            () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
+
+        var workspace = cut.FindComponent<AtlasWorkspaceHost>().Instance.Workspace;
+        Assert.NotNull(workspace);
+
+        await workspace!.ExecuteAsync(
+            new SelectItemOperation(new DockItemId("showcase-splitter")));
+
+        cut.WaitForAssertion(
+            () => Assert.Contains(
+                "布局已更新",
+                cut.Find(".showcase-statusbar").TextContent,
+                StringComparison.Ordinal));
+
+        cut.Find("button[aria-label='撤销布局更改']").Click();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var status = cut.Find(".showcase-statusbar").TextContent;
+                Assert.Contains("已撤销上次更改", status, StringComparison.Ordinal);
+                Assert.DoesNotContain("布局已更新", status, StringComparison.Ordinal);
+            });
     }
 
     [Fact]

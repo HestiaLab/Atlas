@@ -2,7 +2,8 @@ namespace Atlas.Showcase.Components;
 
 /// <summary>
 ///     教学面板共享的代码片段。修改公共 API 时先同步这里，
-///     再检查 <c>GuidePanel</c> 与各面板是否仍引用同一常量。
+///     再检查 <c>GuidePanel</c> 与各面板是否仍引用同一常量；
+///     声明式片段以实际编译的 <c>Pages/DeclarativeExample.razor</c> 为准。
 /// </summary>
 internal static class ShowcaseSnippets
 {
@@ -16,24 +17,27 @@ builder.Services.AddAtlasWorkspace();";
    @using Atlas.Blazor.Components
    @using Atlas.Core
    @using Atlas.Core.Items
-   @using Atlas.Core.Layout *@
+   @using Atlas.Core.Layout
+   @using Atlas.Core.Placement *@
 <AtlasWorkspaceHost WorkspaceId=""@(new WorkspaceId(""demo""))"">
-  <AtlasSplitDefinition Id=""@(new LayoutNodeId(""root""))""
-                        Axis=""SplitAxis.InlineChildren"">
-    <AtlasToolGroupDefinition Id=""@(new LayoutNodeId(""tools""))""
-                              LogicalRegion=""LogicalRegion.InlineStartUpper"">
-      <AtlasToolItemDefinition Id=""@(new DockItemId(""explorer""))""
-                               ContentKind=""explorer""
-                               ResourceId=""explorer""
-                               Title=""Explorer"" />
-    </AtlasToolGroupDefinition>
-    <AtlasDocumentGroupDefinition Id=""@(new LayoutNodeId(""documents""))"">
-      <AtlasDocumentItemDefinition Id=""@(new DockItemId(""readme""))""
-                                   ContentKind=""markdown""
-                                   ResourceId=""readme""
-                                   Title=""Readme.md"" />
-    </AtlasDocumentGroupDefinition>
-  </AtlasSplitDefinition>
+  <ChildContent>
+    <AtlasSplitDefinition Id=""@(new LayoutNodeId(""root""))""
+                          Axis=""SplitAxis.InlineChildren"">
+      <AtlasToolGroupDefinition Id=""@(new LayoutNodeId(""tools""))""
+                                LogicalRegion=""LogicalRegion.InlineStartUpper"">
+        <AtlasToolItemDefinition Id=""@(new DockItemId(""explorer""))""
+                                 ContentKind=""explorer""
+                                 ResourceId=""explorer""
+                                 Title=""Explorer"" />
+      </AtlasToolGroupDefinition>
+      <AtlasDocumentGroupDefinition Id=""@(new LayoutNodeId(""documents""))"">
+        <AtlasDocumentItemDefinition Id=""@(new DockItemId(""readme""))""
+                                     ContentKind=""markdown""
+                                     ResourceId=""readme""
+                                     Title=""Readme.md"" />
+      </AtlasDocumentGroupDefinition>
+    </AtlasSplitDefinition>
+  </ChildContent>
 </AtlasWorkspaceHost>";
 
     internal const string CreateWorkspace = @"var result = Factory.Create(

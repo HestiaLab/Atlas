@@ -8,7 +8,6 @@ using Atlas.Core.Operations;
 using Atlas.Core.Persistence;
 using Atlas.Core.Results;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
 namespace Atlas.Showcase.Components;
@@ -22,6 +21,9 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     private string? persistenceEvent;
     private string? initializationError;
     private long revision;
+    // 已呈现到的最新 revision；命令消息在事件之后设置并记录当前水位，
+    // 避免同一批变更的后续事件把具体消息覆盖成通用提示。
+    private long lastHandledRevision;
     private bool isCompact;
     private bool disposed;
 
@@ -90,6 +92,8 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
             revision = workspace.Current.Revision;
         }
 
+        lastHandledRevision = revision;
+
         if (refresh)
         {
             await RefreshAsync();
@@ -105,6 +109,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
 
         var current = workspace;
         workspace = null;
+        lastHandledRevision = 0;
         current.Changed -= OnWorkspaceChanged;
         await current.DisposeAsync();
     }
@@ -381,6 +386,11 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
     {
         revision = args.ChangeSet.AfterRevision;
+        if (revision > lastHandledRevision)
+        {
+            SetStatus("布局已更新", "ok");
+        }
+
         _ = RefreshAsync();
     }
 
@@ -405,6 +415,7 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     {
         operationStatus = message;
         statusTone = tone;
+        lastHandledRevision = workspace?.Current.Revision ?? lastHandledRevision;
     }
 
     private static string Failure(
