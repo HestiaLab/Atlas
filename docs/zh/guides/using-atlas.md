@@ -14,7 +14,7 @@ Atlas 提供一个 NuGet 包：`Atlas.Blazor`。把它加入你的 Blazor 项目
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Atlas.Blazor" Version="0.0.0-dev" />
+    <PackageReference Include="Atlas.Blazor" Version="0.3.0" />
   </ItemGroup>
 </Project>
 ```

@@ -118,13 +118,16 @@ nuget.org 消费已发布包并独立验证 consumer 边界。仓库内
 
 1. 在 `src/Atlas.Core` / `src/Atlas.Blazor` 上迭代（SRS 追溯、测试、格式、
    CI 全绿）。
-2. 在**三个触点**同步提升版本号（用 grep 搜索旧版本字符串确认）：
+2. 同步提升版本号（用 grep 搜索旧版本字符串确认）：
    `src/Atlas.Blazor/package-readme.md`、`.github/workflows/ci.yml`
-   （`-p:PackageVersion=`），以及独立 DbcView consumer 仓库的
-   `Directory.Packages.props`。
+   （`-p:PackageVersion=`）、`samples/Atlas.Showcase/Components/GuidePanel.razor`
+   与 `docs/zh/guides/using-atlas.md` 的示例版本，以及独立 DbcView consumer
+   仓库的 `Directory.Packages.props`（**发布 NuGet 后再提升**）。
 3. 打开发布准备 PR（CI pack job 必须通过）。
-4. 将 nupkg 发布到 NuGet.org 与 GitHub Packages（需要带 `write:packages`
-   的 PAT；绝不提交凭据）。
+4. 将 nupkg 发布到 GitHub Packages 与 NuGet.org：
+   - GitHub Packages 使用 `Publish GitHub Packages` workflow（`GITHUB_TOKEN`
+     的 `packages: write`），发布到组织 `HestiaLab`。
+   - NuGet.org 由维护者手动发布；绝不提交凭据。
 5. 打标签（`git tag -a X.Y.Z`），并创建带 nupkg 资产的 GitHub Release。
 
 ### 版本提升陷阱

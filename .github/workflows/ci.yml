@@ -81,4 +81,4 @@ jobs:
       # it embeds Atlas.Core.dll. The version is pinned to match the
       # published release so consumers (e.g. the DbcView sample application)
       # resolve the exact package Atlas ships.
-      - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages -p:PackageVersion=0.2.0
+      - run: dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --no-restore --configuration Release --output artifacts/packages -p:PackageVersion=0.3.0
