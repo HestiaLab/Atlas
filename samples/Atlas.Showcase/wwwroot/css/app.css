@@ -753,6 +753,52 @@ button { font: inherit; }
     overflow: hidden;
 }
 
+/* Declarative example page */
+.showcase-declarative-host {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0.4rem;
+    background: var(--showcase-bg);
+}
+
+.showcase-declarative-host > .atlas-v2-workspace {
+    height: 100%;
+}
+
+.showcase-declarative-chrome,
+.showcase-declarative-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.7rem;
+    padding: 0 0.6rem;
+    background: var(--showcase-chrome);
+    color: var(--showcase-chrome-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.showcase-declarative-status {
+    border-top: 1px solid var(--showcase-border);
+}
+
+.showcase-declarative-back {
+    border: 1px solid var(--showcase-border);
+    border-radius: 0.125rem;
+    padding: 0.2rem 0.5rem;
+    background: var(--showcase-surface);
+    color: var(--showcase-ink);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.showcase-declarative-back:hover,
+.showcase-declarative-back:focus-visible {
+    color: var(--showcase-accent);
+    border-color: var(--showcase-accent);
+}
+
 .showcase-not-found {
     min-height: 100%;
     display: grid;

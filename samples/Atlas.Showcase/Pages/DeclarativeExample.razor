@@ -1,0 +1,86 @@
+@page "/declarative"
+@namespace Atlas.Showcase.Pages
+@using Atlas.Blazor.Components
+@using Atlas.Core
+@using Atlas.Core.Items
+@using Atlas.Core.Layout
+@using Atlas.Core.Placement
+
+<PageTitle>Atlas 演示 — 声明式布局</PageTitle>
+
+<div class="showcase-verification-page">
+    <header class="showcase-verification-header">
+        <div>
+            <h1>声明式布局示例</h1>
+            <p>本页由真实 Razor 定义组件编译而成；必填参数在构建期校验。</p>
+        </div>
+        <a class="showcase-declarative-back" href="./">返回首页</a>
+    </header>
+    <main class="showcase-declarative-host" aria-label="声明式工作区示例">
+        <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("showcase-declarative"))">
+            <TopToolbarContent>
+                <div class="showcase-declarative-chrome">
+                    <span>声明式工作区</span>
+                    <span>真实 Razor 定义组件</span>
+                </div>
+            </TopToolbarContent>
+            <StatusBarContent>
+                <div class="showcase-declarative-status">
+                    REQ-F-099 · REQ-F-100 · 内容通过 AtlasContentRoute 绑定
+                </div>
+            </StatusBarContent>
+            <ContentRoutes>
+                <AtlasContentRoute Kind="declarative-tool">
+                    <ChildContent Context="content">
+                        <div class="showcase-tool">
+                            <TeachingCard Requirement="REQ-F-099 · REQ-F-100"
+                                          Source="DeclarativeExample.razor">
+                                <p>这个工具面板由 <code>&lt;AtlasToolItemDefinition&gt;</code>
+                                声明，内容通过 <code>&lt;AtlasContentRoute&gt;</code> 绑定。</p>
+                                <p>内容引用：
+                                <code>@content.Reference.Kind / @content.Reference.ResourceId</code></p>
+                                <p><span class="showcase-tag accent">试一试</span>
+                                拖动工具标签或文档标签，观察声明式工作区的交互。</p>
+                            </TeachingCard>
+                        </div>
+                    </ChildContent>
+                </AtlasContentRoute>
+                <AtlasContentRoute Kind="declarative-document">
+                    <ChildContent Context="content">
+                        <div class="showcase-tool">
+                            <TeachingCard Requirement="REQ-F-099 · REQ-F-100"
+                                          Source="DeclarativeExample.razor">
+                                <p>这个编辑器标签页由
+                                <code>&lt;AtlasDocumentItemDefinition&gt;</code> 声明。</p>
+                                <p>必填参数：<code>Id</code>、<code>ContentKind</code>、
+                                <code>ResourceId</code>。</p>
+                                <p>资源：<code>@content.Reference.ResourceId</code></p>
+                            </TeachingCard>
+                        </div>
+                    </ChildContent>
+                </AtlasContentRoute>
+            </ContentRoutes>
+
+            <ChildContent>
+                <AtlasSplitDefinition Id="@(new LayoutNodeId("root"))"
+                                      Axis="SplitAxis.InlineChildren"
+                                      Basis="SplitBasis.FixedPixels(280, SplitAnchor.First)"
+                                      Constraints="new SplitConstraints(180, 420, 240, null)">
+                    <AtlasToolGroupDefinition Id="@(new LayoutNodeId("declarative-tools"))"
+                                              LogicalRegion="LogicalRegion.InlineStartUpper">
+                        <AtlasToolItemDefinition Id="@(new DockItemId("declarative-tool"))"
+                                                 ContentKind="declarative-tool"
+                                                 ResourceId="declarative-tool-resource"
+                                                 Title="声明式工具" />
+                    </AtlasToolGroupDefinition>
+                    <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("declarative-documents"))">
+                        <AtlasDocumentItemDefinition Id="@(new DockItemId("declarative-document"))"
+                                                     ContentKind="declarative-document"
+                                                     ResourceId="declarative-document-resource"
+                                                     Title="声明式文档" />
+                    </AtlasDocumentGroupDefinition>
+                </AtlasSplitDefinition>
+            </ChildContent>
+        </AtlasWorkspaceHost>
+    </main>
+</div>

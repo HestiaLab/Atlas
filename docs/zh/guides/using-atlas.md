@@ -238,33 +238,37 @@ private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
 
 ## 7. 声明式替代方案
 
-如果你更想在 Razor 中构建布局，在 Host 内使用声明组件（并在 `_Imports.razor` 中引入 `Atlas.Blazor.Components`、`Atlas.Core`、`Atlas.Core.Items` 与 `Atlas.Core.Layout`）：
+如果你更想在 Razor 中构建布局，在 Host 的 `ChildContent` 内使用声明组件（并在 `_Imports.razor` 中引入 `Atlas.Blazor.Components`、`Atlas.Core`、`Atlas.Core.Items`、`Atlas.Core.Layout` 与 `Atlas.Core.Placement`）：
 
 ```razor
 <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("my-workspace"))"
                     WorkspaceOptions="@options">
-    <AtlasSplitDefinition Id="@(new LayoutNodeId("root"))"
-                          Axis="SplitAxis.BlockChildren"
-                          Basis="SplitBasis.Proportional(0.72)">
-        <AtlasSplitDefinition Id="@(new LayoutNodeId("main"))"
-                              Axis="SplitAxis.InlineChildren">
-            <AtlasToolGroupDefinition Id="@(new LayoutNodeId("tools"))"
-                                      LogicalRegion="LogicalRegion.InlineStartUpper">
-                <AtlasToolItemDefinition Id="@(new DockItemId("project"))"
-                                         ContentKind="my-tool"
-                                         ResourceId="project"
-                                         Title="Project" />
-            </AtlasToolGroupDefinition>
-            <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("documents"))">
-                <AtlasDocumentItemDefinition Id="@(new DockItemId("program"))"
-                                             ContentKind="my-editor"
-                                             ResourceId="program"
-                                             Title="Program.cs" />
-            </AtlasDocumentGroupDefinition>
+    <ChildContent>
+        <AtlasSplitDefinition Id="@(new LayoutNodeId("root"))"
+                              Axis="SplitAxis.BlockChildren"
+                              Basis="SplitBasis.Proportional(0.72)">
+            <AtlasSplitDefinition Id="@(new LayoutNodeId("main"))"
+                                  Axis="SplitAxis.InlineChildren">
+                <AtlasToolGroupDefinition Id="@(new LayoutNodeId("tools"))"
+                                          LogicalRegion="LogicalRegion.InlineStartUpper">
+                    <AtlasToolItemDefinition Id="@(new DockItemId("project"))"
+                                             ContentKind="my-tool"
+                                             ResourceId="project"
+                                             Title="Project" />
+                </AtlasToolGroupDefinition>
+                <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("documents"))">
+                    <AtlasDocumentItemDefinition Id="@(new DockItemId("program"))"
+                                                 ContentKind="my-editor"
+                                                 ResourceId="program"
+                                                 Title="Program.cs" />
+                </AtlasDocumentGroupDefinition>
+            </AtlasSplitDefinition>
         </AtlasSplitDefinition>
-    </AtlasSplitDefinition>
+    </ChildContent>
 </AtlasWorkspaceHost>
 ```
+
+可编译、可运行的完整版本见 [`DeclarativeExample.razor`](../../../samples/Atlas.Showcase/Pages/DeclarativeExample.razor)（Showcase 的 `/declarative` 路由）。
 
 Host 收集声明、构建定义，并在一次原子操作中协调。声明条目由声明拥有；你在声明变更后以编程方式打开的条目在其 Group 和 Kind 保持时会被保留。
 
@@ -296,11 +300,13 @@ var editorAndRight = new SplitNode(
     rightDock.Id);
 ```
 
-在 Razor 中，将 basis 传给 `AtlasSplitDefinition`：
+在 Razor 中，将 basis 传给 `AtlasSplitDefinition`（该组件同样位于 Host 的 `<ChildContent>` 内；两个子定义此处省略）：
 
 ```razor
 <AtlasSplitDefinition Axis="SplitAxis.InlineChildren"
                       Basis="SplitBasis.FixedPixels(280, SplitAnchor.First)">
+    @* 两个子定义：第一个子项固定 280px *@
+</AtlasSplitDefinition>
 ```
 
 终态 resize 提交保留分割的 basis 类型：`FixedPixels` 分割在拖拽、键盘步进或双击均分后仍保持像素基准，布局不会悄悄退化为比例尺寸。
