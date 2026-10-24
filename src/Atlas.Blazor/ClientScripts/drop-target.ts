@@ -34,6 +34,11 @@ export function resolveDropTarget(
     return undefined;
   }
 
+  // 内联方向决定 document-inline-start/end 的物理侧；
+  // RTL 下右侧是 inline-start，与 CSS logical inset 预览保持一致。
+  const direction = ownerDocument?.defaultView
+    ?.getComputedStyle(root).direction;
+
   if (drag.sourceKind === "document-tab") {
     const group = hit.closest<HTMLElement>("[data-atlas-group-kind=document][data-atlas-group-id]");
     const groupId = group?.dataset.atlasGroupId;
@@ -51,7 +56,11 @@ export function resolveDropTarget(
         element: tab,
         kind: "document-center",
         groupId,
-        insertionIndex: tabIndex + (x >= rect.left + (rect.width / 2) ? 1 : 0)
+        insertionIndex: documentTabInsertionIndex(
+          rect,
+          x,
+          tabIndex,
+          direction)
       };
     }
 
@@ -64,7 +73,8 @@ export function resolveDropTarget(
       kind: documentTargetKind(
         drag.documentGeometry.get(group) ?? group.getBoundingClientRect(),
         x,
-        y),
+        y,
+        direction),
       groupId
     };
   }
@@ -178,19 +188,41 @@ export function resolveDropTarget(
 export function documentTargetKind(
   rect: DOMRect,
   x: number,
-  y: number): AtlasDropTargetKind {
+  y: number,
+  direction: string | undefined = "ltr"): AtlasDropTargetKind {
   const localX = x - rect.left;
   const localY = y - rect.top;
   const inlineBand = rect.width * 0.25;
   const blockBand = rect.height * 0.25;
+  const inlineStartDistance = direction === "rtl"
+    ? rect.width - localX
+    : localX;
+  const inlineEndDistance = direction === "rtl"
+    ? localX
+    : rect.width - localX;
   const distances = [
-    { kind: "document-inline-start" as const, distance: localX, enabled: localX < inlineBand },
-    { kind: "document-inline-end" as const, distance: rect.width - localX, enabled: localX > rect.width - inlineBand },
+    { kind: "document-inline-start" as const, distance: inlineStartDistance, enabled: inlineStartDistance < inlineBand },
+    { kind: "document-inline-end" as const, distance: inlineEndDistance, enabled: inlineEndDistance < inlineBand },
     { kind: "document-block-start" as const, distance: localY, enabled: localY < blockBand },
     { kind: "document-block-end" as const, distance: rect.height - localY, enabled: localY > rect.height - blockBand }
   ].filter(candidate => candidate.enabled)
     .sort((left, right) => left.distance - right.distance);
   return distances[0]?.kind ?? "document-center";
+}
+
+/**
+ * 同组标签页拖拽的插入位置按写入方向镜像：LTR 落在右侧半边插入到目标之后，
+ * RTL 落在左侧半边才表示之后。
+ */
+export function documentTabInsertionIndex(
+  rect: DOMRect,
+  x: number,
+  tabIndex: number,
+  direction: string | undefined = "ltr"): number {
+  const afterTarget = direction === "rtl"
+    ? x < rect.left + (rect.width / 2)
+    : x >= rect.left + (rect.width / 2);
+  return tabIndex + (afterTarget ? 1 : 0);
 }
 
 function readNonNegativeInteger(

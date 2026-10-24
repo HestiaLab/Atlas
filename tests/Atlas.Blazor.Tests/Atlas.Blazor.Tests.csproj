@@ -29,5 +29,11 @@
     <None Include="..\..\src\Atlas.Blazor\ClientScripts\dom-metadata-manifest.json"
           Link="fixtures\dom-metadata-manifest.json"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Atlas.Blazor\wwwroot\atlas-v2\atlas.css"
+          Link="fixtures\atlas.css"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\zh\theming.md"
+          Link="fixtures\theming.md"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

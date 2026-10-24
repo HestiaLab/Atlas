@@ -36,6 +36,8 @@ import { SplitResizeSession } from "./split-resize-session";
 // 并复用 Host 已消费的会话 ID，导致第二次拖拽被当作重复会话拒绝
 // （consumedDragSessions）。
 let globalDragSequence = 0;
+// 自动隐藏 Flyout 的移出收起延迟（REQ-F-023 AC3）。
+const autoHideCloseDelayMilliseconds = 300;
 // 内置键盘默认值。C# AtlasKeyboardCommandMap.Default 持有 Host 驱动控制器
 // 的权威映射，并始终发送其绑定；此副本仅服务于由静态浏览器夹具直接挂载
 // 的控制器。两份列表必须保持同步。
@@ -67,6 +69,19 @@ export class AtlasInteractionController {
   private keyboardRatio: number | undefined;
   private callbackQueue: Promise<unknown> = Promise.resolve();
   private disposed = false;
+  // 跨过阈值的拖拽结束后，浏览器仍可能对拖拽源派发原生 click。该标记让
+  // 控制器一次性拦截紧随其后的 click，避免 Showcase 等调用方把拖拽误判为
+  // 普通点击（例如 ToolBar Entry 切换分组可见性）。
+  private suppressNextClick = false;
+  // ESC/失焦在指针仍按下时结束会话；此时真正的 click 要等到松开才发生，
+  // 因此延迟到对应 pointerup 再安装监听，避免 setTimeout(0) 提前清理。
+  private pendingClickPointerId: number | undefined;
+  private clickSuppression:
+    { readonly listener: (event: Event) => void; readonly timer: ReturnType<typeof setTimeout> } | undefined;
+  private tabResizeObserver: ResizeObserver | undefined;
+  private tabMutationObserver: MutationObserver | undefined;
+  private readonly autoHideCloseTimers =
+    new Map<HTMLElement, ReturnType<typeof setTimeout>>();
 
   public constructor(
     private readonly root: HTMLElement,
@@ -103,6 +118,13 @@ export class AtlasInteractionController {
     this.root.addEventListener("dblclick", this.onDoubleClick);
     this.root.addEventListener("keydown", this.onKeyDown);
     this.root.addEventListener("keyup", this.onKeyUp);
+    this.root.addEventListener(
+      "wheel",
+      this.onWheel as EventListener,
+      { passive: false } as AddEventListenerOptions);
+    this.root.addEventListener("pointerover", this.onAutoHidePointerOver);
+    this.root.addEventListener("pointerout", this.onAutoHidePointerOut);
+    this.root.addEventListener("focusout", this.onAutoHideFocusOut);
     this.ownerWindow?.addEventListener("resize", this.onEnvironmentInvalidated);
     this.ownerWindow?.addEventListener("blur", this.onEnvironmentInvalidated);
     this.ownerWindow?.addEventListener("pointerup", this.onPointerUp);
@@ -110,8 +132,12 @@ export class AtlasInteractionController {
     this.ownerDocument?.addEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
+    // 拖拽源（Panel Header、ToolBar Entry）通常不持有焦点，Escape 不会
+    // 冒泡到宿主根；在 document 上补充监听，确保任何焦点位置都能取消。
+    this.ownerDocument?.addEventListener("keydown", this.onDocumentKeyDown);
     this.reducedMotionQuery?.addEventListener("change", this.onReducedMotionChanged);
     this.projectReducedMotion();
+    this.refreshTabOverflow();
   }
 
   public update(
@@ -148,8 +174,15 @@ export class AtlasInteractionController {
     this.disposed = true;
     this.resizeSession.cancel();
     this.cancelDrag();
+    this.suppressNextClick = false;
+    this.pendingClickPointerId = undefined;
+    this.clearClickSuppression();
     this.clearKeyboardCommit();
     this.sandboxController.dispose();
+    this.closeAllAutoHide();
+    this.root.removeEventListener("pointerover", this.onAutoHidePointerOver);
+    this.root.removeEventListener("pointerout", this.onAutoHidePointerOut);
+    this.root.removeEventListener("focusout", this.onAutoHideFocusOut);
     this.root.removeEventListener("pointerdown", this.onPointerDown);
     this.root.removeEventListener("pointermove", this.onPointerMove);
     this.root.removeEventListener("pointerup", this.onPointerUp);
@@ -158,6 +191,11 @@ export class AtlasInteractionController {
     this.root.removeEventListener("dblclick", this.onDoubleClick);
     this.root.removeEventListener("keydown", this.onKeyDown);
     this.root.removeEventListener("keyup", this.onKeyUp);
+    this.root.removeEventListener("wheel", this.onWheel as EventListener);
+    this.tabResizeObserver?.disconnect();
+    this.tabResizeObserver = undefined;
+    this.tabMutationObserver?.disconnect();
+    this.tabMutationObserver = undefined;
     this.ownerWindow?.removeEventListener("resize", this.onEnvironmentInvalidated);
     this.ownerWindow?.removeEventListener("blur", this.onEnvironmentInvalidated);
     this.ownerWindow?.removeEventListener("pointerup", this.onPointerUp);
@@ -165,6 +203,7 @@ export class AtlasInteractionController {
     this.ownerDocument?.removeEventListener(
       "visibilitychange",
       this.onVisibilityChanged);
+    this.ownerDocument?.removeEventListener("keydown", this.onDocumentKeyDown);
     this.reducedMotionQuery?.removeEventListener("change", this.onReducedMotionChanged);
   }
 
@@ -179,6 +218,14 @@ export class AtlasInteractionController {
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
+    // 新的指针交互开始：尚未消费的拖拽后 click 抑制立即失效，后续点击
+    // 必须恢复正常。拖拽进行中的多指按下不打断当前会话。
+    if (!this.activeDrag) {
+      this.suppressNextClick = false;
+      this.pendingClickPointerId = undefined;
+      this.clearClickSuppression();
+    }
+
     if (event.button !== 0 || !event.isPrimary
       || this.isCollapseControl(event.target)) {
       return;
@@ -231,6 +278,7 @@ export class AtlasInteractionController {
         drag.documentGeometry = captureDocumentGeometry(this.root);
         drag.documentTabGeometry = captureDocumentTabGeometry(this.root);
         drag.phase = "dragging";
+        this.suppressNextClick = true;
         drag.preview = this.dragPreview.create(
           drag,
           event.clientX,
@@ -308,12 +356,27 @@ export class AtlasInteractionController {
       return;
     }
 
+    // 取消路径（ESC/失焦）在指针仍按下时结束会话；松开时浏览器会派发
+    // click，必须在此刻同步安装一次性监听。
+    if (this.pendingClickPointerId === event.pointerId) {
+      this.pendingClickPointerId = undefined;
+      this.suppressNextClick = false;
+      this.armClickSuppression();
+    }
+
     this.resizeSession.finish(event);
   };
 
   private readonly onPointerCancel = (event: PointerEvent): void => {
     if (this.activeDrag?.pointerId === event.pointerId) {
-      this.cancelDrag();
+      // pointercancel / lostpointercapture 是终止路径，立即安装兜底监听。
+      this.cancelDrag(false);
+    } else if (event.type === "pointercancel"
+      && this.pendingClickPointerId === event.pointerId) {
+      // 指针被取消不会产生 click；清除延迟抑制。lostpointercapture 不能
+      // 清除：ESC 释放捕获时它会在松开前触发。
+      this.pendingClickPointerId = undefined;
+      this.suppressNextClick = false;
     }
     if (this.resizeSession.matchesPointer(event.pointerId)) {
       this.resizeSession.cancel();
@@ -348,7 +411,191 @@ export class AtlasInteractionController {
     this.commitResize(split, ratio, "equalize", baseRevision, basisFor(split));
   };
 
+  private readonly onWheel = (event: WheelEvent): void => {
+    // 滚动溢出模式：纵向滚轮转换为标签条的水平滚动（REQ-F-043 AC1）。
+    // 原生横向滚动（触控板/Shift+滚轮）保持浏览器默认行为。
+    const strip = event.target instanceof Element
+      ? event.target.closest<HTMLElement>(domMetadata.tabStrip.selector)
+      : null;
+    if (!strip || this.disposed
+      || strip.dataset.atlasOverflowMode !== "scroll"
+      || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+      return;
+    }
+
+    if (strip.scrollWidth <= strip.clientWidth) {
+      return;
+    }
+
+    const direction = this.ownerWindow?.getComputedStyle(strip).direction;
+    strip.scrollLeft += tabOverflowWheelDelta(event.deltaY, direction);
+    event.preventDefault();
+  };
+
+  private readonly onAutoHidePointerOver = (event: PointerEvent): void => {
+    if (this.disposed) {
+      return;
+    }
+
+    const owner = this.autoHideOwnerFrom(event.target);
+    if (!owner) {
+      return;
+    }
+
+    this.cancelAutoHideClose(owner);
+    if (owner.dataset.atlasAutoHideOpen !== "true") {
+      this.closeAllAutoHide(owner);
+      this.openAutoHideOwner(owner);
+    }
+  };
+
+  private readonly onAutoHidePointerOut = (event: PointerEvent): void => {
+    if (this.disposed) {
+      return;
+    }
+
+    const owner = this.autoHideOwnerFrom(event.target);
+    if (!owner) {
+      return;
+    }
+
+    // 指针从条目移入同一 Flyout 仍属于同一 owner，不触发收起。
+    const related = event.relatedTarget;
+    if (related !== null && typeof related === "object"
+      && owner.contains(related as Node)) {
+      return;
+    }
+
+    this.scheduleAutoHideClose(owner);
+  };
+
+  private readonly onAutoHideFocusOut = (event: FocusEvent): void => {
+    if (this.disposed) {
+      return;
+    }
+
+    const owner = this.autoHideOwnerFrom(event.target);
+    if (!owner) {
+      return;
+    }
+
+    const related = event.relatedTarget;
+    if (related !== null && typeof related === "object"
+      && owner.contains(related as Node)) {
+      return;
+    }
+
+    this.scheduleAutoHideClose(owner);
+  };
+
+  private autoHideOwnerFrom(target: EventTarget | null): HTMLElement | null {
+    return target instanceof Element
+      ? target.closest<HTMLElement>(domMetadata.autoHideOwner.selector)
+      : null;
+  }
+
+  private openAutoHideOwner(owner: HTMLElement): void {
+    owner.dataset.atlasAutoHideOpen = "true";
+    owner.querySelector<HTMLElement>(domMetadata.autoHideEntry.selector)
+      ?.setAttribute("aria-expanded", "true");
+    const flyout = owner.querySelector<HTMLElement>(
+      domMetadata.autoHideFlyout.selector);
+    if (flyout) {
+      flyout.setAttribute("aria-hidden", "false");
+      flyout.removeAttribute("inert");
+    }
+  }
+
+  private closeAutoHideOwner(owner: HTMLElement): void {
+    this.cancelAutoHideClose(owner);
+    if (owner.dataset.atlasAutoHideOpen !== "true") {
+      return;
+    }
+
+    delete owner.dataset.atlasAutoHideOpen;
+    const entry = owner.querySelector<HTMLElement>(
+      domMetadata.autoHideEntry.selector);
+    entry?.setAttribute("aria-expanded", "false");
+    const flyout = owner.querySelector<HTMLElement>(
+      domMetadata.autoHideFlyout.selector);
+    if (flyout) {
+      flyout.setAttribute("aria-hidden", "true");
+      flyout.setAttribute("inert", "");
+      const active = this.ownerDocument?.activeElement;
+      if (!this.disposed && active && flyout.contains(active)) {
+        entry?.focus();
+      }
+    }
+  }
+
+  private scheduleAutoHideClose(owner: HTMLElement): void {
+    if (owner.dataset.atlasAutoHideOpen !== "true") {
+      return;
+    }
+
+    this.cancelAutoHideClose(owner);
+    const timer = setTimeout(() => {
+      this.autoHideCloseTimers.delete(owner);
+      if (!this.disposed) {
+        this.closeAutoHideOwner(owner);
+      }
+    }, autoHideCloseDelayMilliseconds);
+    this.autoHideCloseTimers.set(owner, timer);
+  }
+
+  private cancelAutoHideClose(owner: HTMLElement): void {
+    const timer = this.autoHideCloseTimers.get(owner);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      this.autoHideCloseTimers.delete(owner);
+    }
+  }
+
+  private closeAllAutoHide(except?: HTMLElement): void {
+    for (const owner of Array.from(
+      this.root.querySelectorAll<HTMLElement>(domMetadata.autoHideOwner.selector))) {
+      if (owner === except) {
+        continue;
+      }
+
+      this.closeAutoHideOwner(owner);
+    }
+
+    // 被移除的 owner 不会出现在查询结果中；一并清理其待决计时器。
+    for (const owner of Array.from(this.autoHideCloseTimers.keys())) {
+      if (owner !== except) {
+        this.cancelAutoHideClose(owner);
+      }
+    }
+  }
+
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    const autoHideOwner = this.autoHideOwnerFrom(event.target);
+    if (autoHideOwner) {
+      const entry = autoHideOwner.querySelector<HTMLElement>(
+        domMetadata.autoHideEntry.selector);
+      if ((event.code === "Enter" || event.code === "Space")
+        && event.target === entry) {
+        event.preventDefault();
+        if (autoHideOwner.dataset.atlasAutoHideOpen === "true") {
+          this.closeAutoHideOwner(autoHideOwner);
+        } else {
+          this.closeAllAutoHide(autoHideOwner);
+          this.openAutoHideOwner(autoHideOwner);
+        }
+
+        return;
+      }
+
+      if (event.code === "Escape"
+        && autoHideOwner.dataset.atlasAutoHideOpen === "true") {
+        event.preventDefault();
+        this.closeAutoHideOwner(autoHideOwner);
+        entry?.focus();
+        return;
+      }
+    }
+
     if (event.code === "Escape" && this.activeDrag) {
       event.preventDefault();
       this.cancelDrag();
@@ -411,6 +658,24 @@ export class AtlasInteractionController {
       ...(sourceGroupId === undefined ? {} : { sourceGroupId }),
       ...(targetGroupId === undefined ? {} : { targetGroupId })
     });
+  };
+
+  private readonly onDocumentKeyDown = (event: KeyboardEvent): void => {
+    // 根节点已处理过的 Escape 会 preventDefault；避免重复取消同一次会话。
+    if (event.code !== "Escape" || event.defaultPrevented) {
+      return;
+    }
+
+    if (this.activeDrag) {
+      event.preventDefault();
+      this.cancelDrag();
+      return;
+    }
+
+    if (this.resizeSession.active) {
+      event.preventDefault();
+      this.resizeSession.cancel();
+    }
   };
 
   private readonly onKeyUp = (event: KeyboardEvent): void => {
@@ -563,23 +828,199 @@ export class AtlasInteractionController {
     this.clearPreview(split);
   }
 
-  private cancelDrag(): void {
+  private cancelDrag(deferClickSuppression = true): void {
     if (this.activeDrag) {
-      this.finishDrag();
+      this.finishDrag(deferClickSuppression);
     }
   }
 
-  private finishDrag(): void {
+  private finishDrag(deferClickSuppression = false): void {
     const drag = this.activeDrag;
     this.activeDrag = undefined;
     if (!drag) {
       return;
     }
 
+    const suppressClick = this.suppressNextClick;
+    this.suppressNextClick = false;
     clearDropPreview(drag.target);
     this.dragPreview.clear(drag.preview, this.findOverlayRoot());
     this.root.removeAttribute("data-atlas-dragging");
     drag.source.releasePointerCapture?.(drag.pointerId);
+    if (!suppressClick) {
+      return;
+    }
+
+    if (deferClickSuppression && drag.phase === "dragging") {
+      this.pendingClickPointerId = drag.pointerId;
+      this.suppressNextClick = true;
+    } else {
+      this.armClickSuppression();
+    }
+  }
+
+  private armClickSuppression(): void {
+    this.clearClickSuppression();
+    const document = this.ownerDocument;
+    if (!document) {
+      return;
+    }
+
+    // 捕获阶段监听，确保在应用（如 Showcase 条目）的 click 处理之前拦截；
+    // 只处理路径包含本 Host root 的事件，避免吞掉其他 Host 的合法点击。
+    const listener = (event: Event): void => {
+      if (!this.eventTouchesRoot(event)) {
+        return;
+      }
+
+      this.clearClickSuppression();
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    this.clickSuppression = {
+      listener,
+      // 某些取消路径不会产生 click；下一轮任务开始前清理，防止监听泄漏。
+      timer: setTimeout(() => this.clearClickSuppression(), 0)
+    };
+    // 使用 options 对象而非布尔值：Node 的 EventTarget 在布尔 capture
+    // 下移除监听不匹配，浏览器与测试环境需要一致语义。
+    document.addEventListener("click", listener, { capture: true });
+  }
+
+  private clearClickSuppression(): void {
+    const pending = this.clickSuppression;
+    this.clickSuppression = undefined;
+    if (!pending) {
+      return;
+    }
+
+    clearTimeout(pending.timer);
+    this.ownerDocument?.removeEventListener(
+      "click",
+      pending.listener,
+      { capture: true });
+  }
+
+  private refreshTabOverflow(): void {
+    if (this.disposed) {
+      return;
+    }
+
+    // ResizeObserver 覆盖容器缩放、字体/标题变化与 DPI 缩放；
+    // MutationObserver 捕获由 Blazor 动态增删的标签条与标签页。
+    // 每次重建观察器，避免已移除标签页的观察目标长期滞留。
+    if (typeof ResizeObserver !== "undefined") {
+      this.tabResizeObserver?.disconnect();
+      const observer = new ResizeObserver(entries => {
+        if (this.disposed) {
+          return;
+        }
+
+        const strips = new Set<HTMLElement>();
+        for (const entry of entries) {
+          const target = entry.target;
+          const strip = target instanceof Element
+            ? (target.matches(domMetadata.tabStrip.selector)
+              ? target as HTMLElement
+              : target.closest<HTMLElement>(domMetadata.tabStrip.selector))
+            : null;
+          if (strip) {
+            strips.add(strip);
+          }
+        }
+
+        for (const strip of strips) {
+          if (this.root.contains(strip)) {
+            this.measureTabStrip(strip);
+          }
+        }
+      });
+      this.tabResizeObserver = observer;
+      for (const strip of Array.from(
+        this.root.querySelectorAll<HTMLElement>(domMetadata.tabStrip.selector))) {
+        observer.observe(strip);
+        for (const tab of Array.from(
+          strip.querySelectorAll<HTMLElement>("[role=\"tab\"]"))) {
+          observer.observe(tab);
+        }
+
+        this.measureTabStrip(strip);
+      }
+    }
+
+    if (typeof MutationObserver !== "undefined") {
+      this.tabMutationObserver?.disconnect();
+      const observer = new MutationObserver(() => {
+        if (!this.disposed) {
+          this.refreshTabOverflow();
+        }
+      });
+      this.tabMutationObserver = observer;
+      observer.observe(this.root, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-atlas-overflow-mode"]
+      });
+    }
+  }
+
+  private measureTabStrip(strip: HTMLElement): void {
+    const tabs = Array.from(
+      strip.querySelectorAll<HTMLElement>("[role=\"tab\"]"));
+    // 溢出菜单渲染在标签条之外、同一 Group 内；按 Group 作用域匹配菜单项，
+    // 避免把其他 Group 的菜单项标记写成同一集合。
+    const menuScope = strip.closest<HTMLElement>(domMetadata.groupRegion.selector)
+      ?? this.root;
+    const menuItems = Array.from(
+      menuScope.querySelectorAll<HTMLElement>("[data-atlas-tab-menu-item]"));
+    if (strip.dataset.atlasOverflowMode !== "menu") {
+      delete strip.dataset.atlasOverflowing;
+      for (const tab of tabs) {
+        delete tab.dataset.atlasTabClipped;
+      }
+
+      for (const item of menuItems) {
+        delete item.dataset.atlasTabClipped;
+      }
+
+      return;
+    }
+
+    const stripRect = strip.getBoundingClientRect();
+    let overflowing = false;
+    const clipped = new Map<string, boolean>();
+    for (const tab of tabs) {
+      const itemId = tab.dataset.atlasItemId ?? "";
+      const isClipped = isTabClipped(tab.getBoundingClientRect(), stripRect);
+      overflowing = overflowing || isClipped;
+      clipped.set(itemId, isClipped);
+      tab.dataset.atlasTabClipped = isClipped ? "true" : "false";
+    }
+
+    strip.dataset.atlasOverflowing = overflowing ? "true" : "false";
+    // 菜单项可能稍后由 Blazor 插入；MutationObserver 会在插入后再次测量。
+    for (const item of menuItems) {
+      const itemId = item.dataset.atlasItemId ?? "";
+      item.dataset.atlasTabClipped = clipped.get(itemId) === true
+        ? "true"
+        : "false";
+    }
+  }
+
+  private eventTouchesRoot(event: Event): boolean {
+    const path = typeof event.composedPath === "function"
+      ? event.composedPath()
+      : undefined;
+    if (path && path.length > 0) {
+      return path.includes(this.root);
+    }
+
+    // 测试假对象或旧环境可能没有 composedPath；退化为 DOM 包含判断。
+    const target = event.target;
+    return target !== null
+      && typeof this.root.contains === "function"
+      && this.root.contains(target as Node);
   }
 
   private findOverlayRoot(): HTMLElement | undefined {
@@ -694,8 +1135,11 @@ export class AtlasInteractionController {
   }
 
   private isCollapseControl(target: EventTarget | null): boolean {
+    // 折叠按钮与 Panel Header 关闭按钮都是内嵌在拖拽源中的交互控件；
+    // 按在这些控件上的指针不能启动拖拽。
     return target instanceof Element
-      && target.closest(domMetadata.collapseControl.selector) !== null;
+      && (target.closest(domMetadata.collapseControl.selector) !== null
+        || target.closest(domMetadata.panelClose.selector) !== null);
   }
 
 }
@@ -709,6 +1153,37 @@ export function clearAtlasSplitPreview(
   controller: AtlasInteractionController,
   splitId: string): void {
   controller.clearSplitPreview(splitId);
+}
+
+/**
+ * 把纵向滚轮增量转换为标签条的水平滚动方向。RTL 下滚动起点在右侧，
+ * 因此方向取反。
+ */
+export function tabOverflowWheelDelta(
+  deltaY: number,
+  direction: string | undefined): number {
+  if (!Number.isFinite(deltaY) || deltaY === 0) {
+    return 0;
+  }
+
+  return direction === "rtl" ? -deltaY : deltaY;
+}
+
+/**
+ * 标签页是否未完全位于标签条可视区域内。使用物理矩形，因此 LTR/RTL
+ * 与缩放环境共用同一判定；半像素容差吸收浏览器亚像素舍入。
+ */
+export function isTabClipped(
+  tab: Readonly<{ left: number; right: number; width: number }>,
+  strip: Readonly<{ left: number; right: number; width: number }>,
+  tolerance = 0.5): boolean {
+  if (!Number.isFinite(tab.width) || !Number.isFinite(strip.width)
+    || tab.width <= 0 || strip.width <= 0) {
+    return false;
+  }
+
+  return tab.left < strip.left - tolerance
+    || tab.right > strip.right + tolerance;
 }
 
 function binding(

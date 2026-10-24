@@ -1,5 +1,6 @@
 using System.Text;
 using Atlas.Core;
+using Atlas.Core.Layout;
 
 namespace Atlas.Blazor.Components;
 
@@ -17,6 +18,17 @@ internal static class AtlasDomIdentity
     internal static string ControlId(string hostId, DockItemId itemId, string kind)
     {
         return $"atlas-v2-{kind}-{Token(hostId)}-{Token(itemId.Value)}";
+    }
+
+    /// <summary>
+    ///     为组级控件（如标签页溢出菜单）派生 DOM id。
+    /// </summary>
+    /// <param name="hostId">宿主标识，参与派生以保证宿主间唯一。</param>
+    /// <param name="groupId">组标识，参与派生以保证组间唯一。</param>
+    /// <param name="kind">控件种类令牌，如 tab-overflow-menu。</param>
+    internal static string GroupControlId(string hostId, LayoutNodeId groupId, string kind)
+    {
+        return $"atlas-v2-{kind}-{Token(hostId)}-{Token(groupId.Value)}";
     }
 
     /// <summary>

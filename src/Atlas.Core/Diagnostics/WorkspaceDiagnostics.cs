@@ -67,6 +67,8 @@ internal static class WorkspaceDiagnostics
         internal const string V1Shape = "ATLAS-V1-SHAPE";
         internal const string V1SizeIgnored = "ATLAS-V1-SIZE-IGNORED";
         internal const string V1TopologyFallback = "ATLAS-V1-TOPOLOGY-FALLBACK";
+        internal const string WorkspaceRepair = "ATLAS-WORKSPACE-REPAIR";
+        internal const string WorkspaceReset = "ATLAS-WORKSPACE-RESET";
     }
 
     internal static class Messages
@@ -107,5 +109,6 @@ internal static class WorkspaceDiagnostics
         internal const string ToolBarNotFound = "Atlas.ToolBar.NotFound";
         internal const string ToolBarRegionNotFound = "Atlas.ToolBar.RegionNotFound";
         internal const string ToolBarTargetRejected = "Atlas.ToolBar.TargetRejected";
+        internal const string WorkspaceResetToInitial = "Atlas.Workspace.ResetToInitial";
     }
 }

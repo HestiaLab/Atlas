@@ -199,6 +199,46 @@ public sealed class LayoutAutoPersistenceTests
     }
 
     [Fact]
+    public async Task Layout_stays_operable_after_repeated_automatic_write_failures()
+    {
+        await using var workspace = CreateWorkspace();
+        var diagnostics = new List<WorkspacePersistenceDiagnostic>();
+        await using var persistence = new LayoutAutoPersistence(
+            workspace,
+            new AtlasXmlLayoutSerializer(),
+            new ThrowingWorkspaceStore(),
+            TimeSpan.FromMilliseconds(1),
+            diagnostics.Add);
+
+        var collapse = await workspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(
+                new LayoutNodeId("tools"),
+                GroupVisibility.Collapsed));
+        await Task.Delay(50);
+        var expand = await workspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(
+                new LayoutNodeId("tools"),
+                GroupVisibility.Expanded));
+        await Task.Delay(50);
+
+        Assert.True(collapse.Succeeded);
+        Assert.True(expand.Succeeded);
+        Assert.Equal(2, workspace.Current.Revision);
+        Assert.Equal(
+            GroupVisibility.Expanded,
+            Assert.IsType<GroupNode>(
+                workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility);
+        Assert.True(workspace.CanUndo);
+        Assert.Contains(
+            diagnostics,
+            diagnostic => diagnostic.Kind
+                == WorkspacePersistenceDiagnosticKind.StorageUnavailable);
+        Assert.All(
+            diagnostics,
+            diagnostic => Assert.Equal("ATLAS-AUTO-WRITE", diagnostic.DiagnosticId));
+    }
+
+    [Fact]
     public async Task Restore_storage_failure_is_reported_as_diagnostic()
     {
         await using var workspace = CreateWorkspace();

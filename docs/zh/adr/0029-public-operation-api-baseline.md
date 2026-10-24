@@ -116,3 +116,11 @@ ADR-0002 冻结了操作、工厂、命令与错误码表面，但仓库尚无�
 ## 取代关系
 
 无。完成 ADR-0002 承诺的基线治理；不改变冻结签名。
+
+## 修订
+
+- 2026-10-24：ADR-0038 解除 `ResetWorkspace`（12）的保留状态，新增
+  `ResetWorkspaceOperation`、`ResetWorkspacePlanner` 与
+  `AtlasWorkspaceCommands.ResetWorkspaceAsync`，并将其纳入受支持操作集。
+  上文“保留值”列表保留为历史记录；`SetAutoHide`、`RestoreAutoHiddenItem`
+  与 `ReplaceContentReference` 的保留状态不变。当前可调用性以 ADR-0038 为准。

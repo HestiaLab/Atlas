@@ -4,8 +4,11 @@ using Atlas.Core;
 using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
+using Atlas.Core.Results;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System.Globalization;
 
 namespace Atlas.Blazor.Components;
@@ -22,6 +25,9 @@ internal sealed class AtlasGroupView : ComponentBase
     // 上次实际渲染时的参数戳；ShouldRender 与当前戳比较。
     private int lastRenderedStamp;
 
+    // 上次实际渲染时的菜单戳；菜单开关不经过参数设置，单独参与 ShouldRender。
+    private int lastRenderedPopupStamp;
+
     // 本次参数设置汇总出的参数戳；变化才触发重渲染。
     private int currentStamp;
 
@@ -30,6 +36,23 @@ internal sealed class AtlasGroupView : ComponentBase
 
     // keep-alive 缓存中保持挂载的非选中项；按最近活动排序，超出上限时淘汰最旧。
     private readonly List<DockItemId> keptAliveItemIds = new();
+
+    // 标签按钮的 DOM 引用；菜单关闭后把焦点还给触发标签。
+    private readonly Dictionary<DockItemId, ElementReference> tabElements = new();
+
+    // 溢出菜单按钮引用；菜单关闭后把焦点还给按钮。
+    private ElementReference overflowButtonElement;
+
+    // 当前打开的标签页菜单；null 表示没有菜单。
+    private TabPopupState? openPopup;
+
+    // 菜单开关的局部渲染戳；ShouldRender 只为参数戳变化放行，
+    // 因此本地菜单状态也必须参与戳计算。
+    private int popupStamp;
+
+    // 菜单关闭后待恢复焦点的标签或按钮；在渲染完成后执行。
+    private DockItemId? pendingTabFocus;
+    private bool pendingOverflowButtonFocus;
 
     /// <summary>
     ///     组所属的工作区；选择操作经它提交。
@@ -119,6 +142,8 @@ internal sealed class AtlasGroupView : ComponentBase
     protected override void OnParametersSet()
     {
         UpdateLifetimeCache();
+        PruneStaleTabReferences();
+        ClosePopupIfStale();
         // 汇总影响投影的参数生成渲染戳，ShouldRender 据此跳过无关重渲染。
         var hash = new HashCode();
         hash.Add(RuntimeHelpers.GetHashCode(Group));
@@ -136,6 +161,7 @@ internal sealed class AtlasGroupView : ComponentBase
         hash.Add(Catalog);
         hash.Add(Generation);
         hash.Add(StateScope);
+        hash.Add(popupStamp);
         foreach (var itemId in keptAliveItemIds)
         {
             hash.Add(itemId);
@@ -146,7 +172,8 @@ internal sealed class AtlasGroupView : ComponentBase
 
     protected override bool ShouldRender()
     {
-        return lastRenderedStamp != currentStamp;
+        return lastRenderedStamp != currentStamp
+            || lastRenderedPopupStamp != popupStamp;
     }
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
@@ -190,7 +217,7 @@ internal sealed class AtlasGroupView : ComponentBase
                     8,
                     (RenderFragment)(headerBuilder =>
                     {
-                        RenderTabStrip(headerBuilder);
+                        RenderTabBar(headerBuilder);
                     }));
             }
             else
@@ -219,35 +246,78 @@ internal sealed class AtlasGroupView : ComponentBase
         // 先记录已渲染戳再执行副作用：ShouldRender 依赖戳值判断参数是否变化，
         // 必须在本次渲染完成后更新，避免把「尚未渲染」误判为「无需渲染」。
         lastRenderedStamp = currentStamp;
+        lastRenderedPopupStamp = popupStamp;
         await ReportMissingContentAsync();
         // 焦点经协调器仲裁：同一渲染批次中多个组都可能请求聚焦，
         // 只有成功认领的组才调用 FocusAsync，防止焦点在组间来回跳动。
         var selected = Group.SelectedItemId;
-        if (selected is null
-            || !FocusCoordinator.TryClaim(selected.Value, Snapshot.Revision))
+        if (selected is not null
+            && FocusCoordinator.TryClaim(selected.Value, Snapshot.Revision))
         {
-            return;
+            try
+            {
+                if (selectedContentOutlet is not null)
+                {
+                    await selectedContentOutlet.FocusAsync();
+                }
+            }
+            catch (Exception)
+            {
+                if (OnError.HasDelegate)
+                {
+                    await OnError.InvokeAsync(
+                        new AtlasHostError(
+                            AtlasHostErrorCode.FocusFailed,
+                            "ATLAS-FOCUS-FAILED",
+                            "Atlas.Focus.Failed",
+                            Workspace.Id,
+                            selected));
+                }
+            }
         }
 
+        await ApplyPendingFocusAsync();
+    }
+
+    private void PruneStaleTabReferences()
+    {
+        // 关闭大量标签后，ElementReference 缓存不能无限增长；
+        // 同时丢弃指向已移除标签的待恢复焦点。
+        var liveIds = Items.Select(item => item.Id).ToHashSet();
+        foreach (var staleId in tabElements.Keys
+            .Where(itemId => !liveIds.Contains(itemId))
+            .ToArray())
+        {
+            tabElements.Remove(staleId);
+        }
+
+        if (pendingTabFocus is { } pending && !liveIds.Contains(pending))
+        {
+            pendingTabFocus = null;
+        }
+    }
+
+    private async Task ApplyPendingFocusAsync()
+    {
+        var tabFocus = pendingTabFocus;
+        var overflowFocus = pendingOverflowButtonFocus;
+        pendingTabFocus = null;
+        pendingOverflowButtonFocus = false;
         try
         {
-            if (selectedContentOutlet is not null)
+            if (tabFocus is { } itemId
+                && tabElements.TryGetValue(itemId, out var element))
             {
-                await selectedContentOutlet.FocusAsync();
+                await element.FocusAsync();
+            }
+            else if (overflowFocus && OverflowMode() == EditorOverflowMode.Menu)
+            {
+                await overflowButtonElement.FocusAsync();
             }
         }
-        catch (Exception)
+        catch (JSException)
         {
-            if (OnError.HasDelegate)
-            {
-                await OnError.InvokeAsync(
-                    new AtlasHostError(
-                        AtlasHostErrorCode.FocusFailed,
-                        "ATLAS-FOCUS-FAILED",
-                        "Atlas.Focus.Failed",
-                        Workspace.Id,
-                        selected));
-            }
+            // 菜单命令可能已移除目标标签；此时焦点由工作区激活策略接管。
         }
     }
 
@@ -324,14 +394,41 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.CloseElement();
     }
 
+    private void RenderTabBar(RenderTreeBuilder builder)
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-tab-bar");
+        builder.AddAttribute(2, "data-atlas-tab-bar", "true");
+        RenderTabStrip(builder);
+        if (OverflowMode() == EditorOverflowMode.Menu)
+        {
+            RenderOverflowButton(builder);
+        }
+
+        builder.CloseElement();
+        if (openPopup is not null)
+        {
+            RenderPopup(builder);
+        }
+    }
+
     private void RenderTabStrip(RenderTreeBuilder builder)
     {
+        var mode = OverflowMode();
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "atlas-v2-tab-strip");
         builder.AddAttribute(2, "role", "tablist");
         builder.AddAttribute(3, "aria-orientation", "horizontal");
         builder.AddAttribute(4, "aria-label", $"{Group.Id.Value} documents");
         builder.AddAttribute(5, "data-atlas-group-id", Group.Id.Value);
+        builder.AddAttribute(
+            6,
+            "data-atlas-overflow-mode",
+            mode == EditorOverflowMode.Menu
+                ? "menu"
+                : mode == EditorOverflowMode.Wrap
+                    ? "wrap"
+                    : "scroll");
         for (var itemIndex = 0; itemIndex < Items.Count; itemIndex++)
         {
             var item = Items[itemIndex];
@@ -372,12 +469,283 @@ internal sealed class AtlasGroupView : ComponentBase
                 14,
                 "onclick",
                 EventCallback.Factory.Create(this, () => SelectAsync(item.Id)));
+            builder.AddAttribute(
+                15,
+                "oncontextmenu",
+                EventCallback.Factory.Create<MouseEventArgs>(
+                    this,
+                    args => OpenContextMenu(item.Id, args)));
+            builder.AddAttribute(16, "oncontextmenu:preventDefault", true);
+            builder.AddElementReferenceCapture(
+                17,
+                value => tabElements[item.Id] = value);
             RenderHeader(builder, item, selected);
             builder.CloseElement();
         }
 
         builder.CloseElement();
     }
+
+    private void RenderOverflowButton(RenderTreeBuilder builder)
+    {
+        var expanded = openPopup?.IsOverflow == true;
+        builder.OpenElement(0, "button");
+        builder.AddAttribute(1, "type", "button");
+        builder.AddAttribute(2, "class", "atlas-v2-tab-overflow-button");
+        builder.AddAttribute(3, "data-atlas-overflow-menu-button", "true");
+        builder.AddAttribute(4, "aria-haspopup", "menu");
+        builder.AddAttribute(5, "aria-expanded", expanded ? "true" : "false");
+        builder.AddAttribute(6, "aria-controls", OverflowMenuId());
+        builder.AddAttribute(7, "aria-label", "All tabs");
+        builder.AddAttribute(8, "title", "All tabs");
+        builder.AddAttribute(
+            9,
+            "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(
+                this,
+                args => OpenOverflowMenu(args)));
+        builder.AddElementReferenceCapture(
+            10,
+            value => overflowButtonElement = value);
+        builder.AddContent(11, "»");
+        builder.CloseElement();
+    }
+
+    private void RenderPopup(RenderTreeBuilder builder)
+    {
+        var popup = openPopup!;
+        builder.OpenComponent<AtlasPopupMenu>(0);
+        builder.SetKey(popup);
+        builder.AddAttribute(1, "Label", popup.IsOverflow
+            ? "All tabs"
+            : $"Tab actions for {ContextItem(popup).Title}");
+        builder.AddAttribute(2, "MenuId", popup.IsOverflow
+            ? OverflowMenuId()
+            : ContextMenuId());
+        builder.AddAttribute(3, "MarkerAttribute", popup.IsOverflow
+            ? "data-atlas-tab-menu"
+            : "data-atlas-tab-context-menu");
+        builder.AddAttribute(4, "X", popup.X);
+        builder.AddAttribute(5, "Y", popup.Y);
+        builder.AddAttribute(6, "UseFallbackPosition", popup.KeyboardOpened);
+        builder.AddAttribute(7, "Items", popup.IsOverflow
+            ? BuildOverflowMenuItems()
+            : BuildContextMenuItems(ContextItem(popup)));
+        builder.AddAttribute(
+            8,
+            "OnDismiss",
+            EventCallback.Factory.Create(this, DismissPopupAsync));
+        builder.CloseComponent();
+    }
+
+    private IReadOnlyList<AtlasPopupMenuItem> BuildOverflowMenuItems()
+    {
+        return Items.Select(
+                item => new AtlasPopupMenuItem(
+                    "activate",
+                    item.Title,
+                    Disabled: false,
+                    () => ActivateFromMenuAsync(item.Id),
+                    item.Id,
+                    IsTabListItem: true))
+            .ToArray();
+    }
+
+    private IReadOnlyList<AtlasPopupMenuItem> BuildContextMenuItems(DockItem target)
+    {
+        var targetIndex = -1;
+        for (var index = 0; index < Items.Count; index++)
+        {
+            if (Items[index].Id == target.Id)
+            {
+                targetIndex = index;
+                break;
+            }
+        }
+
+        var targetClosable = CanClose(target);
+        var others = Items
+            .Where(item => item.Id != target.Id && CanClose(item))
+            .Select(item => item.Id)
+            .ToArray();
+        var right = targetIndex < 0
+            ? Array.Empty<DockItemId>()
+            : Items.Skip(targetIndex + 1)
+                .Where(CanClose)
+                .Select(item => item.Id)
+                .ToArray();
+        var all = Items.Where(CanClose).Select(item => item.Id).ToArray();
+        return new[]
+        {
+            new AtlasPopupMenuItem(
+                "close",
+                "Close",
+                !targetClosable,
+                () => CloseItemsAsync(new[] { target.Id })),
+            new AtlasPopupMenuItem(
+                "close-others",
+                "Close Others",
+                !targetClosable || others.Length == 0,
+                () => CloseItemsAsync(others)),
+            new AtlasPopupMenuItem(
+                "close-right",
+                "Close to the Right",
+                !targetClosable || right.Length == 0,
+                () => CloseItemsAsync(right)),
+            new AtlasPopupMenuItem(
+                "close-all",
+                "Close All",
+                !targetClosable || all.Length == 0,
+                () => CloseItemsAsync(all)),
+        };
+    }
+
+    private void OpenOverflowMenu(MouseEventArgs args)
+    {
+        openPopup = new TabPopupState(
+            IsOverflow: true,
+            TargetItemId: null,
+            args.ClientX,
+            args.ClientY,
+            KeyboardOpened: args.Detail == 0);
+        popupStamp++;
+    }
+
+    private void OpenContextMenu(DockItemId itemId, MouseEventArgs args)
+    {
+        openPopup = new TabPopupState(
+            IsOverflow: false,
+            itemId,
+            args.ClientX,
+            args.ClientY,
+            KeyboardOpened: false);
+        popupStamp++;
+    }
+
+    private async Task DismissPopupAsync()
+    {
+        var popup = openPopup;
+        if (popup is null)
+        {
+            return;
+        }
+
+        openPopup = null;
+        popupStamp++;
+        if (popup.IsOverflow)
+        {
+            pendingOverflowButtonFocus = true;
+        }
+        else if (popup.TargetItemId is { } itemId
+            && Items.Any(item => item.Id == itemId))
+        {
+            pendingTabFocus = itemId;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ActivateFromMenuAsync(DockItemId itemId)
+    {
+        var result = await Workspace.ExecuteAsync(new SelectItemOperation(itemId));
+        if (!result.Succeeded)
+        {
+            await ReportTabFailureAsync("ATLAS-TAB-ACTIVATE-FAILED", itemId);
+            return;
+        }
+
+        pendingTabFocus = itemId;
+    }
+
+    private async Task CloseItemsAsync(IReadOnlyList<DockItemId> itemIds)
+    {
+        // 关闭目标标签后焦点由既有激活策略接管（内容出口），
+        // 不再把焦点还给已移除的标签页。
+        pendingTabFocus = null;
+        pendingOverflowButtonFocus = false;
+        foreach (var itemId in itemIds)
+        {
+            var result = await Workspace.ExecuteAsync(new CloseItemOperation(itemId));
+            if (result.Succeeded || result.Status == WorkspaceResultStatus.NoChange)
+            {
+                continue;
+            }
+
+            // 复用既有 Close 操作，不引入批量原子 API：首个失败的 typed failure
+            // 立即上报并停止，避免把拒绝伪装成成功。
+            await ReportTabFailureAsync("ATLAS-TAB-CLOSE-FAILED", itemId);
+            return;
+        }
+    }
+
+    private async Task ReportTabFailureAsync(string diagnosticId, DockItemId itemId)
+    {
+        if (OnError.HasDelegate)
+        {
+            await OnError.InvokeAsync(
+                new AtlasHostError(
+                    AtlasHostErrorCode.Unexpected,
+                    diagnosticId,
+                    "Atlas.Tab.CommandFailed",
+                    Workspace.Id,
+                    itemId));
+        }
+    }
+
+    private void ClosePopupIfStale()
+    {
+        if (openPopup is null)
+        {
+            return;
+        }
+
+        if (openPopup.IsOverflow && OverflowMode() != EditorOverflowMode.Menu
+            || !openPopup.IsOverflow
+            && openPopup.TargetItemId is { } itemId
+            && !Items.Any(item => item.Id == itemId))
+        {
+            openPopup = null;
+            popupStamp++;
+        }
+    }
+
+    private EditorOverflowMode OverflowMode()
+    {
+        return Group.EditorState?.OverflowMode ?? EditorOverflowMode.Scroll;
+    }
+
+    private DockItem ContextItem(TabPopupState popup)
+    {
+        return Items.First(item => item.Id == popup.TargetItemId);
+    }
+
+    private static bool CanClose(DockItem item)
+    {
+        return item.Capabilities.HasFlag(DockItemCapabilities.CanClose);
+    }
+
+    private string OverflowMenuId()
+    {
+        return AtlasDomIdentity.GroupControlId(
+            HostId,
+            Group.Id,
+            "tab-overflow-menu");
+    }
+
+    private string ContextMenuId()
+    {
+        return AtlasDomIdentity.GroupControlId(
+            HostId,
+            Group.Id,
+            "tab-context-menu");
+    }
+
+    private sealed record TabPopupState(
+        bool IsOverflow,
+        DockItemId? TargetItemId,
+        double X,
+        double Y,
+        bool KeyboardOpened);
     private void RenderToolHeader(RenderTreeBuilder builder)
     {
         // 工具组头部只呈现选中项：与文档标签条不同，工具面板
@@ -405,7 +773,27 @@ internal sealed class AtlasGroupView : ComponentBase
             "data-atlas-insertion-index",
             IndexOf(Group.ItemIds, selected.Id).ToString(CultureInfo.InvariantCulture));
         RenderHeader(builder, selected, isSelected: true);
+        // 面板标题栏关闭按钮（REQ-F-141 AC1）：复用 Group 可见性操作收起面板，
+        // ToolBar Entry 由工作区状态保留；按钮位于拖拽源内部，控制器据此排除拖拽。
+        builder.OpenElement(7, "button");
+        builder.SetKey((selected.Id, "panel-close"));
+        builder.AddAttribute(8, "type", "button");
+        builder.AddAttribute(9, "class", "atlas-v2-panel-close");
+        builder.AddAttribute(10, "data-atlas-close-panel", "true");
+        builder.AddAttribute(11, "aria-label", $"Close {selected.Title}");
+        builder.AddAttribute(
+            12,
+            "onclick",
+            EventCallback.Factory.Create(this, CollapseAsync));
+        builder.AddContent(13, "×");
         builder.CloseElement();
+        builder.CloseElement();
+    }
+
+    private async Task CollapseAsync()
+    {
+        await Workspace.ExecuteAsync(
+            new SetGroupVisibilityOperation(Group.Id, GroupVisibility.Collapsed));
     }
 
     private void RenderHeader(

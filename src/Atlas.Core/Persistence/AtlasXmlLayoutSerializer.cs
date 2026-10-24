@@ -101,6 +101,9 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 
             // 先按嵌入式 XSD 校验结构，再做规模限制扫描，两者都通过才进入对象构建。
             ValidateSchema(document);
+            // V2 XSD 允许若干可缺省字段；在对象构建前显式填入领域默认值，
+            // 而不是让每个读取分支各自猜测默认值。
+            NormalizeOptionalFields(document);
             ValidateLimits(root, limits);
             // 恢复文档必须属于目标工作区，防止把其他工作区的布局灌入当前工作区。
             var persistedWorkspaceId = Required(root, "workspaceId");

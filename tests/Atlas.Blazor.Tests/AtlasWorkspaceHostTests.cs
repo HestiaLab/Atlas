@@ -2438,6 +2438,75 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     }
 
     [Fact]
+    public async Task Work_area_renders_an_explicit_center_column_without_toolbars()
+    {
+        await using var workspace = CreateWorkspace(
+            DocumentDefinition("editor-only", "Only document"));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var workArea = cut.Find(".atlas-v2-work-area");
+        Assert.Empty(workArea.QuerySelectorAll("[data-atlas-toolbar-side]"));
+        var center = cut.Find(".atlas-v2-work-area-center");
+        Assert.Equal(
+            "true",
+            center.GetAttribute("data-atlas-work-area-center"));
+        Assert.NotNull(center.QuerySelector("[data-atlas-group-kind='document']"));
+    }
+
+    [Fact]
+    public async Task Panel_header_close_button_collapses_group_and_keeps_toolbar_entry()
+    {
+        await using var workspace = CreateWorkspace(TwoToolEntriesDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var close = cut.Find("[data-atlas-close-panel='true']");
+        Assert.Equal("button", close.GetAttribute("type"));
+        Assert.False(string.IsNullOrWhiteSpace(close.GetAttribute("aria-label")));
+        Assert.Contains("First Tool", close.GetAttribute("aria-label"));
+
+        close.Click();
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                var group = Assert.IsType<GroupNode>(
+                    workspace.Current.Nodes[new LayoutNodeId("tools")]);
+                Assert.Equal(GroupVisibility.Collapsed, group.Visibility);
+                Assert.Equal(
+                    new[] { new DockItemId("first-tool"), new DockItemId("second-tool") },
+                    group.ItemIds);
+                Assert.Equal(2, workspace.Current.Items.Count);
+                Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry]").Count);
+                Assert.Single(cut.FindAll(".atlas-v2-group-collapsed"));
+            });
+    }
+
+    [Fact]
+    public async Task Document_tab_title_exposes_full_text_and_tooltip_attribute()
+    {
+        const string title =
+            "This is an intentionally very long editor tab title that must be truncated "
+            + "with an ellipsis and exposed in full through a hover tooltip for acceptance "
+            + "verification";
+        await using var workspace = CreateWorkspace(
+            DocumentDefinition("long-title", title));
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false));
+
+        var titleSpan = cut.Find(".atlas-v2-item-title");
+        Assert.Equal(title, titleSpan.TextContent);
+        Assert.Equal(title, titleSpan.GetAttribute("title"));
+    }
+
+    [Fact]
     public async Task Dom_metadata_manifest_matches_rendered_projection()
     {
         var path = Path.Combine(

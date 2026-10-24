@@ -1,1 +1,25 @@
 #nullable enable
+Atlas.Core.AtlasWorkspaceCommands.OpenItemFromRequestAsync(Atlas.Core.Operations.OpenItemRequest! request, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Results.OpenItemResult!>!>
+Atlas.Core.AtlasWorkspaceCommands.ResetWorkspaceAsync(long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.Operations.OpenItemRequest
+Atlas.Core.Operations.OpenItemRequest.Capabilities.get -> Atlas.Core.Items.DockItemCapabilities
+Atlas.Core.Operations.OpenItemRequest.Content.get -> Atlas.Core.Items.ContentReference
+Atlas.Core.Operations.OpenItemRequest.DocumentState.get -> Atlas.Core.Items.DocumentState?
+Atlas.Core.Operations.OpenItemRequest.IconKey.get -> string?
+Atlas.Core.Operations.OpenItemRequest.Id.get -> Atlas.Core.DockItemId?
+Atlas.Core.Operations.OpenItemRequest.Kind.get -> Atlas.Core.Items.DockItemKind
+Atlas.Core.Operations.OpenItemRequest.OpenItemRequest(Atlas.Core.Items.DockItemKind kind, Atlas.Core.Items.ContentReference content, Atlas.Core.Items.DockItemCapabilities capabilities, Atlas.Core.DockItemId? id = null, string? title = null, string? iconKey = null, Atlas.Core.Items.DocumentState? documentState = null) -> void
+Atlas.Core.Operations.OpenItemRequest.Title.get -> string?
+Atlas.Core.Operations.OpenItemRequestOperation
+Atlas.Core.Operations.OpenItemRequestOperation.DeduplicationMode.get -> Atlas.Core.Items.ContentDeduplicationMode
+Atlas.Core.Operations.OpenItemRequestOperation.OpenItemRequestOperation(Atlas.Core.Operations.OpenItemRequest! request, Atlas.Core.LayoutNodeId targetGroupId, Atlas.Core.Items.ContentDeduplicationMode deduplicationMode, int? targetIndex = null, long? baseRevision = null) -> void
+Atlas.Core.Operations.OpenItemRequestOperation.Request.get -> Atlas.Core.Operations.OpenItemRequest!
+Atlas.Core.Operations.OpenItemRequestOperation.ResolvedItemId.get -> Atlas.Core.DockItemId?
+Atlas.Core.Operations.OpenItemRequestOperation.TargetGroupId.get -> Atlas.Core.LayoutNodeId
+Atlas.Core.Operations.OpenItemRequestOperation.TargetIndex.get -> int?
+Atlas.Core.Operations.ResetWorkspaceOperation
+Atlas.Core.Operations.ResetWorkspaceOperation.ResetWorkspaceOperation(long? baseRevision = null) -> void
+Atlas.Core.Results.OpenItemResult
+Atlas.Core.Results.OpenItemResult.ChangeSet.get -> Atlas.Core.Changes.LayoutChangeSet!
+Atlas.Core.Results.OpenItemResult.Created.get -> bool
+Atlas.Core.Results.OpenItemResult.ItemId.get -> Atlas.Core.DockItemId
