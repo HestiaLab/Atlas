@@ -7,61 +7,50 @@ using Atlas.Core.Placement;
 namespace Atlas.Showcase.Components;
 
 /// <summary>
-///     工作区定义与 <see cref="AtlasContentRoute"/> 声明之间共享的
-///     中心内容 Kind 常量。将这些字符串值集中在一处，
-///     可防止某一侧的改名悄然产生“Content is not registered”
-///     运行时失败。
-/// </summary>
-public static class ShowcaseContentKinds
-{
-    public const string Catalog = "showcase-catalog";
-    public const string Layout = "showcase-layout";
-    public const string Content = "showcase-content";
-    public const string DragDrop = "showcase-dragdrop";
-    public const string Splitter = "showcase-splitter";
-    public const string Keyboard = "showcase-keyboard";
-    public const string Theme = "showcase-theme";
-    public const string Persistence = "showcase-persistence";
-    public const string Guide = "showcase-guide";
-}
-
-/// <summary>
 ///     构建 Atlas.Showcase 工作区：每个框架能力对应一个教学面板，
-///     排列在六个 LogicalRegion 槽位中，外加一个承载
-///     快速入门指南的编辑器文档。
+///     排列在六个 LogicalRegion 槽位中，外加承载快速上手与快捷键速查的
+///     两个编辑器文档。
 /// </summary>
 internal static class ShowcaseWorkspaceDefinition
 {
-    internal static AtlasWorkspaceDefinition Create(string workspaceName)
+    internal static AtlasWorkspaceDefinition Create(string workspaceName, bool compact = false)
     {
         if (string.IsNullOrWhiteSpace(workspaceName))
         {
             throw new ArgumentException("A workspace name is required.", nameof(workspaceName));
         }
 
-        var catalog = Tool("showcase-catalog", "教学目录", ShowcaseContentKinds.Catalog);
-        var layout = Tool("showcase-layout", "声明式布局", ShowcaseContentKinds.Layout);
-        var content = Tool("showcase-content", "内容注册", ShowcaseContentKinds.Content);
-        var dragDrop = Tool("showcase-dragdrop", "拖拽与停靠", ShowcaseContentKinds.DragDrop);
-        var splitter = Tool("showcase-splitter", "分割条", ShowcaseContentKinds.Splitter);
-        var keyboard = Tool("showcase-keyboard", "键盘操作", ShowcaseContentKinds.Keyboard);
-        var theme = Tool("showcase-theme", "主题定制", ShowcaseContentKinds.Theme);
-        var persistence = Tool("showcase-persistence", "持久化", ShowcaseContentKinds.Persistence);
-        var guide = Document("showcase-guide", "使用指南", isPinned: true, ShowcaseContentKinds.Guide);
+        return compact
+            ? CreateCompact(workspaceName)
+            : CreateStandard(workspaceName);
+    }
 
-        var leftUpper = ToolGroup("left-upper", LogicalRegion.InlineStartUpper, catalog.Id);
-        var leftLower = ToolGroup("left-lower", LogicalRegion.InlineStartLower, layout.Id);
+    private static AtlasWorkspaceDefinition CreateStandard(string workspaceName)
+    {
+        var tools = ShowcasePanels.All.Select(Tool).ToArray();
+        var documents = ShowcaseDocuments.All.Select(Document).ToArray();
+        var guide = documents[0];
+
+        var groups = ShowcasePanels.Groups
+            .Select(group => ToolGroup(
+                group.Id.Value,
+                group.Region,
+                ShowcasePanels.ForGroup(group.Id).Select(panel => panel.ItemId).ToArray()))
+            .ToArray();
+        var leftUpper = groups[0];
+        var leftLower = groups[1];
+        var rightUpper = groups[2];
+        var rightLower = groups[3];
+        var bottomLeft = groups[4];
+        var bottomRight = groups[5];
+
         var editor = new GroupNode(
             Id("editor"),
             DockItemKind.Document,
             GroupRetentionPolicy.Persistent,
             GroupVisibility.Expanded,
-            new[] { guide.Id },
+            documents.Select(document => document.Id).ToArray(),
             guide.Id);
-        var rightUpper = ToolGroup("right-upper", LogicalRegion.InlineEndUpper, content.Id, dragDrop.Id);
-        var rightLower = ToolGroup("right-lower", LogicalRegion.InlineEndLower, keyboard.Id);
-        var bottomLeft = ToolGroup("bottom-left", LogicalRegion.BlockEndInlineStart, theme.Id, splitter.Id);
-        var bottomRight = ToolGroup("bottom-right", LogicalRegion.BlockEndInlineEnd, persistence.Id);
 
         var leftDock = Split(
             "left-dock",
@@ -106,7 +95,7 @@ internal static class ShowcaseWorkspaceDefinition
             bottomDock.Id,
             new SplitConstraints(300d, null, 120d, 360d));
 
-        LayoutNode[] nodes =
+        LayoutNode[] nodes = new LayoutNode[]
         {
             root,
             mainArea,
@@ -122,31 +111,63 @@ internal static class ShowcaseWorkspaceDefinition
             bottomLeft,
             bottomRight,
         };
-        DockItem[] items =
-        {
-            catalog,
-            layout,
-            content,
-            dragDrop,
-            splitter,
-            keyboard,
-            theme,
-            persistence,
-            guide,
-        };
+        DockItem[] items = tools.Concat(documents).ToArray();
         var toolBars = new[]
         {
             new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
             new ToolBarState(LogicalSide.InlineEnd, ToolBarVisibility.Expanded),
         };
+        var toolBarOrders = ShowcasePanels.Groups
+            .Select(group => new ToolBarOrderState(
+                group.Region,
+                ShowcasePanels.ForGroup(group.Id).Select(panel => panel.ItemId).ToArray()))
+            .ToArray();
+
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId(workspaceName),
+            root.Id,
+            nodes,
+            items,
+            toolBars,
+            toolBarOrders);
+    }
+
+    private static AtlasWorkspaceDefinition CreateCompact(string workspaceName)
+    {
+        var tools = ShowcasePanels.All.Select(Tool).ToArray();
+        var documents = ShowcaseDocuments.All.Select(Document).ToArray();
+        var guide = documents[0];
+
+        var toolGroup = ToolGroup(
+            "compact-tools",
+            LogicalRegion.InlineStartUpper,
+            ShowcasePanels.CatalogOrder.Select(panel => panel.ItemId).ToArray());
+        var editor = new GroupNode(
+            Id("editor"),
+            DockItemKind.Document,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            documents.Select(document => document.Id).ToArray(),
+            guide.Id);
+        var root = Split(
+            "root",
+            SplitAxis.InlineChildren,
+            SplitBasis.FixedPixels(140d, SplitAnchor.First),
+            toolGroup.Id,
+            editor.Id,
+            new SplitConstraints(110d, 200d, 150d, null));
+
+        LayoutNode[] nodes = new LayoutNode[] { root, toolGroup, editor };
+        DockItem[] items = tools.Concat(documents).ToArray();
+        var toolBars = new[]
+        {
+            new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
+        };
         var toolBarOrders = new[]
         {
-            new ToolBarOrderState(LogicalRegion.InlineStartUpper, new[] { catalog.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineStartLower, new[] { layout.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineEndUpper, new[] { content.Id, dragDrop.Id }),
-            new ToolBarOrderState(LogicalRegion.InlineEndLower, new[] { keyboard.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineStart, new[] { theme.Id, splitter.Id }),
-            new ToolBarOrderState(LogicalRegion.BlockEndInlineEnd, new[] { persistence.Id }),
+            new ToolBarOrderState(
+                LogicalRegion.InlineStartUpper,
+                ShowcasePanels.CatalogOrder.Select(panel => panel.ItemId).ToArray()),
         };
 
         return new AtlasWorkspaceDefinition(
@@ -207,31 +228,27 @@ internal static class ShowcaseWorkspaceDefinition
             secondId);
     }
 
-    private static DockItem Tool(string id, string title, string contentKind)
+    private static DockItem Tool(ShowcasePanelDescriptor panel)
     {
         return new DockItem(
-            new DockItemId(id),
+            panel.ItemId,
             DockItemKind.Tool,
-            new ContentReference(contentKind, id),
+            new ContentReference(panel.ContentKind, panel.ItemId.Value),
             DockItemCapabilityPresets.Tool,
-            title,
-            id);
+            panel.Title,
+            panel.ItemId.Value);
     }
 
-    private static DockItem Document(
-        string id,
-        string title,
-        bool isPinned,
-        string contentKind)
+    private static DockItem Document(ShowcaseDocumentDescriptor document)
     {
         return new DockItem(
-            new DockItemId(id),
+            document.ItemId,
             DockItemKind.Document,
-            new ContentReference(contentKind, id),
+            new ContentReference(document.ContentKind, document.ResourceId),
             DockItemCapabilityPresets.Document,
-            title,
-            id,
-            new DocumentState(isPinned, isPreview: false));
+            document.Title,
+            document.ItemId.Value,
+            new DocumentState(document.IsPinned, isPreview: false));
     }
 
     private static LayoutNodeId Id(string value) => new(value);

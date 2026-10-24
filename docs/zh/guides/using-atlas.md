@@ -2,7 +2,7 @@
 
 > 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
-本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例取自 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 教学演示；下面的每一段代码都来自真实运行的程序。
+本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例以 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 的实现为准；声明式片段是等价写法，必填参数与 0.3.0 公共 API 一致。
 
 ## 1. 引用包
 
@@ -52,7 +52,7 @@ builder.Services.AddAtlasContent<MyEditorContent>("my-editor");
 
 ## 3. 声明工作区定义（编程式）
 
-声明式 Razor 组件是最容易的起点，但编程式定义给你完整的模型。Demo 在 `AtlasDemoWorkspaceDefinition.Create` 中构建：
+声明式 Razor 组件是最容易的起点，但编程式定义给你完整的模型。Showcase 在 `ShowcaseWorkspaceDefinition.Create` 中构建：
 
 ```csharp
 var project = Tool("project", "Project");       // DockItem，Kind=Tool
@@ -104,7 +104,7 @@ private IAtlasWorkspace? workspace;
 
 protected override void OnInitialized()
 {
-    var result = Factory.Create(AtlasDemoWorkspaceDefinition.Create("atlas-demo"));
+    var result = Factory.Create(ShowcaseWorkspaceDefinition.Create("atlas-showcase"));
     if (!result.Succeeded || result.Value is null)
     {
         throw new InvalidOperationException(result.Error?.DiagnosticId ?? "Init failed.");
@@ -238,17 +238,28 @@ private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
 
 ## 7. 声明式替代方案
 
-如果你更想在 Razor 中构建布局，在 Host 内使用声明组件：
+如果你更想在 Razor 中构建布局，在 Host 内使用声明组件（并在 `_Imports.razor` 中引入 `Atlas.Blazor.Components`、`Atlas.Core`、`Atlas.Core.Items` 与 `Atlas.Core.Layout`）：
 
 ```razor
-<AtlasWorkspaceHost WorkspaceId="@workspaceId" WorkspaceOptions="@options">
-    <AtlasSplitDefinition Axis="SplitAxis.BlockChildren" Basis="SplitBasis.Proportional(0.72)">
-        <AtlasSplitDefinition Axis="SplitAxis.InlineChildren">
-            <AtlasToolGroupDefinition LogicalRegion="LogicalRegion.InlineStartUpper">
-                <AtlasToolItemDefinition Id="project" Kind="my-tool" Title="Project" />
+<AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("my-workspace"))"
+                    WorkspaceOptions="@options">
+    <AtlasSplitDefinition Id="@(new LayoutNodeId("root"))"
+                          Axis="SplitAxis.BlockChildren"
+                          Basis="SplitBasis.Proportional(0.72)">
+        <AtlasSplitDefinition Id="@(new LayoutNodeId("main"))"
+                              Axis="SplitAxis.InlineChildren">
+            <AtlasToolGroupDefinition Id="@(new LayoutNodeId("tools"))"
+                                      LogicalRegion="LogicalRegion.InlineStartUpper">
+                <AtlasToolItemDefinition Id="@(new DockItemId("project"))"
+                                         ContentKind="my-tool"
+                                         ResourceId="project"
+                                         Title="Project" />
             </AtlasToolGroupDefinition>
-            <AtlasDocumentGroupDefinition>
-                <AtlasDocumentItemDefinition Id="program" Kind="my-editor" Title="Program.cs" />
+            <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("documents"))">
+                <AtlasDocumentItemDefinition Id="@(new DockItemId("program"))"
+                                             ContentKind="my-editor"
+                                             ResourceId="program"
+                                             Title="Program.cs" />
             </AtlasDocumentGroupDefinition>
         </AtlasSplitDefinition>
     </AtlasSplitDefinition>

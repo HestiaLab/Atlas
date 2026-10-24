@@ -1,15 +1,34 @@
 @namespace Atlas.Showcase.Components
 
-<footer class="showcase-statusbar" data-testid="showcase-status-bar">
-    <span class="showcase-ok">●</span>
+<footer class="showcase-statusbar"
+        data-testid="showcase-status-bar"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label="Atlas 演示状态">
+    <span class="showcase-status-dot @ToneClass" aria-hidden="true">●</span>
     <span>@OperationStatus</span>
-    <span class="showcase-status-spacer"></span>
-    <span>LF</span>
-    <span>UTF-8</span>
-    <span>Atlas v2</span>
+    <span class="showcase-status-revision">Rev @Revision</span>
+    <span class="showcase-status-spacer" aria-hidden="true"></span>
+    <span aria-hidden="true">LF</span>
+    <span aria-hidden="true">UTF-8</span>
+    <span aria-hidden="true">Atlas v2</span>
 </footer>
 
 @code {
     [Parameter]
     public string OperationStatus { get; set; } = "就绪";
+
+    [Parameter]
+    public long Revision { get; set; }
+
+    [Parameter]
+    public string Tone { get; set; } = "ok";
+
+    private string ToneClass => Tone switch
+    {
+        "warn" => "showcase-warn",
+        "error" => "showcase-error",
+        _ => "showcase-ok",
+    };
 }

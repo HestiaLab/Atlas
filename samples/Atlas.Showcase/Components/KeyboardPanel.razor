@@ -1,31 +1,17 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="键盘操作"
-                  Requirement="REQ-F-035 · REQ-F-116 · REQ-F-117"
-                  CodeSnippet="@Code">
+    <TeachingCard Requirement="REQ-F-035 · REQ-F-116 · REQ-F-117 · REQ-F-118"
+                  Source="AtlasKeyboardCommandMap.cs"
+                  CodeSnippet="@ShowcaseSnippets.KeyboardBinding">
         <p>Atlas 将键盘快捷键映射到与指针相同的 Core 操作。方向键调整
         已聚焦分割条的大小；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
-        切换编辑器标签页；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
-        关闭当前标签页。</p>
-        <p><span class="showcase-tag accent">试一试</span> 点击一个编辑器
-        标签页，然后按 <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
+        切换编辑器标签页；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Shift</span>+<span class="showcase-kbd">Tab</span>
+        反向切换；<span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">W</span>
+        关闭当前可关闭标签页；<span class="showcase-kbd">Alt</span>+方向键切换面板焦点。</p>
+        <p><span class="showcase-tag accent">试一试</span> 点击
+        <strong>快捷键速查</strong> 或 <strong>使用指南</strong> 标签页，
+        然后按 <span class="showcase-kbd">Ctrl</span>+<span class="showcase-kbd">Tab</span>
         切换。命令映射可以重新绑定任意操作。</p>
     </TeachingCard>
 </div>
-
-@code {
-    private const string Code = @"// 默认绑定（子集）
-AtlasKeyboardCommand.NextTab            → Ctrl+Tab
-AtlasKeyboardCommand.CloseActiveDocument → Ctrl+W
-
-// 自定义绑定：
-var bindings = new[]
-{
-    new AtlasKeyboardBinding(
-        new AtlasKeyboardChord(""KeyQ"", control: true),
-        AtlasKeyboardCommand.CloseActiveDocument),
-};
-var map = new AtlasKeyboardCommandMap(bindings);
-<AtlasWorkspaceHost KeyboardCommands=""map"">…</AtlasWorkspaceHost>";
-}

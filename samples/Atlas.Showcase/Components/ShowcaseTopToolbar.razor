@@ -1,59 +1,99 @@
 @namespace Atlas.Showcase.Components
-@using Atlas.Core.Layout
-@using Atlas.Core.Placement
+@using Atlas.Core
+@using Microsoft.JSInterop
 
 <header class="showcase-topbar" data-testid="showcase-top-toolbar">
     <div class="showcase-brand" aria-label="Atlas Showcase">A</div>
-    <nav class="showcase-menu" aria-label="演示分区">
-        <button type="button">使用指南</button>
-        <button type="button">能力</button>
-        <button type="button">主题</button>
+    <nav class="showcase-menu" aria-label="演示导航">
+        <button type="button" @onclick="() => OnOpenGuide.InvokeAsync()">指南</button>
+        <button type="button" @onclick="() => OnOpenCatalog.InvokeAsync()">能力</button>
+        <button type="button" @onclick="() => OnOpenTheme.InvokeAsync()">主题</button>
+        @if (ShowVerificationLink)
+        {
+            <button class="showcase-verify" type="button" @onclick="() => OnOpenVerification.InvokeAsync()">验证</button>
+        }
     </nav>
     <div class="showcase-history" aria-label="布局历史">
-        <button type="button" disabled="@(!CanUndo)" @onclick="OnUndo" aria-label="撤销布局更改">↶</button>
-        <button type="button" disabled="@(!CanRedo)" @onclick="OnRedo" aria-label="重做布局更改">↷</button>
+        <button type="button" disabled="@(!CanUndo)" @onclick="() => OnUndo.InvokeAsync()" aria-label="撤销布局更改">↶</button>
+        <button type="button" disabled="@(!CanRedo)" @onclick="() => OnRedo.InvokeAsync()" aria-label="重做布局更改">↷</button>
     </div>
     <div class="showcase-actions">
-        <div class="showcase-quickmenu">
-            <button class="showcase-action" type="button" aria-haspopup="true" aria-expanded="@QuickMenuOpen" @onclick="ToggleMenu">
+        <div class="showcase-quickmenu" @onkeydown="OnDialogKeyDown">
+            <button class="showcase-action"
+                    type="button"
+                    @ref="menuButton"
+                    aria-haspopup="dialog"
+                    aria-expanded="@(PanelManagerOpen ? "true" : "false")"
+                    aria-controls="showcase-panel-manager"
+                    @onclick="TogglePanelManagerAsync">
                 ☰ 面板
             </button>
-            @if (QuickMenuOpen)
+            @if (PanelManagerOpen)
             {
-                <div class="showcase-quickmenu-popup" role="menu" aria-label="面板快捷菜单">
-                    @foreach (var group in Panels.GroupBy(p => p.Region))
-                    {
-                        <div class="showcase-quickmenu-group">@group.Key</div>
-                        @foreach (var panel in group)
+                <div class="showcase-dialog-backdrop" @onclick="ClosePanelManagerAsync"></div>
+                <section id="showcase-panel-manager"
+                         class="showcase-panel-manager"
+                         role="dialog"
+                         aria-modal="false"
+                         aria-labelledby="showcase-panel-manager-title"
+                         tabindex="-1"
+                         @ref="managerElement"
+                         @onkeydown="OnDialogKeyDown">
+                    <header class="showcase-panel-manager-header">
+                        <h2 id="showcase-panel-manager-title">面板管理</h2>
+                        <button type="button"
+                                class="showcase-panel-manager-close"
+                                @onclick="ClosePanelManagerAsync"
+                                aria-label="关闭面板管理">关闭</button>
+                    </header>
+                    <div class="showcase-panel-manager-actions">
+                        <button type="button" @onclick="ToggleCompactAsync">
+                            @(IsCompact ? "使用标准布局" : "使用紧凑布局")
+                        </button>
+                        <button type="button" @onclick="ResetAsync">重置布局</button>
+                    </div>
+                    <ul class="showcase-panel-manager-list">
+                        @foreach (var view in Panels)
                         {
-                            <div class="showcase-quickmenu-row" role="menuitem">
-                                <span class="name" title="@panel.Title">@panel.Title</span>
-                                <span class="hint">@(IsPanelVisible(panel) ? "可见" : "隐藏")</span>
-                                <button type="button" @onclick="() => OnTogglePanel(panel)" aria-label="切换 @panel.Title">
-                                    @(IsPanelVisible(panel) ? "隐藏" : "显示")
-                                </button>
-                            </div>
+                            var current = view;
+                            var targets = MoveTargets(current);
+                            <li class="showcase-panel-manager-row">
+                                <div class="showcase-panel-manager-main">
+                                    <span class="name">@current.Panel.Title</span>
+                                    <span class="state">@StateLabel(current)</span>
+                                </div>
+                                <div class="showcase-panel-manager-row-actions">
+                                    <button type="button"
+                                            disabled="@(!current.Exists)"
+                                            @onclick="() => ActivateAsync(current)"
+                                            aria-label="打开 @current.Panel.Title">打开</button>
+                                    <button type="button"
+                                            disabled="@(!current.Exists)"
+                                            @onclick="() => ToggleGroupAsync(current)">
+                                        @(current.GroupVisible ? "折叠分组" : "展开分组")
+                                    </button>
+                                    @if (targets.Count > 0)
+                                    {
+                                        <select aria-label="移动 @current.Panel.Title 到区域"
+                                                @onchange="args => MoveAsync(current, args.Value?.ToString())">
+                                            <option value="">移动到…</option>
+                                            @foreach (var target in targets)
+                                            {
+                                                <option value="@target.Id.Value">@target.Label</option>
+                                            }
+                                        </select>
+                                    }
+                                </div>
+                            </li>
                         }
-                    }
-                    <div class="showcase-quickmenu-group">移动到…</div>
-                    @foreach (var panel in Panels)
-                    {
-                        foreach (var region in (LogicalRegion[])Enum.GetValues(typeof(LogicalRegion)))
-                        {
-                            var target = region;
-                            <div class="showcase-quickmenu-row">
-                                <span class="name">@panel.Title → @target</span>
-                                <button type="button" @onclick="() => OnMovePanel(panel, target)" aria-label="将 @panel.Title 移动到 @target">
-                                    移动
-                                </button>
-                            </div>
-                        }
-                    }
-                </div>
+                    </ul>
+                    <p class="showcase-panel-manager-note">
+                        “折叠分组”影响该 Group 内的所有面板；切换布局会重置布局历史。
+                    </p>
+                </section>
             }
         </div>
         <span class="showcase-branch">atlas/showcase</span>
-        <button class="showcase-run" type="button" aria-label="运行演示">▶</button>
     </div>
 </header>
 
@@ -65,16 +105,43 @@
     public bool CanRedo { get; set; }
 
     [Parameter]
-    public IReadOnlyList<ShowcasePanelEntry> Panels { get; set; } = Array.Empty<ShowcasePanelEntry>();
+    public IReadOnlyList<ShowcasePanelView> Panels { get; set; } = Array.Empty<ShowcasePanelView>();
 
     [Parameter]
-    public Func<ShowcasePanelEntry, bool> IsPanelVisible { get; set; } = static _ => true;
+    public IReadOnlyList<ShowcaseGroupDescriptor> Groups { get; set; } = Array.Empty<ShowcaseGroupDescriptor>();
 
     [Parameter]
-    public Func<ShowcasePanelEntry, Task> OnTogglePanel { get; set; } = static _ => Task.CompletedTask;
+    public bool IsCompact { get; set; }
 
     [Parameter]
-    public Func<ShowcasePanelEntry, LogicalRegion, Task> OnMovePanel { get; set; } = static (_, _) => Task.CompletedTask;
+    public bool ShowVerificationLink { get; set; } = true;
+
+    [Parameter]
+    public Func<ShowcasePanelDescriptor, Task> OnActivatePanel { get; set; } = static _ => Task.CompletedTask;
+
+    [Parameter]
+    public Func<ShowcasePanelView, Task> OnToggleGroup { get; set; } = static _ => Task.CompletedTask;
+
+    [Parameter]
+    public Func<ShowcasePanelDescriptor, LayoutNodeId, Task> OnMovePanel { get; set; } = static (_, _) => Task.CompletedTask;
+
+    [Parameter]
+    public Func<Task> OnReset { get; set; } = static () => Task.CompletedTask;
+
+    [Parameter]
+    public Func<Task> OnToggleCompact { get; set; } = static () => Task.CompletedTask;
+
+    [Parameter]
+    public EventCallback OnOpenGuide { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenCatalog { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenTheme { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpenVerification { get; set; }
 
     [Parameter]
     public EventCallback OnUndo { get; set; }
@@ -82,7 +149,129 @@
     [Parameter]
     public EventCallback OnRedo { get; set; }
 
-    private bool QuickMenuOpen { get; set; }
+    private bool PanelManagerOpen { get; set; }
 
-    private void ToggleMenu() => QuickMenuOpen = !QuickMenuOpen;
+    private bool focusManagerPending;
+
+    private bool focusTriggerPending;
+
+    private ElementReference menuButton;
+
+    private ElementReference managerElement;
+
+    private IReadOnlyList<ShowcaseGroupDescriptor> MoveTargets(ShowcasePanelView view)
+    {
+        return !view.Exists
+            ? Array.Empty<ShowcaseGroupDescriptor>()
+            : Groups.Where(group => group.Id != view.GroupId).ToArray();
+    }
+
+    private static string StateLabel(ShowcasePanelView view)
+    {
+        if (!view.Exists)
+        {
+            return "不存在";
+        }
+
+        if (!view.GroupVisible)
+        {
+            return "已折叠";
+        }
+
+        return view.IsSelected ? "当前显示" : "已展开";
+    }
+
+    private async Task TogglePanelManagerAsync()
+    {
+        if (PanelManagerOpen)
+        {
+            await ClosePanelManagerAsync();
+            return;
+        }
+
+        PanelManagerOpen = true;
+        focusManagerPending = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClosePanelManagerAsync()
+    {
+        if (!PanelManagerOpen)
+        {
+            return;
+        }
+
+        PanelManagerOpen = false;
+        focusTriggerPending = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusManagerPending)
+        {
+            focusManagerPending = false;
+            await FocusAsync(managerElement);
+        }
+        else if (focusTriggerPending)
+        {
+            focusTriggerPending = false;
+            await FocusAsync(menuButton);
+        }
+    }
+
+    private async Task ActivateAsync(ShowcasePanelView view)
+    {
+        await OnActivatePanel(view.Panel);
+        await ClosePanelManagerAsync();
+    }
+
+    private async Task ToggleGroupAsync(ShowcasePanelView view)
+    {
+        await OnToggleGroup(view);
+        await ClosePanelManagerAsync();
+    }
+
+    private async Task MoveAsync(ShowcasePanelView view, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        await OnMovePanel(view.Panel, new LayoutNodeId(value));
+        await ClosePanelManagerAsync();
+    }
+
+    private async Task ResetAsync()
+    {
+        await OnReset();
+        await ClosePanelManagerAsync();
+    }
+
+    private async Task ToggleCompactAsync()
+    {
+        await OnToggleCompact();
+        await ClosePanelManagerAsync();
+    }
+
+    private async Task OnDialogKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            await ClosePanelManagerAsync();
+        }
+    }
+
+    private static async Task FocusAsync(ElementReference element)
+    {
+        try
+        {
+            await element.FocusAsync();
+        }
+        catch (Exception exception) when (exception is JSException or InvalidOperationException)
+        {
+            // 静态渲染或元素尚未挂载时没有可聚焦的浏览器上下文。
+        }
+    }
 }

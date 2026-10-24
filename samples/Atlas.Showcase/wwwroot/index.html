@@ -1,19 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0B6BCB" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b6bcb'/%3E%3Ctext x='16' y='23' font-family='Segoe UI,Arial' font-size='20' font-weight='700' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
     <base href="/" />
     <link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/atlas.css" />
     <link rel="stylesheet" href="css/app.css" />
-    <title>Atlas Showcase</title>
+    <title>Atlas 演示</title>
+    <script>
+        window.atlasShowcaseIsCompact = function () {
+            return window.matchMedia("(max-width: 960px), (max-height: 520px)").matches;
+        };
+    </script>
 </head>
 <body>
-    <div id="app"><div class="showcase-loading">Loading Atlas Showcase…</div></div>
+    <div id="app"><div class="showcase-loading">正在加载 Atlas 演示…</div></div>
     <div id="blazor-error-ui" role="alert">
-        Atlas Showcase encountered an unexpected error.
-        <a href="" class="reload">Reload</a>
+        Atlas 演示遇到意外错误。
+        <a href="" class="reload">重新加载</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>

@@ -1,9 +1,9 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Title="内容注册"
-                  Requirement="REQ-F-006 · REQ-F-007 · REQ-F-008"
-                  CodeSnippet="@Code">
+    <TeachingCard Requirement="REQ-F-006 · REQ-F-007 · REQ-F-008"
+                  Source="ShowcaseWorkspace.razor"
+                  CodeSnippet="@ShowcaseSnippets.ContentRoute">
         <p>面板和标签页渲染按 <em>Kind</em> 注册的组件。生效的 Content
         Catalog 合并了启动时 DI 注册、宿主内 <code>AtlasContentRoute</code>
         声明以及函数式映射。</p>
@@ -13,14 +13,3 @@
         面板都是通过路由注册的内容。</p>
     </TeachingCard>
 </div>
-
-@code {
-    private const string Code = @"<AtlasContentRoute Kind=""explorer"">
-  <ChildContent Context=""content"">
-    <ExplorerPanel />
-  </ChildContent>
-</AtlasContentRoute>
-
-// 另一种方式：在 Program.cs 中通过 DI 注册
-builder.Services.AddAtlasContent<ExplorerPanel>(""explorer"");";
-}

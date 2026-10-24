@@ -13,7 +13,7 @@ Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet c
 | TypeScript | `src/Atlas.Blazor/tests` | protocol、controller 的可测试逻辑和 wire behavior | C# commit、Blazor lifecycle、完整浏览器集成 |
 | Browser fixture | `tests/browser` | 真实 DOM、pointer、sandbox、hardening 和跨层行为 | NuGet 包边界、consumer restore |
 | NuGet consumer | `HestiaLab/DbcView`（独立仓库） | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
-| 教学演示 | `samples/Atlas.Showcase`（在 `Atlas.sln` 内） | public API 用法、渲染、交互 | NuGet 包边界 |
+| 教学演示 | `samples/Atlas.Showcase`（在 `Atlas.sln` 内）；`tests/Atlas.Showcase.Tests` | public API 用法、元数据一致性、目录/面板管理器、渲染与交互 | NuGet 包边界、真实浏览器 CSS/pointer |
 | Build/format/pack | solution、CI | 编译、analyzer、style、包内容 | 用户交互行为本身 |
 
 ## 2. Core 测试

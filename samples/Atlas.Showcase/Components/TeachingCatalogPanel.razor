@@ -2,28 +2,46 @@
 
 <div class="showcase-tool" role="navigation" aria-label="教学目录">
     <ul class="showcase-list">
-        @foreach (var item in Items)
+        @foreach (var view in Items)
         {
-            <li class="@(item.Key == ActiveKey ? "active" : "")" @onclick="() => OnSelect.InvokeAsync(item.Key)">
-                <span class="idx">@item.Index</span>
-                <span>@item.Title</span>
+            var current = view;
+            <li>
+                <button type="button"
+                        class="showcase-list-button"
+                        @onclick="() => OnSelect(current.Panel)"
+                        aria-label="打开 @current.Panel.Title 面板">
+                    <span class="idx">@current.Panel.Index</span>
+                    <span class="title">@current.Panel.Title</span>
+                    <span class="state">@StateLabel(current)</span>
+                </button>
             </li>
         }
     </ul>
     <div class="showcase-card-body">
         <p>下面的每个面板演示 Atlas 的一项能力。点击某行打开对应面板；
-        使用顶部导航栏的 <strong>面板</strong> 菜单隐藏、显示或移动
-        任意面板。</p>
+        使用顶部导航栏的 <strong>面板</strong> 菜单折叠分组或移动面板。</p>
     </div>
 </div>
 
 @code {
     [Parameter]
-    public IReadOnlyList<ShowcaseCatalogItem> Items { get; set; } = Array.Empty<ShowcaseCatalogItem>();
+    public IReadOnlyList<ShowcasePanelView> Items { get; set; } = Array.Empty<ShowcasePanelView>();
 
     [Parameter]
-    public string? ActiveKey { get; set; }
+    public Func<ShowcasePanelDescriptor, Task> OnSelect { get; set; } = static _ => Task.CompletedTask;
 
-    [Parameter]
-    public EventCallback<string> OnSelect { get; set; }
+    private static string StateLabel(ShowcasePanelView view)
+    {
+        if (!view.Exists)
+        {
+            return "不存在";
+        }
+
+        if (!view.GroupVisible)
+        {
+            return "已折叠";
+        }
+
+        return view.IsSelected ? "当前显示" : "已展开";
+    }
 }

@@ -1,12 +1,30 @@
 @page "/verification"
+@inject NavigationManager Navigation
 
-<PageTitle>Atlas Showcase multi-host verification</PageTitle>
+<PageTitle>Atlas 演示 — 双 Host 隔离验证</PageTitle>
 
-<main class="showcase-verification" aria-label="Atlas multi-host verification">
-    <section data-testid="verification-host-a" aria-label="Workspace A">
-        <ShowcaseWorkspace WorkspaceName="showcase-a" />
-    </section>
-    <section data-testid="verification-host-b" aria-label="Workspace B">
-        <ShowcaseWorkspace WorkspaceName="showcase-b" />
-    </section>
-</main>
+<div class="showcase-verification-page">
+    <header class="showcase-verification-header">
+        <div>
+            <h1>双 Host 隔离验证</h1>
+            <p>两个独立工作区，各自拥有布局、内容与历史。</p>
+        </div>
+        <button type="button" @onclick="GoHome">返回首页</button>
+    </header>
+    <main class="showcase-verification" aria-label="Atlas 双 Host 隔离验证">
+        <section data-testid="verification-host-a" aria-label="工作区 A">
+            <ShowcaseWorkspace WorkspaceName="showcase-a"
+                               ForceCompact="true"
+                               ShowVerificationLink="false" />
+        </section>
+        <section data-testid="verification-host-b" aria-label="工作区 B">
+            <ShowcaseWorkspace WorkspaceName="showcase-b"
+                               ForceCompact="true"
+                               ShowVerificationLink="false" />
+        </section>
+    </main>
+</div>
+
+@code {
+    private void GoHome() => Navigation.NavigateTo("./");
+}
