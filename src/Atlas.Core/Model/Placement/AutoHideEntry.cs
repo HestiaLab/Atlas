@@ -1,7 +1,8 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     An entry in an auto-hide strip: the identifier of the hidden tool item plus the dock-back bookmark used to restore it.
+///     自动隐藏条中的条目：被隐藏工具项的标识符，以及用于恢复它的 dock-back
+///     书签。
 /// </summary>
 public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
 {
@@ -15,7 +16,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     private readonly bool _isInitialized;
 
     /// <summary>
-    ///     Constructs an auto-hide entry; neither the item identifier nor the bookmark may be the default value.
+    ///     构造自动隐藏条目；条目标识符与书签都不得为默认值。
     /// </summary>
     public AutoHideEntry(DockItemId itemId, DockBack dockBack)
     {
@@ -39,7 +40,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     The identifier of the hidden tool item.
+    ///     被隐藏工具项的标识符。
     /// </summary>
     public DockItemId ItemId
     {
@@ -51,7 +52,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     The dock-back bookmark used to restore this entry.
+    ///     用于恢复该条目的 dock-back 书签。
     /// </summary>
     public DockBack DockBack
     {
@@ -63,7 +64,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is the default, uninitialized value.
+    ///     获取一个值，指示该实例是否为默认的未初始化值。
     /// </summary>
     public bool IsDefault => !_isInitialized;
 
@@ -88,7 +89,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     Determines whether two auto-hide entries are equal.
+    ///     判断两个自动隐藏条目是否相等。
     /// </summary>
     public static bool operator ==(AutoHideEntry left, AutoHideEntry right)
     {
@@ -96,7 +97,7 @@ public readonly struct AutoHideEntry : IEquatable<AutoHideEntry>
     }
 
     /// <summary>
-    ///     Determines whether two auto-hide entries are unequal.
+    ///     判断两个自动隐藏条目是否不相等。
     /// </summary>
     public static bool operator !=(AutoHideEntry left, AutoHideEntry right)
     {

@@ -3,7 +3,7 @@ using Atlas.Core.Changes;
 namespace Atlas.Core.Events;
 
 /// <summary>
-///     Provides data for the persistent workspace restored event.
+///     为持久化工作区恢复事件提供数据。
 /// </summary>
 public sealed class WorkspaceRestoredEventArgs : EventArgs
 {
@@ -20,22 +20,22 @@ public sealed class WorkspaceRestoredEventArgs : EventArgs
     }
 
     /// <summary>
-    ///     Gets the workspace identifier.
+    ///     获取工作区标识符。
     /// </summary>
     public WorkspaceId WorkspaceId { get; }
 
     /// <summary>
-    ///     Gets the revision before the commit.
+    ///     获取提交前的修订号。
     /// </summary>
     public long BeforeRevision { get; }
 
     /// <summary>
-    ///     Gets the revision after the commit.
+    ///     获取提交后的修订号。
     /// </summary>
     public long AfterRevision { get; }
 
     /// <summary>
-    ///     Gets the semantic source of the commit.
+    ///     获取提交的语义来源。
     /// </summary>
     public LayoutChangeKind ChangeKind { get; }
 }

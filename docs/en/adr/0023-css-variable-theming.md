@@ -1,6 +1,6 @@
 # ADR-0023: CSS Variable Theming Contract
 
-> English (canonical) | [简体中文](../../zh/adr/0023-css-variable-theming.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0023-css-variable-theming.md)
 
 - Status: Accepted
 - Date: 2026-08-06

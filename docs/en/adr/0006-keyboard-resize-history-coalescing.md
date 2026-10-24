@@ -1,6 +1,6 @@
 # ADR-0006: Keyboard Resize Commit and Core History Coalescing
 
-> English (canonical) | [简体中文](../../zh/adr/0006-keyboard-resize-history-coalescing.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0006-keyboard-resize-history-coalescing.md)
 
 - Status: Accepted
 - Date: 2026-07-31

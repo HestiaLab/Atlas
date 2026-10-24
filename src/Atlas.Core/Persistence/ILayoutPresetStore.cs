@@ -1,12 +1,12 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Stores named layout documents without interpreting their content.
+///     存储命名布局文档，不解释其内容。
 /// </summary>
 public interface ILayoutPresetStore
 {
     /// <summary>
-    ///     Saves or overwrites the preset for an ordinal name.
+    ///     保存或覆盖指定序数名称的预设。
     /// </summary>
     ValueTask SaveAsync(
         string name,
@@ -14,21 +14,21 @@ public interface ILayoutPresetStore
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Loads the preset for an ordinal name, returning null when it does not exist.
+    ///     加载指定序数名称的预设；不存在时返回 null。
     /// </summary>
     ValueTask<LayoutPresetDocument?> TryLoadAsync(
         string name,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Deletes the preset for an ordinal name and reports whether it existed.
+    ///     删除指定序数名称的预设，并报告其是否存在。
     /// </summary>
     ValueTask<bool> DeleteAsync(
         string name,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Lists the stored user preset descriptors.
+    ///     列出已存储的用户预设描述符。
     /// </summary>
     ValueTask<IReadOnlyList<LayoutPresetDescriptor>> ListAsync(
         CancellationToken cancellationToken = default);

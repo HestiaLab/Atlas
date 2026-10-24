@@ -913,9 +913,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     [Fact]
     public async Task Fixed_pixel_splitter_exposes_anchor_aware_aria_value()
     {
-        // Regression: FixedPixels splits used to fabricate a 50% reading
-        // (aria-valuenow). The committed pixel extent of the anchored side is
-        // exposed as text instead, phrased for the split axis.
+        // 回归：FixedPixels 分割过去会伪造 50% 读数（aria-valuenow）。
+        // 锚定侧的已提交像素尺寸改为以文本暴露，并按分割轴措辞。
         await using var workspace = CreateFixedPixelWorkspace();
         var cut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
@@ -1194,9 +1193,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             command: null,
             generation: 1);
 
-        // The commit applied; the preview clear is queued and must be
-        // confirmed only after the commit's re-render lands (the render
-        // replaces the split's style attribute, which removes the preview).
+        // 提交已应用；预览清除已排队，必须等提交的重新渲染落地后再确认
+        // （渲染会替换分割的 style 属性，从而移除预览）。
         Assert.Equal(
             SplitBasis.Proportional(0.4),
             Assert.IsType<SplitNode>(
@@ -1231,8 +1229,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             .Single()
             .Arguments[2]!;
 
-        // A stale base revision rejects the commit; no re-render will come,
-        // so the preview must be cleared immediately (not after a render).
+        // 过期的 base revision 会拒绝提交；不会再有重新渲染，
+        // 因此必须立即清除预览（而不是等渲染后）。
         await InvokeInteractionAsync(
             receiverReference,
             type: "resize-split",
@@ -1354,9 +1352,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             .Single()
             .Arguments[2]!;
 
-        // The controller clamps 0.5 to the split's valid range before
-        // sending the equalize commit; the Host must apply that exact
-        // target instead of hard-coding a 50/50 proportion.
+        // 控制器在发送均分提交前会把 0.5 钳制到分割的有效范围；
+        // Host 必须应用该精确目标，而不是硬编码 50/50 比例。
         await InvokeInteractionAsync(
             receiverReference,
             type: "resize-split",
@@ -2291,15 +2288,12 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     [Fact]
     public async Task Interaction_controller_stays_attached_when_host_root_is_preserved()
     {
-        // The Host wraps its content-route collector in a keyed CascadingValue.
-        // Keys must be stable identities; a per-render new object as key makes
-        // Blazor destroy and recreate the whole subtree — including the
-        // workspace root element — on every re-render. That replaced root
-        // severs the controller's pointer listeners and forced the defensive
-        // dispose/re-attach path (and, after a re-attach, drag session ids
-        // restarted at 1, colliding with consumed sessions). With a stable key
-        // the root element is preserved across revision changes and the
-        // controller stays attached for the life of the host.
+        // Host 用带 key 的 CascadingValue 包装内容路由收集器。key 必须是
+        // 稳定身份；每次渲染都使用新对象作为 key 会让 Blazor 在每次重新渲染
+        // 时销毁并重建整个子树——包括工作区根元素。根元素被替换会切断控制器
+        // 的指针监听器，并强制走防御性的释放/重新挂载路径（重新挂载后拖拽
+        // 会话 ID 从 1 重新开始，与已消费会话冲突）。使用稳定 key 后，根元素
+        // 在修订变化间保留，控制器在整个 Host 生命周期内保持挂载。
         var module = JSInterop.SetupModule(
             "./_content/Atlas.Blazor/atlas-v2/atlas.js");
         module.Mode = JSRuntimeMode.Loose;
@@ -2319,8 +2313,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         var rootBefore = cut.Find(".atlas-v2-workspace");
         var revBefore = rootBefore.GetAttribute("data-atlas-revision");
 
-        // Commit a real interaction → workspace revision change → Host
-        // re-render. The root element must be preserved, not replaced.
+        // 提交一次真实交互 → 工作区修订变化 → Host 重新渲染。
+        // 根元素必须保留，不能被替换。
         var receiverReference = module.Invocations["attachAtlasController"]
             .Last().Arguments[2]!;
         await InvokeInteractionAsync(
@@ -2337,9 +2331,8 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 revBefore,
                 cut.Find(".atlas-v2-workspace").GetAttribute("data-atlas-revision")));
 
-        // The same DOM node must still be in the tree, and the controller must
-        // NOT have been disposed and re-attached. Compare the underlying
-        // AngleSharp node (Find returns a per-call wrapper).
+        // 同一 DOM 节点必须仍在树中，且控制器绝不能被释放并重新挂载。
+        // 比较底层 AngleSharp 节点（Find 返回每次调用的包装）。
         Assert.Same(
             rootBefore.Unwrap(),
             cut.Find(".atlas-v2-workspace").Unwrap());
@@ -2353,11 +2346,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
     [Fact]
     public async Task Interaction_controller_reattaches_when_host_root_element_is_replaced()
     {
-        // Defensive path: even though the normal render path now preserves the
-        // root element, the controller must still detect an externally replaced
-        // root and re-attach instead of leaving listeners bound to a detached
-        // node. Simulate the replacement by disposing the host and rendering a
-        // fresh instance under the same JS module.
+        // 防御路径：即使正常渲染路径现在会保留根元素，控制器仍必须检测外部
+        // 替换的根并重新挂载，而不是让监听器绑定在已分离的节点上。通过释放
+        // Host 并在同一 JS 模块下渲染新实例来模拟替换。
         var module = JSInterop.SetupModule(
             "./_content/Atlas.Blazor/atlas-v2/atlas.js");
         module.Mode = JSRuntimeMode.Loose;

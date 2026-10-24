@@ -31,16 +31,14 @@ import {
 } from "./split-geometry";
 import { SplitResizeSession } from "./split-resize-session";
 
-// Monotonic drag-session counter shared across controller instances. Blazor
-// replaces the Host root element after a committed change, which disposes and
-// re-attaches the controller; a per-instance sequence would restart at 1 and
-// reuse session ids the host already consumed, so the second drag would be
-// rejected as a duplicate (consumedDragSessions).
+// 跨控制器实例共享的单调拖拽会话计数器。提交变更后 Blazor 会替换 Host
+// 根元素，从而释放并重新挂载控制器；若使用实例内序号，它会从 1 重新开始
+// 并复用 Host 已消费的会话 ID，导致第二次拖拽被当作重复会话拒绝
+// （consumedDragSessions）。
 let globalDragSequence = 0;
-// Built-in keyboard defaults. The C# AtlasKeyboardCommandMap.Default carries
-// the authoritative map for Host-driven controllers and always sends its
-// bindings; this copy only serves controllers attached directly by the
-// static browser fixtures. The two lists must stay in sync.
+// 内置键盘默认值。C# AtlasKeyboardCommandMap.Default 持有 Host 驱动控制器
+// 的权威映射，并始终发送其绑定；此副本仅服务于由静态浏览器夹具直接挂载
+// 的控制器。两份列表必须保持同步。
 const defaultKeyboardBindings: readonly AtlasKeyboardBinding[] = [
   binding("Tab", "next-tab", true),
   binding("Tab", "previous-tab", true, true),
@@ -343,9 +341,8 @@ export class AtlasInteractionController {
     }
 
     const limits = readLimits(split, extent);
-    // Equalize to the closest legal split position: the raw 0.5 may exceed
-    // the split's pixel constraints (e.g. a dock panel with a maximum
-    // width), which would commit a layout outside the valid range.
+    // 均分到最近的合法分割位置：原始 0.5 可能超出分割的像素约束
+    // （例如带最大宽度的 Dock 面板），从而提交超出有效范围的布局。
     const ratio = clamp(0.5, limits.minimum, limits.maximum);
     this.preview(split, ratio);
     this.commitResize(split, ratio, "equalize", baseRevision, basisFor(split));
@@ -559,8 +556,7 @@ export class AtlasInteractionController {
     const split = this.root.querySelector<HTMLElement>(
       `[data-atlas-node-id="${splitId}"]`);
     if (!split || this.resizeSession.isResizingSplit(split)) {
-      // Unknown split, or the split is currently being dragged: do not wipe
-      // a live preview.
+      // 未知分割，或该分割正在拖拽：不要清除活动预览。
       return;
     }
 
@@ -610,10 +606,9 @@ export class AtlasInteractionController {
   }
 
   private canMove(source: HTMLElement): boolean {
-    // Frozen capability contract: data-atlas-command-capabilities carries
-    // the numeric value of the Core DockItemCapabilities flags enum
-    // (ADR-0002). Bit 1<<1 is CanMove; adding or renumbering capability
-    // flags in Core is a public API change that must keep this bit stable.
+    // 冻结的能力契约：data-atlas-command-capabilities 携带 Core
+    // DockItemCapabilities 标志枚举的数值（ADR-0002）。1<<1 位是 CanMove；
+    // 在 Core 中新增或重新编号能力标志属于公共 API 变更，必须保持该位稳定。
     const capabilities = Number(source.dataset.atlasCommandCapabilities);
     return Number.isSafeInteger(capabilities)
       && capabilities >= 0
@@ -640,9 +635,9 @@ export class AtlasInteractionController {
     const rawPixelExtent = basis?.basisKind === "fixed-pixels" && extent > 0
       ? (basis.anchor === "Second" ? (1 - firstRatio) * extent : firstRatio * extent)
       : undefined;
-    // Round to 0.001px: the ratio-based computation above accumulates
-    // double-precision noise (e.g. 0.25 + 30/100 → 55.00000000000001), far
-    // below visual resolution but harmful to persisted pixel values.
+    // 四舍五入到 0.001px：上面的比例计算会累积双精度噪声
+    // （例如 0.25 + 30/100 → 55.00000000000001），远低于视觉分辨率，
+    // 但会损害持久化的像素值。
     const pixelExtent = rawPixelExtent === undefined
       ? undefined
       : Math.round(rawPixelExtent * 1000) / 1000;
@@ -706,10 +701,9 @@ export class AtlasInteractionController {
 }
 
 /**
- * Confirms that a split resize commit's outcome is known: Blazor calls this
- * after an applied commit's render lands (a no-op because the new style
- * attribute already replaced the preview inline styles) or immediately when
- * the commit was rejected, so the preview reverts to the committed ratio.
+ * 确认分割尺寸提交的结果已可知：Blazor 在已应用提交的渲染落地后调用
+ * （此时新样式属性已替换预览内联样式，因此是空操作），或在提交被拒绝时
+ * 立即调用，使预览回到已提交比例。
  */
 export function clearAtlasSplitPreview(
   controller: AtlasInteractionController,

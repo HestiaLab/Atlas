@@ -1,8 +1,8 @@
 # ADR-0031：持久化 Schema 版本策略与 Limits 对齐
 
-> [English](../../en/adr/0031-persistence-schema-versioning-and-limits.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0031-persistence-schema-versioning-and-limits.md)
 >
-> 状态：Accepted（维护者已于 2026-10-23 批准）。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：Accepted（维护者已于 2026-10-23 批准）。本文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 - **状态**：Accepted
 - **日期**：2026-10-23

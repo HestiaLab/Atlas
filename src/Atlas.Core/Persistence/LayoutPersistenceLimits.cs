@@ -1,18 +1,15 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Resource ceilings applied before untrusted persistence input enters domain
-///     state: document bytes, nesting depth, node and item counts, string length
-///     and legacy migration steps.
+///     在不可信持久化输入进入领域状态前应用的资源上限：文档字节数、嵌套深度、
+///     节点与条目数量、字符串长度以及旧版迁移步数。
 /// </summary>
 public sealed class LayoutPersistenceLimits
 {
     /// <summary>
-    ///     Creates the resource limits; every ceiling must be positive. Values
-    ///     above the embedded schema hard caps (4096 items, 1024 item references
-    ///     per group/order/strip, 4096 character identifiers) are clamped to the
-    ///     hard cap: configured limits can only lower, never raise, the schema
-    ///     ceiling.
+    ///     创建资源限制；每个上限都必须为正数。超过内嵌 schema 硬上限（4096 个
+    ///     条目、每个 Group/顺序/条最多 1024 个条目引用、4096 字符标识符）的值
+    ///     会被钳制到硬上限：配置只能降低、绝不能提高 schema 上限。
     /// </summary>
     public LayoutPersistenceLimits(
         int maxDocumentBytes = 1024 * 1024,
@@ -39,37 +36,37 @@ public sealed class LayoutPersistenceLimits
     }
 
     /// <summary>
-    ///     Gets the maximum UTF-8 document size.
+    ///     获取最大 UTF-8 文档大小。
     /// </summary>
     public int MaxDocumentBytes { get; }
 
     /// <summary>
-    ///     Gets the maximum XML/layout nesting depth.
+    ///     获取最大 XML/布局嵌套深度。
     /// </summary>
     public int MaxDepth { get; }
 
     /// <summary>
-    ///     Gets the maximum layout node count.
+    ///     获取最大布局节点数。
     /// </summary>
     public int MaxNodeCount { get; }
 
     /// <summary>
-    ///     Gets the maximum dock item count.
+    ///     获取最大停靠条目数。
     /// </summary>
     public int MaxItemCount { get; }
 
     /// <summary>
-    ///     Gets the maximum number of item references in a single group.
+    ///     获取单个 Group 内条目引用的最大数量。
     /// </summary>
     public int MaxItemsPerGroup { get; }
 
     /// <summary>
-    ///     Gets the maximum persisted string length.
+    ///     获取持久化字符串的最大长度。
     /// </summary>
     public int MaxStringLength { get; }
 
     /// <summary>
-    ///     Gets the maximum number of legacy migration steps.
+    ///     获取旧版迁移的最大步数。
     /// </summary>
     public int MaxMigrationSteps { get; }
 

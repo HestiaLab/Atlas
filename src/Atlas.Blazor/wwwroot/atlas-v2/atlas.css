@@ -1,5 +1,5 @@
 .atlas-v2-workspace {
-  /* Sizing */
+  /* 尺寸 */
   --atlas-splitter-size: 0.25rem;
   --atlas-splitter-hit-area: 0.25rem;
   --atlas-chrome-height: 2rem;
@@ -10,12 +10,12 @@
   --atlas-border-width: 1px;
   --atlas-focus-ring-width: 2px;
   --atlas-drag-preview-max-width: min(20rem, calc(100vw - 1rem));
-  /* Colors */
+  /* 颜色 */
   --atlas-accent: Highlight;
   --atlas-surface: Canvas;
   --atlas-text: CanvasText;
   --atlas-drag-preview-shadow: rgb(0 0 0 / 28%);
-  /* Chrome colors (ADR-0023 extension) */
+  /* 界面框架颜色（ADR-0023 扩展） */
   --atlas-group-bg: transparent;
   --atlas-chrome-bg: transparent;
   --atlas-tab-text: inherit;
@@ -23,7 +23,7 @@
   --atlas-tab-bg-active: transparent;
   --atlas-tab-bg-hover: transparent;
   --atlas-splitter-color: currentColor;
-  /* Opacity */
+  /* 不透明度 */
   --atlas-splitter-opacity: 0.18;
   --atlas-splitter-opacity-hover: 0.4;
   --atlas-splitter-opacity-focus: 0.5;
@@ -32,7 +32,7 @@
   --atlas-drop-highlight-alpha-strong: 22%;
   --atlas-toolbar-divider-opacity: 0.25;
   --atlas-drag-preview-opacity: 0.92;
-  /* Layering */
+  /* 层级 */
   --atlas-layer-content: 0;
   --atlas-layer-chrome: 10;
   --atlas-layer-drag: 30;
@@ -253,18 +253,17 @@
   min-inline-size: 100%;
 }
 
-/* Drop highlight: non-document-group elements keep a whole-element
-   indicator (panel-header-insertion / toolbar-insertion / drop-scaffold /
-   toolbar-region / panel-region-center / document-center on a tab). */
+/* 放置高亮：非文档 Group 元素保留整元素指示器
+   （panel-header-insertion / toolbar-insertion / drop-scaffold /
+   toolbar-region / panel-region-center / 标签页上的 document-center）。 */
 [data-atlas-drop-preview]:not([data-atlas-group-kind="document"]) {
   outline: var(--atlas-focus-ring-width) solid var(--atlas-accent);
   outline-offset: -2px;
   background: color-mix(in srgb, var(--atlas-accent) var(--atlas-drop-highlight-alpha-soft), transparent);
 }
 
-/* The document group body is not filled as a whole; the five zone shapes
-   are drawn by ::before. The 25% band widths must stay exactly consistent
-   with the documentTargetKind decision (what you see is what you get). */
+/* 文档 Group 主体不整体填充；五个区域形状由 ::before 绘制。
+   25% 带宽必须与 documentTargetKind 决策完全一致（所见即所得）。 */
 [data-atlas-group-kind="document"][data-atlas-drop-preview] {
   outline: none;
   background: transparent;

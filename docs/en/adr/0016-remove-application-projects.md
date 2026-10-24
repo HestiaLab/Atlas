@@ -1,6 +1,6 @@
 # ADR-0016: Delete Application and Example Projects
 
-> English (canonical) | [简体中文](../../zh/adr/0016-remove-application-projects.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0016-remove-application-projects.md)
 
 - Status: Accepted
 - Date: 2026-07-31

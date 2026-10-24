@@ -1,6 +1,6 @@
 # ADR-0032: Disposition of Unwired Public API
 
-> English (canonical) | [简体中文](../../zh/adr/0032-unwired-public-api-disposition.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0032-unwired-public-api-disposition.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

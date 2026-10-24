@@ -1,22 +1,22 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     Identifies an edge that can host auto-hidden tool items.
+///     标识可承载自动隐藏工具项的边缘。
 /// </summary>
 public enum WorkspaceEdge
 {
     /// <summary>
-    ///     The inline-start edge.
+    ///     行内起始边缘。
     /// </summary>
     InlineStart = 0,
 
     /// <summary>
-    ///     The inline-end edge.
+    ///     行内结束边缘。
     /// </summary>
     InlineEnd = 1,
 
     /// <summary>
-    ///     The block-end edge.
+    ///     块末端边缘。
     /// </summary>
     BlockEnd = 2,
 }

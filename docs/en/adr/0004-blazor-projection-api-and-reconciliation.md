@@ -1,6 +1,6 @@
 # ADR-0004: Blazor Projection API and Declaration Reconciliation Semantics
 
-> English (canonical) | [简体中文](../../zh/adr/0004-blazor-projection-api-and-reconciliation.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0004-blazor-projection-api-and-reconciliation.md)
 
 - **Status**: Accepted
 - **Date**: 2026-07-31

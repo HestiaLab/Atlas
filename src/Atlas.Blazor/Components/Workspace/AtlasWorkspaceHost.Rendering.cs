@@ -223,9 +223,8 @@ public sealed partial class AtlasWorkspaceHost
             }
             else
             {
-                // Fixed-pixel bases have no render-time ratio; the anchored
-                // child's pixel extent is the committed value. Expose it as
-                // text instead of fabricating a 50% reading.
+                // 固定像素基准没有渲染期比例；锚定子项的像素尺寸就是已提交值。
+                // 将其作为文本暴露，而不是伪造 50% 的读数。
                 var anchoredSide = split.Basis.Anchor == SplitAnchor.First
                     ? split.Axis == SplitAxis.InlineChildren
                         ? "inline-start"

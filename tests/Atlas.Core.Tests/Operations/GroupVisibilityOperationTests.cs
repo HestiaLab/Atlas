@@ -82,9 +82,9 @@ public sealed class GroupVisibilityOperationTests
     [Fact]
     public async Task Expanding_an_empty_persistent_tool_group_is_rejected()
     {
-        // An empty Persistent tool group is always Collapsed (REQ-F-154 and
-        // GroupVisibilityInvariant); expanding it has no content to show and
-        // must be rejected up-front rather than silently normalized away.
+        // 空的 Persistent 工具 Group 始终为 Collapsed（REQ-F-154 与
+        // GroupVisibilityInvariant）；展开它没有可显示内容，
+        // 必须提前拒绝，而不是被静默规范化掉。
         var group = new GroupNode(
             new LayoutNodeId("tools"),
             DockItemKind.Tool,

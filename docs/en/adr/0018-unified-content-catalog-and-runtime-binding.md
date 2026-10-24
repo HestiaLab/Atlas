@@ -1,6 +1,6 @@
 # ADR-0018: Unified Content Catalog and Runtime Binding
 
-> English (canonical) | [简体中文](../../zh/adr/0018-unified-content-catalog-and-runtime-binding.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0018-unified-content-catalog-and-runtime-binding.md)
 
 - Status: Accepted
 - Date: 2026-08-03

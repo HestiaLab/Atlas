@@ -1,6 +1,6 @@
 # ADR-0017: Independent NuGet Consumer Demo
 
-> English (canonical) | [简体中文](../../zh/adr/0017-nuget-consumer-demo-sample.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0017-nuget-consumer-demo-sample.md)
 
 - Status: Accepted
 - Date: 2026-08-01

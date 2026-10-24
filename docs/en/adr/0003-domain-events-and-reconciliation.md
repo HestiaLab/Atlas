@@ -1,6 +1,6 @@
 # ADR-0003: Domain Events and Definition Reconciliation API
 
-> English (canonical) | [简体中文](../../zh/adr/0003-domain-events-and-reconciliation.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0003-domain-events-and-reconciliation.md)
 
 - **Status**: Accepted
 - **Date**: 2026-07-31

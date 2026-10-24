@@ -1,5 +1,7 @@
 # Software Requirements Specification (SRS)
 
+> English mirror (Chinese authoritative) | [简体中文](../zh/SRS.md)
+
 > **Reading Guide**
 > 
 > - **Document nature**: A product requirements specification — defines what Atlas **does** (user-observable behavior).

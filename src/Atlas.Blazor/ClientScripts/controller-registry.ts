@@ -19,11 +19,9 @@ export function attachAtlasController(
 
   const previous = controllers.get(identity.hostId);
   if (previous !== undefined) {
-    // ADR-0005 records the registry as "reject duplicate attachment of the
-    // same workspace". The implementation replaces the previous controller
-    // instead so rebind/retry flows can re-attach deterministically;
-    // replacing disposes the old listeners first, so at most one live
-    // controller per Host exists at any time.
+    // ADR-0005 将注册表记录为“拒绝重复挂载同一工作区”。实现改为替换
+    // 先前的控制器，使重绑/重试流程可以确定性地重新挂载；替换会先释放
+    // 旧的监听器，因此任一时刻每个 Host 最多只有一个活动控制器。
     disposeAtlasController(previous);
   }
 
@@ -37,14 +35,13 @@ export function attachAtlasController(
 }
 
 /**
- * Resolves the Host root element handed over by Blazor.
+ * 解析 Blazor 移交的 Host 根元素。
  *
- * Blazor's ElementReference reviver resolves `{__internalId: ...}` wrappers by
- * querying the element's `_bl_<id>` capture attribute. In WebAssembly the
- * reviver can run before the current render batch has applied that attribute,
- * which produces `null` even though the workspace element is about to appear
- * in the DOM. Fall back to the Host's stable identity attribute, and signal a
- * retry when neither lookup can find the element yet.
+ * Blazor 的 ElementReference reviver 通过查询元素的 `_bl_<id>` 捕获属性来
+ * 解析 `{__internalId: ...}` 包装。在 WebAssembly 中，reviver 可能在当前
+ * 渲染批次应用该属性之前运行；此时即使工作区元素即将出现在 DOM 中，也会
+ * 得到 `null`。回退到 Host 的稳定身份属性，并在两种查找都找不到元素时
+ * 发出重试信号。
  */
 function resolveHostElement(root: HTMLElement, hostId: string): HTMLElement {
   if (root instanceof HTMLElement) {
@@ -56,10 +53,8 @@ function resolveHostElement(root: HTMLElement, hostId: string): HTMLElement {
     return host;
   }
 
-  // This message text is an internal attach diagnostic, not part of the
-  // frozen interaction protocol: the C# Host matches it to distinguish the
-  // transient retry case from a real attach failure. Keep the two sides in
-  // sync when changing it.
+  // 该消息文本是内部挂载诊断，不属于冻结的交互协议：C# Host 通过匹配它
+  // 区分瞬时重试与真实挂载失败。修改时请保持两侧同步。
   throw new Error("ATLAS-INTERACTION-ATTACH-RETRY");
 }
 

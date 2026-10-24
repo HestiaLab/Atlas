@@ -1,8 +1,13 @@
 # Atlas Multilingual Documentation Plan
 
-> English (canonical) | [简体中文](../../zh/development/multilingual-documentation-plan.md)
+> **Status: Superseded (historical record).** This plan describes the 2026-08
+> "English canonical + Chinese mirror" model. It is superseded by
+> [ADR-0035](../adr/0035-chinese-first-language-policy.md) and is kept for
+> history; it is no longer maintained.
 
-- Status: Proposed
+> English mirror (historical record) | [简体中文](../../zh/development/multilingual-documentation-plan.md)
+
+- Status: Superseded
 - Date: 2026-08-02
 - Scope: repository root README, `docs/`, documentation references, documentation collaboration rules, and the verification tests that read documentation directly
 - Excludes: product runtime code, product behavior, public API, NuGet package structure, or build behavior changes
@@ -148,8 +153,8 @@ docs/
 ```markdown
 # Atlas Documentation
 
-- [English](./en/README.md) — canonical after cutover
-- [简体中文](./zh/README.md) — Chinese source/translation; see status table
+- [English](../README.md) — canonical after cutover
+- [简体中文](../../zh/README.md) — Chinese source/translation; see status table
 ```
 
 ## 5. File Mapping

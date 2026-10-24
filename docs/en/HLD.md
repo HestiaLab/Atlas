@@ -1,5 +1,7 @@
 # High-Level Design Specification (HLD)
 
+> English mirror (Chinese authoritative) | [简体中文](../zh/HLD.md)
+
 **Reading Guide**
 
 - **Document nature**: high-level design — describes Atlas's internal architecture, explaining **how** the product behavior defined in [SRS.md](./SRS.md) is implemented.

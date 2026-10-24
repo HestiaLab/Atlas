@@ -1,8 +1,8 @@
 # ADR-0021: 弹性吸收分割尺寸
 
-> [English](../../en/adr/0021-elastic-absorb-split-sizing.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0021-elastic-absorb-split-sizing.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 - 状态: Accepted
 - 日期: 2026-08-05
@@ -65,7 +65,7 @@ Host 根据消息重建 basis：`FixedPixels(pixelExtent, currentAnchor)` 或 `P
 - bUnit：`FixedPixels` split 的终态提交保持 basis 类型与 anchor 不变；比例提交不变。
 - Demo：拖拽左分割条时右分割条位置与右面板宽度不变；窗口缩放时两个面板保持稳定，仅编辑器改变尺寸。
 - 拖拽/窗口缩放行为的实机浏览器验收。
-- `docs/en/requirements-traceability.md` 记录 REQ-F-073/074 的尺寸语义；接受后更新 HLD resize 章节。
+- `docs/zh/requirements-traceability.md` 记录 REQ-F-073/074 的尺寸语义；接受后更新 HLD resize 章节。
 
 ## Supersession
 

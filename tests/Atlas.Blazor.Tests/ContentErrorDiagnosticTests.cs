@@ -27,9 +27,8 @@ public sealed class ContentErrorDiagnosticTests : TestContext
     [Fact]
     public void Render_failure_logs_exception_details_correlated_by_diagnostic_id()
     {
-        // REQ-F-128 AC2: the log carries diagnostic details correlated by the
-        // same opaque DiagnosticId shown in the UI, while the UI and callback
-        // never expose the exception message, type, or stack.
+        // REQ-F-128 AC2：日志携带与 UI 中相同的、不透明 DiagnosticId 关联的
+        // 诊断详情，而 UI 与回调绝不暴露异常消息、类型或堆栈。
         var errors = new List<AtlasHostError>();
         var workspace = CreateWorkspace();
         var captured = new StringWriter();

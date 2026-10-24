@@ -4,6 +4,8 @@
 
 Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout persistence for IDEs, designers, admin consoles, and other complex web applications. The package embeds the UI-independent layout engine (`Atlas.Core`), so a single reference gives you the full workspace.
 
+> Chinese documentation is authoritative under [`docs/zh/`](https://github.com/HestiaLab/Atlas/tree/main/docs/zh); English documentation under `docs/en/` is maintained as a mirror (ADR-0035).
+
 ## Install
 
 ```xml
@@ -76,11 +78,12 @@ See the [theming guide](https://github.com/HestiaLab/Atlas/blob/main/docs/en/the
 ## Documentation
 
 - [Atlas repository](https://github.com/HestiaLab/Atlas)
-- [Using Atlas (worked example)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/using-atlas.md)
-- [Styling and theming](https://github.com/HestiaLab/Atlas/blob/main/docs/en/theming.md)
-- [Software Requirements Specification](https://github.com/HestiaLab/Atlas/blob/main/docs/en/SRS.md)
-- [Architecture Overview](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/architecture-overview.md)
-- [ADR index](https://github.com/HestiaLab/Atlas/blob/main/docs/en/adr/README.md)
+- Chinese (authoritative): [SRS](https://github.com/HestiaLab/Atlas/blob/main/docs/zh/SRS.md) · [Using Atlas](https://github.com/HestiaLab/Atlas/blob/main/docs/zh/guides/using-atlas.md) · [Theming](https://github.com/HestiaLab/Atlas/blob/main/docs/zh/theming.md)
+- [Using Atlas (worked example, English mirror)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/using-atlas.md)
+- [Styling and theming (English mirror)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/theming.md)
+- [Software Requirements Specification (English mirror)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/SRS.md)
+- [Architecture Overview (English mirror)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/guides/architecture-overview.md)
+- [ADR index (English mirror)](https://github.com/HestiaLab/Atlas/blob/main/docs/en/adr/README.md)
 
 ## License
 

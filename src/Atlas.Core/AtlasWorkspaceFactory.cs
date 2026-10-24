@@ -7,19 +7,18 @@ using Atlas.Core.Results;
 namespace Atlas.Core;
 
 /// <summary>
-///     Public workspace factory: materializes a declarative definition into an
-///     initial snapshot and creates a workspace with the default operation planner.
+///     公共工作区工厂：把声明式定义物化为初始快照，并使用默认操作规划器
+///     创建工作区。
 /// </summary>
 public sealed class AtlasWorkspaceFactory : IAtlasWorkspaceFactory
 {
     /// <summary>
-    ///     Creates a usable workspace from a declarative definition; returns a
-    ///     typed failure when the definition is invalid.
+    ///     从声明式定义创建可用的工作区；定义无效时返回类型化失败。
     /// </summary>
-    /// <param name="definition">Declarative workspace definition.</param>
-    /// <param name="options">Optional workspace creation options.</param>
+    /// <param name="definition">声明式工作区定义。</param>
+    /// <param name="options">可选的工作区创建选项。</param>
     /// <returns>
-    ///     The workspace on success; a typed failure when the definition is invalid.
+    ///     成功时返回工作区；定义无效时返回类型化失败。
     /// </returns>
     public WorkspaceResult<IAtlasWorkspace> Create(
         AtlasWorkspaceDefinition definition,

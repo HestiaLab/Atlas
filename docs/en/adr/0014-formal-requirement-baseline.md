@@ -1,6 +1,6 @@
 # ADR-0014: Formal Requirement Baseline and Historical ID Disposition
 
-> English (canonical) | [简体中文](../../zh/adr/0014-formal-requirement-baseline.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0014-formal-requirement-baseline.md)
 
 - Status: Accepted
 - Date: 2026-07-31

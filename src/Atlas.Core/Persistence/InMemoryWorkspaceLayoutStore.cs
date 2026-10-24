@@ -1,7 +1,7 @@
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     Provides an isolated in-memory automatic layout store.
+///     提供隔离的内存自动布局存储。
 /// </summary>
 public sealed class InMemoryWorkspaceLayoutStore : IWorkspaceLayoutStore
 {

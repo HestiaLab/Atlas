@@ -1,6 +1,8 @@
 # Atlas 样式与主题定制
 
-> [English](../en/theming.md) | 简体中文
+> 简体中文（权威） | [English mirror](../en/theming.md)
+>
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发，并通过文档化的、以 `--atlas-` 为前缀的 CSS 自定义属性暴露其视觉样式（REQ-NF-009、ADR-0023）。你通过覆盖这些变量定制外观——不需要 `!important`，不需要内部选择器。
 

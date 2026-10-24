@@ -1,6 +1,6 @@
 # ADR-0027: Subscriber Fault Diagnostics
 
-> English (canonical) | [简体中文](../../zh/adr/0027-subscriber-fault-diagnostics.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0027-subscriber-fault-diagnostics.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

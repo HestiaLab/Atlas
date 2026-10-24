@@ -1,17 +1,17 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     Which child owns the fixed size in a FixedPixels basis.
+///     FixedPixels 基准中由哪个子项持有固定尺寸。
 /// </summary>
 public enum SplitAnchor
 {
     /// <summary>
-    ///     The first child holds the fixed size.
+    ///     第一个子项持有固定尺寸。
     /// </summary>
     First = 0,
 
     /// <summary>
-    ///     The second child holds the fixed size.
+    ///     第二个子项持有固定尺寸。
     /// </summary>
     Second = 1,
 }

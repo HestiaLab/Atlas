@@ -1,12 +1,12 @@
 namespace Atlas.Core.Operations;
 
 /// <summary>
-///     Equalizes the two children of an existing split.
+///     均分现有分割的两个子项。
 /// </summary>
 public sealed class EqualizeSplitOperation : LayoutOperation
 {
     /// <summary>
-    ///     Initializes a new instance of the <see cref="EqualizeSplitOperation"/> class.
+    ///     初始化 <see cref="EqualizeSplitOperation"/> 类的新实例。
     /// </summary>
     public EqualizeSplitOperation(
         LayoutNodeId splitId,
@@ -24,7 +24,7 @@ public sealed class EqualizeSplitOperation : LayoutOperation
     }
 
     /// <summary>
-    ///     Gets the split to equalize.
+    ///     获取要均分的分割。
     /// </summary>
     public LayoutNodeId SplitId { get; }
 }

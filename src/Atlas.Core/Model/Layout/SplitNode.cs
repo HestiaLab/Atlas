@@ -1,21 +1,21 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     Internal split node of the layout tree: divides the available space between two child nodes along
-///     an axis, where the Basis determines the preferred size and the Constraints determine the limits.
+///     布局树的内部划分节点：沿某一轴在两个子节点之间分配可用空间，Basis 决定
+///     偏好尺寸，Constraints 决定限制。
 /// </summary>
 public sealed class SplitNode : LayoutNode
 {
     /// <summary>
-    ///     Constructs a split node; the axis must be known, the basis must not be default, and the two child
-    ///     identifiers must be non-default and different; an argument exception is thrown otherwise.
+    ///     构造分割节点；轴必须是已知值，基准不得为默认值，两个子标识符必须
+    ///     非默认且不同；否则抛出参数异常。
     /// </summary>
-    /// <param name="id">The node identifier within the workspace scope.</param>
-    /// <param name="axis">The logical arrangement axis of the children.</param>
-    /// <param name="basis">The committed sizing basis.</param>
-    /// <param name="constraints">The child size constraints.</param>
-    /// <param name="firstId">The identifier of the first child.</param>
-    /// <param name="secondId">The identifier of the second child.</param>
+    /// <param name="id">工作区范围内的节点标识符。</param>
+    /// <param name="axis">子项的逻辑排列轴。</param>
+    /// <param name="basis">已提交的尺寸基准。</param>
+    /// <param name="constraints">子项尺寸约束。</param>
+    /// <param name="firstId">第一个子项的标识符。</param>
+    /// <param name="secondId">第二个子项的标识符。</param>
     public SplitNode(
         LayoutNodeId id,
         SplitAxis axis,
@@ -66,27 +66,27 @@ public sealed class SplitNode : LayoutNode
     }
 
     /// <summary>
-    ///     The logical arrangement axis of the children.
+    ///     子项的逻辑排列轴。
     /// </summary>
     public SplitAxis Axis { get; }
 
     /// <summary>
-    ///     The committed sizing basis.
+    ///     已提交的尺寸基准。
     /// </summary>
     public SplitBasis Basis { get; }
 
     /// <summary>
-    ///     The child size constraints.
+    ///     子项尺寸约束。
     /// </summary>
     public SplitConstraints Constraints { get; }
 
     /// <summary>
-    ///     The identifier of the first child node.
+    ///     第一个子节点的标识符。
     /// </summary>
     public LayoutNodeId FirstId { get; }
 
     /// <summary>
-    ///     The identifier of the second child node.
+    ///     第二个子节点的标识符。
     /// </summary>
     public LayoutNodeId SecondId { get; }
 }

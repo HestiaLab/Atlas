@@ -1,14 +1,14 @@
 # 开发 Atlas：一个完整示例
 
-> [English](../../en/guides/developing-atlas.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/guides/developing-atlas.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本指南端到端走一遍 Atlas 的真实改动：选择需求、找到所属设计、修改代码、并用测试证明。它与[开发指南](./development-guide.md)（解释规则）互补，展示一个完整改动实际长什么样。场景做了简化，但严格遵循仓库期望的工作流。
 
 ## 1. 从需求开始，而不是从代码开始
 
-每个功能改动都必须追溯到 [`docs/en/SRS.md`](../SRS.md) 中的 `REQ-F-*` 或 `REQ-NF-*` 需求。假设你需要修改关闭文档标签页后如何选择下一个标签页。
+每个功能改动都必须追溯到 [`docs/zh/SRS.md`](../SRS.md) 中的 `REQ-F-*` 或 `REQ-NF-*` 需求。假设你需要修改关闭文档标签页后如何选择下一个标签页。
 
 按此顺序阅读：
 
@@ -93,7 +93,7 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 6. 在同一提交更新追溯
 
-如果改动影响实现或验证状态，在同一提交更新 `docs/en/requirements-traceability.md`：该需求的行必须列出新的测试证据，并保持状态诚实（每个 AC 都有证据前为 `In Progress`，之后才能 `Verified`）。
+如果改动影响实现或验证状态，在同一提交更新 `docs/zh/requirements-traceability.md`：该需求的行必须列出新的测试证据，并保持状态诚实（每个 AC 都有证据前为 `In Progress`，之后才能 `Verified`）。
 
 ## 7. 当改动跨边界
 

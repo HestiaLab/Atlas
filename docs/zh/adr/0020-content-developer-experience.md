@@ -1,8 +1,8 @@
 # ADR-0020: 内容开发者体验
 
-> [English](../../en/adr/0020-content-developer-experience.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/adr/0020-content-developer-experience.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 - 状态: Accepted
 - 日期: 2026-08-05
@@ -161,7 +161,7 @@ public abstract class AtlasModelContentComponent<TModel>
 - 公共 API 增加（首次实施）：`IAtlasContentStateScope` 服务、`AtlasContentContext.GetState<TState>()`。后续决策点（若批准）将增加 `AtlasContentContext` 上的 `AtlasContentServices` 和 `AtlasModelContentComponent<TModel>`。
 - 安全姿态：内容获得有界的工作区能力；ADR-0013 中的信任边界保持绝对（沙箱内容什么也得不到）。
 - Demo 更新为示范两个同 Kind 文档的独立状态（轨道 B Phase B2）和域事件驱动的跨面板流（B3 之后的轨道 A Phase A5）。
-- 批准的形状实施时，必须更新 HLD 与 `docs/en/requirements-traceability.md`。
+- 批准的形状实施时，必须更新 HLD 与 `docs/zh/requirements-traceability.md`。
 
 ## Verification
 

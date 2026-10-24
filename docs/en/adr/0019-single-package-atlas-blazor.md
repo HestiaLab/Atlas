@@ -1,6 +1,6 @@
 # ADR-0019: Single NuGet Package (Atlas.Blazor) with Independent Atlas.Core Project
 
-> English (canonical) | [简体中文](../../zh/adr/0019-single-package-atlas-blazor.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0019-single-package-atlas-blazor.md)
 
 - **Status**: Accepted
 - **Date**: 2026-08-04

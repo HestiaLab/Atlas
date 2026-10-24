@@ -63,9 +63,9 @@ export function readRevision(split: HTMLElement): number {
 }
 
 /**
- * Feasible first-child ratio range derived from both sides' constraints.
- * Mirrors Atlas.Core `SplitLayoutResolver` semantics so pointer and keyboard
- * limits stay in lockstep with the committed basis.
+ * 由双方约束推导的可行第一子项比例范围。
+ * 镜像 Atlas.Core `SplitLayoutResolver` 语义，使指针与键盘限制
+ * 与已提交基准保持同步。
  */
 export function feasibleRange(
   availableExtent: number,
@@ -101,9 +101,8 @@ export function feasibleRange(
 }
 
 /**
- * Pure split resolution in extent space; mirrors Atlas.Core
- * `SplitLayoutResolver.Resolve` exactly so shared fixtures can lock both
- * implementations.
+ * 尺寸空间中的纯分割解析；精确镜像 Atlas.Core
+ * `SplitLayoutResolver.Resolve`，以便共享夹具锁定双方实现。
  */
 export function resolveSplit(
   availableExtent: number,

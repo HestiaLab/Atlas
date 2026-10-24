@@ -1,8 +1,8 @@
 # P8 System Hardening Evidence
 
-> [English](../../en/evidence/p8-system-hardening.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/evidence/p8-system-hardening.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 
 > 历史证据说明：20 Panel 测量所用 `Atlas.Demo` 页面已按 ADR-0016 删除。以下测量记录保持为

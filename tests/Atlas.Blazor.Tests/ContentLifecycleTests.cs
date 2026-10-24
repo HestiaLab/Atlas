@@ -39,7 +39,7 @@ public sealed class ContentLifecycleTests : TestContext
         cut.WaitForAssertion(
             () => Assert.Equal("first-mount", cut.Find(".external-state").TextContent));
 
-        // The second item becomes active; the first unmounts under Default lifetime.
+        // 第二个条目变为活动；在 Default 生命周期下第一个条目卸载。
         await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
         cut.WaitForAssertion(() =>
         {
@@ -47,11 +47,11 @@ public sealed class ContentLifecycleTests : TestContext
             Assert.Equal(1, tracker.Disposed);
         });
 
-        // External state changes while the first item is unmounted.
+        // 第一个条目卸载期间外部状态发生变化。
         state.Update("remount-value");
 
-        // Selecting the first item again remounts it; the fresh instance reads the
-        // current external state rather than a stale snapshot.
+        // 再次选中第一个条目会重新挂载它；新实例读取当前外部状态，
+        // 而不是过期快照。
         await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")));
         cut.WaitForAssertion(() =>
         {
@@ -79,7 +79,7 @@ public sealed class ContentLifecycleTests : TestContext
                         AtlasContentLifetimeMode.KeepAliveWithinGroup,
                         maxCachedItems: 2)));
 
-        // Both items stay mounted; each instance subscribes exactly once.
+        // 两个条目都保持挂载；每个实例恰好订阅一次。
         await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
         cut.WaitForAssertion(() =>
         {
@@ -87,8 +87,8 @@ public sealed class ContentLifecycleTests : TestContext
             Assert.Equal(0, tracker.Disposed);
         });
 
-        // A single external update reaches the mounted instance; repeated updates
-        // never re-subscribe or remount the content.
+        // 一次外部更新会到达已挂载实例；重复更新绝不会重新订阅或重新挂载
+        // 内容。
         await cut.InvokeAsync(() => state.Update("v2"));
         cut.WaitForAssertion(
             () => Assert.Equal("v2", cut.Find(".external-state").TextContent));
@@ -123,8 +123,8 @@ public sealed class ContentLifecycleTests : TestContext
 
         await cut.Instance.DisposeAsync();
 
-        // A later workspace change must not invoke the disposed host's callbacks
-        // and must not surface stale renderer exceptions.
+        // 后续工作区变更不得调用已释放 Host 的回调，也不得暴露过期的渲染器
+        // 异常。
         var result = await workspace.ExecuteAsync(
             new SelectItemOperation(new DockItemId("second")));
         Assert.True(result.Succeeded);
@@ -164,8 +164,8 @@ public sealed class ContentLifecycleTests : TestContext
                     StringComparison.OrdinalIgnoreCase);
             });
 
-        // A throwing registered renderer exposes only the safe render-failure
-        // DiagnosticId; the exception message stays private.
+        // 抛出异常的已注册渲染器只暴露安全的渲染失败 DiagnosticId；
+        // 异常消息保持私有。
         var throwingWorkspace = CreateWorkspace(Item("throw-doc", "throw-kind"));
         var throwingCut = RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
@@ -260,9 +260,9 @@ public sealed class ContentLifecycleTests : TestContext
         cut.WaitForAssertion(
             () =>
             {
-                // The first projection reports a missing Kind (the Map generation
-                // commits in OnAfterRenderAsync); the committed projection then
-                // throws and receives a fresh per-occurrence DiagnosticId.
+                // 第一次投影报告缺失 Kind（Map 代际在 OnAfterRenderAsync 中
+                // 提交）；已提交投影随后抛出异常，并获得新的按次
+                // DiagnosticId。
                 Assert.Contains(
                     renderErrors,
                     error => error.Code == AtlasHostErrorCode.ContentRenderFailed);
@@ -275,9 +275,8 @@ public sealed class ContentLifecycleTests : TestContext
             first.DiagnosticId,
             StringComparison.Ordinal);
 
-        // A structural Map replacement changes the renderer revision, which
-        // changes the Outlet RecoveryKey; the failed Retry then receives a new
-        // per-occurrence DiagnosticId.
+        // 结构性 Map 替换会改变渲染器修订，从而改变 Outlet RecoveryKey；
+        // 失败后的 Retry 会获得新的按次 DiagnosticId。
         var secondMap = AtlasContentMap.Create(
             map => map.MapComponent<SecondThrowingContent>(
                 "throw-kind",

@@ -1,6 +1,6 @@
 # Atlas Security Documentation
 
-> English (canonical) | [简体中文](../../zh/security/README.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/security/README.md)
 
 This directory records Atlas's content trust model and security boundaries.
 Repository-level vulnerability reporting, supported versions, and dependency

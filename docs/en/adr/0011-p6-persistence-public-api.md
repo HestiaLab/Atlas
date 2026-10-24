@@ -1,6 +1,6 @@
 # ADR-0011: P6 Persistence Public API
 
-> English (canonical) | [简体中文](../../zh/adr/0011-p6-persistence-public-api.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0011-p6-persistence-public-api.md)
 
 - Status: Accepted
 - Date: 2026-07-31

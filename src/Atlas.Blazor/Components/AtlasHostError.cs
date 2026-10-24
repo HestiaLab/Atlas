@@ -3,54 +3,53 @@ using Atlas.Core;
 namespace Atlas.Blazor.Components;
 
 /// <summary>
-///     Identifies safe Blazor Host diagnostics.
+///     标识安全的 Blazor Host 诊断。
 /// </summary>
 public enum AtlasHostErrorCode
 {
     /// <summary>
-    ///     Both programmatic and declarative authoritative inputs were
-    ///     supplied.
+    ///     同时提供了编程式与声明式权威输入。
     /// </summary>
     InitializationModeConflict = 1,
 
     /// <summary>
-    ///     The declarative definition is incomplete or invalid.
+    ///     声明式定义不完整或无效。
     /// </summary>
     DefinitionInvalid = 2,
 
     /// <summary>
-    ///     The content renderer is not registered.
+    ///     内容渲染器未注册。
     /// </summary>
     ContentNotRegistered = 3,
 
     /// <summary>
-    ///     The content renderer failed while rendering.
+    ///     内容渲染器在渲染时失败。
     /// </summary>
     ContentRenderFailed = 4,
 
     /// <summary>
-    ///     The requested focus effect could not complete.
+    ///     请求的焦点效果无法完成。
     /// </summary>
     FocusFailed = 5,
 
     /// <summary>
-    ///     An unexpected Host failure was isolated.
+    ///     隔离了一次意外的 Host 失败。
     /// </summary>
     Unexpected = 6,
 
     /// <summary>
-    ///     A Host-local Route/Map ownership conflict invalidated a Kind.
+    ///     Host 本地 Route/Map 所有权冲突使某个 Kind 失效。
     /// </summary>
     ContentRegistrationConflict = 7,
 }
 
 /// <summary>
-///     Provides safe diagnostic data without exposing exception details.
+///     提供安全的诊断数据，且不暴露异常细节。
 /// </summary>
 public sealed class AtlasHostError
 {
     /// <summary>
-    ///     Initializes a safe Host diagnostic.
+    ///     初始化安全的 Host 诊断。
     /// </summary>
     public AtlasHostError(
         AtlasHostErrorCode code,
@@ -75,32 +74,32 @@ public sealed class AtlasHostError
     }
 
     /// <summary>
-    ///     Gets the stable Host error code.
+    ///     获取稳定的 Host 错误码。
     /// </summary>
     public AtlasHostErrorCode Code { get; }
 
     /// <summary>
-    ///     Gets the non-sensitive diagnostic correlation identifier.
+    ///     获取不敏感的诊断关联标识符。
     /// </summary>
     public string DiagnosticId { get; }
 
     /// <summary>
-    ///     Gets the localizable message key.
+    ///     获取可本地化的消息键。
     /// </summary>
     public string MessageKey { get; }
 
     /// <summary>
-    ///     Gets the related workspace identifier when available.
+    ///     获取可用时的相关工作区标识符。
     /// </summary>
     public WorkspaceId? WorkspaceId { get; }
 
     /// <summary>
-    ///     Gets the related item identifier when available.
+    ///     获取可用时的相关条目标识符。
     /// </summary>
     public DockItemId? ItemId { get; }
 
     /// <summary>
-    ///     Gets the related node identifier when available.
+    ///     获取可用时的相关节点标识符。
     /// </summary>
     public LayoutNodeId? NodeId { get; }
 

@@ -1,6 +1,8 @@
 # P8 Formal Requirement Audit
 
-> English (canonical) | [简体中文](../../zh/evidence/p8-requirement-audit.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/evidence/p8-requirement-audit.md)
+>
+> Status: Outdated (historical English mirror; Chinese authoritative version under `docs/zh/`).
 
 - Date: 2026-08-03 (baseline updated 2026-08-06: REQ-NF-009 added via
   ADR-0023 brings the count to 151)

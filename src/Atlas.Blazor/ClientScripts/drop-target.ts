@@ -78,9 +78,8 @@ export function resolveDropTarget(
     const headerIndex = readNonNegativeInteger(
       panelHeader.dataset.atlasInsertionIndex) ?? 0;
     const rect = panelHeader.getBoundingClientRect();
-    // Split before/after by the header's vertical half, matching the
-    // toolbar-entry resolver, so the release position agrees with the
-    // highlighted insertion slot.
+    // 按标题垂直中点拆分前/后插入，与工具栏条目解析器一致，
+    // 使释放位置与高亮插入槽一致。
     const insertionIndex = rect.height > 0
       && y >= rect.top + (rect.height / 2)
       ? headerIndex + 1
@@ -93,10 +92,10 @@ export function resolveDropTarget(
     };
   }
 
-  // A visible tool group body is a valid Panel drop target (region-center):
-  // releasing there moves the dragged panel into the target group and
-  // activates it, mirroring the document-center semantic without creating a
-  // new split. ToolBar Entry drags keep the ToolBar-first enabled set.
+  // 可见的工具 Group 主体是有效的 Panel 放置目标（region-center）：
+  // 在此释放会把被拖拽 Panel 移入目标 Group 并激活它，镜像
+  // document-center 语义而不创建新分割。ToolBar 条目拖拽仍使用
+  // ToolBar-first 启用集。
   const toolGroup = hit.closest<HTMLElement>(
     "[data-atlas-group-kind=tool][data-atlas-group-id]");
   if (drag.sourceKind === "panel-header"

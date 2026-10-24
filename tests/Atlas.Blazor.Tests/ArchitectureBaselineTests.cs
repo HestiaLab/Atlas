@@ -33,7 +33,7 @@ public sealed class ArchitectureBaselineTests
             .Where(type => type.Namespace == "Atlas.Blazor.Content" && type.IsPublic)
             .ToArray();
 
-        // The immutable Map, builder, and typed binding expose no public constructors.
+        // 不可变的 Map、构建器与强类型绑定不暴露公共构造函数。
         var sealedConfigurationTypes = contentTypes
             .Where(type => type.Name is "AtlasContentMap"
                 or "AtlasContentMapBuilder"
@@ -47,8 +47,8 @@ public sealed class ArchitectureBaselineTests
                 constructor => constructor.IsPublic);
         }
 
-        // No public member accepts an arbitrary parameter dictionary or a string
-        // parameter name; parameter names are always derived from typed selectors.
+        // 没有公共成员接受任意参数字典或字符串参数名；参数名始终来自强类型
+        // 选择器。
         var unsafeParameters = contentTypes
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             .Where(method => method.GetParameters().Any(
@@ -60,14 +60,14 @@ public sealed class ArchitectureBaselineTests
             .ToArray();
         Assert.Empty(unsafeParameters);
 
-        // No public property exposes a mutable parameter bag.
+        // 没有公共属性暴露可变参数包。
         var dictionaryProperties = contentTypes
             .SelectMany(type => type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             .Where(property => property.PropertyType == typeof(Dictionary<string, object?>))
             .ToArray();
         Assert.Empty(dictionaryProperties);
 
-        // No public API returns a naked component instance.
+        // 没有公共 API 返回裸组件实例。
         var instanceAccessorNames = contentTypes
             .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             .Where(method => typeof(ComponentBase).IsAssignableFrom(method.ReturnType))
@@ -80,7 +80,7 @@ public sealed class ArchitectureBaselineTests
             .ToArray();
         Assert.Empty(instanceAccessorNames);
 
-        // The Host exposes no legacy instance lookup or parameter-bag APIs.
+        // Host 不暴露遗留的实例查找或参数包 API。
         var hostType = assembly.GetType("Atlas.Blazor.Components.AtlasWorkspaceHost");
         Assert.NotNull(hostType);
         var hostMethods = hostType!

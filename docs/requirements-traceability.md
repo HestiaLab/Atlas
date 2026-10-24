@@ -1,10 +1,9 @@
-# Requirements Traceability
+# 需求追溯矩阵
 
-> This is a stable compatibility entry point. The canonical English document
-> has moved to [docs/en/requirements-traceability.md](./en/requirements-traceability.md).
-> The Chinese translation lives at
-> [docs/zh/requirements-traceability.md](./zh/requirements-traceability.md).
+> 本文件是稳定兼容入口。中文权威版本位于
+> [docs/zh/requirements-traceability.md](./zh/requirements-traceability.md)；
+> 英文镜像位于
+> [docs/en/requirements-traceability.md](./en/requirements-traceability.md)。
 >
-> This stub intentionally contains only the migration notice and links; it
-> does not duplicate the matrix. Bookmarked deep links into this old path
-> cannot be automatically redirected.
+> 本 stub 仅保留迁移说明与链接，不复制矩阵正文。指向旧路径的书签深层链接
+> 无法自动重定向。

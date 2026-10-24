@@ -1,6 +1,6 @@
 # Atlas Content Threat Model
 
-> English (canonical) | [简体中文](../../zh/security/content-threat-model.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/security/content-threat-model.md)
 
 ## Scope
 

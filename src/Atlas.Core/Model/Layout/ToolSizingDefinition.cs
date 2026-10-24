@@ -1,16 +1,15 @@
 namespace Atlas.Core.Layout;
 
 /// <summary>
-///     Trusted metadata for tool item sizing: initial ratio, minimum/maximum content extent, and collapsed
-///     extent; declared by the host, and the workspace uses it to initialize and constrain tool groups.
+///     工具条目尺寸的可信元数据：初始比例、最小/最大内容尺寸与折叠尺寸；由宿主
+///     声明，工作区用它初始化并约束工具 Group。
 /// </summary>
 public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
 {
     /// <summary>
-    ///     Constructs a sizing definition; the initial ratio must lie in the open
-    ///     interval (0, 1) so it can seed a proportional split, extents must be
-    ///     finite and non-negative, the maximum must not be less than the minimum,
-    ///     and the collapsed extent must be finite and non-negative.
+    ///     构造尺寸定义；初始比例必须位于开区间 (0, 1) 内，以便作为比例分割的
+    ///     初始值；尺寸必须有限且非负，最大值不得小于最小值，折叠尺寸必须有限
+    ///     且非负。
     /// </summary>
     public ToolSizingDefinition(
         double? initialRatio = null,
@@ -57,28 +56,29 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     The ratio used when initializing and resetting a tool group; <see langword="null"/> means no initial ratio is specified.
+    ///     初始化和重置工具 Group 时使用的比例；<see langword="null"/> 表示未
+    ///     指定初始比例。
     /// </summary>
     public double? InitialRatio { get; }
 
     /// <summary>
-    ///     The minimum content extent of a tool group; <see langword="null"/> means no lower bound.
+    ///     工具 Group 的最小内容尺寸；<see langword="null"/> 表示无下限。
     /// </summary>
     public double? MinExtent { get; }
 
     /// <summary>
-    ///     The maximum content extent of a tool group; <see langword="null"/> means no upper bound.
+    ///     工具 Group 的最大内容尺寸；<see langword="null"/> 表示无上限。
     /// </summary>
     public double? MaxExtent { get; }
 
     /// <summary>
-    ///     The extent a tool group occupies when collapsed; defaults to 0 (fully collapsed).
+    ///     工具 Group 折叠时占用的尺寸；默认为 0（完全折叠）。
     /// </summary>
     public double CollapsedExtent { get; }
 
     /// <summary>
-    ///     Gets a value indicating whether this instance is the default definition
-    ///     (no ratio or extents). The default definition is a legal value.
+    ///     获取一个值，指示该实例是否为默认定义（无比例或尺寸）。默认定义是
+    ///     合法值。
     /// </summary>
     public bool IsDefault =>
         InitialRatio is null
@@ -108,7 +108,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     Determines whether two sizing definitions are equal.
+    ///     判断两个尺寸定义是否相等。
     /// </summary>
     public static bool operator ==(ToolSizingDefinition left, ToolSizingDefinition right)
     {
@@ -116,7 +116,7 @@ public readonly struct ToolSizingDefinition : IEquatable<ToolSizingDefinition>
     }
 
     /// <summary>
-    ///     Determines whether two sizing definitions are unequal.
+    ///     判断两个尺寸定义是否不相等。
     /// </summary>
     public static bool operator !=(ToolSizingDefinition left, ToolSizingDefinition right)
     {

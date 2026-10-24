@@ -1,6 +1,6 @@
 # ADR-0009: Document Tab Insertion Semantics
 
-> English (canonical) | [简体中文](../../zh/adr/0009-document-tab-insertion-semantics.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0009-document-tab-insertion-semantics.md)
 
 - Status: Accepted
 - Date: 2026-07-31

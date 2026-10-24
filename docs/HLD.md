@@ -1,9 +1,8 @@
-# High-Level Design Specification (HLD)
+# 概要设计说明书（HLD）
 
-> This is a stable compatibility entry point. The canonical English document
-> has moved to [docs/en/HLD.md](./en/HLD.md). The Chinese translation lives
-> at [docs/zh/HLD.md](./zh/HLD.md).
+> 本文件是稳定兼容入口。中文权威版本位于
+> [docs/zh/HLD.md](./zh/HLD.md)；英文镜像位于
+> [docs/en/HLD.md](./en/HLD.md)。
 >
-> This stub intentionally contains only the migration notice and links; it
-> does not duplicate the design body. Bookmarked deep links into this old
-> path cannot be automatically redirected.
+> 本 stub 仅保留迁移说明与链接，不复制设计正文。指向旧路径的书签深层链接
+> 无法自动重定向。

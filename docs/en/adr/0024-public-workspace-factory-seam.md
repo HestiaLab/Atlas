@@ -1,6 +1,6 @@
 # ADR-0024: Public Workspace Factory Seam
 
-> English (canonical) | [简体中文](../../zh/adr/0024-public-workspace-factory-seam.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0024-public-workspace-factory-seam.md)
 
 - **Status**: Accepted
 - **Date**: 2026-10-23

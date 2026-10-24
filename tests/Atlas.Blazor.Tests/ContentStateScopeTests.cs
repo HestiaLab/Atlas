@@ -118,7 +118,7 @@ public sealed class ContentStateScopeTests : TestContext
 
         Assert.Null(context.GetState<TestState>());
 
-        // Without a scope the fallback path runs the factory per call.
+        // 没有作用域时，回退路径每次调用都会运行工厂。
         var fallback = context.GetOrCreateState(() => new TestState("fallback"));
         var fallbackAgain = context.GetOrCreateState(() => new TestState("fallback"));
         Assert.Equal("fallback", fallback.ResourceId);
@@ -150,8 +150,8 @@ public sealed class ContentStateScopeTests : TestContext
                         AtlasContentLifetimeMode.KeepAliveWithinGroup,
                         maxCachedItems: 2)));
 
-        // Selecting the second document keeps the first outlet mounted, so both
-        // content components resolve their own state in the same render tree.
+        // 选中第二个文档会保持第一个出口挂载，因此两个内容组件在同一渲染树中
+        // 各自解析自己的状态。
         await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("doc-b")));
 
         cut.WaitForAssertion(

@@ -1,6 +1,6 @@
 # ADR-0007: Panel Drop Policy
 
-> English (canonical) | [简体中文](../../zh/adr/0007-panel-drop-policy.md)
+> English mirror (Chinese authoritative) | [简体中文](../../zh/adr/0007-panel-drop-policy.md)
 
 - Status: Accepted
 - Date: 2026-07-31

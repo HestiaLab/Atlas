@@ -1,46 +1,41 @@
-# Contributing
+# 贡献指南
 
-Atlas uses focused, reviewable changes. Every change must be traceable to an
-SRS requirement — see `docs/en/SRS.md`.
+> 简体中文（权威） | [English mirror](CONTRIBUTING.en.md)
 
-Start with the [developer documentation index](docs/en/README.md) for the project
-architecture, development workflow, testing strategy, ADRs, evidence, and
-security documentation.
+Atlas 采用聚焦、可审查的改动。每个改动都必须追溯到 SRS 需求——见
+`docs/zh/SRS.md`。
 
-## Documentation Language And Authority
+先从[开发者文档入口](docs/zh/README.md)开始，了解项目架构、开发流程、测试
+策略、ADR、验证证据与安全文档。
 
-English is the canonical version of every documentation language pair. Chinese
-translations live in `docs/zh/` and English documents in `docs/en/`; the
-English document under `docs/en/` is the authority for each pair.
+## 文档语言与权威性
 
-- When a normative document (SRS, HLD, traceability) changes, update the
-  Chinese translation in the same PR or mark it `Chinese Outdated`; never
-  silently leave an out-of-date translation looking synchronized.
-- Do not change contract semantics while translating: preserve requirement and
-  design IDs, Actor/Priority/Source, AC counts and order, code identifiers,
-  numeric constraints, and must/should/may strength.
+中文是每个文档语言对的权威版本。中文文档位于 `docs/zh/`，英文镜像位于
+`docs/en/`；`docs/zh/` 下的文档是权威版本。
 
-## Code Comment Language
+- 当规范文档（SRS、HLD、追溯矩阵）变化时，在同一 PR 中更新英文镜像，或
+  显式标记英文镜像为 `Outdated`；不得让过期翻译看起来仍然同步。
+- 翻译时不得改变契约语义：保留需求与设计 ID、Actor/Priority/Source、AC
+  数量与顺序、代码标识符、数值约束，以及 must/should/may 的强度。
 
-ADR-0026 defines the code-comment language tiers:
+## 代码注释语言
 
-- Public API XML documentation (types/members in `PublicAPI.*`) is English.
-- Public exception messages, diagnostic IDs, message keys, and protocol strings
-  are English; do not change their ASCII identifiers while translating.
-- Internal comments/XML docs prefer English. Chinese is allowed where it
-  captures domain rationale more precisely, but do not mix both languages for
-  the same kind of explanation within one file.
-- Translate public XML docs incrementally when a member is touched or before a
-  public release; do not mass-translate internal comments in a single change.
-- Documentation in `docs/en/` remains canonical, with `docs/zh/` mirrors.
+ADR-0035 定义中文优先的注释政策：
 
-## Local Checks
+- 公共 API XML 文档（`PublicAPI.*` 中的类型与成员）使用中文。
+- 公共异常消息、诊断 ID、消息键与协议字符串保持英文/ASCII；翻译时不得改动
+  这些稳定标识。运行时可见文本（异常消息、日志、诊断、UI 文案）本轮不翻译。
+- 内部注释与内部 XML 文档使用中文。
+- 新增公共成员必须从首次提交起提供中文 XML 文档。
+- 文档以 `docs/zh/` 为权威，`docs/en/` 为英文镜像。
+
+## 本地检查
 
 ```sh
-# Restore .NET dependencies
+# 还原 .NET 依赖
 dotnet restore Atlas.sln
 
-# Install and verify TypeScript dependencies
+# 安装并验证 TypeScript 依赖
 cd src/Atlas.Blazor
 npm ci
 npm run typecheck
@@ -48,22 +43,22 @@ npm run test:js
 npm run build:js
 cd ../..
 
-# Build all projects
+# 构建所有项目
 dotnet build Atlas.sln --no-restore
 
-# Run all tests
+# 运行全部测试
 dotnet test Atlas.sln --no-build --no-restore
 
-# Check code style
+# 检查代码风格
 dotnet format Atlas.sln --verify-no-changes --no-restore
 
-# Validate NuGet packaging (single package per ADR-0019: Atlas.Blazor embeds Atlas.Core.dll)
+# 验证 NuGet 打包（ADR-0019：单包 Atlas.Blazor 内嵌 Atlas.Core.dll）
 dotnet pack src/Atlas.Blazor/Atlas.Blazor.csproj --configuration Release --no-restore --output artifacts/packages
 ```
 
-## Branches
+## 分支
 
-Use short branch names:
+使用短分支名：
 
 - `feature/<topic>`
 - `fix/<topic>`
@@ -71,9 +66,9 @@ Use short branch names:
 - `infra/<topic>`
 - `release/<version>`
 
-## Commits And PRs
+## 提交与 PR
 
-Use Conventional Commit style:
+使用 Conventional Commit 风格：
 
 ```text
 feat(core): add directional docking support
@@ -83,62 +78,59 @@ infra(ci): add NuGet packaging job
 docs(srs): update REQ-F-055 acceptance criteria
 ```
 
-Before opening a PR:
+打开 PR 前：
 
-- Run the Local Checks above.
-- Run `dotnet format` to ensure consistent code style.
-- Fill in the PR template sections that apply to the change.
-- Reference relevant SRS requirements (`REQ-F-xxx`).
-- Update `docs/en/requirements-traceability.md` for implementation changes.
-- Add tests for behaviour changes.
-- Keep unrelated cleanup out of feature or fix PRs.
+- 运行上面的本地检查。
+- 运行 `dotnet format` 确保代码风格一致。
+- 填写 PR 模板中适用的章节。
+- 引用相关的 SRS 需求（`REQ-F-xxx`）。
+- 实现变化时更新 `docs/zh/requirements-traceability.md`，并同步英文镜像。
+- 行为变化时增加测试。
+- 不要在功能或修复 PR 中混入无关清理。
 
-Use the issue templates for bug reports, feature proposals, and infrastructure
-maintenance requests.
+使用 issue 模板提交缺陷报告、功能建议和基础设施维护请求。
 
-## Architecture
+## 架构
 
-- Atlas domain, operation, history, and persistence code belongs in `src/Atlas.Core` and must not reference Blazor or JS interop.
-- Atlas rendering, content composition, and JS host code belongs in `src/Atlas.Blazor`.
-- Browser verification fixtures belong in `tests/browser`.
-- `samples/Atlas.Showcase` is the in-repo teaching demo of the public API; it
-  references Atlas source projects and is part of `Atlas.sln`.
-- The NuGet consumer showcase lives in the standalone
-  [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) repository
-  (ADR-0017 boundary); it is not part of `Atlas.sln`.
-- Prefer explicit `IDisposable` / `IAsyncDisposable` for cleanup.
-- Avoid adding abstractions until repeated use justifies them.
-- The accepted runtime/package/toolchain baseline is documented in
-  `docs/en/adr/0001-runtime-and-package-baseline.md`.
+- Atlas 领域、操作、历史与持久化代码位于 `src/Atlas.Core`，不得引用 Blazor
+  或 JS interop。
+- Atlas 渲染、内容组合与 JS 宿主代码位于 `src/Atlas.Blazor`。
+- 浏览器验证夹具位于 `tests/browser`。
+- `samples/Atlas.Showcase` 是公共 API 的仓库内教学演示；它引用 Atlas 源码
+  项目，属于 `Atlas.sln`。
+- NuGet consumer 展示项目位于独立
+  [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库
+  （ADR-0017 边界）；它不属于 `Atlas.sln`。
+- 清理逻辑优先使用显式 `IDisposable` / `IAsyncDisposable`。
+- 在重复使用足以证明必要性之前，避免增加抽象。
+- 已接受的运行时/包/工具链基线见
+  `docs/zh/adr/0001-runtime-and-package-baseline.md`。
 
-## Releases
+## 发布
 
-Atlas ships one NuGet package (`Atlas.Blazor`, embedding `Atlas.Core`) to
-NuGet.org and GitHub Packages. The NuGet consumer showcase lives in the
-standalone [`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView)
-repository, which consumes the published package from nuget.org and verifies
-the consumer boundary independently. The in-repo `samples/Atlas.Showcase`
-teaching demo is covered by the main solution's build/test/format gates.
+Atlas 向 NuGet.org 与 GitHub Packages 发布一个 NuGet 包
+（`Atlas.Blazor`，内嵌 `Atlas.Core`）。NuGet consumer 展示项目位于独立
+[`HestiaLab/DbcView`](https://github.com/HestiaLab/DbcView) 仓库，它从
+nuget.org 消费已发布包并独立验证 consumer 边界。仓库内
+`samples/Atlas.Showcase` 教学演示由主解决方案的 build/test/format 门禁覆盖。
 
-### Major-node release checklist
+### 主版本节点发布检查表
 
-1. Iterate on `src/Atlas.Core` / `src/Atlas.Blazor` (SRS traceability, tests,
-   format, CI green).
-2. Bump the version in **all three touchpoints** (grep the old version string
-   to be sure): `src/Atlas.Blazor/package-readme.md`,
-   `.github/workflows/ci.yml` (`-p:PackageVersion=`), and the
-   `Directory.Packages.props` of the standalone DbcView consumer repository.
-3. Open the release-prep PR (CI pack job must pass).
-4. Publish the nupkg to NuGet.org and GitHub Packages (PAT with
-   `write:packages`; never commit credentials).
-5. Tag the release (`git tag -a X.Y.Z`) and create a GitHub Release with the
-   nupkg asset.
+1. 在 `src/Atlas.Core` / `src/Atlas.Blazor` 上迭代（SRS 追溯、测试、格式、
+   CI 全绿）。
+2. 在**三个触点**同步提升版本号（用 grep 搜索旧版本字符串确认）：
+   `src/Atlas.Blazor/package-readme.md`、`.github/workflows/ci.yml`
+   （`-p:PackageVersion=`），以及独立 DbcView consumer 仓库的
+   `Directory.Packages.props`。
+3. 打开发布准备 PR（CI pack job 必须通过）。
+4. 将 nupkg 发布到 NuGet.org 与 GitHub Packages（需要带 `write:packages`
+   的 PAT；绝不提交凭据）。
+5. 打标签（`git tag -a X.Y.Z`），并创建带 nupkg 资产的 GitHub Release。
 
-### Version bump pitfalls
+### 版本提升陷阱
 
-- The `ci.yml` `-p:PackageVersion=` must match the published release; a stale
-  value fails the pack job with `NU1102`.
-- The DbcView consumer resolves the exact version pinned in its
-  `Directory.Packages.props` from nuget.org — publish the package **before**
-  bumping DbcView, or its restore fails (which doubles as a "package is
-  consumable" check).
+- `ci.yml` 的 `-p:PackageVersion=` 必须与已发布版本一致；过期值会让 pack job
+  以 `NU1102` 失败。
+- DbcView consumer 从 nuget.org 解析其 `Directory.Packages.props` 中固定的
+  精确版本——先发布包，**再**提升 DbcView，否则其 restore 会失败（这也可作为
+  “包可消费”的检查）。

@@ -1,8 +1,8 @@
 # 开发实现记录
 
-> [English](../../en/development/README.md) | 简体中文
+> 简体中文（权威） | [English mirror](../../en/development/README.md)
 >
-> 状态：Chinese Synchronized。本文是英文主文档的翻译；如有冲突，以英文版本为准。
+> 状态：简体中文是权威版本；英文版本是按 ADR-0035 维护的镜像。
 
 本目录保存 Atlas 的阶段实现记录和重大修复复盘。它们帮助开发者理解实现过程、历史约束和已发现的工程陷阱，但不定义新的产品需求。
 

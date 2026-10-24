@@ -1,17 +1,17 @@
 namespace Atlas.Core.Placement;
 
 /// <summary>
-///     Identifies the committed visibility of a logical tool bar.
+///     标识逻辑工具栏的已提交可见性。
 /// </summary>
 public enum ToolBarVisibility
 {
     /// <summary>
-    ///     The tool bar shows its normal content.
+    ///     工具栏显示正常内容。
     /// </summary>
     Expanded = 0,
 
     /// <summary>
-    ///     The tool bar is collapsed, hiding only the content while its state is preserved for restore.
+    ///     工具栏已折叠，仅隐藏内容，状态保留以便恢复。
     /// </summary>
     Collapsed = 1,
 }

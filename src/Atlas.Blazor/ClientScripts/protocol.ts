@@ -15,9 +15,8 @@ export interface ResizeSplitCommit {
   readonly generation: number;
   readonly baseRevision: number | null;
   /**
-   * Present only when the split's basis is FixedPixels; the anchored child's
-   * extent in CSS pixels. Older hosts ignore the field and degrade to the
-   * proportional interpretation of firstRatio.
+   * 仅当分割基准为 FixedPixels 时存在；锚定子项以 CSS 像素表示的尺寸。
+   * 旧版 Host 会忽略该字段，并退化为对 firstRatio 的比例解释。
    */
   readonly basisKind?: "proportional" | "fixed-pixels";
   readonly pixelExtent?: number;
