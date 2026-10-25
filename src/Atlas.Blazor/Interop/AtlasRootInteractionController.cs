@@ -36,6 +36,12 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
     // 控制器附加时的根元素标识；根元素被替换后需重新附加。
     private string? controllerRootId;
 
+    // 交互禁用时的静态标签页溢出观察器；与控制器互斥。
+    private IJSObjectReference? overflowObserver;
+
+    // 静态观察器附加时的根元素标识；根元素被替换后需重新附加。
+    private string? overflowObserverRootId;
+
     // 释放标记；防止重复释放与释放后操作。
     private bool disposed;
 
@@ -82,11 +88,33 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(keyboardCommands);
         // 交互被禁用或尚无工作区时分离控制器：残留的事件监听器会继续上报
         // 针对旧或空工作区的交互，必须随宿主状态一起拆除。
-        if (!enabled || workspaceId is null)
+        if (workspaceId is null)
         {
             await DisposeControllerAsync();
+            await DisposeOverflowObserverAsync();
             return;
         }
+
+        if (!enabled)
+        {
+            // 交互禁用时仍需测量标签页溢出（REQ-F-042）。静态观察器与
+            // 交互控制器互斥，保证每个 Host 只有一个测量 owner；它只写入
+            // data-atlas-* 标记，不启用拖拽、Splitter、键盘或自动隐藏监听。
+            await DisposeControllerAsync();
+            try
+            {
+                await SynchronizeOverflowObserverAsync(root);
+            }
+            catch (JSException)
+            {
+                // 静态投影属于渐进增强：挂载失败不影响工作区渲染。
+                await DisposeOverflowObserverAsync();
+            }
+
+            return;
+        }
+
+        await DisposeOverflowObserverAsync();
 
         // 控制器与附加时的工作区身份绑定；工作区更换后必须重建控制器，
         // 使后续消息携带新工作区的代际，避免作用于旧工作区。
@@ -176,6 +204,7 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
 
         disposed = true;
         await DisposeControllerAsync();
+        await DisposeOverflowObserverAsync();
         receiverReference.Dispose();
         if (module is not null)
         {
@@ -215,6 +244,66 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
         catch (JSException)
         {
             // 浏览器线路已释放该控制器。
+        }
+    }
+
+    private async ValueTask SynchronizeOverflowObserverAsync(ElementReference root)
+    {
+        if (overflowObserver is not null
+            && string.Equals(overflowObserverRootId, root.Id, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        await DisposeOverflowObserverAsync();
+        module ??= await jsRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            ModulePath);
+        if (module is null)
+        {
+            return;
+        }
+
+        overflowObserver = await module.InvokeAsync<IJSObjectReference>(
+            "attachAtlasTabOverflowObserver",
+            root.Context is null ? null : root,
+            hostId);
+        overflowObserverRootId = root.Id;
+    }
+
+    private async ValueTask DisposeOverflowObserverAsync()
+    {
+        var current = overflowObserver;
+        overflowObserver = null;
+        overflowObserverRootId = null;
+        if (current is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (module is not null)
+            {
+                await module.InvokeVoidAsync(
+                    "disposeAtlasTabOverflowObserver",
+                    current);
+            }
+        }
+        catch (JSException)
+        {
+            // 浏览器线路已释放该观察器。
+        }
+        finally
+        {
+            try
+            {
+                await current.DisposeAsync();
+            }
+            catch (JSException)
+            {
+                // 浏览器线路已释放该对象引用。
+            }
         }
     }
 

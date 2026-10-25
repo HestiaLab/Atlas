@@ -7,6 +7,7 @@ using Atlas.Core.Items;
 using Atlas.Core.Layout;
 using Atlas.Core.Operations;
 using Bunit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
@@ -211,6 +212,143 @@ public sealed class TabOverflowTests : TestContext
     }
 
     [Fact]
+    public async Task Disabled_interactions_still_attach_and_dispose_the_overflow_observer()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Menu);
+        var cut = RenderHost(workspace);
+
+        cut.WaitForAssertion(
+            () => Assert.Single(
+                module.Invocations["attachAtlasTabOverflowObserver"]));
+        Assert.Empty(module.Invocations["attachAtlasController"]);
+        Assert.Single(cut.FindAll("[data-atlas-overflow-menu-button]"));
+
+        await cut.Instance.DisposeAsync();
+
+        Assert.Single(module.Invocations["disposeAtlasTabOverflowObserver"]);
+    }
+
+    [Fact]
+    public async Task Enabled_interactions_keep_the_controller_as_the_only_overflow_observer()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Menu);
+        var cut = RenderHost(workspace, enableInteractions: true);
+
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["attachAtlasController"]));
+        Assert.Empty(module.Invocations["attachAtlasTabOverflowObserver"]);
+
+        await cut.Instance.DisposeAsync();
+        Assert.Single(module.Invocations["disposeAtlasController"]);
+        Assert.Empty(module.Invocations["disposeAtlasTabOverflowObserver"]);
+    }
+
+    [Fact]
+    public async Task Keyboard_opened_overflow_menu_positions_at_its_button()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Menu);
+        var cut = RenderHost(workspace);
+
+        // 键盘激活的 click 没有指针计数（Detail=0）；bUnit 的 Click()
+        // 模拟指针点击，因此这里显式派发键盘语义的 click。
+        cut.Find("[data-atlas-overflow-menu-button]")
+            .TriggerEvent("onclick", new MouseEventArgs { Detail = 0, Button = 0 });
+
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Single(module.Invocations["positionAtlasPopup"]);
+                Assert.Single(
+                    module.Invocations["focusFirstVisibleAtlasPopupItem"]);
+            });
+        var invocation = module.Invocations["positionAtlasPopup"].Single();
+        Assert.IsType<ElementReference>(invocation.Arguments[1]);
+        Assert.Equal(
+            "true",
+            cut.Find("[data-atlas-overflow-menu-button]")
+                .GetAttribute("aria-expanded"));
+    }
+
+    [Fact]
+    public async Task Keyboard_context_menu_positions_at_the_focused_tab_and_closes()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Scroll);
+        var cut = RenderHost(workspace);
+
+        cut.FindAll("[data-atlas-drag-kind=document-tab]")[1]
+            .TriggerEvent(
+                "oncontextmenu",
+                new MouseEventArgs { ClientX = 0, ClientY = 0, Button = 0 });
+
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["positionAtlasPopup"]));
+        var menu = cut.Find("[data-atlas-tab-context-menu]");
+        Assert.Equal("menu", menu.GetAttribute("role"));
+
+        menu.TriggerEvent(
+            "onkeydown",
+            new KeyboardEventArgs { Key = "Escape", Code = "Escape" });
+
+        cut.WaitForAssertion(
+            () => Assert.Empty(cut.FindAll("[data-atlas-tab-context-menu]")));
+    }
+
+    [Fact]
+    public async Task Keyboard_context_menu_key_opens_anchor_positioned_menu()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Scroll);
+        var cut = RenderHost(workspace);
+
+        cut.FindAll("[data-atlas-drag-kind=document-tab]")[1]
+            .TriggerEvent(
+                "onkeydown",
+                new KeyboardEventArgs { Key = "F10", ShiftKey = true });
+
+        cut.WaitForAssertion(
+            () => Assert.Single(module.Invocations["positionAtlasPopup"]));
+        var menu = cut.Find("[data-atlas-tab-context-menu]");
+        Assert.Equal("menu", menu.GetAttribute("role"));
+
+        menu.TriggerEvent(
+            "onkeydown",
+            new KeyboardEventArgs { Key = "Escape", Code = "Escape" });
+        cut.WaitForAssertion(
+            () => Assert.Empty(cut.FindAll("[data-atlas-tab-context-menu]")));
+    }
+
+    [Fact]
+    public async Task Pointer_context_menu_keeps_pointer_positioning_without_anchor_helper()
+    {
+        var module = JSInterop.SetupModule(
+            "./_content/Atlas.Blazor/atlas-v2/atlas.js");
+        module.Mode = JSRuntimeMode.Loose;
+        await using var workspace = CreateWorkspace(EditorOverflowMode.Scroll);
+        var cut = RenderHost(workspace);
+
+        OpenContextMenu(cut, 0, 120, 80);
+
+        var menu = cut.Find("[data-atlas-tab-context-menu]");
+        Assert.Contains("120px", menu.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("80px", menu.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Empty(module.Invocations["positionAtlasPopup"]);
+    }
+
+    [Fact]
     public async Task Tab_overflow_and_context_menu_contracts_match_the_dom_manifest()
     {
         var path = Path.Combine(
@@ -259,7 +397,14 @@ public sealed class TabOverflowTests : TestContext
         cut.FindAll("[data-atlas-drag-kind=document-tab]")[tabIndex]
             .TriggerEvent(
                 "oncontextmenu",
-                new MouseEventArgs { ClientX = x, ClientY = y });
+                new MouseEventArgs
+                {
+                    ClientX = x,
+                    ClientY = y,
+                    Button = 2,
+                    Buttons = 2,
+                    Detail = 1,
+                });
     }
 
     private IAtlasWorkspace CreateWorkspace(
@@ -293,12 +438,14 @@ public sealed class TabOverflowTests : TestContext
         return result.Value!;
     }
 
-    private IRenderedFragment RenderHost(IAtlasWorkspace workspace)
+    private IRenderedComponent<AtlasWorkspaceHost> RenderHost(
+        IAtlasWorkspace workspace,
+        bool enableInteractions = false)
     {
         return RenderComponent<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
-                .Add(component => component.EnableInteractions, false));
+                .Add(component => component.EnableInteractions, enableInteractions));
     }
 
     private static DockItem CreateDocument(

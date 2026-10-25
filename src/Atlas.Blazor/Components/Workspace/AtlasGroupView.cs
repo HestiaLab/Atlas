@@ -476,8 +476,16 @@ internal sealed class AtlasGroupView : ComponentBase
                     this,
                     args => OpenContextMenu(item.Id, args)));
             builder.AddAttribute(16, "oncontextmenu:preventDefault", true);
-            builder.AddElementReferenceCapture(
+            // 显式处理键盘上下文菜单键：Firefox 在不显示原生菜单时可能
+            // 不派发 contextmenu 事件，不能只依赖 oncontextmenu。
+            builder.AddAttribute(
                 17,
+                "onkeydown",
+                EventCallback.Factory.Create<KeyboardEventArgs>(
+                    this,
+                    args => OnTabKeyDown(item.Id, args)));
+            builder.AddElementReferenceCapture(
+                18,
                 value => tabElements[item.Id] = value);
             RenderHeader(builder, item, selected);
             builder.CloseElement();
@@ -528,11 +536,12 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddAttribute(4, "X", popup.X);
         builder.AddAttribute(5, "Y", popup.Y);
         builder.AddAttribute(6, "UseFallbackPosition", popup.KeyboardOpened);
-        builder.AddAttribute(7, "Items", popup.IsOverflow
+        builder.AddAttribute(7, "Anchor", popup.Anchor);
+        builder.AddAttribute(8, "Items", popup.IsOverflow
             ? BuildOverflowMenuItems()
             : BuildContextMenuItems(ContextItem(popup)));
         builder.AddAttribute(
-            8,
+            9,
             "OnDismiss",
             EventCallback.Factory.Create(this, DismissPopupAsync));
         builder.CloseComponent();
@@ -602,23 +611,69 @@ internal sealed class AtlasGroupView : ComponentBase
 
     private void OpenOverflowMenu(MouseEventArgs args)
     {
+        // 键盘激活的 click 没有指针计数（Detail=0）；此时锚定溢出按钮。
+        var keyboardOpened = args.Detail == 0;
         openPopup = new TabPopupState(
             IsOverflow: true,
             TargetItemId: null,
             args.ClientX,
             args.ClientY,
-            KeyboardOpened: args.Detail == 0);
+            keyboardOpened,
+            keyboardOpened ? overflowButtonElement : default);
+        popupStamp++;
+    }
+
+    private void OnTabKeyDown(DockItemId itemId, KeyboardEventArgs args)
+    {
+        if (args.Key == "ContextMenu" || (args.ShiftKey && args.Key == "F10"))
+        {
+            OpenKeyboardContextMenu(itemId);
+        }
+    }
+
+    private void OpenKeyboardContextMenu(DockItemId itemId)
+    {
+        var anchor = tabElements.TryGetValue(itemId, out var element)
+            ? element
+            : default;
+        openPopup = new TabPopupState(
+            IsOverflow: false,
+            itemId,
+            0,
+            0,
+            KeyboardOpened: true,
+            anchor);
         popupStamp++;
     }
 
     private void OpenContextMenu(DockItemId itemId, MouseEventArgs args)
     {
+        // 指针右键的 button 为 2；ContextMenu 键与 Shift+F10 由浏览器合成
+        // contextmenu 事件时 button 为 0，应按键盘语义锚定标签页。
+        var keyboardOpened = args.Button != 2;
+        if (keyboardOpened
+            && openPopup is
+            {
+                IsOverflow: false,
+                KeyboardOpened: true,
+                TargetItemId: { } current,
+            }
+            && current == itemId)
+        {
+            // 显式 keydown 已打开同一标签的键盘菜单；忽略随后合成的
+            // contextmenu，避免把它降级为指针定位。
+            return;
+        }
+
         openPopup = new TabPopupState(
             IsOverflow: false,
             itemId,
             args.ClientX,
             args.ClientY,
-            KeyboardOpened: false);
+            keyboardOpened,
+            keyboardOpened && tabElements.TryGetValue(itemId, out var anchor)
+                ? anchor
+                : default);
         popupStamp++;
     }
 
@@ -745,7 +800,8 @@ internal sealed class AtlasGroupView : ComponentBase
         DockItemId? TargetItemId,
         double X,
         double Y,
-        bool KeyboardOpened);
+        bool KeyboardOpened,
+        ElementReference Anchor);
     private void RenderToolHeader(RenderTreeBuilder builder)
     {
         // 工具组头部只呈现选中项：与文档标签条不同，工具面板

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:js": "esbuild ./tests/protocol.test.ts ./tests/split-geometry.test.ts --bundle --platform=node --format=esm --outdir=./obj/tests && node --test ./obj/tests/*.test.js",
+    "test:js": "esbuild ./tests/protocol.test.ts ./tests/split-geometry.test.ts ./tests/tab-overflow.test.ts ./tests/popup-position.test.ts --bundle --platform=node --format=esm --outdir=./obj/tests && node --test ./obj/tests/*.test.js",
     "build:js": "esbuild ./ClientScripts/public-api.ts --bundle --format=esm --platform=browser --target=es2020 --sourcemap --outfile=./wwwroot/atlas-v2/atlas.js"
   },
   "devDependencies": {

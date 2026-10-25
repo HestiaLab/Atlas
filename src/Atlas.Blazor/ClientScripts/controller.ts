@@ -30,6 +30,10 @@ import {
   readRevision
 } from "./split-geometry";
 import { SplitResizeSession } from "./split-resize-session";
+import {
+  AtlasTabOverflowObserver,
+  tabOverflowWheelDelta
+} from "./tab-overflow";
 
 // 跨控制器实例共享的单调拖拽会话计数器。提交变更后 Blazor 会替换 Host
 // 根元素，从而释放并重新挂载控制器；若使用实例内序号，它会从 1 重新开始
@@ -78,8 +82,7 @@ export class AtlasInteractionController {
   private pendingClickPointerId: number | undefined;
   private clickSuppression:
     { readonly listener: (event: Event) => void; readonly timer: ReturnType<typeof setTimeout> } | undefined;
-  private tabResizeObserver: ResizeObserver | undefined;
-  private tabMutationObserver: MutationObserver | undefined;
+  private readonly tabOverflow: AtlasTabOverflowObserver;
   private readonly autoHideCloseTimers =
     new Map<HTMLElement, ReturnType<typeof setTimeout>>();
 
@@ -137,7 +140,7 @@ export class AtlasInteractionController {
     this.ownerDocument?.addEventListener("keydown", this.onDocumentKeyDown);
     this.reducedMotionQuery?.addEventListener("change", this.onReducedMotionChanged);
     this.projectReducedMotion();
-    this.refreshTabOverflow();
+    this.tabOverflow = new AtlasTabOverflowObserver(this.root);
   }
 
   public update(
@@ -192,10 +195,7 @@ export class AtlasInteractionController {
     this.root.removeEventListener("keydown", this.onKeyDown);
     this.root.removeEventListener("keyup", this.onKeyUp);
     this.root.removeEventListener("wheel", this.onWheel as EventListener);
-    this.tabResizeObserver?.disconnect();
-    this.tabResizeObserver = undefined;
-    this.tabMutationObserver?.disconnect();
-    this.tabMutationObserver = undefined;
+    this.tabOverflow.dispose();
     this.ownerWindow?.removeEventListener("resize", this.onEnvironmentInvalidated);
     this.ownerWindow?.removeEventListener("blur", this.onEnvironmentInvalidated);
     this.ownerWindow?.removeEventListener("pointerup", this.onPointerUp);
@@ -901,113 +901,6 @@ export class AtlasInteractionController {
       { capture: true });
   }
 
-  private refreshTabOverflow(): void {
-    if (this.disposed) {
-      return;
-    }
-
-    // ResizeObserver 覆盖容器缩放、字体/标题变化与 DPI 缩放；
-    // MutationObserver 捕获由 Blazor 动态增删的标签条与标签页。
-    // 每次重建观察器，避免已移除标签页的观察目标长期滞留。
-    if (typeof ResizeObserver !== "undefined") {
-      this.tabResizeObserver?.disconnect();
-      const observer = new ResizeObserver(entries => {
-        if (this.disposed) {
-          return;
-        }
-
-        const strips = new Set<HTMLElement>();
-        for (const entry of entries) {
-          const target = entry.target;
-          const strip = target instanceof Element
-            ? (target.matches(domMetadata.tabStrip.selector)
-              ? target as HTMLElement
-              : target.closest<HTMLElement>(domMetadata.tabStrip.selector))
-            : null;
-          if (strip) {
-            strips.add(strip);
-          }
-        }
-
-        for (const strip of strips) {
-          if (this.root.contains(strip)) {
-            this.measureTabStrip(strip);
-          }
-        }
-      });
-      this.tabResizeObserver = observer;
-      for (const strip of Array.from(
-        this.root.querySelectorAll<HTMLElement>(domMetadata.tabStrip.selector))) {
-        observer.observe(strip);
-        for (const tab of Array.from(
-          strip.querySelectorAll<HTMLElement>("[role=\"tab\"]"))) {
-          observer.observe(tab);
-        }
-
-        this.measureTabStrip(strip);
-      }
-    }
-
-    if (typeof MutationObserver !== "undefined") {
-      this.tabMutationObserver?.disconnect();
-      const observer = new MutationObserver(() => {
-        if (!this.disposed) {
-          this.refreshTabOverflow();
-        }
-      });
-      this.tabMutationObserver = observer;
-      observer.observe(this.root, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["data-atlas-overflow-mode"]
-      });
-    }
-  }
-
-  private measureTabStrip(strip: HTMLElement): void {
-    const tabs = Array.from(
-      strip.querySelectorAll<HTMLElement>("[role=\"tab\"]"));
-    // 溢出菜单渲染在标签条之外、同一 Group 内；按 Group 作用域匹配菜单项，
-    // 避免把其他 Group 的菜单项标记写成同一集合。
-    const menuScope = strip.closest<HTMLElement>(domMetadata.groupRegion.selector)
-      ?? this.root;
-    const menuItems = Array.from(
-      menuScope.querySelectorAll<HTMLElement>("[data-atlas-tab-menu-item]"));
-    if (strip.dataset.atlasOverflowMode !== "menu") {
-      delete strip.dataset.atlasOverflowing;
-      for (const tab of tabs) {
-        delete tab.dataset.atlasTabClipped;
-      }
-
-      for (const item of menuItems) {
-        delete item.dataset.atlasTabClipped;
-      }
-
-      return;
-    }
-
-    const stripRect = strip.getBoundingClientRect();
-    let overflowing = false;
-    const clipped = new Map<string, boolean>();
-    for (const tab of tabs) {
-      const itemId = tab.dataset.atlasItemId ?? "";
-      const isClipped = isTabClipped(tab.getBoundingClientRect(), stripRect);
-      overflowing = overflowing || isClipped;
-      clipped.set(itemId, isClipped);
-      tab.dataset.atlasTabClipped = isClipped ? "true" : "false";
-    }
-
-    strip.dataset.atlasOverflowing = overflowing ? "true" : "false";
-    // 菜单项可能稍后由 Blazor 插入；MutationObserver 会在插入后再次测量。
-    for (const item of menuItems) {
-      const itemId = item.dataset.atlasItemId ?? "";
-      item.dataset.atlasTabClipped = clipped.get(itemId) === true
-        ? "true"
-        : "false";
-    }
-  }
-
   private eventTouchesRoot(event: Event): boolean {
     const path = typeof event.composedPath === "function"
       ? event.composedPath()
@@ -1155,36 +1048,7 @@ export function clearAtlasSplitPreview(
   controller.clearSplitPreview(splitId);
 }
 
-/**
- * 把纵向滚轮增量转换为标签条的水平滚动方向。RTL 下滚动起点在右侧，
- * 因此方向取反。
- */
-export function tabOverflowWheelDelta(
-  deltaY: number,
-  direction: string | undefined): number {
-  if (!Number.isFinite(deltaY) || deltaY === 0) {
-    return 0;
-  }
-
-  return direction === "rtl" ? -deltaY : deltaY;
-}
-
-/**
- * 标签页是否未完全位于标签条可视区域内。使用物理矩形，因此 LTR/RTL
- * 与缩放环境共用同一判定；半像素容差吸收浏览器亚像素舍入。
- */
-export function isTabClipped(
-  tab: Readonly<{ left: number; right: number; width: number }>,
-  strip: Readonly<{ left: number; right: number; width: number }>,
-  tolerance = 0.5): boolean {
-  if (!Number.isFinite(tab.width) || !Number.isFinite(strip.width)
-    || tab.width <= 0 || strip.width <= 0) {
-    return false;
-  }
-
-  return tab.left < strip.left - tolerance
-    || tab.right > strip.right + tolerance;
-}
+export { isTabClipped, tabOverflowWheelDelta } from "./tab-overflow";
 
 function binding(
   code: string,

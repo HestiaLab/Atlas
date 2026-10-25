@@ -11,6 +11,7 @@ using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Globalization;
 
@@ -58,6 +59,7 @@ public sealed partial class AtlasWorkspaceHost
         }
 
         var snapshot = activeWorkspace.Current;
+        PruneMountedAutoHideItems(snapshot);
         // 交互控制器的稳定锚点：Blazor 会在重渲染间复用此 DOM 节点
         // （只有属性变化），因此控制器的指针监听器
         // 保持绑定在存活的元素上。
@@ -528,48 +530,95 @@ public sealed partial class AtlasWorkspaceHost
             19,
             "data-atlas-insertion-index",
             itemIndex.ToString(CultureInfo.InvariantCulture));
+        // 首次悬停/聚焦才挂载内容：初始投影不创建内容出口，
+        // 悬停由控制器打开浮层时内容已随本次渲染挂载。
+        builder.AddAttribute(
+            20,
+            "onmouseover",
+            EventCallback.Factory.Create<MouseEventArgs>(
+                this,
+                _ => MountAutoHideItem(item.Id)));
+        builder.AddAttribute(
+            21,
+            "onfocus",
+            EventCallback.Factory.Create<FocusEventArgs>(
+                this,
+                _ => MountAutoHideItem(item.Id)));
         if (item.IconKey is not null)
         {
-            builder.OpenElement(20, "span");
-            builder.AddAttribute(21, "class", "atlas-v2-item-icon");
-            builder.AddAttribute(22, "data-atlas-icon", item.IconKey);
-            builder.AddAttribute(23, "aria-hidden", "true");
+            builder.OpenElement(22, "span");
+            builder.AddAttribute(23, "class", "atlas-v2-item-icon");
+            builder.AddAttribute(24, "data-atlas-icon", item.IconKey);
+            builder.AddAttribute(25, "aria-hidden", "true");
             builder.CloseElement();
         }
 
-        builder.AddContent(24, item.Title);
+        builder.AddContent(26, item.Title);
         builder.CloseElement();
 
-        // Flyout 内容始终挂载，由控制器切换 owner 的 data-atlas-auto-hide-open
-        // 与 aria-hidden/inert；这样鼠标移入浮层时无需服务端往返。
-        builder.OpenElement(25, "div");
-        builder.AddAttribute(26, "class", "atlas-v2-auto-hide-flyout");
-        builder.AddAttribute(27, "data-atlas-auto-hide-flyout", "true");
-        builder.AddAttribute(28, "role", "region");
-        builder.AddAttribute(29, "aria-label", item.Title);
-        builder.AddAttribute(30, "aria-hidden", "true");
-        builder.AddAttribute(31, "inert", true);
-        var context = new AtlasContentContext(activeWorkspace!, item, effectiveStateScope);
-        var resolution = (effectiveCatalog ?? AtlasContentCatalog.Empty)
-            .TryResolve(item.Content.Kind, out var descriptor);
-        builder.OpenComponent<AtlasContentOutlet>(32);
-        builder.SetKey((item.Id, "auto-hide-outlet"));
-        builder.AddAttribute(33, "Content", context);
-        builder.AddAttribute(34, "Resolution", resolution);
-        builder.AddAttribute(35, "Descriptor", descriptor);
-        builder.AddAttribute(36, "IsSelected", true);
-        builder.AddAttribute(37, "PanelId", panelId);
-        builder.AddAttribute(38, "LabelledById", controlId);
-        builder.AddAttribute(
-            39,
-            "RecoveryKey",
-            (SandboxedFrameResolver, descriptor?.Revision ?? 0, "auto-hide"));
-        builder.AddAttribute(40, "OnError", OnError);
-        builder.AddAttribute(41, "SandboxedFrameResolver", SandboxedFrameResolver);
-        builder.AddAttribute(42, "Generation", interactionGeneration);
-        builder.CloseComponent();
+        // Flyout 外壳始终渲染（保留 ARIA 关系），内容出口只在首次悬停/聚焦后
+        // 挂载并保持 keep-alive；控制器仍只切换 data-atlas-auto-hide-open
+        // 与 aria-hidden/inert，不新增 JS→C# 生命周期消息。
+        builder.OpenElement(27, "div");
+        builder.AddAttribute(28, "class", "atlas-v2-auto-hide-flyout");
+        builder.AddAttribute(29, "data-atlas-auto-hide-flyout", "true");
+        builder.AddAttribute(30, "role", "region");
+        builder.AddAttribute(31, "aria-label", item.Title);
+        builder.AddAttribute(32, "aria-hidden", "true");
+        builder.AddAttribute(33, "inert", true);
+        if (mountedAutoHideItemIds.Contains(item.Id))
+        {
+            var context = new AtlasContentContext(
+                activeWorkspace!,
+                item,
+                effectiveStateScope);
+            var resolution = (effectiveCatalog ?? AtlasContentCatalog.Empty)
+                .TryResolve(item.Content.Kind, out var descriptor);
+            builder.OpenComponent<AtlasContentOutlet>(34);
+            builder.SetKey((item.Id, "auto-hide-outlet"));
+            builder.AddAttribute(35, "Content", context);
+            builder.AddAttribute(36, "Resolution", resolution);
+            builder.AddAttribute(37, "Descriptor", descriptor);
+            builder.AddAttribute(38, "IsSelected", true);
+            builder.AddAttribute(39, "PanelId", panelId);
+            builder.AddAttribute(40, "LabelledById", controlId);
+            builder.AddAttribute(
+                41,
+                "RecoveryKey",
+                (SandboxedFrameResolver, descriptor?.Revision ?? 0, "auto-hide"));
+            builder.AddAttribute(42, "OnError", OnError);
+            builder.AddAttribute(
+                43,
+                "SandboxedFrameResolver",
+                SandboxedFrameResolver);
+            builder.AddAttribute(44, "Generation", interactionGeneration);
+            builder.CloseComponent();
+        }
+
         builder.CloseElement();
         builder.CloseElement();
+    }
+
+    private void MountAutoHideItem(DockItemId itemId)
+    {
+        if (mountedAutoHideItemIds.Add(itemId))
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void PruneMountedAutoHideItems(WorkspaceSnapshot snapshot)
+    {
+        if (mountedAutoHideItemIds.Count == 0)
+        {
+            return;
+        }
+
+        var autoHidden = snapshot.AutoHideStrips.Values
+            .SelectMany(strip => strip.Entries)
+            .Select(entry => entry.ItemId)
+            .ToHashSet();
+        mountedAutoHideItemIds.RemoveWhere(itemId => !autoHidden.Contains(itemId));
     }
 
     private void RenderToolBarRegion(
