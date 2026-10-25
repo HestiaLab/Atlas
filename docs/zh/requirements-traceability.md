@@ -164,6 +164,17 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-024 | DES-INT-008、DES-NFR-002 | P2 | `atlas.css`、`ClientScripts/drop-target.ts` | Node：`documentTargetKind`/`documentTabInsertionIndex` LTR/RTL 镜像；真实浏览器三浏览器：Showcase `dir=rtl` 下 inline-start ToolBar 位于右侧、inline-end 位于左侧、激活标签在右侧；RTL 内联分割条拖拽 Rev 2→3；RTL 右侧拖拽释放得到 `document-inline-start`、预览 `right:0px`、Rev 3→4；LTR 分割条拖拽 5→6 | Verified | 使用 CSS Grid direction + logical properties；document 放置区按写入方向镜像，修正了预览与提交侧不一致；未使用 left/right 布局绕过 |
 | REQ-F-152 | DES-INT-005 | P2 | — | — | Deferred | SRS 明示预留；本阶段不实现，不作为本阶段失败项 |
 
+## 2026-10-24 P1/P2 后续增强
+
+| Requirement | DES | Phase | Owner | Test evidence | Status | Notes |
+|-------------|-----|-------|-------|---------------|--------|-------|
+| REQ-F-038、REQ-F-042 | DES-DOM-010~011、DES-INT-001~003 | P1 后续增强 | `Atlas.Blazor/Interop`、`ClientScripts/tab-overflow.ts`、`AtlasWorkspaceHost` | `TabOverflowTests`：`EnableInteractions=false` 仍挂载静态溢出观察器并释放；启用交互时只有控制器观察器；Node：裁剪判定/菜单标记/观察器生命周期；三浏览器：静态 Menu 主机按钮出现、菜单仅列未裁剪项、点击激活、RTL/缩放/销毁后继续测量且无拖拽/键盘副作用 | Verified | 交互禁用时由 C# Host 经 `IJSRuntime` 挂载独立观察器；与控制器互斥，单一 owner；未新增协议消息或公共 API |
+| REQ-F-023 | DES-DOM-009、DES-INT-001~003 | P1 后续增强 | `AtlasWorkspaceHost.Rendering`、`tests/Atlas.Blazor.Tests` | `AutoHideFlyoutTests`：初始无内容出口、悬停/聚焦后挂载、关闭后保持、再次悬停不重建、双 Host 隔离；三浏览器：初始 0 出口、悬停 1 出口、移出 300ms 后保留、再次悬停同一 DOM 实例 | Verified | Host 本地 `mountedAutoHideItemIds` + entry `onmouseover`/`onfocus`；keep-alive，不新增协议或卸载语义 |
+| REQ-F-042、REQ-F-138 | DES-DOM-010~011、DES-INT-001~003 | P1 后续增强 | `AtlasPopupMenu`、`AtlasGroupView`、`ClientScripts/popup-position.ts`、`tab-overflow.ts` | Node：`clampPopupPosition` 边界/翻转/小视口；bUnit：键盘溢出菜单调用定位 helper、键盘 contextmenu 锚定、指针不调用、显式 Shift+F10 keydown；三浏览器：按钮位于右下角时键盘打开菜单完整在视口内且贴近锚点、Escape 关闭、RTL 同样通过 | Verified | 键盘打开按锚点测量并视口 clamp；指针坐标定位不变；补首个可见菜单项聚焦，避免隐藏首项导致 Escape 失焦 |
+| REQ-F-024 | DES-INT-008、DES-NFR-002 | P2 后续增强 | `ClientScripts/drop-target.ts`、浏览器夹具 | 三浏览器 RTL 双 Host：Host A 文档拖拽 Rev 0→1、面板拖拽 1→2，Host B 始终 0；inline-start 新文档组物理位于右侧 | Verified | 复用既有 RTL 放置实现；未修改协议或布局语义 |
+| REQ-NF-001 | DES-NFR-001、DES-NFR-003 | P1 后续增强 | `Atlas.Blazor`、临时内存夹具 | Chrome 100 周期（100 次文档 + 100 次面板关闭/打开）：DOM 节点 138 恒定、jsEventListeners 51 恒定、GC 后 heap 增量 324 KB（容差 2 MB）、workspace 监听器 12 恒定、0 console error | Verified | 见报告 §6；约 1.9 KB/周期堆噪声，未判定泄漏；未做数小时长会话剖析 |
+| REQ-F-038、REQ-F-043、REQ-F-044、REQ-F-138、REQ-F-023 | DES-DOM-010~011、DES-INT-001~003 | P1 后续增强 | `samples/Atlas.Showcase/Pages/TabsAutoHideExample.razor`、`docs/zh/guides/using-atlas.md` | `TabsAutoHideExampleTests`（2）：三溢出模式/按钮、自动隐藏初始与悬停挂载、TopToolbar 入口；三浏览器 `/tabs-auto-hide`：Scroll 无按钮、Menu 4 个裁剪项、Wrap 8/8 可见、初始 auto-hide 0 出口、0 console error；Showcase 测试 9→11 | Verified | 仅使用公共 API；新增 `/tabs-auto-hide` 教学页并从 TopToolbar 链接；未改变公共 C# 表面 |
+
 ## 更新规则
 
 1. 每个功能 PR 必须列出 Requirement、DES、Phase、owner module 和测试。

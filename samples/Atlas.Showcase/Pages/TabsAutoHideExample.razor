@@ -1,0 +1,239 @@
+@page "/tabs-auto-hide"
+@namespace Atlas.Showcase.Pages
+@implements IAsyncDisposable
+@using Atlas.Blazor.Components
+@using Atlas.Blazor.Content
+@using Atlas.Core
+@using Atlas.Core.Definitions
+@using Atlas.Core.Items
+@using Atlas.Core.Layout
+@using Atlas.Core.Placement
+@inject IAtlasWorkspaceFactory Factory
+
+<PageTitle>Atlas 演示 — 标签页与自动隐藏</PageTitle>
+
+<div class="showcase-verification-page">
+    <header class="showcase-verification-header">
+        <div>
+            <h1>标签页溢出与自动隐藏</h1>
+            <p>Scroll / Menu / Wrap 三种溢出模式，以及悬停展开的自动隐藏 Flyout。</p>
+        </div>
+        <a class="showcase-declarative-back" href="./">返回首页</a>
+    </header>
+    <main class="showcase-tabs-content" aria-label="标签页与自动隐藏示例">
+        <section class="showcase-tabs-demo" aria-label="标签页溢出模式">
+            <h2>标签页溢出：Scroll（默认） / Menu / Wrap</h2>
+            <p>
+                三种模式使用相同的 8 个文档。窄容器下 Scroll 可用滚轮横向滚动，
+                Menu 仅在存在未完全可见标签页时显示溢出按钮，Wrap 换行显示全部标签页。
+                任意标签页右键可打开关闭上下文菜单。
+            </p>
+            <div class="showcase-tabs-grid">
+                <div class="showcase-tabs-column">
+                    <h3>Scroll</h3>
+                    <div class="showcase-tabs-host" data-testid="overflow-scroll">
+                        <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("showcase-overflow-scroll"))">
+                            <ContentRoutes>
+                                <AtlasContentRoute Kind="showcase-tab-document">
+                                    <ChildContent Context="content">
+                                        <div class="showcase-tabs-outlet">
+                                            <p><code>@content.Reference.ResourceId</code></p>
+                                            <p>纵向滚轮会转换为标签条的水平滚动。</p>
+                                        </div>
+                                    </ChildContent>
+                                </AtlasContentRoute>
+                            </ContentRoutes>
+                            <ChildContent>
+                                <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("scroll-documents"))"
+                                                              OverflowMode="EditorOverflowMode.Scroll">
+                                    @for (var index = 1; index <= 8; index++)
+                                    {
+                                        <AtlasDocumentItemDefinition Id="@(new DockItemId($"scroll-doc-{index:00}"))"
+                                                                     ContentKind="showcase-tab-document"
+                                                                     ResourceId="@($"scroll-doc-{index:00}")"
+                                                                     Title="@($"Document {index:00}")" />
+                                    }
+                                </AtlasDocumentGroupDefinition>
+                            </ChildContent>
+                        </AtlasWorkspaceHost>
+                    </div>
+                </div>
+                <div class="showcase-tabs-column">
+                    <h3>Menu</h3>
+                    <div class="showcase-tabs-host" data-testid="overflow-menu">
+                        <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("showcase-overflow-menu"))">
+                            <ContentRoutes>
+                                <AtlasContentRoute Kind="showcase-tab-document">
+                                    <ChildContent Context="content">
+                                        <div class="showcase-tabs-outlet">
+                                            <p><code>@content.Reference.ResourceId</code></p>
+                                            <p>溢出按钮列出未完全可见的标签页。</p>
+                                        </div>
+                                    </ChildContent>
+                                </AtlasContentRoute>
+                            </ContentRoutes>
+                            <ChildContent>
+                                <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("menu-documents"))"
+                                                              OverflowMode="EditorOverflowMode.Menu">
+                                    @for (var index = 1; index <= 8; index++)
+                                    {
+                                        <AtlasDocumentItemDefinition Id="@(new DockItemId($"menu-doc-{index:00}"))"
+                                                                     ContentKind="showcase-tab-document"
+                                                                     ResourceId="@($"menu-doc-{index:00}")"
+                                                                     Title="@($"Document {index:00}")" />
+                                    }
+                                </AtlasDocumentGroupDefinition>
+                            </ChildContent>
+                        </AtlasWorkspaceHost>
+                    </div>
+                </div>
+                <div class="showcase-tabs-column">
+                    <h3>Wrap</h3>
+                    <div class="showcase-tabs-host" data-testid="overflow-wrap">
+                        <AtlasWorkspaceHost WorkspaceId="@(new WorkspaceId("showcase-overflow-wrap"))">
+                            <ContentRoutes>
+                                <AtlasContentRoute Kind="showcase-tab-document">
+                                    <ChildContent Context="content">
+                                        <div class="showcase-tabs-outlet">
+                                            <p><code>@content.Reference.ResourceId</code></p>
+                                            <p>标签页换行，全部保持可见。</p>
+                                        </div>
+                                    </ChildContent>
+                                </AtlasContentRoute>
+                            </ContentRoutes>
+                            <ChildContent>
+                                <AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("wrap-documents"))"
+                                                              OverflowMode="EditorOverflowMode.Wrap">
+                                    @for (var index = 1; index <= 8; index++)
+                                    {
+                                        <AtlasDocumentItemDefinition Id="@(new DockItemId($"wrap-doc-{index:00}"))"
+                                                                     ContentKind="showcase-tab-document"
+                                                                     ResourceId="@($"wrap-doc-{index:00}")"
+                                                                     Title="@($"Document {index:00}")" />
+                                    }
+                                </AtlasDocumentGroupDefinition>
+                            </ChildContent>
+                        </AtlasWorkspaceHost>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="showcase-tabs-demo" aria-label="自动隐藏 Flyout">
+            <h2>自动隐藏：ToolBar 条目与 300ms Flyout</h2>
+            <p>
+                自动隐藏面板以 ToolBar 条目呈现。首次悬停或键盘聚焦才挂载内容；
+                移出后 300ms 收起，内容保持挂载以保留状态。
+            </p>
+            <div class="showcase-auto-hide-host" data-testid="auto-hide">
+                @if (autoHideWorkspace is not null)
+                {
+                    <AtlasWorkspaceHost Workspace="@autoHideWorkspace"
+                                        WorkspaceOwnership="WorkspaceOwnership.External"
+                                        EnableInteractions="true">
+                        <ContentRoutes>
+                            <AtlasContentRoute Kind="showcase-auto-hide-tool">
+                                <ChildContent Context="content">
+                                    <div class="showcase-tabs-outlet">
+                                        <p><code>@content.Reference.ResourceId</code></p>
+                                        <p>悬停打开浮层；移出后延迟收起。</p>
+                                    </div>
+                                </ChildContent>
+                            </AtlasContentRoute>
+                        </ContentRoutes>
+                    </AtlasWorkspaceHost>
+                }
+            </div>
+        </section>
+    </main>
+</div>
+
+@code {
+    private IAtlasWorkspace? autoHideWorkspace;
+
+    protected override void OnInitialized()
+    {
+        autoHideWorkspace = CreateAutoHideWorkspace();
+    }
+
+    private IAtlasWorkspace CreateAutoHideWorkspace()
+    {
+        var docked = new DockItem(
+            new DockItemId("showcase-auto-hide-docked"),
+            DockItemKind.Tool,
+            new ContentReference(
+                "showcase-auto-hide-tool",
+                "showcase-auto-hide-docked"),
+            DockItemCapabilityPresets.Tool,
+            "Docked panel",
+            "pin");
+        var hidden = new DockItem(
+            new DockItemId("showcase-auto-hide-hidden"),
+            DockItemKind.Tool,
+            new ContentReference(
+                "showcase-auto-hide-tool",
+                "showcase-auto-hide-hidden"),
+            DockItemCapabilityPresets.Tool,
+            "Auto-hidden panel",
+            "pin");
+        var group = new GroupNode(
+            new LayoutNodeId("showcase-auto-hide-tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { docked.Id },
+            docked.Id,
+            toolbarRegion: LogicalRegion.InlineStartUpper);
+        var definition = new AtlasWorkspaceDefinition(
+            new WorkspaceId("showcase-tabs-auto-hide"),
+            group.Id,
+            new LayoutNode[] { group },
+            new[] { docked, hidden },
+            toolBars: new[]
+            {
+                new ToolBarState(
+                    LogicalSide.InlineStart,
+                    ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    new[] { docked.Id, hidden.Id }),
+            },
+            autoHideStrips: new[]
+            {
+                new AutoHideStripState(
+                    WorkspaceEdge.InlineStart,
+                    new[]
+                    {
+                        new AutoHideEntry(
+                            hidden.Id,
+                            new DockBack(
+                                group.Id,
+                                0,
+                                WorkspaceEdge.InlineStart)),
+                    }),
+            });
+        var result = Factory.Create(definition);
+        if (!result.Succeeded || result.Value is null)
+        {
+            throw new InvalidOperationException(
+                result.Error?.DiagnosticId
+                ?? "ATLAS-SHOWCASE-TABS-AUTO-HIDE-FAILED");
+        }
+
+        return result.Value;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (autoHideWorkspace is null)
+        {
+            return;
+        }
+
+        var workspace = autoHideWorkspace;
+        autoHideWorkspace = null;
+        await workspace.DisposeAsync();
+    }
+}

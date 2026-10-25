@@ -353,6 +353,52 @@ var list = await presets.ListAsync();
 
 服务保持 single-writer 路径：一次只保存一个，同一 key 以最新写入为准。
 
+## 10. 标签页溢出与自动隐藏
+
+### 溢出模式
+
+文档组通过 `AtlasDocumentGroupDefinition.OverflowMode` 选择溢出模式（默认 `Scroll`）：
+
+```razor
+<AtlasDocumentGroupDefinition Id="@(new LayoutNodeId("documents"))"
+                              OverflowMode="EditorOverflowMode.Menu">
+    <AtlasDocumentItemDefinition Id="@(new DockItemId("program"))"
+                                 ContentKind="my-editor"
+                                 ResourceId="program"
+                                 Title="Program.cs" />
+</AtlasDocumentGroupDefinition>
+```
+
+- `Scroll`：标签条水平滚动；鼠标纵向滚轮在标签条上转换为水平滚动。
+- `Menu`：仅当存在未完全可见的标签页时显示溢出按钮；菜单只列出这些标签页。
+- `Wrap`：标签页换行，全部保持可见。
+
+右键任意标签页会打开上下文菜单（关闭、关闭其他、关闭右侧所有、关闭全部）；不可关闭标签页的全部关闭项为禁用状态。菜单支持 Escape、外部点击关闭与方向键漫游；键盘打开时按触发按钮/标签页锚定并钳制在视口内。
+
+即使 Host 设置 `EnableInteractions="false"`，菜单模式仍会测量溢出并显示溢出按钮；此时不会启用拖拽、Splitter、键盘命令或自动隐藏悬停监听。
+
+### 自动隐藏 Flyout
+
+自动隐藏条目由工作区定义中的 `AutoHideStrips`、`AutoHideEntry` 与 `DockBack` 描述；条目渲染在 dock-back 组所在侧的 ToolBar 中：
+
+```csharp
+autoHideStrips: new[]
+{
+    new AutoHideStripState(
+        WorkspaceEdge.InlineStart,
+        new[]
+        {
+            new AutoHideEntry(
+                hidden.Id,
+                new DockBack(group.Id, 0, WorkspaceEdge.InlineStart)),
+        }),
+}
+```
+
+悬停条目以浮层展开内容并覆盖相邻面板；移出浮层 300ms 后收起。内容在首次悬停或键盘聚焦时才挂载，之后保持挂载以保留组件状态；关闭浮层不会卸载内容。
+
+完整可运行示例见 [`TabsAutoHideExample.razor`](../../../samples/Atlas.Showcase/Pages/TabsAutoHideExample.razor)（Showcase 的 `/tabs-auto-hide` 路由）。
+
 ## 接下来去哪里
 
 - 完整可运行示例：[`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)

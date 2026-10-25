@@ -11,11 +11,15 @@ namespace Atlas.Blazor.Components;
 ///     标签页溢出菜单与右键菜单共用的弹出菜单：负责视口内定位、
 ///     首项聚焦、方向键漫游与 Escape/Tab 关闭。
 /// </summary>
-internal sealed class AtlasPopupMenu : ComponentBase
+internal sealed class AtlasPopupMenu : ComponentBase, IAsyncDisposable
 {
+    private const string ModulePath =
+        "./_content/Atlas.Blazor/atlas-v2/atlas.js";
+
     private readonly List<ElementReference> itemElements = new();
     private int focusedIndex = -1;
     private ElementReference menuElement;
+    private IJSObjectReference? module;
 
     /// <summary>
     ///     菜单的无障碍名称。
@@ -48,10 +52,18 @@ internal sealed class AtlasPopupMenu : ComponentBase
     public double Y { get; set; }
 
     /// <summary>
-    ///     键盘打开时没有指针坐标，使用视口内固定回退位置。
+    ///     键盘打开时没有指针坐标，先使用视口内回退位置，
+    ///     渲染后按锚点测量并精确放置。
     /// </summary>
     [Parameter]
     public bool UseFallbackPosition { get; set; }
+
+    /// <summary>
+    ///     键盘打开时的定位锚点（触发按钮或标签页）；
+    ///     指针打开时忽略。
+    /// </summary>
+    [Parameter]
+    public ElementReference Anchor { get; set; }
 
     /// <summary>
     ///     菜单项；禁用项不可聚焦且不执行。
@@ -65,6 +77,9 @@ internal sealed class AtlasPopupMenu : ComponentBase
     /// </summary>
     [Parameter]
     public EventCallback OnDismiss { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -143,21 +158,67 @@ internal sealed class AtlasPopupMenu : ComponentBase
             return;
         }
 
+        if (UseFallbackPosition)
+        {
+            try
+            {
+                module ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+                    "import",
+                    ModulePath);
+                await module.InvokeVoidAsync(
+                    "positionAtlasPopup",
+                    menuElement,
+                    Anchor);
+            }
+            catch (JSException)
+            {
+                // 回退定位仍在视口内；菜单保持可用。
+            }
+        }
+
         var firstEnabled = FirstEnabledIndex();
         if (firstEnabled >= 0)
         {
             await FocusItemAsync(firstEnabled);
-            return;
+        }
+        else
+        {
+            // 全部命令禁用时没有可聚焦菜单项；聚焦菜单容器，
+            // 保证 Escape/Tab 仍能关闭菜单（REQ-F-138 AC2）。
+            try
+            {
+                await menuElement.FocusAsync();
+            }
+            catch (JSException)
+            {
+            }
         }
 
-        // 全部命令禁用时没有可聚焦菜单项；聚焦菜单容器，
-        // 保证 Escape/Tab 仍能关闭菜单（REQ-F-138 AC2）。
+        if (string.Equals(
+            MarkerAttribute,
+            "data-atlas-tab-menu",
+            StringComparison.Ordinal))
+        {
+            await FocusFirstVisibleOverflowItemAsync();
+        }
+    }
+
+    private async Task FocusFirstVisibleOverflowItemAsync()
+    {
+        // 溢出菜单的全部标签项都会渲染，未裁剪项由 CSS 隐藏；
+        // Blazor 无法从 C# 判断布局裁剪，因此在测量后由 JS 聚焦首个可见项。
         try
         {
-            await menuElement.FocusAsync();
+            module ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "import",
+                ModulePath);
+            await module.InvokeVoidAsync(
+                "focusFirstVisibleAtlasPopupItem",
+                menuElement);
         }
         catch (JSException)
         {
+            // 聚焦失败时菜单仍可用鼠标操作。
         }
     }
 
@@ -270,6 +331,25 @@ internal sealed class AtlasPopupMenu : ComponentBase
     private Task DismissAsync()
     {
         return OnDismiss.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await module.DisposeAsync();
+        }
+        catch (JSException)
+        {
+            // 浏览器线路已释放该模块。
+        }
+
+        module = null;
     }
 
     private string MenuStyle()

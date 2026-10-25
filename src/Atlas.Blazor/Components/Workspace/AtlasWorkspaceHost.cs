@@ -40,6 +40,10 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     // 待清除的分割预览会话；渲染后统一通知控制器清理。
     private readonly HashSet<string> pendingSplitPreviewClears = new(StringComparer.Ordinal);
 
+    // 已按需挂载内容的自动隐藏条目；首次悬停/聚焦后保持挂载（keep-alive），
+    // 关闭浮层不卸载内容，避免新增 JS→C# 生命周期消息。
+    private readonly HashSet<DockItemId> mountedAutoHideItemIds = new();
+
     // 收集子组件声明的宿主本地内容路由。
     private AtlasContentRouteCollector routeCollector = new();
 
@@ -465,6 +469,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         interactionGeneration++;
         consumedDragSessions.Clear();
         consumedDragSessionOrder.Clear();
+        mountedAutoHideItemIds.Clear();
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }
@@ -482,6 +487,7 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         activeWorkspaceDeclarative = false;
         ownsActiveWorkspace = false;
         pendingSplitPreviewClears.Clear();
+        mountedAutoHideItemIds.Clear();
     }
 
     private async Task UnbindWorkspaceAsync(bool disposeOwned)
