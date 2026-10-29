@@ -1,0 +1,403 @@
+/* Atlas IDE theme — 可选的紧凑 IDE 工作区外观。
+   链接顺序：atlas.css → themes/ide.css → 应用自有覆盖。
+   主题只作用于 Atlas 自有 chrome：工作区、组、标签页、面板标题栏、工具栏、
+   分割条、弹出层、自动隐藏与拖拽反馈；面板内容仍由应用负责。
+   调色板与度量取自 DbcView 工作区；--ide-* 是主题私有变量，不属于
+   --atlas-* 公共契约。主题在公共 token 之外只维护结构性效果与私有调色板。 */
+
+.atlas-v2-workspace {
+  /* 私有调色板 — 亮色 */
+  --ide-bg: #f6f7f9;
+  --ide-surface: #ffffff;
+  --ide-chrome: #fbfcfd;
+  --ide-sunken: #f1f3f5;
+  --ide-text: #1f2328;
+  --ide-text-secondary: #57606a;
+  --ide-text-muted: #6e7781;
+  --ide-border: #d0d7de;
+  --ide-divider: #e6e9ed;
+  --ide-accent: #0969da;
+  --ide-on-accent: #ffffff;
+  --ide-hover: #f2f4f7;
+  --ide-selection: #e8f0fb;
+  --ide-focus: #0969da;
+  --ide-danger: #cf222e;
+  --ide-danger-bg: #fff1f0;
+  --ide-danger-text: #a40e26;
+  --ide-warning: #9a6700;
+  --ide-warning-bg: #fff8c5;
+  --ide-warning-text: #7d4e00;
+  --ide-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  --ide-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+  --ide-font-mono: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+
+  /* 公开 token 覆盖 */
+  --atlas-accent: var(--ide-accent);
+  --atlas-surface: var(--ide-surface);
+  --atlas-text: var(--ide-text);
+  /* DbcView 度量按 16px 根字号折算为像素，避免宿主根字号改变 chrome 尺寸。 */
+  --atlas-splitter-size: 4.8px;
+  --atlas-splitter-hit-area: 4px;
+  --atlas-chrome-height: 34px;
+  --atlas-gap: 4px;
+  --atlas-padding-compact: 4px 8px;
+  --atlas-radius: 4px;
+  --atlas-radius-sm: 4px;
+  --atlas-border-width: 1px;
+  --atlas-focus-ring-width: 2px;
+  --atlas-splitter-opacity: 1;
+  --atlas-splitter-opacity-hover: 1;
+  --atlas-splitter-opacity-focus: 1;
+  --atlas-splitter-opacity-disabled: 1;
+  --atlas-drop-highlight-alpha-soft: 12%;
+  --atlas-drop-highlight-alpha-strong: 20%;
+  --atlas-toolbar-divider-opacity: 1;
+  --atlas-drag-preview-opacity: 0.98;
+  --atlas-drag-preview-shadow: var(--ide-shadow);
+  --atlas-group-bg: var(--ide-surface);
+  --atlas-chrome-bg: var(--ide-chrome);
+  --atlas-tab-text: var(--ide-text-secondary);
+  --atlas-tab-text-active: var(--ide-text);
+  --atlas-tab-bg-active: var(--ide-surface);
+  --atlas-tab-bg-hover: var(--ide-hover);
+  --atlas-splitter-color: var(--ide-border);
+  --atlas-border-color: var(--ide-border);
+  --atlas-group-border-width: 1px;
+  --atlas-group-radius: 4px;
+  --atlas-tab-indicator-width: 2px;
+  --atlas-tab-indicator-color: var(--atlas-accent);
+  --atlas-popup-bg: var(--ide-surface);
+  --atlas-popup-text: var(--ide-text);
+  --atlas-popup-border: var(--ide-border);
+  --atlas-popup-shadow: var(--ide-shadow);
+  --atlas-popup-backdrop: transparent;
+  --atlas-flyout-shadow: var(--ide-shadow);
+  --atlas-popup-item-padding: 6px 8px;
+  --atlas-popup-item-radius: 4px;
+
+  background: var(--ide-bg);
+  color: var(--ide-text);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  .atlas-v2-workspace {
+    --ide-bg: #0d1117;
+    --ide-surface: #161b22;
+    --ide-chrome: #161b22;
+    --ide-sunken: #10151c;
+    --ide-text: #e6edf3;
+    --ide-text-secondary: #b1bac4;
+    --ide-text-muted: #8b949e;
+    --ide-border: #30363d;
+    --ide-divider: #21262d;
+    --ide-accent: #58a6ff;
+    --ide-on-accent: #0d1117;
+    --ide-hover: #21262d;
+    --ide-selection: #1f3550;
+    --ide-focus: #58a6ff;
+    --ide-danger: #ff7b72;
+    --ide-danger-bg: #2d1214;
+    --ide-danger-text: #ffb3ad;
+    --ide-warning: #d29922;
+    --ide-warning-bg: #2b2110;
+    --ide-warning-text: #ffd580;
+    --ide-shadow: 0 8px 24px rgb(0 0 0 / 48%);
+  }
+}
+
+.atlas-v2-workspace ::selection {
+  background: var(--atlas-accent);
+  color: var(--ide-on-accent);
+}
+
+/* 固定槽位只提供表面与分隔线；槽位内部内容仍由应用样式负责。 */
+.atlas-v2-workspace > .atlas-v2-top-toolbar,
+.atlas-v2-workspace > .atlas-v2-status-bar {
+  min-inline-size: 0;
+  overflow: hidden;
+  background: var(--atlas-chrome-bg);
+}
+
+.atlas-v2-workspace > .atlas-v2-top-toolbar {
+  border-block-end: 1px solid var(--atlas-border-color);
+}
+
+.atlas-v2-workspace > .atlas-v2-status-bar {
+  border-block-start: 1px solid var(--atlas-border-color);
+}
+
+.atlas-v2-work-area {
+  background: var(--ide-bg);
+}
+
+.atlas-v2-group {
+  box-sizing: border-box;
+}
+
+.atlas-v2-panel-header,
+.atlas-v2-tab-strip {
+  box-sizing: border-box;
+  align-items: center;
+  min-block-size: var(--atlas-chrome-height);
+  border-block-end: 1px solid var(--ide-divider);
+  background: var(--atlas-chrome-bg);
+  color: var(--atlas-tab-text);
+  font-family: var(--ide-font-sans);
+  user-select: none;
+}
+
+.atlas-v2-panel-header {
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.atlas-v2-tab-strip {
+  gap: 2px;
+  padding-inline: 6px;
+}
+
+.atlas-v2-item-icon:empty {
+  display: none;
+}
+
+.atlas-v2-item-title {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-v2-tab-strip [role="tab"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: var(--atlas-chrome-height);
+  max-inline-size: 240px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--atlas-tab-text);
+  font-family: var(--ide-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-v2-tab-strip [role="tab"]:hover:not([aria-selected="true"]) {
+  background: var(--atlas-tab-bg-hover);
+  color: var(--atlas-tab-text-active);
+}
+
+.atlas-v2-tab-strip [role="tab"][aria-selected="true"] {
+  background: var(--atlas-tab-bg-active);
+  color: var(--atlas-tab-text-active);
+}
+
+.atlas-v2-panel-close,
+.atlas-v2-tab-overflow-button {
+  color: var(--atlas-tab-text);
+}
+
+.atlas-v2-panel-close:hover,
+.atlas-v2-tab-overflow-button:hover {
+  background: var(--atlas-tab-bg-hover);
+  color: var(--atlas-tab-text-active);
+}
+
+.atlas-v2-panel-close {
+  border-radius: 4px;
+}
+
+.atlas-v2-toolbar {
+  inline-size: 38px;
+  block-size: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  padding: 4px 0;
+  background: var(--atlas-chrome-bg);
+}
+
+.atlas-v2-toolbar[data-atlas-toolbar-side="inline-start"] {
+  border-inline-end: 1px solid var(--atlas-border-color);
+}
+
+.atlas-v2-toolbar[data-atlas-toolbar-side="inline-end"] {
+  border-inline-start: 1px solid var(--atlas-border-color);
+}
+
+.atlas-v2-toolbar-region {
+  inline-size: 100%;
+}
+
+.atlas-v2-toolbar [data-atlas-toolbar-entry],
+.atlas-v2-toolbar [data-atlas-auto-hide-entry] {
+  width: 30px;
+  min-height: 0;
+  margin: 2px auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 3px;
+  background: transparent;
+  color: var(--atlas-tab-text);
+  font-family: var(--ide-font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.atlas-v2-toolbar [data-atlas-auto-hide-entry] {
+  width: 100%;
+}
+
+.atlas-v2-toolbar [data-atlas-toolbar-entry]:hover,
+.atlas-v2-toolbar [data-atlas-auto-hide-entry]:hover {
+  background: var(--atlas-tab-bg-hover);
+  color: var(--atlas-tab-text-active);
+}
+
+.atlas-v2-toolbar [data-atlas-toolbar-entry][aria-selected="true"] {
+  background: var(--ide-selection);
+  color: var(--atlas-tab-text-active);
+  box-shadow: inset 2px 0 0 var(--atlas-accent);
+}
+
+.atlas-v2-toolbar-divider {
+  width: 20px;
+  margin: 4px auto;
+  border-block-start: 1px solid var(--ide-divider);
+  opacity: 1;
+}
+
+.atlas-v2-toolbar-section-divider {
+  display: none;
+}
+
+/* 空闲时不画分割线：组边框与间隙已表达结构；悬停/拖拽/焦点才显示 accent 线。 */
+.atlas-v2-splitter {
+  background: transparent;
+  color: var(--atlas-splitter-color);
+  opacity: 1;
+}
+
+.atlas-v2-splitter::after {
+  content: "";
+  position: absolute;
+  background: transparent;
+}
+
+.atlas-v2-split-inline > .atlas-v2-splitter::after {
+  inset-block: 0;
+  inset-inline-start: 50%;
+  inline-size: 1px;
+}
+
+.atlas-v2-split-block > .atlas-v2-splitter::after {
+  inset-inline: 0;
+  inset-block-start: 50%;
+  block-size: 1px;
+}
+
+.atlas-v2-splitter:not([aria-disabled="true"]):hover::after,
+.atlas-v2-split[data-atlas-resizing="true"] > .atlas-v2-splitter::after,
+.atlas-v2-splitter:focus-visible::after {
+  background: var(--atlas-accent);
+}
+
+.atlas-v2-splitter:focus-visible {
+  outline: 2px solid var(--atlas-accent);
+  outline-offset: 0;
+}
+
+.atlas-v2-splitter-collapse {
+  color: var(--atlas-tab-text);
+  border-radius: 4px;
+}
+
+.atlas-v2-splitter-collapse:hover {
+  background: var(--atlas-tab-bg-hover);
+  color: var(--atlas-tab-text-active);
+}
+
+.atlas-v2-splitter-collapse:focus-visible {
+  outline: 2px solid var(--atlas-accent);
+  outline-offset: 0;
+}
+
+.atlas-v2-content-outlet:focus-visible {
+  outline: 2px solid var(--atlas-accent);
+  outline-offset: -2px;
+}
+
+.atlas-v2-popup {
+  font-family: var(--ide-font-sans);
+}
+
+.atlas-v2-popup-item {
+  font-size: 13px;
+}
+
+.atlas-v2-drag-preview {
+  font-family: var(--ide-font-sans);
+  font-size: 13px;
+}
+
+.atlas-v2-empty-state,
+.atlas-v2-workspace-empty {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: var(--ide-text-secondary);
+  font-family: var(--ide-font-sans);
+  font-size: 13px;
+}
+
+.atlas-v2-content-error,
+.atlas-v2-content-missing,
+.atlas-v2-content-conflict,
+.atlas-v2-group-error,
+.atlas-v2-host-error {
+  padding: 12px;
+  border: 1px solid var(--ide-border);
+  border-radius: 4px;
+  background: var(--ide-surface);
+  color: var(--ide-text-secondary);
+  font-family: var(--ide-font-sans);
+  font-size: 13px;
+}
+
+.atlas-v2-content-error,
+.atlas-v2-group-error,
+.atlas-v2-host-error {
+  border-color: var(--ide-danger);
+  background: var(--ide-danger-bg);
+  color: var(--ide-danger-text);
+}
+
+.atlas-v2-content-missing,
+.atlas-v2-content-conflict {
+  border-color: var(--ide-warning);
+  background: var(--ide-warning-bg);
+  color: var(--ide-warning-text);
+}
+
+.atlas-v2-content-error-diagnostic {
+  display: block;
+  margin-block-start: 6px;
+  font-family: var(--ide-font-mono);
+  font-size: 11px;
+}
+
+.atlas-v2-auto-hide-flyout {
+  border-radius: var(--atlas-radius);
+}

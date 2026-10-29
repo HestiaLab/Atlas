@@ -3,15 +3,15 @@
 > 简体中文（历史证据，记录当时验证结果）；本文为唯一维护版本（ADR-0036）。
 
 
-- 日期：2026-08-03（2026-08-06 更新基线：ADR-0023 新增 REQ-NF-009 后计数为 151）
-- 基线：ADR-0014；151 = REQ-F 142 + REQ-NF 9
+- 日期：2026-08-03（2026-08-06 更新基线：ADR-0023 新增 REQ-NF-009；2026-10-29 ADR-0039/0040 新增 REQ-NF-010 与 REQ-F-157 后计数为 153）
+- 基线：ADR-0014；153 = REQ-F 143 + REQ-NF 10
 - 规则：每个正式需求恰好一行；状态是实现状态，不继承 HLD 的 Designed。
 
 ## Five-dimension consistency audit
 
 | 维度 | 结论 | 证据/缺口 |
 |---|---|---|
-| Requirement correctness | Pass | ADR-0014 与 RequirementsBaselineTests 固定正文/索引同一 151 项集合。 |
+| Requirement correctness | Pass | ADR-0014 与 RequirementsBaselineTests 固定正文/索引同一 153 项集合。 |
 | Architecture boundary | Pass | Atlas.Core architecture test 禁止 Blazor、JS interop 与 Atlas.Blazor 引用；Core/Blazor 程序集边界保持。本历史审计描述的双包发布已被 ADR-0019 取代：只发布 Atlas.Blazor，并嵌入 Atlas.Core。 |
 | Domain model | Partial | identity、snapshot、layout、placement、sizing、persistence 模型存在；Auto-hide runtime、Reset 等行为仍缺。 |
 | Operation/render flow | Partial | P2/P4/P5/P6/P7 纵向切片存在；Overflow Menu/Wrap、Context Menu、部分修复策略未实现。 |
@@ -163,6 +163,7 @@
 | REQ-F-154 | In Progress | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-F-155 | Verified | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
 | REQ-F-156 | Verified | DES-OP-004~005、DES-OP-007、DES-PRJ-003 | [P5 evidence](./p5-drag-and-dock.md)：Core/Node/component/browser 与 terminal/performance。 |
+| REQ-F-157 | Implemented | DES-NFR-005 | [ADR-0040](../adr/0040-svg-chrome-icons.md)：公开 `AtlasIcon`/`AtlasIconName`、chrome 图标替换与方向感知折叠测试已完成；真实浏览器 close/overflow/collapse 图标已检查。 |
 | REQ-NF-001 | In Progress | DES-NFR-001、DES-RND-005 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-002 | In Progress | DES-PRJ-001 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
 | REQ-NF-003 | In Progress | DES-INT-007~008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | 现有 P1–P7 模型、operation 或 projection 测试仅覆盖部分 AC；缺口保留为 In Progress。 |
@@ -172,6 +173,7 @@
 | REQ-NF-007 | Implemented | DES-INT-007~008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | bUnit/DOM golden/真实 accessibility tree 验证现有 chrome；未实现控件与全焦点矩阵缺口仍保留。 |
 | REQ-NF-008 | Verified | DES-NFR-002、DES-PRJ-002 | [P8 evidence](./p8-system-hardening.md)：Node + 真实浏览器动态 change、dispose 和 CSS fallback。 |
 | REQ-NF-009 | Implemented | DES-NFR-005、DES-PRJ-002 | [ADR-0023](../adr/0023-css-variable-theming.md) 契约：atlas.css 已 token 化，真实浏览器默认 + `--atlas-accent` 覆盖已验证；[主题指南](../theming.md) 已发布。 |
+| REQ-NF-010 | Implemented | DES-NFR-005 | [ADR-0039](../adr/0039-opt-in-ide-theme.md)：`themes/ide.css`、token 契约测试、AA 对比度测试、Showcase 接入与真实浏览器亮/暗 fixture 已检查；全 chrome 拖拽反馈视觉证据沿用既有 REQ-NF-009 夹具。 |
 
 ## Audit interpretation
 
@@ -182,7 +184,7 @@
 ### 2026-10-24 复核
 
 ADR-0024~0034 实施批次与 `PublicAPI.Shipped` 基线迁移完成后，对照当前实现与
-测试证据（341 Core + 130 Blazor + 51 JS tests）复核了全部 151 行。状态无变更：
+测试证据（341 Core + 130 Blazor + 51 JS tests）复核了全部 151 行（当时基线）。状态无变更：
 每行 In Progress 仍只覆盖部分 AC；REQ-F-047（重置布局）保持 Not Started，
 因为 `ResetWorkspace` 按 ADR-0029 仍为保留值；Deferred 行保持 Deferred。
 升级为 Implemented/Verified 需先闭合各行记录的逐 AC 缺口。

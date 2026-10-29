@@ -611,6 +611,26 @@ menu open 和行折叠测量是 transient render state。DockItem.Title 是标�
 来源：F-034, F-038~040, F-042~045, F-048, F-138
 ```
 
+```
+DES-DOM-012
+Chrome 图标组件（AtlasIcon）
+Atlas 自有 chrome 控件使用公开的 `AtlasIcon` 组件与 `AtlasIconName` 枚举渲染内联 SVG：
+`Close`、`ChevronUp`、`ChevronDown`、`ChevronLeft`、`ChevronRight`。图标固定 16×16 viewBox，
+使用 `currentColor` 描边与 1.5 stroke-width，默认 16px，可由 `Size`/`CssClass` 调整；
+始终 `aria-hidden="true"`、`focusable="false"`，可访问名称由承载控件提供。
+
+默认映射：
+
+- Editor Tab overflow → `ChevronDown`
+- Panel Header close → `Close`
+- Splitter collapse → 按 `InlineChildren`/`BlockChildren` 选择左右或上下箭头；折叠后箭头指向展开方向
+
+图标以内联路径分发，不引入图标字体或第三方依赖。公共 API 由 PublicAPI 分析器约束；新增枚举值
+必须追加，不得删除或重排。
+
+来源：F-157
+```
+
 ---
 
 ## 4 操作引擎
@@ -2127,7 +2147,16 @@ token 集合是公开的、只增不减（additive）的契约。变量按用途
 
 完整 token 目录、默认值与实操示例见 `docs/zh/theming.md`。未来版本可以新增变量或调整默认值，但不得移除变量；移除变量属于破坏性变更。
 
-来源：NF-009
+REQ-NF-010 在此契约之上分发可选的静态 IDE 主题 `wwwroot/atlas-v2/themes/ide.css`（ADR-0039）：
+链接即生效，仅覆盖 Atlas 自有 chrome；通过 `prefers-color-scheme` 提供亮/暗调色板，并在 workspace
+上设置 background、text color 与 `color-scheme`。主题复用现有 `--atlas-*` token，新增
+`--atlas-border-color`、`--atlas-group-border-width`、`--atlas-group-radius`、
+`--atlas-tab-indicator-width`、`--atlas-tab-indicator-color` 五个默认不可见的 token；结构性效果
+（竖排 toolbar、Tab 下划线、交互态 1px 分割线、面板标题排版）由主题自有规则承担。主题必须满足
+WCAG AA（文本 4.5:1、指示器/焦点 3:1），不得使用 `!important`，并允许消费者在主题之后覆盖公共
+token。`--ide-*` 变量为主题私有，不属于公共契约。
+
+来源：NF-009, NF-010
 ```
 
 ---
@@ -2284,7 +2313,7 @@ preservation 与 component instance preservation，不能合并为一个模糊�
 | DEV-GATE-003 Content Lifetime | **Closed**：ADR-0012；跨 Group remount/dispose + 外置业务状态恢复 Spike | 跨 Group 的 instance-preservation 声明和 Workspace-wide keep-alive | Blazor Spike + Accepted ADR，明确业务状态合同 | Default、KeepAliveWithinGroup、外置状态恢复 |
 | DEV-GATE-004 Content Trust | **Closed**：ADR-0013；[threat model](./security/content-threat-model.md) | 对外安全承诺、SandboxedFrame public API、威胁模型 E2E | 产品决策 + threat model + Accepted ADR；browser E2E 仍是 P7 Exit 条件 | TrustedComponent + ErrorBoundary，但不得声称安全沙箱 |
 | DEV-GATE-005 Persistence Schema | **Closed**：ADR-0010 Accepted；namespace/version/order/default/limits/unknown policy 与 V1 窄兼容已冻结 | V2 Serializer、V1 importer、Preset 兼容性 | schema ADR、XSD、V1/V2 golden files、schema validation tests | DTO/validator 接口与 adversarial parser tests |
-| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；151 = F142 + NF9（基线计数由 REQ-NF-009/ADR-0023 更新） | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 151 个正式需求块维护矩阵 |
+| DEV-GATE-006 Traceability Baseline | **Closed**：ADR-0014；153 = F143 + NF10（基线计数由 REQ-NF-009/ADR-0023、REQ-NF-010/ADR-0039、REQ-F-157/ADR-0040 更新） | 自动化覆盖率统计和“全部需求完成”声明 | SRS/附录集合一致性测试；历史删除与非规范编号已有明确 disposition | 以 153 个正式需求块维护矩阵 |
 | DEV-GATE-007 Unified Content Catalog | **Closed**：ADR-0018；启动期 DI、Host-local Route 与 immutable Host-local Map 进入一个 strict Catalog | 删除旧的 Host-wide Template API、公开 Route/Map API 与跨 Panel 协作示例 | SRS F-006~008/119/120/122/128 + DES-RND-001~005 + Accepted ADR-0018 | 在冻结合同下执行 TDD 实施和 package/browser 验证 |
 
 闸门只阻断表中范围，不阻断无依赖模块。例如 DEV-GATE-002 未关闭时可以完成 Core transaction、
@@ -2588,7 +2617,7 @@ DOM contract tests 至少验证：
 | P5 Drag & Dock | Tab drag、Panel drag、target resolver、preview、cancel、undo | P4 + DEV-GATE-002 Closed | resolver matrix、全部 terminal path、跨实例、stale、30fps profile 通过 |
 | P6 Persistence | V2 XML、restore、Preset、V1 migration、repair/degradation | P2 + DEV-GATE-005 Closed | XSD/golden/fuzz/atomicity/single-writer tests 通过 |
 | P7 Content Lifetime & Security | keep-alive policy、SandboxedFrame、threat model | P3 + DEV-GATE-003/004 Closed | lifecycle/heap/browser/security E2E 通过；public claim 与实际边界一致 |
-| P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 151 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
+| P8 System Hardening | 全量追溯、a11y、RTL deferred guard、performance、packaging、demo | P3~P7 | 153 正式需求逐条有实现状态与测试证据；Open/Deferred 未伪装完成 |
 | Consumer Demo | 可迁移的 SRS §3.1 IDE 工作区、consumer boundary 与真实浏览器复验 | P8 + ADR-0017 Accepted | 双包 Release pack；独立 solution restore/build/test/format；仓库外 restore/build/test/run；当前浏览器证据单独记录且不替代 P7/P8 历史证据 |
 
 P5 与 P6 可以在 P2/P4 稳定后并行，但共享的 ID、Result、Revision、protocol enum 和 public API
@@ -2762,6 +2791,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-DOM-009 | ToolBar 状态与派生投影 | F-020~024, F-140, F-149~153 |
 | DES-DOM-010 | 尺寸约束、折叠与空间重分配 | F-014~016, F-033, F-047, F-078, F-082, F-104, F-141, F-144, F-148 |
 | DES-DOM-011 | Editor Tab 顺序、选择与最近访问状态 | F-034, F-038~040, F-042~045, F-048, F-138 |
+| DES-DOM-012 | Chrome 图标组件（AtlasIcon） | F-157 |
 | DES-OP-001 | Operation 模型 | F-027~029, F-069, F-049 等 |
 | DES-OP-002 | Transaction Pipeline | F-133, F-041, F-110~115 |
 | DES-OP-003 | Async Guard | F-041, F-029 |
@@ -2802,7 +2832,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-NFR-002 | Reduced Motion | NF-008 |
 | DES-NFR-003 | WAI-ARIA 语义与焦点合同 | F-022, F-035, F-116~118, NF-003, NF-007 |
 | DES-NFR-004 | 内容信任模式与安全隔离 | F-120, F-128, NF-006 |
-| DES-NFR-005 | 通过 CSS 变量进行样式定制 | NF-009 |
+| DES-NFR-005 | 通过 CSS 变量进行样式定制 | NF-009, NF-010 |
 | DES-PRJ-001 | 模块划分与依赖方向 | F-109, NF-002 |
 | DES-PRJ-002 | TypeScript 模块划分 | NF-003~004, NF-006, NF-008 |
 | DES-PRJ-003 | ToolBar 与 Panel 拖拽验证矩阵 | F-020~024, F-069~071, F-140, F-142, F-147, F-150~156, NF-004~005, NF-007 |
@@ -2811,7 +2841,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 
 ## 附录 D：SRS—HLD 完整设计追溯矩阵
 
-本矩阵覆盖 SRS 正文中的 151 个正式需求块。连续且具有相同设计责任和状态的需求合并为一行；
+本矩阵覆盖 SRS 正文中的 153 个正式需求块。连续且具有相同设计责任和状态的需求合并为一行；
 `来源` 字段与本矩阵由同一编号展开规则校验。仅出现在 SRS 索引/变更记录、没有正式需求块和 AC 的
 编号不计入覆盖率。
 
@@ -2849,12 +2879,14 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006 | Core/Interop/E2E | Designed |
 | REQ-F-155 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-156 | DES-OP-004~005、DES-OP-007 | Core/E2E | Designed |
+| REQ-F-157 | DES-DOM-012 | Blazor/DOM | Designed；ADR-0040 已接受 |
 | REQ-NF-003 | DES-INT-007~008、DES-NFR-003 | Blazor/E2E | Designed |
 | REQ-NF-004 | DES-INT-001~006、DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-005 | DES-INT-004、DES-INT-006、DES-PRJ-003 | Interop/Performance | Designed |
 | REQ-NF-006 | DES-ARCH-003、DES-NFR-004、DES-PRJ-002 | Security/E2E | Designed，OI-006 已由 ADR-0013 关闭 |
 | REQ-NF-007 | DES-NFR-003、DES-RND-006、DES-RND-009 | Blazor/E2E | Designed |
 | REQ-NF-009 | DES-NFR-005 | Blazor/CSS | Designed；ADR-0023 已接受，主题指南已发布 |
+| REQ-NF-010 | DES-NFR-005 | Blazor/CSS | Designed；ADR-0039 已接受，IDE 主题与主题指南已发布 |
 
 ### D.2 完整需求映射
 
@@ -2941,6 +2973,7 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | Designed |
 | REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Designed |
 | REQ-F-156 | DES-OP-004、DES-OP-005、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-F-157 | DES-DOM-012 | Designed |
 | REQ-NF-001 | DES-NFR-001、DES-RND-005 | Designed |
 | REQ-NF-002 | DES-PRJ-001 | Designed |
 | REQ-NF-003 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-002、DES-RND-006、DES-RND-009 | Designed |
@@ -2950,3 +2983,4 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-NF-007 | DES-INT-007、DES-INT-008、DES-NFR-003、DES-PRJ-003、DES-RND-006、DES-RND-009 | Designed |
 | REQ-NF-008 | DES-NFR-002、DES-PRJ-002 | Designed |
 | REQ-NF-009 | DES-NFR-005 | Designed |
+| REQ-NF-010 | DES-NFR-005 | Designed |

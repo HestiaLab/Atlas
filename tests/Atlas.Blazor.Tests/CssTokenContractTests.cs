@@ -80,6 +80,38 @@ public sealed class CssTokenContractTests
         Assert.Contains(".atlas-v2-workspace", theming, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Theme_stylesheet_only_uses_documented_tokens()
+    {
+        var theme = ReadFixture("ide.css");
+        var documented = Matches(ReadFixture("theming.md"), DocumentedPattern)
+            .Where(name => name.Length > "--atlas-".Length)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var defined = Matches(theme, DefinitionPattern);
+        var used = Matches(theme, UsagePattern);
+
+        Assert.NotEmpty(defined);
+        Assert.NotEmpty(used);
+        Assert.All(defined, token => Assert.Contains(token, documented));
+        Assert.All(used, token => Assert.Contains(token, documented));
+    }
+
+    [Fact]
+    public void Theme_stylesheet_provides_light_and_dark_palettes_without_important()
+    {
+        var theme = ReadFixture("ide.css");
+
+        Assert.Contains(
+            "@media (prefers-color-scheme: dark)",
+            theme,
+            StringComparison.Ordinal);
+        Assert.Contains("color-scheme: light dark", theme, StringComparison.Ordinal);
+        Assert.DoesNotContain("!important", theme, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--atlas-group-border-width: 1px", theme, StringComparison.Ordinal);
+        Assert.Contains("--atlas-tab-indicator-width: 2px", theme, StringComparison.Ordinal);
+    }
+
     private static HashSet<string> Matches(string text, Regex pattern)
     {
         return pattern.Matches(text)

@@ -32,6 +32,9 @@
     <None Include="..\..\src\Atlas.Blazor\wwwroot\atlas-v2\atlas.css"
           Link="fixtures\atlas.css"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Atlas.Blazor\wwwroot\atlas-v2\themes\ide.css"
+          Link="fixtures\ide.css"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\docs\zh\theming.md"
           Link="fixtures\theming.md"
           CopyToOutputDirectory="PreserveNewest" />

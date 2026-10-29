@@ -259,12 +259,14 @@ public sealed partial class AtlasWorkspaceHost
                 snapshot,
                 split.FirstId,
                 "first",
+                split.Axis,
                 presentation.CanCollapseFirst);
             RenderCollapseButton(
                 builder,
                 snapshot,
                 split.SecondId,
                 "second",
+                split.Axis,
                 presentation.CanCollapseSecond);
             builder.CloseElement();
             RenderNode(builder, snapshot, split.SecondId);
@@ -803,6 +805,7 @@ public sealed partial class AtlasWorkspaceHost
         WorkspaceSnapshot snapshot,
         LayoutNodeId childId,
         string childName,
+        SplitAxis axis,
         bool enabled)
     {
         // 折叠目标必须是组节点（分割子节点没有可见性概念），
@@ -831,8 +834,30 @@ public sealed partial class AtlasWorkspaceHost
             EventCallback.Factory.Create(
                 this,
                 () => ToggleSplitChildAsync(group.Id, collapsed)));
-        builder.AddContent(6, collapsed ? "›" : "‹");
+        builder.OpenComponent<AtlasIcon>(6);
+        builder.AddAttribute(
+            7,
+            "Name",
+            CollapseIcon(axis, string.Equals(childName, "first", StringComparison.Ordinal), collapsed));
+        builder.AddAttribute(8, "Size", 14);
+        builder.CloseComponent();
         builder.CloseElement();
+    }
+
+    // 折叠按钮指向将被折叠的一侧；折叠后改为指向展开方向。
+    private static AtlasIconName CollapseIcon(SplitAxis axis, bool isFirst, bool collapsed)
+    {
+        return (axis, isFirst, collapsed) switch
+        {
+            (SplitAxis.InlineChildren, true, false) => AtlasIconName.ChevronLeft,
+            (SplitAxis.InlineChildren, true, true) => AtlasIconName.ChevronRight,
+            (SplitAxis.InlineChildren, false, false) => AtlasIconName.ChevronRight,
+            (SplitAxis.InlineChildren, false, true) => AtlasIconName.ChevronLeft,
+            (SplitAxis.BlockChildren, true, false) => AtlasIconName.ChevronUp,
+            (SplitAxis.BlockChildren, true, true) => AtlasIconName.ChevronDown,
+            (SplitAxis.BlockChildren, false, false) => AtlasIconName.ChevronDown,
+            _ => AtlasIconName.ChevronUp,
+        };
     }
 
     private static void AddOptionalAttribute(

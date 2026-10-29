@@ -7,12 +7,13 @@
 
 ## Baseline
 
-- 基线日期：2026-07-31；2026-08-06 经 ADR-0023 新增 REQ-NF-009 后，基线计数更新为
-  151 = REQ-F 142 + REQ-NF 9
-- 正式需求块：151（REQ-F 142 + REQ-NF 9）
-- 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 18、In Progress 80、
-  Not Started 5、Deferred 2（2026-10-24 于 ADR-0024~0034 后复核：151 行全部
-  重新核对，状态无变更——见 P8 审计的复核说明）
+- 基线日期：2026-07-31；2026-08-06 经 ADR-0023 新增 REQ-NF-009，2026-10-29 经
+  ADR-0039/0040 新增 REQ-NF-010 与 REQ-F-157 后，基线计数更新为
+  153 = REQ-F 143 + REQ-NF 10
+- 正式需求块：153（REQ-F 143 + REQ-NF 10）
+- 当前功能实施状态：见 P8 逐项审计；Verified 46、Implemented 20、In Progress 80、
+  Not Started 5、Deferred 2（2026-10-24 复核 151 行；2026-10-29 新增
+  REQ-NF-010/REQ-F-157 均为 Implemented）
 - 最新实测门禁基线（2026-10-23，分支 `main`，Phase 0
   正确性修复、Phase 1 结构重构切片与 ADR-0024~0034 实施后）：
   341 Core + 135 Blazor tests；Core 行覆盖率 91.25% / 分支覆盖率 81.07%；
@@ -40,10 +41,14 @@
   `artifacts/reports/phase-p1-p2-2026-10-24.md` 与
   `artifacts/reports/phase-p1-p2-2026-10-24-evidence/`。
 
-在首个功能 work package 合并前，所有 151 个正式需求默认继承 `Not Started`。开始实施后，只在
+- 2026-10-29 IDE 主题与 chrome 图标：361 Core + 175 Blazor + 11 Showcase + 79 JS
+  全绿；Release build/test/format/pack 通过；Showcase 与 `tests/browser/ide-theme-fixture.html`
+  的亮/暗计算样式、public token 覆盖与图标已在真实浏览器验证。
+
+在首个功能 work package 合并前，所有 153 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
 
-P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-audit.md)。该表每个正式 ID
+P8 的逐项审计见 [153 条正式需求状态表](./evidence/p8-requirement-audit.md)。该表每个正式 ID
 恰好一行，并明确保留 Partial、Not Started 与 Deferred 缺口。
 
 ## 状态
@@ -67,7 +72,7 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | DEV-GATE-003 Content Lifetime | Closed | ADR-0012 + `ContentLifetimeSpikeTests`：跨 Group remount/dispose，ResourceId 外置业务状态恢复 |
 | DEV-GATE-004 Content Trust | Closed | ADR-0013 + threat model；真实浏览器安全证据已在 P7 Phase Exit 补齐 |
 | DEV-GATE-005 Persistence Schema | Closed | [ADR-0010](./adr/0010-persistence-schema-and-v1-compatibility.md) Accepted；严格 V2 XSD、V2 golden 与无样本 V1 窄兼容 golden 已冻结 |
-| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 151 = F142 + NF9 且附录与正文集合相同 |
+| DEV-GATE-006 Traceability Baseline | Closed | [ADR-0014](./adr/0014-formal-requirement-baseline.md) Accepted；`RequirementsBaselineTests` 验证 153 = F143 + NF10 且附录与正文集合相同 |
 | DEV-GATE-007 Unified Content Catalog | Closed | [ADR-0018](./adr/0018-unified-content-catalog-and-runtime-binding.md) Accepted；SRS/HLD 合同已冻结，实施证据仍作为 In Progress 单独跟踪 |
 
 ## 实施状态变更
@@ -174,6 +179,13 @@ P8 的逐项审计见 [151 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-F-024 | DES-INT-008、DES-NFR-002 | P2 后续增强 | `ClientScripts/drop-target.ts`、浏览器夹具 | 三浏览器 RTL 双 Host：Host A 文档拖拽 Rev 0→1、面板拖拽 1→2，Host B 始终 0；inline-start 新文档组物理位于右侧 | Verified | 复用既有 RTL 放置实现；未修改协议或布局语义 |
 | REQ-NF-001 | DES-NFR-001、DES-NFR-003 | P1 后续增强 | `Atlas.Blazor`、临时内存夹具 | Chrome 100 周期（100 次文档 + 100 次面板关闭/打开）：DOM 节点 138 恒定、jsEventListeners 51 恒定、GC 后 heap 增量 324 KB（容差 2 MB）、workspace 监听器 12 恒定、0 console error | Verified | 见报告 §6；约 1.9 KB/周期堆噪声，未判定泄漏；未做数小时长会话剖析 |
 | REQ-F-038、REQ-F-043、REQ-F-044、REQ-F-138、REQ-F-023 | DES-DOM-010~011、DES-INT-001~003 | P1 后续增强 | `samples/Atlas.Showcase/Pages/TabsAutoHideExample.razor`、`docs/zh/guides/using-atlas.md` | `TabsAutoHideExampleTests`（2）：三溢出模式/按钮、自动隐藏初始与悬停挂载、TopToolbar 入口；三浏览器 `/tabs-auto-hide`：Scroll 无按钮、Menu 4 个裁剪项、Wrap 8/8 可见、初始 auto-hide 0 出口、0 console error；Showcase 测试 9→11 | Verified | 仅使用公共 API；新增 `/tabs-auto-hide` 教学页并从 TopToolbar 链接；未改变公共 C# 表面 |
+
+## 2026-10-29 IDE 主题与 chrome 图标
+
+| Requirement | DES | Phase | Owner | Test evidence | Status | Notes |
+|-------------|-----|-------|-------|---------------|--------|-------|
+| REQ-NF-010 | DES-NFR-005 | P10 | `wwwroot/atlas-v2/themes/ide.css`、`samples/Atlas.Showcase`、`docs/zh/theming.md` | `CssTokenContractTests`：主题只使用文档化 token、亮/暗块存在、无 `!important`；`ThemeContrastTests`：亮/暗 AA 对比度；`tests/browser/ide-theme-fixture.html`：亮/暗工作区 chrome 视觉夹具 | Implemented | ADR-0039；真实浏览器亮/暗计算样式、主题后 `--atlas-*` 覆盖与 fixture 已验证；主题链接即生效、跟随 OS 明暗；内容排版仍由应用负责 |
+| REQ-F-157 | DES-NFR-005 | P10 | `Atlas.Blazor/Components/AtlasIcon.cs`、`AtlasGroupView`、`AtlasWorkspaceHost.Rendering` | `AtlasIconTests`：五个枚举、SVG 属性、装饰性 aria；`AtlasWorkspaceHostTests`/`TabOverflowTests`：溢出/关闭/折叠图标与方向感知、可访问名称保留 | Implemented | ADR-0040；默认 chrome 由文本字形切换为 SVG；公共 API 已进入 `PublicAPI.Unshipped`；真实浏览器 close/overflow/collapse 图标与 bUnit 方向测试已检查 |
 
 ## 更新规则
 

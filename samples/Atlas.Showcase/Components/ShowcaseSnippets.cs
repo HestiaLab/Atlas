@@ -102,17 +102,14 @@ var map = new AtlasKeyboardCommandMap(bindings);
 // Razor
 <AtlasWorkspaceHost KeyboardCommands=""@map"">…</AtlasWorkspaceHost>";
 
-    internal const string Theme = @"/* app.css —— 在 atlas.css 之后加载 */
-.atlas-v2-workspace {
-  --atlas-accent: #0b6bcb;      /* 放置区域、焦点、拖拽预览 */
-  --atlas-surface: #ffffff;     /* 面板背景 */
-  --atlas-text: #26303a;        /* 标签 */
-  --atlas-splitter-size: 5px;
-  --atlas-radius: 0.125rem;
-}
+    internal const string Theme = @"<!-- index.html —— 在 atlas.css 之后链接可选 IDE 主题 -->
+<link rel=""stylesheet"" href=""_content/Atlas.Blazor/atlas-v2/atlas.css"" />
+<link rel=""stylesheet"" href=""_content/Atlas.Blazor/atlas-v2/themes/ide.css"" />
 
-/* 暗色调色板通过 color-scheme 跟随操作系统：
-   :root { color-scheme: light dark } */";
+/* 仍可覆盖公开 --atlas-* 变量（放在主题之后） */
+.atlas-v2-workspace {
+  --atlas-accent: #0b6bcb;
+}";
 
     internal const string Persistence = @"var serializer = new AtlasXmlLayoutSerializer();
 string xml = serializer.Serialize(workspace.Current);

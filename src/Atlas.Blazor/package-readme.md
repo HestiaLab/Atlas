@@ -71,6 +71,7 @@ See the [theming guide](https://github.com/HestiaLab/Atlas/blob/main/docs/zh/the
 - Layout history with undo and redo
 - XML layout persistence, restore, and presets
 - CSS variable theming contract for consumer customization
+- Optional compact IDE theme (`atlas-v2/themes/ide.css`) with light/dark palettes
 - Blazor content hosting with a SandboxedFrame security boundary
 - Multi-Workspace, multi-Host state and DOM isolation
 - ARIA, focus coordination, and reduced-motion support
