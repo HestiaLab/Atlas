@@ -2148,7 +2148,7 @@ token 集合是公开的、只增不减（additive）的契约。变量按用途
 完整 token 目录、默认值与实操示例见 `docs/zh/theming.md`。未来版本可以新增变量或调整默认值，但不得移除变量；移除变量属于破坏性变更。
 
 REQ-NF-010 在此契约之上分发可选的静态 IDE 主题 `wwwroot/atlas-v2/themes/ide.css`（ADR-0039）：
-链接即生效，仅覆盖 Atlas 自有 chrome；通过 `prefers-color-scheme` 提供亮/暗调色板，并在 workspace
+链接即生效，仅覆盖 Atlas 自有 chrome；槽位只提供表面与分隔线且不裁剪应用内容；通过 `prefers-color-scheme` 提供亮/暗调色板，并在 workspace
 上设置 background、text color 与 `color-scheme`。主题复用现有 `--atlas-*` token，新增
 `--atlas-border-color`、`--atlas-group-border-width`、`--atlas-group-radius`、
 `--atlas-tab-indicator-width`、`--atlas-tab-indicator-color` 五个默认不可见的 token；结构性效果
