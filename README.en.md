@@ -2,7 +2,18 @@
 
 English introduction (Chinese documentation is authoritative) | [简体中文](README.md)
 
-**A dockable workspace component library for Blazor.**
+**Dockable Workspace for Blazor.**
+
+[![CI](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml) [![NuGet](https://img.shields.io/nuget/v/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![NuGet downloads](https://img.shields.io/nuget/dt/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![License](https://img.shields.io/github/license/HestiaLab/Atlas)](LICENSE)
+
+[**Live Demo**](https://HestiaLab.github.io/Atlas/) · [NuGet](https://www.nuget.org/packages/Atlas.Blazor) · [Documentation](docs/zh/README.md) · [Releases](https://github.com/HestiaLab/Atlas/releases)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/atlas-showcase-dark.png">
+  <img alt="Atlas Showcase: a dockable Blazor workspace in the light theme" src="docs/assets/atlas-showcase-light.png">
+</picture>
+
+> The screenshot uses the optional IDE theme (`themes/ide.css`).
 
 Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout
 persistence for IDEs, designers, admin consoles, and other complex web
@@ -63,6 +74,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 - [`HestiaLab/Penelopa`](https://github.com/HestiaLab/Penelopa) — a Blazor WebAssembly primitive alignment editor.
 
 ## Contributing
+
+If Atlas helps you, please consider starring the repository or sharing it with someone building a Blazor IDE or designer.
 
 Read [`CONTRIBUTING.md`](CONTRIBUTING.md) (Chinese) before submitting changes.
 Security and supported-version notes are in [`SECURITY.md`](SECURITY.md) (Chinese).
