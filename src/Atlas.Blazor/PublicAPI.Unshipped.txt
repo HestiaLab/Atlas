@@ -1,1 +1,15 @@
 #nullable enable
+Atlas.Blazor.Components.AtlasIcon
+Atlas.Blazor.Components.AtlasIcon.AtlasIcon() -> void
+Atlas.Blazor.Components.AtlasIcon.CssClass.get -> string?
+Atlas.Blazor.Components.AtlasIcon.CssClass.set -> void
+Atlas.Blazor.Components.AtlasIcon.Name.get -> Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIcon.Name.set -> void
+Atlas.Blazor.Components.AtlasIcon.Size.get -> int
+Atlas.Blazor.Components.AtlasIcon.Size.set -> void
+Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIconName.ChevronDown = 2 -> Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIconName.ChevronLeft = 3 -> Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIconName.ChevronRight = 4 -> Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIconName.ChevronUp = 1 -> Atlas.Blazor.Components.AtlasIconName
+Atlas.Blazor.Components.AtlasIconName.Close = 0 -> Atlas.Blazor.Components.AtlasIconName

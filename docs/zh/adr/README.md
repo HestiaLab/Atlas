@@ -62,6 +62,8 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0036](./0036-chinese-only-documentation.md) | Accepted | 中文唯一文档：删除 docs/en 全量镜像，只保留 README.en.md 作为国际入口；修订 ADR-0035 镜像条款 |
 | [ADR-0037](./0037-optional-item-identity-on-open.md) | Accepted | 打开条目可选标识符：`OpenItemRequest` + 工作区生成 GUID，结果返回实际标识符（REQ-F-028） |
 | [ADR-0038](./0038-reset-operation-and-serious-error-recovery.md) | Accepted | `ResetWorkspaceOperation` 解除保留状态；严重错误检测、稳定诊断日志与原子回退初始布局（REQ-F-047/127） |
+| [ADR-0039](./0039-opt-in-ide-theme.md) | Accepted | 第一方可选 IDE 主题 `themes/ide.css`：链接即生效、OS 明暗、完整 chrome 覆盖、混合 token/结构规则与 AA 对比度合同（REQ-NF-010） |
+| [ADR-0040](./0040-svg-chrome-icons.md) | Accepted | 公开 `AtlasIcon`/`AtlasIconName`；chrome 文本字形改为默认 SVG 图标并刷新 REQ-NF-009 AC3 基线（REQ-F-157） |
 
 ## 编写约定
 

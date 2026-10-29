@@ -2,7 +2,7 @@
 
 > 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
-Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发，并通过文档化的、以 `--atlas-` 为前缀的 CSS 自定义属性暴露其视觉样式（REQ-NF-009、ADR-0023）。你通过覆盖这些变量定制外观——不需要 `!important`，不需要内部选择器。
+Atlas 分发默认样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）与可选的 IDE 主题（`_content/Atlas.Blazor/atlas-v2/themes/ide.css`），并通过文档化的、以 `--atlas-` 为前缀的 CSS 自定义属性暴露其视觉样式（REQ-NF-009、ADR-0023）。你通过覆盖这些变量定制外观——不需要 `!important`，不需要内部选择器。
 
 ## 1. 链接样式表
 
@@ -12,7 +12,25 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 
 这会加载默认主题。默认值使用 CSS 系统颜色（`Highlight`、`Canvas`、`CanvasText`），由浏览器解析为平台界面颜色——例如在 Windows/Chrome 上 `Highlight` 解析为系统强调色，`Canvas`/`CanvasText` 解析为浅色模式的白底黑字。只有当浏览器配置为跟随系统明暗模式时，它们才会随之变化；具体解析值取决于浏览器与操作系统设置。
 
-## 2. 覆盖变量（推荐）
+## 2. 可选 IDE 主题
+
+Atlas.Blazor 还分发一个可选的紧凑 IDE 主题。链接即生效，无需修改组件参数：
+
+```html
+<link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/atlas.css" />
+<link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/themes/ide.css" />
+```
+
+- 主题作用于页面上所有 `.atlas-v2-workspace`；不链接时默认外观保持不变。
+- 只改变 Atlas 自有 chrome（组、标签页、面板标题栏、工具栏、分割条、弹出层、自动隐藏与拖拽反馈）。面板内容、顶部栏/状态栏内部内容与命令面板仍由应用负责。
+- 跟随操作系统 `prefers-color-scheme` 提供亮/暗调色板，无 JavaScript、无运行时主题 API。
+- 主题会在工作区上设置 `background`、文字颜色与 `color-scheme`。面板内容会继承这些值以保证暗色模式可读性；内容排版不改变。
+- 主题不使用 `!important`，只覆盖本文档列出的 `--atlas-*` 变量，并为结构性效果提供主题自有规则。不要依赖主题的内部选择器。
+- 若仍需定制，请在主题之后覆盖 `--atlas-*` 变量。
+
+主题的调色板与度量对照 DbcView 工作区维护；`--ide-*` 是主题私有变量，不属于 `--atlas-*` 公共契约。
+
+## 3. 覆盖变量（推荐）
 
 在你的样式表中声明覆盖，**放在** Atlas 链接之后。默认值定义在 `.atlas-v2-workspace` 元素上，因此任何匹配工作区容器（或其祖先）的选择器都会生效。
 
@@ -48,7 +66,7 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 }
 ```
 
-## 3. 变量契约
+## 4. 变量契约
 
 以下清单是公共 API：未来版本可以新增变量或调整默认值，但绝不删除。
 
@@ -66,6 +84,8 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-tab-text-active` | `inherit` | 激活 Tab 标签文字颜色 |
 | `--atlas-tab-bg-active` | `transparent` | 激活 Tab 背景 |
 | `--atlas-tab-bg-hover` | `transparent` | 悬停 Tab 背景 |
+| `--atlas-tab-indicator-color` | `transparent` | 激活 Tab 指示条颜色 |
+| `--atlas-border-color` | `currentColor` | 组边框与主题结构性边框 |
 | `--atlas-splitter-color` | `currentColor` | 分割条颜色 |
 | `--atlas-popup-bg` | `Canvas` | 标签页菜单 / 自动隐藏 Flyout 背景 |
 | `--atlas-popup-text` | `CanvasText` | 标签页菜单 / 自动隐藏 Flyout 文字 |
@@ -85,6 +105,9 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-padding-compact` | `0.375rem 0.625rem` | 拖拽预览内边距 |
 | `--atlas-radius` | `0.25rem` | 常规圆角 |
 | `--atlas-radius-sm` | `0.125rem` | 小圆角（区域高亮） |
+| `--atlas-group-border-width` | `0px` | 组边框宽度 |
+| `--atlas-group-radius` | `0px` | 组圆角 |
+| `--atlas-tab-indicator-width` | `0px` | 激活 Tab 指示条厚度 |
 | `--atlas-border-width` | `1px` | 细边框（toolbar 分隔线、拖拽预览） |
 | `--atlas-focus-ring-width` | `2px` | 焦点环与放置区域 outline 宽度 |
 | `--atlas-drag-preview-max-width` | `min(20rem, calc(100vw - 1rem))` | 拖拽预览上限 |
@@ -120,7 +143,7 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 | `--atlas-drag-preview-opacity` | `0.92` | 拖拽预览 |
 | `--atlas-popup-disabled-opacity` | `0.45` | 菜单禁用项 |
 
-## 4. 深度定制（复制样式表）
+## 5. 深度定制（复制样式表）
 
 如果变量覆盖不够，将 `atlas.css` 复制到你的项目中，修改后链接你的副本而非包内资产：
 
@@ -130,9 +153,10 @@ Atlas 以单个样式表（`_content/Atlas.Blazor/atlas-v2/atlas.css`）分发�
 
 这提供对布局与结构的完全控制，但你的副本将停止跟随 Atlas 升级——未来版本可能改变类名或结构。除非需要结构性修改，否则优先使用变量覆盖。
 
-## 5. 兼容性说明
+## 6. 兼容性说明
 
-- 默认值与 ADR-0023 之前的基线逐像素一致。
+- 默认值与 ADR-0023 之前的基线逐像素一致（ADR-0040 的 SVG chrome 图标是唯一已记录的例外）。
+- 新增 token（`--atlas-border-color`、`--atlas-group-border-width`、`--atlas-group-radius`、`--atlas-tab-indicator-width`、`--atlas-tab-indicator-color`）默认不可见，不改变未覆盖时的基线。
 - 变量作用域为 `.atlas-v2-workspace`；在任意祖先上的覆盖通过 CSS 继承传播。
 - `currentColor` 文本/边框值未 token 化：它们有意跟随宿主应用的文字颜色。
 - 删除变量是破坏性变更；契约是增量的。

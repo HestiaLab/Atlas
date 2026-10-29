@@ -1,16 +1,18 @@
 @namespace Atlas.Showcase.Components
 
 <div class="showcase-tool">
-    <TeachingCard Requirement="REQ-NF-009"
-                  Source="app.css"
+    <TeachingCard Requirement="REQ-NF-010"
+                  Source="index.html + themes/ide.css"
                   CodeSnippet="@ShowcaseSnippets.Theme">
-        <p>Atlas 通过文档化的 <code>--atlas-*</code> CSS 变量（ADR-0023）
-        暴露视觉样式。覆盖这些变量即可定制主题，无需 <code>!important</code>，
-        也无需使用 Atlas 内部选择器。边框、圆角等效果层仍由消费方样式负责。
-        本演示用 <code>app.css</code> 中的 <code>--showcase-*</code> 调色板
-        驱动每个 Atlas token。</p>
-        <p><span class="showcase-tag accent">试一试</span> 你在放置区域和
-        焦点环上看到的强调色就是 <code>--showcase-accent</code>；它通过
-        <code>color-scheme</code> 跟随操作系统明暗偏好。</p>
+        <p>本演示在 <code>atlas.css</code> 之后链接 Atlas 可选的 IDE 主题
+        <code>themes/ide.css</code>（ADR-0039）。链接即生效，主题只改变 Atlas
+        自有 chrome；Showcase 的内容面板、顶栏与状态栏仍由
+        <code>--showcase-*</code> 调色板驱动。</p>
+        <p>主题跟随操作系统明暗偏好，并为工作区设置
+        <code>color-scheme</code>。需要更深度定制时，你仍可在主题之后覆盖
+        公开的 <code>--atlas-*</code> 变量，无需 <code>!important</code>
+        （REQ-NF-009）。</p>
+        <p><span class="showcase-tag accent">试一试</span> 切换操作系统的
+        明暗模式，观察工作区 chrome 与内容面板同时切换调色板。</p>
     </TeachingCard>
 </div>

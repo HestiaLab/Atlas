@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas IDE theme fixture</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/src/Atlas.Blazor/wwwroot/atlas-v2/atlas.css">
+  <link rel="stylesheet" href="/src/Atlas.Blazor/wwwroot/atlas-v2/themes/ide.css">
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { font-family: "Segoe UI", sans-serif; }
+    .atlas-v2-workspace { block-size: 100%; }
+    .fixture-topbar,
+    .fixture-statusbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      block-size: 100%;
+      padding: 0 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .fixture-topbar { justify-content: space-between; font-weight: 600; }
+    .fixture-statusbar { color: var(--ide-text-secondary); font-size: 0.75rem; }
+    .fixture-panel {
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .fixture-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-block-end: 1px solid var(--ide-divider);
+    }
+    .fixture-popup {
+      inset-block-start: 4rem;
+      inset-inline-end: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="atlas-v2-workspace">
+    <div class="atlas-v2-top-toolbar">
+      <div class="fixture-topbar">
+        <span>Atlas IDE theme fixture</span>
+        <span>Undo · Redo · Search</span>
+      </div>
+    </div>
+
+    <div class="atlas-v2-work-area">
+      <div class="atlas-v2-toolbar" data-atlas-toolbar-side="inline-start">
+        <div class="atlas-v2-toolbar-region">
+          <button type="button" role="tab" data-atlas-toolbar-entry="true" aria-selected="true">Explorer</button>
+          <button type="button" role="tab" data-atlas-toolbar-entry="true" aria-selected="false">Search</button>
+          <div class="atlas-v2-toolbar-divider" data-atlas-toolbar-section-divider="true"></div>
+          <button type="button" role="tab" data-atlas-toolbar-entry="true" aria-selected="false">Source</button>
+        </div>
+      </div>
+
+      <div class="atlas-v2-work-area-center">
+        <div class="atlas-v2-split atlas-v2-split-inline"
+             style="--atlas-first-track: 16rem; --atlas-second-track: minmax(0, 1fr);">
+          <section class="atlas-v2-group" data-atlas-group-kind="tool">
+            <div class="atlas-v2-panel-header" data-atlas-panel-header="true">
+              <span class="atlas-v2-item-title">Explorer</span>
+              <button type="button" class="atlas-v2-panel-close" data-atlas-close-panel="true" aria-label="Close Explorer">
+                <svg class="atlas-v2-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true" focusable="false"><path d="m4 4 8 8M12 4 4 12"></path></svg>
+              </button>
+            </div>
+            <div class="atlas-v2-content-outlet fixture-panel">
+              <div class="fixture-row"><span>dbc</span><span>3 files</span></div>
+              <div class="fixture-row"><span>main.dbc</span><span></span></div>
+              <div class="fixture-row"><span>signals.dbc</span><span></span></div>
+            </div>
+          </section>
+
+          <div class="atlas-v2-splitter" role="separator" aria-orientation="vertical" tabindex="0"
+               aria-label="Resize split editor" data-atlas-can-collapse-first="true">
+            <button type="button" class="atlas-v2-splitter-collapse"
+                    data-atlas-collapse-child="second" aria-label="Collapse region">
+              <svg class="atlas-v2-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                   aria-hidden="true" focusable="false"><path d="m6 4 4 4-4 4"></path></svg>
+            </button>
+          </div>
+
+          <div class="atlas-v2-split atlas-v2-split-block"
+               style="--atlas-first-track: minmax(0, 1fr); --atlas-second-track: 8rem;">
+            <section class="atlas-v2-group" data-atlas-group-kind="document">
+              <div class="atlas-v2-tab-bar">
+                <div class="atlas-v2-tab-strip" role="tablist" aria-orientation="horizontal"
+                     data-atlas-overflow-mode="menu" data-atlas-overflowing="true">
+                  <button type="button" role="tab" aria-selected="true">
+                    <span class="atlas-v2-item-title">main.dbc</span>
+                  </button>
+                  <button type="button" role="tab" aria-selected="false">
+                    <span class="atlas-v2-item-title">signals.dbc</span>
+                  </button>
+                </div>
+                <button type="button" class="atlas-v2-tab-overflow-button"
+                        data-atlas-overflow-menu-button="true" aria-haspopup="menu" aria-expanded="false"
+                        aria-label="All tabs">
+                  <svg class="atlas-v2-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"
+                       stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                       aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"></path></svg>
+                </button>
+              </div>
+              <div class="atlas-v2-content-outlet fixture-panel">
+                <div class="fixture-row"><span>BO_ 170 AccPedal</span><span>8 bytes</span></div>
+                <div class="fixture-row"><span>SG_ KickDownPressed</span><span>DME</span></div>
+                <div class="fixture-row"><span>SG_ CruisePedalActive</span><span>DME</span></div>
+                <div class="fixture-row"><span>SG_ ThrottlePressed</span><span>XXX</span></div>
+              </div>
+            </section>
+
+            <div class="atlas-v2-splitter" role="separator" aria-orientation="horizontal" tabindex="0"
+                 aria-label="Resize split diagnostics"></div>
+
+            <section class="atlas-v2-group" data-atlas-group-kind="tool">
+              <div class="atlas-v2-panel-header" data-atlas-panel-header="true">
+                <span class="atlas-v2-item-title">Diagnostics</span>
+              </div>
+              <div class="atlas-v2-content-outlet fixture-panel">
+                <div class="atlas-v2-content-missing">Content is not registered.</div>
+                <div class="atlas-v2-content-error">
+                  Content could not be rendered.
+                  <span class="atlas-v2-content-error-diagnostic">ATLAS-CONTENT-RENDER-FAILED</span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="atlas-v2-toolbar" data-atlas-toolbar-side="inline-end">
+        <div class="atlas-v2-toolbar-region">
+          <button type="button" role="tab" data-atlas-toolbar-entry="true" aria-selected="true">Properties</button>
+          <button type="button" role="tab" data-atlas-toolbar-entry="true" aria-selected="false">Palette</button>
+          <div class="atlas-v2-auto-hide-owner" data-atlas-auto-hide-owner="true"
+               data-atlas-auto-hide-open="true">
+            <button type="button" role="tab" class="atlas-v2-auto-hide-entry"
+                    data-atlas-auto-hide-entry="true" aria-label="Palette">Palette</button>
+            <div class="atlas-v2-auto-hide-flyout" data-atlas-auto-hide-flyout="true"
+                 role="region" aria-label="Palette">
+              <div class="atlas-v2-content-outlet fixture-panel">Floating palette content</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="atlas-v2-status-bar">
+      <div class="fixture-statusbar">
+        <span>Opened main.dbc</span>
+        <span>1 warning</span>
+        <span>Revision 12</span>
+      </div>
+    </div>
+
+    <div class="atlas-v2-popup fixture-popup" role="menu" aria-label="All tabs">
+      <button type="button" class="atlas-v2-popup-item" role="menuitem">main.dbc</button>
+      <button type="button" class="atlas-v2-popup-item" role="menuitem">signals.dbc</button>
+      <button type="button" class="atlas-v2-popup-item" role="menuitem" disabled>diagnostics.log</button>
+    </div>
+  </div>
+</body>
+</html>

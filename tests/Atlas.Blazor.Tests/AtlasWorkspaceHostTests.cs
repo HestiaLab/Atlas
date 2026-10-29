@@ -919,6 +919,9 @@ public sealed class AtlasWorkspaceHostTests : TestContext
             "true",
             splitter.GetAttribute("data-atlas-can-collapse-first"));
         var collapse = cut.Find("[data-atlas-collapse-child='first']");
+        Assert.Equal(
+            "m10 12-4-4 4-4",
+            collapse.QuerySelector("path")!.GetAttribute("d"));
         collapse.Click();
         cut.WaitForAssertion(
             () =>
@@ -935,6 +938,10 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     "first",
                     cut.Find("[data-atlas-node-id='root']")
                         .GetAttribute("data-atlas-split-hidden"));
+                Assert.Equal(
+                    "m6 4 4 4-4 4",
+                    cut.Find("[data-atlas-collapse-child='first'] path")
+                        .GetAttribute("d"));
             });
 
         var undo = await workspace.UndoAsync();
@@ -955,6 +962,41 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                     "none",
                     cut.Find("[data-atlas-node-id='root']")
                         .GetAttribute("data-atlas-split-hidden"));
+            });
+    }
+
+    [Fact]
+    public async Task Block_splitter_collapse_icon_uses_vertical_chevrons()
+    {
+        await using var workspace = CreateWorkspace(BlockToolSplitDefinition());
+        var cut = RenderComponent<AtlasWorkspaceHost>(
+            parameters => parameters
+                .Add(component => component.Workspace, workspace)
+                .Add(component => component.EnableInteractions, false)
+                .Add(
+                    component => component.SplitterPresentation,
+                    splitId => splitId == new LayoutNodeId("block-root")
+                        ? new AtlasSplitterPresentation(canCollapseFirst: true)
+                        : null));
+
+        const string selector =
+            "[data-atlas-split-id='block-root'] [data-atlas-collapse-child='first']";
+        var collapse = cut.Find(selector);
+        Assert.Equal(
+            "m4 10 4-4 4 4",
+            collapse.QuerySelector("path")!.GetAttribute("d"));
+
+        collapse.Click();
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Equal(
+                    GroupVisibility.Collapsed,
+                    Assert.IsType<GroupNode>(
+                        workspace.Current.Nodes[new LayoutNodeId("first-tools")]).Visibility);
+                Assert.Equal(
+                    "m4 6 4 4 4-4",
+                    cut.Find(selector).QuerySelector("path")!.GetAttribute("d"));
             });
     }
 
@@ -2469,6 +2511,12 @@ public sealed class AtlasWorkspaceHostTests : TestContext
         Assert.Equal("button", close.GetAttribute("type"));
         Assert.False(string.IsNullOrWhiteSpace(close.GetAttribute("aria-label")));
         Assert.Contains("First Tool", close.GetAttribute("aria-label"));
+        var closeIcon = close.QuerySelector("svg.atlas-v2-icon");
+        Assert.NotNull(closeIcon);
+        Assert.Equal(
+            "m4 4 8 8M12 4 4 12",
+            closeIcon.QuerySelector("path")!.GetAttribute("d"));
+        Assert.Empty(close.TextContent.Trim());
 
         close.Click();
 
@@ -2772,6 +2820,64 @@ public sealed class AtlasWorkspaceHostTests : TestContext
                 new ToolBarOrderState(
                     LogicalRegion.InlineStartUpper,
                     new[] { tool.Id }),
+            });
+    }
+
+    private static AtlasWorkspaceDefinition BlockToolSplitDefinition()
+    {
+        var first = new DockItem(
+            new DockItemId("first-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "first-resource"),
+            DockItemCapabilityPresets.Tool,
+            "First Tool");
+        var second = new DockItem(
+            new DockItemId("second-tool"),
+            DockItemKind.Tool,
+            new ContentReference("tool", "second-resource"),
+            DockItemCapabilityPresets.Tool,
+            "Second Tool");
+        var firstGroup = new GroupNode(
+            new LayoutNodeId("first-tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { first.Id },
+            first.Id,
+            toolbarRegion: LogicalRegion.InlineStartUpper);
+        var secondGroup = new GroupNode(
+            new LayoutNodeId("second-tools"),
+            DockItemKind.Tool,
+            GroupRetentionPolicy.Persistent,
+            GroupVisibility.Expanded,
+            new[] { second.Id },
+            second.Id,
+            toolbarRegion: LogicalRegion.InlineEndUpper);
+        var split = new SplitNode(
+            new LayoutNodeId("block-root"),
+            SplitAxis.BlockChildren,
+            SplitBasis.Proportional(0.5),
+            new SplitConstraints(),
+            firstGroup.Id,
+            secondGroup.Id);
+        return new AtlasWorkspaceDefinition(
+            new WorkspaceId("block-tools"),
+            split.Id,
+            new LayoutNode[] { split, firstGroup, secondGroup },
+            new[] { first, second },
+            toolBars: new[]
+            {
+                new ToolBarState(LogicalSide.InlineStart, ToolBarVisibility.Expanded),
+                new ToolBarState(LogicalSide.InlineEnd, ToolBarVisibility.Expanded),
+            },
+            toolBarOrders: new[]
+            {
+                new ToolBarOrderState(
+                    LogicalRegion.InlineStartUpper,
+                    new[] { first.Id }),
+                new ToolBarOrderState(
+                    LogicalRegion.InlineEndUpper,
+                    new[] { second.Id }),
             });
     }
 

@@ -46,6 +46,12 @@ public sealed class TabOverflowTests : TestContext
         Assert.Equal("menu", button.GetAttribute("aria-haspopup"));
         Assert.Equal("false", button.GetAttribute("aria-expanded"));
         Assert.False(string.IsNullOrWhiteSpace(button.GetAttribute("aria-controls")));
+        var overflowIcon = button.QuerySelector("svg.atlas-v2-icon");
+        Assert.NotNull(overflowIcon);
+        Assert.Equal(
+            "m4 6 4 4 4-4",
+            overflowIcon.QuerySelector("path")!.GetAttribute("d"));
+        Assert.Empty(button.TextContent.Trim());
         Assert.Empty(cut.FindAll("[data-atlas-tab-menu]"));
 
         button.Click();

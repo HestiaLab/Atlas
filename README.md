@@ -17,7 +17,7 @@ Atlas 为 IDE、设计器、管理后台等复杂 Web 应用提供工具面板�
 - Splitter 鼠标/键盘调整，弹性吸收（elastic-absorb）尺寸
 - 布局历史、撤销与重做
 - XML 布局持久化、恢复与预设
-- CSS 变量主题（`--atlas-*` token，见[主题指南](docs/zh/theming.md)）
+- CSS 变量主题（`--atlas-*` token，见[主题指南](docs/zh/theming.md)）与可选的紧凑 IDE 主题（`themes/ide.css`）
 - 内容承载与 SandboxedFrame 安全边界
 - 多 Workspace 隔离、ARIA、焦点协调与 reduced-motion
 

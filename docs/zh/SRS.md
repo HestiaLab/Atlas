@@ -46,7 +46,7 @@
 - 内容组件（如代码编辑器、终端、文件浏览器）的具体实现——由 Application Developer 提供
 - 服务端状态同步与多人协作
 - 具体框架（React / Vue / Angular 等）的绑定方案——由详细设计阶段确定
-- 主题定制与国际化（i18n）——推迟至后续版本（RTL 镜像见附录 B 延期需求）
+- 运行时主题引擎、自定义主题编辑与国际化（i18n）——推迟至后续版本（静态第一方主题见 REQ-NF-010；RTL 镜像见附录 B 延期需求）
 - Floating Window（浮动窗口）——推迟至后续版本（见附录 B 延期需求）
 
 ### 设计参照
@@ -4259,6 +4259,39 @@ Then 系统应返回失败结果
 And 系统不抛出异常
 ```
 
+```
+REQ-F-157 🟡 [Actor: Application Developer]
+
+Title
+Chrome 图标组件（AtlasIcon）
+
+Description
+系统应提供公开的装饰性图标组件 `AtlasIcon` 与 `AtlasIconName` 枚举，供 Atlas 自有 chrome 控件使用，并允许应用在自有工具栏中复用；图标使用 `currentColor` 与 16×16 viewBox，默认 16px，可由 `Size` 与 `CssClass` 调整，且始终以 `aria-hidden="true"`、`focusable="false"` 渲染。
+
+Acceptance Criteria
+
+AC1：图标枚举与渲染
+
+Given 应用开发者渲染 `AtlasIcon` 并指定 `AtlasIconName` 的任一值
+When 组件完成渲染
+Then 应输出带 `atlas-v2-icon` 基础类的内联 SVG
+And 应使用 `currentColor` 描边并设置 `aria-hidden="true"` 与 `focusable="false"`
+
+AC2：chrome 默认图标
+
+Given 工作区渲染标签页溢出按钮、面板关闭按钮或分割条折叠按钮
+When 控件完成渲染
+Then 应渲染对应 SVG 图标而不是文本字形
+And 控件原有的 `aria-label`/`title` 可访问名称保持不变
+
+AC3：方向感知的折叠图标
+
+Given 分割条为 `InlineChildren` 或 `BlockChildren`
+When 渲染折叠按钮
+Then 图标方向应匹配分割轴
+And 折叠状态切换后图标应指向展开方向
+```
+
 ## 3.9 错误处理与容错
 
 ```
@@ -4783,7 +4816,50 @@ AC3：默认外观保持不变
 
 Given 应用程序开发者未声明任何 Atlas 变量覆盖
 When 工作区渲染
-Then 默认外观应与定制前的基线一致
+Then 默认外观应与当前发行版基线一致
+And ADR-0040 的 SVG chrome 图标是唯一已记录的默认视觉变更
+And 新增 token 的默认值不可见
+```
+
+```
+REQ-NF-010 🟡 [Actor: Application Developer]
+
+Title
+第一方可选 IDE 主题
+
+Description
+系统应分发一个可选的、静态的 IDE 主题样式表，在不改变默认 `atlas.css` 外观的前提下，为 Atlas 自有工作区 chrome 提供统一的紧凑 IDE 视觉；主题必须遵循 REQ-NF-009 的变量契约，并通过 `prefers-color-scheme` 提供亮/暗调色板。
+
+Acceptance Criteria
+
+AC1：链接即生效且默认不变
+
+Given 应用程序开发者同时链接 `atlas.css` 与 `themes/ide.css`
+When 工作区渲染
+Then 所有工作区 chrome 应采用 IDE 主题
+And 若未链接主题，默认外观保持不变（REQ-F-157 的图标变更除外）
+
+AC2：明暗与可访问性
+
+Given 操作系统明暗偏好为亮色或暗色
+When 工作区渲染
+Then 主题应选择对应调色板
+And 正文文本对比度应不低于 4.5:1
+And UI 指示器与焦点环对比度应不低于 3:1
+
+AC3：范围与定制路径
+
+Given 应用链接了主题
+When 应用在主题之后覆盖 `--atlas-*` 变量
+Then 覆盖应生效
+And 主题不得使用 `!important` 或要求覆盖内部选择器
+And 面板内容排版、应用顶栏/状态栏内容与命令面板不属于主题范围
+
+AC4：完整 chrome 覆盖
+
+Given 工作区渲染标签页、面板标题栏、工具栏、分割条、弹出层、自动隐藏 Flyout、空/错误状态或拖拽反馈
+When 主题生效
+Then 上述 Atlas 自有 chrome 均应使用主题视觉
 ```
 
 # 5 需求统计
@@ -4795,10 +4871,10 @@ Then 默认外观应与定制前的基线一致
 | §3.5 Dock Panel（Dock 面板） 移动                   | 6       | 3      | 3      | 0     |
 | §3.6 分割条                                      | 10      | 3      | 7      | 0     |
 | §3.7 布局保存与恢复                                  | 14      | 4      | 9      | 1     |
-| §3.8 开发者接口与事件                                 | 22      | 13     | 8      | 1     |
+| §3.8 开发者接口与事件                                 | 23      | 13     | 9      | 1     |
 | §3.9 错误处理与容错                                  | 11      | 8      | 3      | 0     |
-| §4 非功能需求                                      | 9       | 3      | 5      | 1     |
-| **合计**                                        | **151** | **79** | **67** | **5** |
+| §4 非功能需求                                      | 10      | 3      | 6      | 1     |
+| **合计**                                        | **153** | **79** | **69** | **5** |
 
 ## 附录A：需求统计
 
@@ -4962,6 +5038,7 @@ Then 默认外观应与定制前的基线一致
 | REQ-F-117 | 🟡  | End User              | 键盘快捷键关闭Editor Tab（编辑器标签页）    |
 | REQ-F-118 | 🟢  | End User              | 键盘快捷键切换Dock Panel（Dock 面板）焦点 |
 | REQ-F-147 | 🔴  | Application Developer | Layout Instance（布局实例） 销毁     |
+| REQ-F-157 | 🟡  | Application Developer | Chrome 图标组件（AtlasIcon）      |
 
 ### §3.9 错误处理与容错
 
@@ -4999,8 +5076,9 @@ Then 默认外观应与定制前的基线一致
 | REQ-NF-007 | 🟡  | End User              | WAI-ARIA 可访问性 |
 | REQ-NF-008 | 🟢  | End User              | 动画偏好适配        |
 | REQ-NF-009 | 🟡  | Application Developer | 通过 CSS 变量进行样式定制 |
+| REQ-NF-010 | 🟡  | Application Developer | 第一方可选 IDE 主题 |
 
-> 合计 **151** 条正式需求（F: 142 条 + NF: 9 条）。正式需求以正文中包含 Actor 与 Acceptance
+> 合计 **153** 条正式需求（F: 143 条 + NF: 10 条）。正式需求以正文中包含 Actor 与 Acceptance
 > Criteria 的需求块为准，附录 A 与正文一一对应。
 
 ### 非规范性历史编号处置
@@ -5032,7 +5110,7 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | --------- |:---:| ------------------------------ | ----------------------------- |
 | 历史 F-136（非规范） | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
 | REQ-F-024（含历史 F-135 场景） | 🟢  | RTL（Right-to-Left，从右到左）布局镜像 | 需 i18n 基础支持，当前版本仅 LTR |
-| —         | 🟢  | 主题定制与国际化（i18n）                 | 需全局主题引擎和本地化框架支持               |
+| —         | 🟢  | 运行时主题引擎、自定义主题编辑与国际化（i18n） | 需全局主题引擎和本地化框架支持；静态第一方主题见 REQ-NF-010 |
 | —         | 🟢  | Floating Window（浮动窗口）          | 需独立的窗口管理层，非核心路径，§3.1 已标注为后续扩展 |
 
 ## 附录 C：需求变更记录
@@ -5081,3 +5159,6 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | REQ-NF-002    | 浏览器兼容性                                     | 勘误     | AC1 移除硬编码需求编号范围（REQ-F-001 至 REQ-F-139），改为"§3 全部 REQ-F 需求"，避免随需求增删失效                                        |
 | —             | 全文一致性                                      | 勘误     | 2026-07-31 依据 ADR-0014 固定正式需求数为 150（F:142 + NF:8）；附录 A 与正式需求块一一对应；5 个历史删除编号与 9 个非规范性边界编号不计入覆盖率 |
 | REQ-F-006~008、REQ-F-119~120、REQ-F-122、REQ-F-128 | Content Catalog 与运行时绑定 | 修改 | 2026-08-03 依据 ADR-0018 将 DI、声明式 Route 和函数式 Map 统一为一个 Effective Content Catalog；冻结强类型运行时绑定、应用拥有的共享状态协作、确定性 Kind 冲突、缺失 Item 保留和安全的 scoped 诊断合同 |
+| REQ-NF-010 | 第一方可选 IDE 主题 | 新增 | 2026-10-29 依据 ADR-0039 新增可选 `themes/ide.css`：链接即生效、跟随 OS 明暗、完整覆盖 Atlas chrome、AA 对比度合同、无 `!important` |
+| REQ-F-157 | Chrome 图标组件（AtlasIcon） | 新增 | 2026-10-29 依据 ADR-0040 以公开 `AtlasIcon`/`AtlasIconName` 替换 chrome 文本字形；图标成为默认视觉并刷新 REQ-NF-009 AC3 基线 |
+| REQ-NF-009 | 通过 CSS 变量进行样式定制 | 修改 | 2026-10-29 扩展变量契约以覆盖组边框/圆角与 Tab 指示条；AC3 基线参照 ADR-0040 刷新 |

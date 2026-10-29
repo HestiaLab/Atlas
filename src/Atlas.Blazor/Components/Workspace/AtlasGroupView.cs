@@ -515,7 +515,10 @@ internal sealed class AtlasGroupView : ComponentBase
         builder.AddElementReferenceCapture(
             10,
             value => overflowButtonElement = value);
-        builder.AddContent(11, "»");
+        builder.OpenComponent<AtlasIcon>(11);
+        builder.AddAttribute(12, "Name", AtlasIconName.ChevronDown);
+        builder.AddAttribute(13, "Size", 14);
+        builder.CloseComponent();
         builder.CloseElement();
     }
 
@@ -841,7 +844,10 @@ internal sealed class AtlasGroupView : ComponentBase
             12,
             "onclick",
             EventCallback.Factory.Create(this, CollapseAsync));
-        builder.AddContent(13, "×");
+        builder.OpenComponent<AtlasIcon>(13);
+        builder.AddAttribute(14, "Name", AtlasIconName.Close);
+        builder.AddAttribute(15, "Size", 14);
+        builder.CloseComponent();
         builder.CloseElement();
         builder.CloseElement();
     }
