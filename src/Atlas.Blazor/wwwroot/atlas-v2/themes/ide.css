@@ -111,11 +111,11 @@
   color: var(--ide-on-accent);
 }
 
-/* 固定槽位只提供表面与分隔线；槽位内部内容仍由应用样式负责。 */
+/* 固定槽位只提供表面与分隔线；槽位内部内容仍由应用样式负责。
+   槽位不得裁剪内容：应用可能在顶栏/状态栏内渲染越过边界的弹出层。 */
 .atlas-v2-workspace > .atlas-v2-top-toolbar,
 .atlas-v2-workspace > .atlas-v2-status-bar {
   min-inline-size: 0;
-  overflow: hidden;
   background: var(--atlas-chrome-bg);
 }
 

@@ -112,6 +112,23 @@ public sealed class CssTokenContractTests
         Assert.Contains("--atlas-tab-indicator-width: 2px", theme, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Theme_slot_surfaces_do_not_clip_consumer_content()
+    {
+        var theme = ReadFixture("ide.css");
+        var slotRule = Regex.Match(
+            theme,
+            @"\.atlas-v2-workspace > \.atlas-v2-top-toolbar,\s*"
+                + @"\.atlas-v2-workspace > \.atlas-v2-status-bar\s*\{(?<body>[^}]*)\}",
+            RegexOptions.CultureInvariant);
+
+        Assert.True(slotRule.Success, "Top toolbar/status bar slot rule was not found.");
+        Assert.DoesNotContain(
+            "overflow",
+            slotRule.Groups["body"].Value,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
     private static HashSet<string> Matches(string text, Regex pattern)
     {
         return pattern.Matches(text)
