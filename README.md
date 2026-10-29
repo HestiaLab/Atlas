@@ -2,7 +2,18 @@
 
 简体中文（权威） | [English introduction](README.en.md)
 
-**面向 Blazor 的可停靠工作区组件库。**
+**Dockable Workspace for Blazor** · 面向 Blazor 的可停靠工作区组件库
+
+[![CI](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml) [![NuGet](https://img.shields.io/nuget/v/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![NuGet downloads](https://img.shields.io/nuget/dt/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![License](https://img.shields.io/github/license/HestiaLab/Atlas)](LICENSE)
+
+[**Live Demo**](https://HestiaLab.github.io/Atlas/) · [NuGet](https://www.nuget.org/packages/Atlas.Blazor) · [文档](docs/zh/README.md) · [Releases](https://github.com/HestiaLab/Atlas/releases)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/atlas-showcase-dark.png">
+  <img alt="Atlas Showcase：亮色主题下的可停靠 Blazor 工作区" src="docs/assets/atlas-showcase-light.png">
+</picture>
+
+> 截图使用可选的 IDE 主题（`themes/ide.css`）。
 
 Atlas 为 IDE、设计器、管理后台等复杂 Web 应用提供工具面板、编辑器标签页、分屏、拖放和布局持久化能力。布局领域模型、Blazor 渲染与浏览器交互分层，UI 层不维护第二份布局状态。
 
@@ -79,6 +90,8 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 | [ADR 索引](docs/zh/adr/README.md)                 | 已接受的架构决策        |
 
 ## 参与开发
+
+如果 Atlas 对你有帮助，欢迎点亮 Star，或分享给正在构建 Blazor IDE / 设计器的同事。
 
 提交前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。安全与受支持版本说明见
 [`SECURITY.md`](SECURITY.md)。

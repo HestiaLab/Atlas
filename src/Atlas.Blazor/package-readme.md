@@ -2,6 +2,12 @@
 
 **A dockable workspace component library for Blazor.**
 
+[![NuGet](https://img.shields.io/nuget/v/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![NuGet downloads](https://img.shields.io/nuget/dt/Atlas.Blazor)](https://www.nuget.org/packages/Atlas.Blazor) [![CI](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/HestiaLab/Atlas/actions/workflows/ci.yml)
+
+[**Live Demo**](https://HestiaLab.github.io/Atlas/) · [Repository](https://github.com/HestiaLab/Atlas) · [Releases](https://github.com/HestiaLab/Atlas/releases)
+
+![Atlas Showcase: a dockable Blazor workspace](https://raw.githubusercontent.com/HestiaLab/Atlas/main/docs/assets/atlas-showcase-light.png)
+
 Atlas provides tool panels, editor tabs, split views, drag-and-drop, and layout persistence for IDEs, designers, admin consoles, and other complex web applications. The package embeds the UI-independent layout engine (`Atlas.Core`), so a single reference gives you the full workspace.
 
 > Chinese documentation is authoritative and the only maintained documentation set under [`docs/zh/`](https://github.com/HestiaLab/Atlas/tree/main/docs/zh). This package README and the repository [`README.en.md`](https://github.com/HestiaLab/Atlas/blob/main/README.en.md) are the English entry points (ADR-0036).
@@ -61,6 +67,15 @@ Atlas exposes its visual style through documented `--atlas-*` CSS variables (col
 ```
 
 See the [theming guide](https://github.com/HestiaLab/Atlas/blob/main/docs/zh/theming.md) (Chinese) for the full variable contract.
+
+For the compact IDE look shown in the screenshot, link the optional theme after the default stylesheet:
+
+```html
+<link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/atlas.css" />
+<link rel="stylesheet" href="_content/Atlas.Blazor/atlas-v2/themes/ide.css" />
+```
+
+The theme follows the OS light/dark preference and styles Atlas chrome only; panel content remains application-owned.
 
 ## Core Capabilities
 
