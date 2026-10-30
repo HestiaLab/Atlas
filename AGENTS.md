@@ -38,8 +38,9 @@
 
 ## 项目结构
 
-Atlas 是 **.NET 6 Blazor** 组件库，为 Web 应用提供可停靠工具窗口、编辑器
-分屏和面板切换能力。仓库使用 Node.js 24 LTS 与 npm 处理 TypeScript interop。
+Atlas 是 **.NET 10 Blazor** 组件库，Target Framework 为 `net10.0`（ADR-0041），
+为 Web 应用提供可停靠工具窗口、编辑器分屏和面板切换能力。仓库使用 Node.js 24 LTS
+与 npm 处理 TypeScript interop。
 
 ```text
 src/Atlas.Core/           纯 C# 领域与操作引擎（可打包项目；

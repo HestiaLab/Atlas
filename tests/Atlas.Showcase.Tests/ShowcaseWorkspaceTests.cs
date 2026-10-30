@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Atlas.Showcase.Tests;
 
-public sealed class ShowcaseWorkspaceTests : TestContext
+public sealed class ShowcaseWorkspaceTests : BunitContext
 {
     public ShowcaseWorkspaceTests()
     {
@@ -92,7 +92,7 @@ public sealed class ShowcaseWorkspaceTests : TestContext
     [Fact]
     public void Catalog_row_activates_panel_and_reports_status()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
 
         cut.WaitForAssertion(
             () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
@@ -111,7 +111,7 @@ public sealed class ShowcaseWorkspaceTests : TestContext
     [Fact]
     public async Task External_layout_change_reports_status_and_command_message_wins()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
         cut.WaitForAssertion(
             () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
 
@@ -141,7 +141,7 @@ public sealed class ShowcaseWorkspaceTests : TestContext
     [Fact]
     public void Panel_manager_moves_panel_and_keeps_state_in_sync()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
         cut.WaitForAssertion(
             () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
 
@@ -171,7 +171,7 @@ public sealed class ShowcaseWorkspaceTests : TestContext
     [Fact]
     public async Task Panel_manager_closes_on_escape()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
         cut.WaitForAssertion(
             () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
 
@@ -190,7 +190,7 @@ public sealed class ShowcaseWorkspaceTests : TestContext
     [Fact]
     public void Persistence_capture_enables_restore()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
         cut.WaitForAssertion(
             () => Assert.Equal(8, cut.FindAll(".showcase-list-button").Count));
 

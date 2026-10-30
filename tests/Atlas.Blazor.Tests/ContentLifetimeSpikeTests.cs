@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ContentLifetimeSpikeTests : TestContext
+public sealed class ContentLifetimeSpikeTests : BunitContext
 {
     public ContentLifetimeSpikeTests()
     {
@@ -30,7 +30,7 @@ public sealed class ContentLifetimeSpikeTests : TestContext
     public async Task Cross_group_move_remounts_component_but_restores_external_business_state()
     {
         await using var workspace = CreateWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace));
         Assert.True(StatefulToolContent.Created == 1, cut.Markup);

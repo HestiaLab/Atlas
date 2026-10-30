@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class DocumentTabSwapTests : TestContext
+public sealed class DocumentTabSwapTests : BunitContext
 {
     public DocumentTabSwapTests()
     {
@@ -32,7 +32,7 @@ public sealed class DocumentTabSwapTests : TestContext
         // 点击绑定（真实浏览器增量 DOM 应用在 SetKey 兄弟节点交换时会丢失属性；
         // 参见 ada-blazor-interaction-pitfalls 陷阱 6）。
         var (workspace, first, second) = CreateWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters.Add(component => component.Workspace, workspace));
 
         cut.WaitForAssertion(

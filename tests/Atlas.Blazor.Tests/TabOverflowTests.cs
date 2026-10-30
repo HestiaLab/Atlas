@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class TabOverflowTests : TestContext
+public sealed class TabOverflowTests : BunitContext
 {
     public TabOverflowTests()
     {
@@ -378,7 +378,7 @@ public sealed class TabOverflowTests : TestContext
     }
 
     private static void AssertManifestContract(
-        IRenderedFragment cut,
+        IRenderedComponent<AtlasWorkspaceHost> cut,
         JsonDocument manifest,
         string contractName)
     {
@@ -395,7 +395,7 @@ public sealed class TabOverflowTests : TestContext
     }
 
     private static void OpenContextMenu(
-        IRenderedFragment cut,
+        IRenderedComponent<AtlasWorkspaceHost> cut,
         int tabIndex,
         double x,
         double y)
@@ -448,7 +448,7 @@ public sealed class TabOverflowTests : TestContext
         IAtlasWorkspace workspace,
         bool enableInteractions = false)
     {
-        return RenderComponent<AtlasWorkspaceHost>(
+        return Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(component => component.EnableInteractions, enableInteractions));

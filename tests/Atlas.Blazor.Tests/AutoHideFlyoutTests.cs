@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class AutoHideFlyoutTests : TestContext
+public sealed class AutoHideFlyoutTests : BunitContext
 {
     private readonly ContentTracker tracker = new();
 
@@ -305,9 +305,9 @@ public sealed class AutoHideFlyoutTests : TestContext
         return result.Value!;
     }
 
-    private IRenderedFragment RenderHost(IAtlasWorkspace workspace)
+    private IRenderedComponent<AtlasWorkspaceHost> RenderHost(IAtlasWorkspace workspace)
     {
-        return RenderComponent<AtlasWorkspaceHost>(
+        return Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(component => component.EnableInteractions, false));

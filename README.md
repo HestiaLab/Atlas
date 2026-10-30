@@ -49,7 +49,7 @@ Atlas.Core ← Atlas.Blazor ← Application
 
 ## 构建
 
-环境要求：.NET 6 SDK、Node.js 24 LTS、npm。
+环境要求：.NET 10 SDK（仓库通过 `global.json` 固定 10.0.401 并允许 latestFeature 前滚）、Node.js 24 LTS、npm。
 
 ```sh
 dotnet restore Atlas.sln

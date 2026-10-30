@@ -16,15 +16,6 @@ updates:
           - "Microsoft.NET.Test.Sdk"
           - "xunit*"
           - "coverlet*"
-    # Keep the ASP.NET Core/Extensions majors pinned until the net6.0 TFM
-    # migration ADR lands; mixing 6.x and 10.x packages is unsupported.
-    ignore:
-      - dependency-name: "Microsoft.AspNetCore.*"
-        update-types:
-          - "version-update:semver-major"
-      - dependency-name: "Microsoft.Extensions.*"
-        update-types:
-          - "version-update:semver-major"
 
   - package-ecosystem: npm
     directory: /src/Atlas.Blazor

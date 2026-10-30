@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Atlas.Showcase.Tests;
 
-public sealed class TabsAutoHideExampleTests : TestContext
+public sealed class TabsAutoHideExampleTests : BunitContext
 {
     public TabsAutoHideExampleTests()
     {
@@ -18,7 +18,7 @@ public sealed class TabsAutoHideExampleTests : TestContext
     [Fact]
     public void Teaching_page_renders_three_overflow_modes_and_an_auto_hide_flyout()
     {
-        var cut = RenderComponent<TabsAutoHideExample>();
+        var cut = Render<TabsAutoHideExample>();
 
         cut.WaitForAssertion(
             () => Assert.Equal(4, cut.FindAll(".atlas-v2-workspace").Count));
@@ -58,14 +58,14 @@ public sealed class TabsAutoHideExampleTests : TestContext
     [Fact]
     public void Showcase_toolbar_links_to_the_teaching_page()
     {
-        var cut = RenderComponent<ShowcaseWorkspace>();
+        var cut = Render<ShowcaseWorkspace>();
 
         var link = cut.Find("a[href='tabs-auto-hide']");
         Assert.Equal("标签页", link.TextContent.Trim());
     }
 
     private static void AssertOverflowMode(
-        IRenderedFragment cut,
+        IRenderedComponent<TabsAutoHideExample> cut,
         string workspaceId,
         string expectedMode,
         int expectedTabs)

@@ -22,7 +22,7 @@ namespace Atlas.Blazor.Tests;
 ///     缺失项标识、原子的宿主本地源生成提交，以及
 ///     Outlet 拥有的受保护沙箱投影。
 /// </summary>
-public sealed class ContentCatalogTests : TestContext
+public sealed class ContentCatalogTests : BunitContext
 {
     public ContentCatalogTests()
     {
@@ -38,7 +38,7 @@ public sealed class ContentCatalogTests : TestContext
         Services.AddAtlasContent<DiContent>("di-kind");
         var workspace = CreateWorkspace(Item("doc", "di-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters.Add(host => host.Workspace, workspace));
 
         cut.WaitForAssertion(
@@ -56,7 +56,7 @@ public sealed class ContentCatalogTests : TestContext
     {
         var workspace = CreateWorkspace(Item("doc", "route-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("route-kind", "route-label")));
@@ -79,7 +79,7 @@ public sealed class ContentCatalogTests : TestContext
             Item("di-doc", "di-kind"),
             Item("route-doc", "route-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("route-kind", "route-label")));
@@ -105,7 +105,7 @@ public sealed class ContentCatalogTests : TestContext
         Services.AddAtlasContent<DiContent>("shared-kind");
         var workspace = CreateWorkspace(Item("doc", "shared-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("shared-kind", "route-label"))
@@ -132,7 +132,7 @@ public sealed class ContentCatalogTests : TestContext
         var errors = new List<AtlasHostError>();
         var workspace = CreateWorkspace(Item("doc", "dup-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(
@@ -182,7 +182,7 @@ public sealed class ContentCatalogTests : TestContext
             Item("conflicted", "shared-kind"),
             Item("healthy", "di-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("shared-kind", "route-label")));
@@ -207,7 +207,7 @@ public sealed class ContentCatalogTests : TestContext
         var errors = new List<AtlasHostError>();
         var workspace = CreateWorkspace(Item("doc", "unknown-kind", "resource-doc"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(
@@ -241,7 +241,7 @@ public sealed class ContentCatalogTests : TestContext
     {
         var workspace = CreateWorkspace(Item("doc", "route-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("route-kind", "route-label")));
@@ -251,7 +251,7 @@ public sealed class ContentCatalogTests : TestContext
                 "ROUTE[route-label][doc]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, InvalidRouteFragment()));
@@ -267,7 +267,7 @@ public sealed class ContentCatalogTests : TestContext
     {
         var workspace = CreateWorkspace(Item("a", "kind-a"), Item("b", "kind-b"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, TwoRouteFragment("kind-a", "kind-b")));
@@ -284,7 +284,7 @@ public sealed class ContentCatalogTests : TestContext
                 "ROUTE[kind-b][b]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("kind-a", "route-label")));
@@ -313,7 +313,7 @@ public sealed class ContentCatalogTests : TestContext
         var fragmentExecutions = 0;
         var workspace = CreateWorkspace(Item("doc", "route-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(
@@ -350,7 +350,7 @@ public sealed class ContentCatalogTests : TestContext
             Item("faulting", "di-kind"),
             Item("safe", "di-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(
@@ -500,7 +500,7 @@ public sealed class ContentCatalogTests : TestContext
         // 每一个 AtlasContentRegistration，并在任何 Host 或 Outlet 存在之前
         // 确定性抛出异常（REQ-F-122 AC1）。
         var exception = Assert.Throws<InvalidOperationException>(
-            () => RenderComponent<AtlasWorkspaceHost>(
+            () => Render<AtlasWorkspaceHost>(
                 parameters => parameters.Add(host => host.Workspace, workspace)));
         Assert.Contains("duplicate", exception.Message, StringComparison.Ordinal);
     }

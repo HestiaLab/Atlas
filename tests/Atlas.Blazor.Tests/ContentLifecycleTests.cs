@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ContentLifecycleTests : TestContext
+public sealed class ContentLifecycleTests : BunitContext
 {
     public ContentLifecycleTests()
     {
@@ -34,7 +34,7 @@ public sealed class ContentLifecycleTests : TestContext
         Services.AddAtlasContent<ExternalStateContent>("stateful");
         var workspace = CreateWorkspace();
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters.Add(component => component.Workspace, workspace));
         cut.WaitForAssertion(
             () => Assert.Equal("first-mount", cut.Find(".external-state").TextContent));
@@ -70,7 +70,7 @@ public sealed class ContentLifecycleTests : TestContext
         Services.AddAtlasContent<ExternalStateContent>("stateful");
         var workspace = CreateWorkspace();
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(
@@ -110,7 +110,7 @@ public sealed class ContentLifecycleTests : TestContext
         Services.AddSingleton(new ContentInstanceTracker());
         Services.AddAtlasContent<ExternalStateContent>("stateful");
         var workspace = CreateWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(component => component.WorkspaceOwnership, WorkspaceOwnership.External)
@@ -141,7 +141,7 @@ public sealed class ContentLifecycleTests : TestContext
         Services.AddAtlasContent<ExternalStateContent>("shared-kind");
         Services.AddAtlasContent<ThrowingLifecycleContent>("throw-kind");
         var workspace = CreateWorkspace(Item("doc", "shared-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(component => component.ContentRoutes, RouteFragment("shared-kind"))
@@ -167,7 +167,7 @@ public sealed class ContentLifecycleTests : TestContext
         // 抛出异常的已注册渲染器只暴露安全的渲染失败 DiagnosticId；
         // 异常消息保持私有。
         var throwingWorkspace = CreateWorkspace(Item("throw-doc", "throw-kind"));
-        var throwingCut = RenderComponent<AtlasWorkspaceHost>(
+        var throwingCut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, throwingWorkspace)
                 .Add(
@@ -203,7 +203,7 @@ public sealed class ContentLifecycleTests : TestContext
         Services.AddAtlasContent<ThrowingLifecycleContent>("throw-kind");
         var workspace = CreateWorkspace(Item("throw-doc", "throw-kind"));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(
@@ -247,7 +247,7 @@ public sealed class ContentLifecycleTests : TestContext
                 "throw-kind",
                 _ => { }));
 
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(component => component.ContentMap, firstMap)
@@ -281,7 +281,7 @@ public sealed class ContentLifecycleTests : TestContext
             map => map.MapComponent<SecondThrowingContent>(
                 "throw-kind",
                 _ => { }));
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters.Add(
                 component => component.ContentMap,
                 secondMap));

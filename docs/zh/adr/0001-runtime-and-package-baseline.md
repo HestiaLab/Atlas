@@ -3,7 +3,7 @@
 > 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
 
-- **状态**：Accepted
+- **状态**：Superseded
 - **日期**：2026-07-30
 - **决策者**：Atlas Maintainer
 - **关联**：HLD OI-004、DEV-GATE-001、DES-PRJ-001~002
@@ -87,8 +87,10 @@ CI 固定安装 .NET 6 SDK 与 Node.js 24，并在 Windows/Linux 执行同一基
 
 ## Supersession
 
-Decision 3（`Atlas.Demo`）由 [ADR-0016](./0016-remove-application-projects.md) 取代；其余运行时、
-双包、工具链、测试与 CI 决策继续有效。
+Decision 3（`Atlas.Demo`）由 [ADR-0016](./0016-remove-application-projects.md) 取代。
 决策 2（两个 NuGet 包）对新版本由
 [ADR-0019](./0019-single-package-atlas-blazor.md) 取代：只发布一个
 `Atlas.Blazor` 包并嵌入 `Atlas.Core.dll`，同时保留 Core/Blazor 项目边界。
+其余 Target Framework、C# language baseline、依赖版本线、SDK/CI 工具链与验证基线条款由
+[ADR-0041](./0041-dotnet-10-runtime-baseline.md) 取代：项目升级到 .NET 10 LTS，不再提供
+`net6.0` 资产。Node.js 24 LTS 与 npm 决策继续有效。

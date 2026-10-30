@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ContentLifetimeTests : TestContext
+public sealed class ContentLifetimeTests : BunitContext
 {
     private readonly ContentTracker tracker = new();
 
@@ -142,7 +142,7 @@ public sealed class ContentLifetimeTests : TestContext
         IAtlasWorkspace workspace,
         WorkspaceContentLifetimeOptions? options)
     {
-        return RenderComponent<AtlasWorkspaceHost>(parameters =>
+        return Render<AtlasWorkspaceHost>(parameters =>
         {
             parameters
                 .Add(component => component.Workspace, workspace);

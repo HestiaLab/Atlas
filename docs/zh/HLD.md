@@ -55,7 +55,7 @@ SRS 是 Atlas 用户可感知行为的唯一规范来源，HLD 负责说明实�
 | OI-001 | F-069、F-140、F-150、F-155 | 可见 Dock Region、ToolBar 与 Drop Scaffold 对 Panel 的投放资格描述不一致 | **Closed**：ADR-0007 采用 ToolBar-first + hidden Scaffold；可见 RegionBody 默认拒绝 |
 | OI-002 | F-070、DES-RND-005 | SRS 要求跨区域移动后组件内部状态保持，但 Blazor 跨父级重新挂载不能保证实例身份 | **Closed**：ADR-0012 将合同限定为内容身份与外置业务状态；跨 Group 允许 remount |
 | OI-003 | SRS §5、附录 A | 正式需求块统计为 150，附录曾写为 152 | **Closed**：ADR-0014 固定 150 = F142 + NF8，附录已与正文同步 |
-| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution。ADR-0019 后续取代双包发布：只发布 Atlas.Blazor，Atlas.Core 仍是独立可打包项目并嵌入该包 |
+| OI-004 | AGENTS.md、DES-PRJ-001 | Target Framework、PackageId 与工程结构需要统一 | **Closed**：ADR-0001/0016/0017 采用 .NET 6.0、Atlas.Core/Atlas.Blazor 双包、独立 NuGet consumer sample、Node 24 LTS + npm；sample 不属于双包实现层且不加入主 solution。ADR-0019 后续取代双包发布：只发布 Atlas.Blazor，Atlas.Core 仍是独立可打包项目并嵌入该包。2026-10-30 ADR-0041 将运行时基线升级到 .NET 10 LTS（net10.0），并取代 ADR-0001 的 TFM、语言、依赖与 CI 条款 |
 | OI-005 | SRS 附录 A §3.10 | F-129、F-131 等边界场景曾出现在索引/引用中，但没有正式需求块和 AC | **Closed**：ADR-0014 将 9 个编号归类为非规范性设计/测试输入，不计入需求状态或覆盖率 |
 | OI-006 | NF-006、DES-RND-001 | Blazor RenderFragment 在同一 DOM 内无法阻止内容访问其他 DOM；ErrorBoundary 也不是 security sandbox | **Closed**：ADR-0013 保持 TrustedComponent 默认路径并明确它不是安全沙箱；不可信内容使用 SandboxedFrame |
 | OI-007 | F-006~008、F-122、DES-RND-001~003 | Host ContentTemplate 与 DI Registration 当前形成互斥渲染管线，无法表达一个确定性 Catalog 或强类型函数式绑定 | **Closed**：ADR-0018 采用一个 Effective Content Catalog，来源包括启动期 DI、Host-local Route 和 immutable Host-local Map；重复 startup DI 导致 Registry 构造失败，Host-local 冲突仅隔离受影响 Kind |
@@ -1386,7 +1386,7 @@ Kind、Renderer category/component type 及有序 bound Parameter member set；�
 result 不属于 structural。相同 signature 的 value-only update 保留 Outlet 组件 identity，并在每次渲染
 提供完整 bound Parameter set。更改组件类型、增加/删除 Binding、替换 Route 声明或在 Route/Map 间
 切换 owner 时，revision 递增并进入 Outlet key，使内容 remount。这避免 replacement descriptor 省略
-Parameter 时，在 .NET 6 `SetParametersAsync` 下残留旧 Callback 或捕获值。
+Parameter 时，在 .NET 10 `SetParametersAsync` 下残留旧 Callback 或捕获值。
 
 启动期 DI 内容保留窄协议：
 
@@ -1667,7 +1667,7 @@ Atlas 提供官方的按 Item 业务状态解析路径，使消费方不再重�
 
 AtlasWorkspaceHost 每个 Host 解析一个 effective scope：存在 DI 注册的 IAtlasContentStateScope
 时使用注入实例，否则使用 Host-local 默认实例，因此多个 Host 天然隔离，除非应用刻意注册共享
-scope。由于 .NET 6 的 ComponentFactory 会拒绝未注册的 [Inject] 属性，可选 scope 通过
+scope。为了不依赖 ComponentFactory 对未注册 `[Inject]` 属性的处理行为，可选 scope 通过
 IServiceProvider 解析并回退到 Host-local 实例。AtlasGroupView 把 effective scope 传入其创建的
 每个 AtlasContentContext。
 
@@ -2169,7 +2169,7 @@ DES-PRJ-001
 项目结构：
 
   src/
-    Atlas.Core/              ← 纯 C#，可打包项目 Atlas.Core（net6.0）；
+    Atlas.Core/              ← 纯 C#，可打包项目 Atlas.Core（net10.0）；
       │                        按 ADR-0019 嵌入 Atlas.Blazor 包
       Model/                   Nodes/ SplitNode, GroupNode
       │                        Items/ DockItem, ContentReference
@@ -2180,7 +2180,7 @@ DES-PRJ-001
       Persistence/             Serializer, RestorePipeline, Migration
       Results/                 WorkspaceResult<T>, WorkspaceError
 
-    Atlas.Blazor/            ← 已发布 NuGet 包 Atlas.Blazor（net6.0），
+    Atlas.Blazor/            ← 已发布 NuGet 包 Atlas.Blazor（net10.0），
       │                        依赖 Atlas.Core
       Components/              Workspace/ AtlasWorkspaceHost
       │                        Nodes/ SplitNodeView, GroupNodeView
@@ -2215,8 +2215,8 @@ V2 JS/CSS 文件名、module export 和 CSS root class 使用 atlas-v2 前缀或
 不覆盖 V1 asset。同一解决方案可以同时引用 V1/V2 以运行迁移工具，但同一 DOM subtree 同时挂载
 两个版本不作为支持场景。
 
-Target framework：net6.0。该版本由维护者基于兼容性约束明确指定；其官方支持已结束的风险记录在
-ADR-0001，依赖更新和安全验证不得因此降级。工程使用 Node 24 LTS + npm 构建 TypeScript。
+Target framework：net10.0。该版本由 ADR-0041 确定，项目面向 .NET 10 LTS，不再提供
+`net6.0` 资产；依赖更新和安全验证不得因此降级。工程使用 Node 24 LTS + npm 构建 TypeScript。
 Atlas 1.x maintenance branch 独立维护。
 
 两个项目而非更细粒度拆分：Core/Blazor 边界是最重要的架构边界（可测试性、依赖方向），进一步拆分
