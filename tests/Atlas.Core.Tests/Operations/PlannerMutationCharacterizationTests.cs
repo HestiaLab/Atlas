@@ -78,8 +78,7 @@ public sealed class PlannerMutationCharacterizationTests
             snapshot,
             new DefaultWorkspaceOperationPlanner());
 
-        var move = await workspace.ExecuteAsync(
-            new MoveToolOperation(new DockItemId("t2"), second.Id, targetIndex: 0));
+        var move = await workspace.ExecuteAsync(new MoveToolOperation(new DockItemId("t2"), second.Id, targetIndex: 0), TestContext.Current.CancellationToken);
         Assert.Equal(WorkspaceResultStatus.Success, move.Status);
         Assert.Equal(
             new[] { new DockItemId("t1"), new DockItemId("t3") },
@@ -90,19 +89,17 @@ public sealed class PlannerMutationCharacterizationTests
         AssertOrder(workspace, LogicalRegion.InlineStartUpper, "t1", "t3");
         AssertOrder(workspace, LogicalRegion.InlineEndUpper, "t2", "t4");
 
-        var reorder = await workspace.ExecuteAsync(
-            new ReorderItemOperation(new DockItemId("t1"), first.Id, targetIndex: 1));
+        var reorder = await workspace.ExecuteAsync(new ReorderItemOperation(new DockItemId("t1"), first.Id, targetIndex: 1), TestContext.Current.CancellationToken);
         Assert.Equal(WorkspaceResultStatus.Success, reorder.Status);
         Assert.Equal(
             new[] { new DockItemId("t3"), new DockItemId("t1") },
             CurrentGroup(workspace, first.Id).ItemIds);
         AssertOrder(workspace, LogicalRegion.InlineStartUpper, "t3", "t1");
 
-        var open = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var open = await workspace.ExecuteAsync(new OpenItemOperation(
                 CreateTool("t5"),
                 second.Id,
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
         Assert.Equal(WorkspaceResultStatus.Success, open.Status);
         Assert.Equal(
             new[]
@@ -124,16 +121,16 @@ public sealed class PlannerMutationCharacterizationTests
             hash == "D444D5279455D8EAB9A88CA50F9CF99A41E6CDC795E6437D9574095056DCF952",
             $"Actual hash: {hash}\nLayout XML:\n{xml}");
 
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(
             new[] { new DockItemId("t2"), new DockItemId("t4") },
             CurrentGroup(workspace, second.Id).ItemIds);
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(
             new[] { new DockItemId("t1"), new DockItemId("t3") },
             CurrentGroup(workspace, first.Id).ItemIds);
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync(TestContext.Current.CancellationToken)).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(xml, serializer.Serialize(workspace.Current));
     }
 

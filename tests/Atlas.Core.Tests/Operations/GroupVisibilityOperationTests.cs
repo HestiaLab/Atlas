@@ -16,20 +16,19 @@ public sealed class GroupVisibilityOperationTests
         var (workspace, group) = CreateToolWorkspace();
         await using (workspace)
         {
-            var collapse = await workspace.ExecuteAsync(
-                new SetGroupVisibilityOperation(group.Id, GroupVisibility.Collapsed));
+            var collapse = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(group.Id, GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, collapse.Status);
             Assert.Equal(
                 GroupVisibility.Collapsed,
                 CurrentGroup(workspace, group.Id).Visibility);
 
-            await workspace.UndoAsync();
+            await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 GroupVisibility.Expanded,
                 CurrentGroup(workspace, group.Id).Visibility);
 
-            await workspace.RedoAsync();
+            await workspace.RedoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 GroupVisibility.Collapsed,
                 CurrentGroup(workspace, group.Id).Visibility);
@@ -42,8 +41,7 @@ public sealed class GroupVisibilityOperationTests
         var (workspace, group) = CreateToolWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded));
+            var result = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
             Assert.Equal(0, workspace.Current.Revision);
@@ -67,12 +65,10 @@ public sealed class GroupVisibilityOperationTests
             item.Id);
         await using var workspace = CreateWorkspace(group, item);
 
-        var missing = await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+        var missing = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("missing"),
-                GroupVisibility.Collapsed));
-        var rejected = await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(group.Id, GroupVisibility.Collapsed));
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
+        var rejected = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(group.Id, GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, missing.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, rejected.Error!.Code);
@@ -106,8 +102,7 @@ public sealed class GroupVisibilityOperationTests
             snapshot,
             new DefaultWorkspaceOperationPlanner());
 
-        var result = await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded));
+        var result = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(group.Id, GroupVisibility.Expanded), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
         Assert.Equal(

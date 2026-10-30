@@ -89,7 +89,7 @@ public sealed class ContentCatalogTests : BunitContext
                 "DI[di-kind][di-doc][catalog-tests]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("route-doc")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("route-doc")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(
@@ -193,7 +193,7 @@ public sealed class ContentCatalogTests : BunitContext
                 cut.Find(".atlas-v2-content-outlet").TextContent,
                 StringComparison.OrdinalIgnoreCase));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("healthy")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("healthy")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(
@@ -277,7 +277,7 @@ public sealed class ContentCatalogTests : BunitContext
                 "ROUTE[kind-a][a]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("b")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("b")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(
@@ -289,14 +289,14 @@ public sealed class ContentCatalogTests : BunitContext
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentRoutes, RouteFragment("kind-a", "route-label")));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("a")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("a")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(
                 "ROUTE[route-label][a]",
                 cut.Find(".atlas-v2-content-outlet").TextContent));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("b")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("b")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () =>
@@ -382,7 +382,7 @@ public sealed class ContentCatalogTests : BunitContext
         Assert.DoesNotContain("sandbox failure", cut.Markup, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(errors, error => error.Code == AtlasHostErrorCode.ContentRenderFailed);
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("safe")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("safe")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(

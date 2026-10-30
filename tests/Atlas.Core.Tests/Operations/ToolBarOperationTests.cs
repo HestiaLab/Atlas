@@ -16,10 +16,9 @@ public sealed class ToolBarOperationTests
         var (workspace, items) = CreateWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new SetToolBarVisibilityOperation(
+            var result = await workspace.ExecuteAsync(new SetToolBarVisibilityOperation(
                     LogicalSide.InlineStart,
-                    ToolBarVisibility.Collapsed));
+                    ToolBarVisibility.Collapsed), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(
@@ -40,11 +39,10 @@ public sealed class ToolBarOperationTests
         var (workspace, items) = CreateWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new ReorderToolBarEntryOperation(
+            var result = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(
                     items[2].Id,
                     LogicalRegion.InlineStartUpper,
-                    targetIndex: 0));
+                    targetIndex: 0), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(
@@ -68,11 +66,10 @@ public sealed class ToolBarOperationTests
             selectSecond: true);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new ReorderToolBarEntryOperation(
+            var result = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(
                     items[2].Id,
                     LogicalRegion.InlineStartUpper,
-                    targetIndex: 1));
+                    targetIndex: 1), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             AssertToolGroupState(
@@ -80,14 +77,14 @@ public sealed class ToolBarOperationTests
                 items,
                 new[] { items[0].Id, items[2].Id, items[1].Id });
 
-            var undo = await workspace.UndoAsync();
+            var undo = await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(WorkspaceResultStatus.Success, undo.Status);
             AssertToolGroupState(
                 workspace.Current,
                 items,
                 new[] { items[2].Id, items[0].Id, items[1].Id });
 
-            var redo = await workspace.RedoAsync();
+            var redo = await workspace.RedoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(WorkspaceResultStatus.Success, redo.Status);
             AssertToolGroupState(
                 workspace.Current,
@@ -102,15 +99,13 @@ public sealed class ToolBarOperationTests
         var (workspace, items) = CreateWorkspace();
         await using (workspace)
         {
-            var visibility = await workspace.ExecuteAsync(
-                new SetToolBarVisibilityOperation(
+            var visibility = await workspace.ExecuteAsync(new SetToolBarVisibilityOperation(
                     LogicalSide.InlineStart,
-                    ToolBarVisibility.Expanded));
-            var reorder = await workspace.ExecuteAsync(
-                new ReorderToolBarEntryOperation(
+                    ToolBarVisibility.Expanded), TestContext.Current.CancellationToken);
+            var reorder = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(
                     items[0].Id,
                     LogicalRegion.InlineStartUpper,
-                    targetIndex: 0));
+                    targetIndex: 0), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.NoChange, visibility.Status);
             Assert.Equal(WorkspaceResultStatus.NoChange, reorder.Status);
@@ -124,20 +119,17 @@ public sealed class ToolBarOperationTests
         var (workspace, items) = CreateWorkspace();
         await using (workspace)
         {
-            var missingSide = await workspace.ExecuteAsync(
-                new SetToolBarVisibilityOperation(
+            var missingSide = await workspace.ExecuteAsync(new SetToolBarVisibilityOperation(
                     LogicalSide.InlineEnd,
-                    ToolBarVisibility.Collapsed));
-            var missingRegion = await workspace.ExecuteAsync(
-                new ReorderToolBarEntryOperation(
+                    ToolBarVisibility.Collapsed), TestContext.Current.CancellationToken);
+            var missingRegion = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(
                     items[0].Id,
                     LogicalRegion.InlineEndUpper,
-                    targetIndex: 0));
-            var invalidIndex = await workspace.ExecuteAsync(
-                new ReorderToolBarEntryOperation(
+                    targetIndex: 0), TestContext.Current.CancellationToken);
+            var invalidIndex = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(
                     items[0].Id,
                     LogicalRegion.InlineStartUpper,
-                    targetIndex: 3));
+                    targetIndex: 3), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.TargetNotFound, missingSide.Error!.Code);
             Assert.Equal(WorkspaceErrorCode.TargetNotFound, missingRegion.Error!.Code);

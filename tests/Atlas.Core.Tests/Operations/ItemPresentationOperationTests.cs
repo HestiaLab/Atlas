@@ -16,11 +16,10 @@ public sealed class ItemPresentationOperationTests
         var (workspace, item, group) = CreateWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(
+            var result = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(
                     item.Id,
                     "Explorer",
-                    "explorer-icon"));
+                    "explorer-icon"), TestContext.Current.CancellationToken);
 
             var updated = workspace.Current.Items[item.Id];
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
@@ -32,7 +31,7 @@ public sealed class ItemPresentationOperationTests
             Assert.Equal(new[] { item.Id }, result.Value!.UpdatedItems);
             Assert.Empty(result.Value.UpdatedNodes);
 
-            await workspace.UndoAsync();
+            await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(item.Title, workspace.Current.Items[item.Id].Title);
             Assert.Null(workspace.Current.Items[item.Id].IconKey);
         }
@@ -44,10 +43,8 @@ public sealed class ItemPresentationOperationTests
         var (workspace, item, _) = CreateWorkspace(title: "Custom");
         await using (workspace)
         {
-            var same = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(item.Id, "Custom", iconKey: null));
-            var reset = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(item.Id, title: null, iconKey: null));
+            var same = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Custom", iconKey: null), TestContext.Current.CancellationToken);
+            var reset = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, title: null, iconKey: null), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.NoChange, same.Status);
             Assert.Equal(WorkspaceResultStatus.Success, reset.Status);
@@ -62,11 +59,10 @@ public sealed class ItemPresentationOperationTests
         var (workspace, _, _) = CreateWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(
+            var result = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(
                     new DockItemId("missing"),
                     "Missing",
-                    iconKey: null));
+                    iconKey: null), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.ItemNotFound, result.Error!.Code);
             Assert.Equal(0, workspace.Current.Revision);

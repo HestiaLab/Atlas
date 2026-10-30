@@ -21,8 +21,7 @@ public sealed class DockDocumentOperationTests
         var root = CreateSplit("root", source.Id, target.Id);
         await using var workspace = CreateWorkspace(root.Id, new LayoutNode[] { root, source, target }, moved, sibling, targetItem);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(new[] { sibling.Id }, Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]).ItemIds);
@@ -30,9 +29,9 @@ public sealed class DockDocumentOperationTests
         Assert.Equal(new[] { targetItem.Id, moved.Id }, currentTarget.ItemIds);
         Assert.Equal(moved.Id, currentTarget.SelectedItemId);
 
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(new[] { moved.Id, sibling.Id }, Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]).ItemIds);
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(new[] { targetItem.Id, moved.Id }, Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
     }
 
@@ -52,19 +51,18 @@ public sealed class DockDocumentOperationTests
             sourceSibling,
             targetUnpinned);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
         Assert.Equal(new[] { moved.Id, targetUnpinned.Id }, currentTarget.ItemIds);
         Assert.Equal(moved.Id, currentTarget.SelectedItemId);
 
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(
             new[] { moved.Id, sourceSibling.Id },
             Assert.IsType<GroupNode>(workspace.Current.Nodes[source.Id]).ItemIds);
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(
             new[] { moved.Id, targetUnpinned.Id },
             Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
@@ -92,8 +90,7 @@ public sealed class DockDocumentOperationTests
             targetPinned,
             targetUnpinned);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
@@ -124,8 +121,7 @@ public sealed class DockDocumentOperationTests
             targetPinned,
             targetUnpinned);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
@@ -154,8 +150,7 @@ public sealed class DockDocumentOperationTests
         var newGroupId = new LayoutNodeId("new-group");
         var newSplitId = new LayoutNodeId("new-split");
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, zone, newGroupId, newSplitId));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, zone, newGroupId, newSplitId), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var newGroup = Assert.IsType<GroupNode>(workspace.Current.Nodes[newGroupId]);
@@ -178,8 +173,7 @@ public sealed class DockDocumentOperationTests
         var root = CreateSplit("root", source.Id, target.Id);
         await using var workspace = CreateWorkspace(root.Id, new LayoutNode[] { root, source, target }, moved, targetItem);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(moved.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(target.Id, workspace.Current.RootNodeId);
@@ -194,8 +188,7 @@ public sealed class DockDocumentOperationTests
         var group = CreateGroup("group", GroupRetentionPolicy.Persistent, document);
         await using var workspace = CreateWorkspace(group.Id, new LayoutNode[] { group }, document);
 
-        var result = await workspace.ExecuteAsync(
-            new DockDocumentOperation(document.Id, group.Id, DocumentDockZone.Center));
+        var result = await workspace.ExecuteAsync(new DockDocumentOperation(document.Id, group.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
         Assert.Equal(0, workspace.Current.Revision);
@@ -215,17 +208,14 @@ public sealed class DockDocumentOperationTests
         var root = CreateSplit("root", source.Id, target.Id);
         await using var workspace = CreateWorkspace(root.Id, new LayoutNode[] { root, source, target }, fixedDocument, targetItem);
 
-        var capability = await workspace.ExecuteAsync(
-            new DockDocumentOperation(fixedDocument.Id, target.Id, DocumentDockZone.Center));
-        var missingTarget = await workspace.ExecuteAsync(
-            new DockDocumentOperation(targetItem.Id, new LayoutNodeId("missing"), DocumentDockZone.Center));
-        var collision = await workspace.ExecuteAsync(
-            new DockDocumentOperation(
+        var capability = await workspace.ExecuteAsync(new DockDocumentOperation(fixedDocument.Id, target.Id, DocumentDockZone.Center), TestContext.Current.CancellationToken);
+        var missingTarget = await workspace.ExecuteAsync(new DockDocumentOperation(targetItem.Id, new LayoutNodeId("missing"), DocumentDockZone.Center), TestContext.Current.CancellationToken);
+        var collision = await workspace.ExecuteAsync(new DockDocumentOperation(
                 targetItem.Id,
                 target.Id,
                 DocumentDockZone.InlineEnd,
                 source.Id,
-                new LayoutNodeId("new-split")));
+                new LayoutNodeId("new-split")), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.CapabilityRejected, capability.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, missingTarget.Error!.Code);

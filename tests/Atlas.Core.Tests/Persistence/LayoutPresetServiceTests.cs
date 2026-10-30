@@ -22,20 +22,18 @@ public sealed class LayoutPresetServiceTests
             new AtlasXmlLayoutSerializer(),
             store);
 
-        var first = await service.SaveAsync("focus");
+        var first = await service.SaveAsync("focus", TestContext.Current.CancellationToken);
         Assert.True(first.Succeeded);
-        await workspace.ExecuteAsync(
-            new Atlas.Core.Operations.SetGroupVisibilityOperation(
+        await workspace.ExecuteAsync(new Atlas.Core.Operations.SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Collapsed));
-        var second = await service.SaveAsync("focus");
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
+        var second = await service.SaveAsync("focus", TestContext.Current.CancellationToken);
         Assert.True(second.Succeeded);
-        await workspace.ExecuteAsync(
-            new Atlas.Core.Operations.SetGroupVisibilityOperation(
+        await workspace.ExecuteAsync(new Atlas.Core.Operations.SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Expanded));
+                GroupVisibility.Expanded), TestContext.Current.CancellationToken);
 
-        var applied = await service.ApplyAsync("focus");
+        var applied = await service.ApplyAsync("focus", TestContext.Current.CancellationToken);
 
         Assert.True(applied.Succeeded);
         Assert.Equal(LayoutChangeKind.Restore, applied.Value!.ChangeKind);
@@ -44,7 +42,7 @@ public sealed class LayoutPresetServiceTests
             Assert.IsType<GroupNode>(
                 workspace.Current.Nodes[new LayoutNodeId("tools")]).Visibility);
         Assert.False(workspace.CanUndo);
-        Assert.Single(await store.ListAsync());
+        Assert.Single(await store.ListAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -57,8 +55,8 @@ public sealed class LayoutPresetServiceTests
             new InMemoryLayoutPresetStore());
         var before = workspace.Current;
 
-        var apply = await service.ApplyAsync("missing");
-        var delete = await service.DeleteAsync("missing");
+        var apply = await service.ApplyAsync("missing", TestContext.Current.CancellationToken);
+        var delete = await service.DeleteAsync("missing", TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, apply.Error!.Code);
@@ -77,16 +75,16 @@ public sealed class LayoutPresetServiceTests
             new AtlasXmlLayoutSerializer(),
             store);
 
-        var save = service.SaveAsync("focus").AsTask();
+        var save = service.SaveAsync("focus", TestContext.Current.CancellationToken).AsTask();
         await store.FirstSaveEntered.Task;
-        var delete = service.DeleteAsync("focus").AsTask();
+        var delete = service.DeleteAsync("focus", TestContext.Current.CancellationToken).AsTask();
 
         Assert.False(delete.IsCompleted);
         store.ReleaseFirstSave.SetResult(null);
 
         Assert.True((await save).Succeeded);
         Assert.True((await delete).Succeeded);
-        Assert.Null(await store.TryLoadAsync("focus"));
+        Assert.Null(await store.TryLoadAsync("focus", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -98,17 +96,16 @@ public sealed class LayoutPresetServiceTests
             workspace,
             new AtlasXmlLayoutSerializer(),
             store);
-        var oldSave = service.SaveAsync("focus").AsTask();
+        var oldSave = service.SaveAsync("focus", TestContext.Current.CancellationToken).AsTask();
         await store.FirstSaveEntered.Task;
-        await workspace.ExecuteAsync(
-            new Atlas.Core.Operations.SetGroupVisibilityOperation(
+        await workspace.ExecuteAsync(new Atlas.Core.Operations.SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Collapsed));
-        var newSave = service.SaveAsync("focus").AsTask();
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
+        var newSave = service.SaveAsync("focus", TestContext.Current.CancellationToken).AsTask();
 
         store.ReleaseFirstSave.SetResult(null);
         await Task.WhenAll(oldSave, newSave);
-        var saved = await store.TryLoadAsync("focus");
+        var saved = await store.TryLoadAsync("focus", TestContext.Current.CancellationToken);
         var restored = new AtlasXmlLayoutSerializer().Deserialize(
             saved!.Xml,
             new WorkspaceId("main"));
@@ -129,7 +126,7 @@ public sealed class LayoutPresetServiceTests
             new ThrowingStore());
         var before = workspace.Current;
 
-        var result = await service.SaveAsync("focus");
+        var result = await service.SaveAsync("focus", TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(
@@ -148,7 +145,7 @@ public sealed class LayoutPresetServiceTests
             new AtlasXmlLayoutSerializer(),
             new ThrowingStore());
 
-        var result = await service.ApplyAsync("focus");
+        var result = await service.ApplyAsync("focus", TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, result.Error!.Code);
@@ -165,8 +162,8 @@ public sealed class LayoutPresetServiceTests
             new AtlasXmlLayoutSerializer(),
             new ThrowingStore());
 
-        var list = await service.ListAsync();
-        var delete = await service.DeleteAsync("focus");
+        var list = await service.ListAsync(TestContext.Current.CancellationToken);
+        var delete = await service.DeleteAsync("focus", TestContext.Current.CancellationToken);
 
         Assert.False(list.Succeeded);
         Assert.Equal(WorkspaceErrorCode.PersistenceUnavailable, list.Error!.Code);
@@ -188,12 +185,12 @@ public sealed class LayoutPresetServiceTests
             new AtlasXmlLayoutSerializer(),
             store);
 
-        Assert.True((await service.SaveAsync("focus")).Succeeded);
-        var delete = await service.DeleteAsync("focus");
-        var apply = await service.ApplyAsync("focus");
+        Assert.True((await service.SaveAsync("focus", TestContext.Current.CancellationToken)).Succeeded);
+        var delete = await service.DeleteAsync("focus", TestContext.Current.CancellationToken);
+        var apply = await service.ApplyAsync("focus", TestContext.Current.CancellationToken);
 
         Assert.True(delete.Succeeded);
-        Assert.Null(await store.TryLoadAsync("focus"));
+        Assert.Null(await store.TryLoadAsync("focus", TestContext.Current.CancellationToken));
         Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, apply.Error!.Code);
     }
@@ -208,9 +205,9 @@ public sealed class LayoutPresetServiceTests
             new InMemoryLayoutPresetStore());
 
         Assert.Equal(0, service.ActiveWriterCount);
-        Assert.True((await service.SaveAsync("focus")).Succeeded);
+        Assert.True((await service.SaveAsync("focus", TestContext.Current.CancellationToken)).Succeeded);
         Assert.Equal(0, service.ActiveWriterCount);
-        Assert.True((await service.DeleteAsync("focus")).Succeeded);
+        Assert.True((await service.DeleteAsync("focus", TestContext.Current.CancellationToken)).Succeeded);
         Assert.Equal(0, service.ActiveWriterCount);
     }
 
@@ -241,9 +238,9 @@ public sealed class LayoutPresetServiceTests
 
         foreach (var name in names)
         {
-            var save = await service.SaveAsync(name);
-            var apply = await service.ApplyAsync(name);
-            var delete = await service.DeleteAsync(name);
+            var save = await service.SaveAsync(name, TestContext.Current.CancellationToken);
+            var apply = await service.ApplyAsync(name, TestContext.Current.CancellationToken);
+            var delete = await service.DeleteAsync(name, TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, save.Status);
             Assert.Equal(WorkspaceResultStatus.Failure, apply.Status);

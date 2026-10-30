@@ -15,7 +15,7 @@ assignees: ""
 - [ ] 构建（MSBuild / dotnet CLI）
 - [ ] CI / GitHub Actions
 - [ ] NuGet 打包
-- [ ] 测试（xUnit / coverlet）
+- [ ] 测试（xUnit v3 / Microsoft.Testing.Platform）
 - [ ] TypeScript / JS interop 工具链
 - [ ] 文档
 - [ ] 依赖（NuGet / npm）

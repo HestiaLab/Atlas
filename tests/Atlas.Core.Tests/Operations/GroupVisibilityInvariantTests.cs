@@ -31,7 +31,7 @@ public sealed class GroupVisibilityInvariantTests
             tool);
         await using var workspace = CreateWorkspace(new[] { group }, new[] { tool });
 
-        var result = await workspace.ExecuteAsync(new CloseItemOperation(tool.Id));
+        var result = await workspace.ExecuteAsync(new CloseItemOperation(tool.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Contains(group.Id, workspace.Current.Nodes);
@@ -54,7 +54,7 @@ public sealed class GroupVisibilityInvariantTests
             second);
         await using var workspace = CreateWorkspace(new[] { group }, new[] { first, second });
 
-        await workspace.ExecuteAsync(new CloseItemOperation(first.Id));
+        await workspace.ExecuteAsync(new CloseItemOperation(first.Id), TestContext.Current.CancellationToken);
 
         var current = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
         Assert.Equal(GroupVisibility.Expanded, current.Visibility);
@@ -82,8 +82,7 @@ public sealed class GroupVisibilityInvariantTests
             new LayoutNode[] { split, source, target },
             new[] { moved, targetItem });
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(moved.Id, target.Id, targetIndex: null));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(moved.Id, target.Id, targetIndex: null), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var targetAfter = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
@@ -105,7 +104,7 @@ public sealed class GroupVisibilityInvariantTests
             tool);
         await using var workspace = CreateWorkspace(new[] { group }, new[] { tool });
 
-        var result = await workspace.ExecuteAsync(new SelectItemOperation(tool.Id));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(tool.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
@@ -125,11 +124,10 @@ public sealed class GroupVisibilityInvariantTests
             existing);
         await using var workspace = CreateWorkspace(new[] { group }, new[] { existing });
 
-        var result = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var result = await workspace.ExecuteAsync(new OpenItemOperation(
                 opened,
                 group.Id,
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(

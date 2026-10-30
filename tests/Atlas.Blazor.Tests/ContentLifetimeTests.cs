@@ -35,7 +35,7 @@ public sealed class ContentLifetimeTests : BunitContext
 
         Assert.Equal(1, tracker.Created);
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(2, tracker.Created);
@@ -43,7 +43,7 @@ public sealed class ContentLifetimeTests : BunitContext
             Assert.Single(cut.FindAll(".atlas-v2-content-outlet"));
         });
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(3, tracker.Created);
@@ -61,7 +61,7 @@ public sealed class ContentLifetimeTests : BunitContext
                 AtlasContentLifetimeMode.KeepAliveWithinGroup,
                 maxCachedItems: 2));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(() =>
         {
@@ -74,7 +74,7 @@ public sealed class ContentLifetimeTests : BunitContext
             Assert.True(inactive.HasAttribute("inert"));
         });
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(2, tracker.Created);
@@ -96,7 +96,7 @@ public sealed class ContentLifetimeTests : BunitContext
                 AtlasContentLifetimeMode.KeepAliveWithinGroup,
                 maxCachedItems: 1));
 
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(() =>
         {
@@ -118,10 +118,10 @@ public sealed class ContentLifetimeTests : BunitContext
             new WorkspaceContentLifetimeOptions(
                 AtlasContentLifetimeMode.KeepAliveWithinGroup,
                 maxCachedItems: 2));
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() => Assert.Equal(2, tracker.Created));
 
-        var close = await workspace.ExecuteAsync(new CloseItemOperation(new DockItemId("first")));
+        var close = await workspace.ExecuteAsync(new CloseItemOperation(new DockItemId("first")), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(close.Succeeded);
         cut.WaitForAssertion(

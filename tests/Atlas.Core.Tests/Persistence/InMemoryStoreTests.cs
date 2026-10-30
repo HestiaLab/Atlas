@@ -17,10 +17,10 @@ public sealed class InMemoryStoreTests
         var store = new InMemoryWorkspaceLayoutStore();
         var document = new WorkspaceLayoutDocument("2.0", 4, "<AtlasWorkspace />");
 
-        Assert.Null(await store.TryLoadAsync());
-        await store.SaveAsync(document);
+        Assert.Null(await store.TryLoadAsync(TestContext.Current.CancellationToken));
+        await store.SaveAsync(document, TestContext.Current.CancellationToken);
 
-        Assert.Same(document, await store.TryLoadAsync());
+        Assert.Same(document, await store.TryLoadAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public sealed class InMemoryStoreTests
         cancellation.Cancel();
 
         await Assert.ThrowsAsync<ArgumentNullException>(
-            () => store.SaveAsync(null!).AsTask());
+            () => store.SaveAsync(null!, TestContext.Current.CancellationToken).AsTask());
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => store.TryLoadAsync(cancellation.Token).AsTask());
     }
@@ -43,14 +43,14 @@ public sealed class InMemoryStoreTests
         var second = CreateDocument("b");
         var first = CreateDocument("a");
 
-        await store.SaveAsync("b", second);
-        await store.SaveAsync("a", first);
+        await store.SaveAsync("b", second, TestContext.Current.CancellationToken);
+        await store.SaveAsync("a", first, TestContext.Current.CancellationToken);
 
-        var listed = await store.ListAsync();
+        var listed = await store.ListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(new[] { "a", "b" }, listed.Select(descriptor => descriptor.Name));
-        Assert.True(await store.DeleteAsync("a"));
-        Assert.False(await store.DeleteAsync("a"));
-        Assert.Null(await store.TryLoadAsync("a"));
+        Assert.True(await store.DeleteAsync("a", TestContext.Current.CancellationToken));
+        Assert.False(await store.DeleteAsync("a", TestContext.Current.CancellationToken));
+        Assert.Null(await store.TryLoadAsync("a", TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -62,10 +62,10 @@ public sealed class InMemoryStoreTests
             new AtlasXmlLayoutSerializer(),
             new InMemoryLayoutPresetStore());
 
-        Assert.True((await service.SaveAsync("b")).Succeeded);
-        Assert.True((await service.SaveAsync("a")).Succeeded);
+        Assert.True((await service.SaveAsync("b", TestContext.Current.CancellationToken)).Succeeded);
+        Assert.True((await service.SaveAsync("a", TestContext.Current.CancellationToken)).Succeeded);
 
-        var listed = await service.ListAsync();
+        var listed = await service.ListAsync(TestContext.Current.CancellationToken);
 
         Assert.True(listed.Succeeded);
         Assert.Equal(

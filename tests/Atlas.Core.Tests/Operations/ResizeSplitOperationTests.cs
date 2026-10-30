@@ -17,8 +17,7 @@ public sealed class ResizeSplitOperationTests
         await using (workspace)
         {
             var basis = SplitBasis.FixedPixels(320, SplitAnchor.First);
-            var result = await workspace.ExecuteAsync(
-                new ResizeSplitOperation(split.Id, basis));
+            var result = await workspace.ExecuteAsync(new ResizeSplitOperation(split.Id, basis), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(
@@ -26,12 +25,12 @@ public sealed class ResizeSplitOperationTests
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
             Assert.Equal(new[] { split.Id }, result.Value!.UpdatedNodes);
 
-            await workspace.UndoAsync();
+            await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 split.Basis,
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
 
-            await workspace.RedoAsync();
+            await workspace.RedoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 basis,
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
@@ -44,8 +43,7 @@ public sealed class ResizeSplitOperationTests
         var (workspace, split) = CreateWorkspace();
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new ResizeSplitOperation(split.Id, split.Basis));
+            var result = await workspace.ExecuteAsync(new ResizeSplitOperation(split.Id, split.Basis), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
             Assert.Equal(0, workspace.Current.Revision);
@@ -59,10 +57,8 @@ public sealed class ResizeSplitOperationTests
         await using (workspace)
         {
             var basis = SplitBasis.Proportional(0.4);
-            var missing = await workspace.ExecuteAsync(
-                new ResizeSplitOperation(new LayoutNodeId("missing"), basis));
-            var rejected = await workspace.ExecuteAsync(
-                new ResizeSplitOperation(split.FirstId, basis));
+            var missing = await workspace.ExecuteAsync(new ResizeSplitOperation(new LayoutNodeId("missing"), basis), TestContext.Current.CancellationToken);
+            var rejected = await workspace.ExecuteAsync(new ResizeSplitOperation(split.FirstId, basis), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.TargetNotFound, missing.Error!.Code);
             Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, rejected.Error!.Code);
@@ -84,17 +80,15 @@ public sealed class ResizeSplitOperationTests
                 resizeCoalescingWindow: TimeSpan.FromMilliseconds(500)),
             () => now);
 
-        await workspace.ExecuteAsync(
-            ResizeSplitOperation.CreateKeyboard(
+        await workspace.ExecuteAsync(ResizeSplitOperation.CreateKeyboard(
                 split.Id,
-                SplitBasis.Proportional(0.6)));
+                SplitBasis.Proportional(0.6)), TestContext.Current.CancellationToken);
         now += TimeSpan.FromMilliseconds(100);
-        await workspace.ExecuteAsync(
-            ResizeSplitOperation.CreateKeyboard(
+        await workspace.ExecuteAsync(ResizeSplitOperation.CreateKeyboard(
                 split.Id,
-                SplitBasis.Proportional(0.7)));
+                SplitBasis.Proportional(0.7)), TestContext.Current.CancellationToken);
 
-        var undo = await workspace.UndoAsync();
+        var undo = await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, undo.Status);
         Assert.Equal(
@@ -102,7 +96,7 @@ public sealed class ResizeSplitOperationTests
             Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
         Assert.False(workspace.CanUndo);
 
-        await workspace.RedoAsync();
+        await workspace.RedoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             SplitBasis.Proportional(0.7),
             Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
@@ -122,29 +116,26 @@ public sealed class ResizeSplitOperationTests
                 resizeCoalescingWindow: TimeSpan.FromMilliseconds(50)),
             () => now);
 
-        await workspace.ExecuteAsync(
-            ResizeSplitOperation.CreateKeyboard(
+        await workspace.ExecuteAsync(ResizeSplitOperation.CreateKeyboard(
                 split.Id,
-                SplitBasis.Proportional(0.6)));
+                SplitBasis.Proportional(0.6)), TestContext.Current.CancellationToken);
         now += TimeSpan.FromMilliseconds(100);
-        await workspace.ExecuteAsync(
-            ResizeSplitOperation.CreateKeyboard(
+        await workspace.ExecuteAsync(ResizeSplitOperation.CreateKeyboard(
                 split.Id,
-                SplitBasis.Proportional(0.7)));
-        await workspace.ExecuteAsync(
-            new ResizeSplitOperation(
+                SplitBasis.Proportional(0.7)), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new ResizeSplitOperation(
                 split.Id,
-                SplitBasis.Proportional(0.8)));
+                SplitBasis.Proportional(0.8)), TestContext.Current.CancellationToken);
 
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             SplitBasis.Proportional(0.7),
             Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             SplitBasis.Proportional(0.6),
             Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             split.Basis,
             Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);

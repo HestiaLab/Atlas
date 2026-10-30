@@ -142,11 +142,10 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             "runtime-resource",
             "Runtime");
 
-        await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        await workspace.ExecuteAsync(new OpenItemOperation(
                 runtime,
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), Xunit.TestContext.Current.CancellationToken);
         cut.Render(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("runtime"))
@@ -379,11 +378,10 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             "data-atlas-node-id",
             "root");
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(
                 new DockItemId("project"),
                 new LayoutNodeId("right-upper"),
-                targetIndex: 1));
+                targetIndex: 1), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
         cut.WaitForAssertion(
@@ -411,7 +409,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
                 AssertCommittedSplitBases(workspace.Current, committedSplitBases);
             });
 
-        var undo = await workspace.UndoAsync();
+        var undo = await workspace.UndoAsync(Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
         cut.WaitForAssertion(
@@ -426,7 +424,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
                 AssertCommittedSplitBases(workspace.Current, committedSplitBases);
             });
 
-        var redo = await workspace.RedoAsync();
+        var redo = await workspace.RedoAsync(Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
         cut.WaitForAssertion(
@@ -452,11 +450,10 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
                 .Add(component => component.EnableInteractions, false));
 
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(
                 new DockItemId("services"),
                 new LayoutNodeId("left-lower"),
-                targetIndex: 0));
+                targetIndex: 0), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded, result.Error?.MessageKey ?? result.Error?.DiagnosticId);
         cut.WaitForAssertion(
@@ -533,8 +530,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
         Assert.Equal("false", toolEntries[1].GetAttribute("aria-selected"));
         Assert.True(toolEntries[1].HasAttribute("aria-selected"));
 
-        await toolbarWorkspace.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("second-tool")));
+        await toolbarWorkspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second-tool")), Xunit.TestContext.Current.CancellationToken);
         toolbarCut.WaitForAssertion(
             () =>
             {
@@ -555,8 +551,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
         Assert.Equal("false", documentTabs[1].GetAttribute("aria-selected"));
         Assert.True(documentTabs[1].HasAttribute("aria-selected"));
 
-        await documentWorkspace.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("second")));
+        await documentWorkspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         documentCut.WaitForAssertion(
             () =>
             {
@@ -627,10 +622,9 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
 
         Assert.Single(cut.FindAll(".atlas-v2-toolbar"));
 
-        await workspace.ExecuteAsync(
-            new SetToolBarVisibilityOperation(
+        await workspace.ExecuteAsync(new SetToolBarVisibilityOperation(
                 LogicalSide.InlineStart,
-                ToolBarVisibility.Collapsed));
+                ToolBarVisibility.Collapsed), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(() => Assert.Empty(cut.FindAll(".atlas-v2-toolbar")));
     }
@@ -739,11 +733,10 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
         Assert.Equal(1, RenderCounterContent.Count("left-resource"));
         Assert.Equal(1, RenderCounterContent.Count("right-resource"));
 
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(
                 new DockItemId("left-item"),
                 "Left changed",
-                iconKey: null));
+                iconKey: null), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () =>
@@ -771,8 +764,8 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
         var activated = new TaskCompletionSource<object?>(
             TaskCreationOptions.RunContinuationsAsynchronously);
         workspace.DomainEvents.ItemActivated += (_, _) => activated.TrySetResult(null);
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
-        await activated.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
+        await activated.Task.WaitAsync(TimeSpan.FromSeconds(1), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () =>
@@ -796,11 +789,10 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
                 .Add(component => component.Workspace, second));
 
 
-        await first.ExecuteAsync(
-            new UpdateItemPresentationOperation(
+        await first.ExecuteAsync(new UpdateItemPresentationOperation(
                 new DockItemId("document"),
                 "First changed",
-                iconKey: null));
+                iconKey: null), Xunit.TestContext.Current.CancellationToken);
 
         firstCut.WaitForAssertion(
             () => Assert.Contains("First changed", firstCut.Markup, StringComparison.Ordinal));
@@ -944,7 +936,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
                         .GetAttribute("d"));
             });
 
-        var undo = await workspace.UndoAsync();
+        var undo = await workspace.UndoAsync(Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
         cut.WaitForAssertion(
@@ -2169,7 +2161,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             selectedItemId: "second",
             new[] { "first", "third", "second" });
 
-        var undo = await tracked.UndoAsync();
+        var undo = await tracked.UndoAsync(Xunit.TestContext.Current.CancellationToken);
         Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
         AssertToolGroupState(
             tracked.Current,
@@ -2177,7 +2169,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             selectedItemId: "second",
             new[] { "third", "first", "second" });
 
-        var redo = await tracked.RedoAsync();
+        var redo = await tracked.RedoAsync(Xunit.TestContext.Current.CancellationToken);
         Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
         AssertToolGroupState(
             tracked.Current,
@@ -2240,7 +2232,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             selectedItemId: "second",
             new[] { "third", "first", "second" });
 
-        var undo = await tracked.UndoAsync();
+        var undo = await tracked.UndoAsync(Xunit.TestContext.Current.CancellationToken);
         Assert.True(undo.Succeeded, undo.Error?.MessageKey ?? undo.Error?.DiagnosticId);
         AssertToolGroupState(
             tracked.Current,
@@ -2248,7 +2240,7 @@ public sealed class AtlasWorkspaceHostTests : BunitContext
             selectedItemId: "second",
             new[] { "third", "first", "second" });
 
-        var redo = await tracked.RedoAsync();
+        var redo = await tracked.RedoAsync(Xunit.TestContext.Current.CancellationToken);
         Assert.True(redo.Succeeded, redo.Error?.MessageKey ?? redo.Error?.DiagnosticId);
         AssertToolGroupState(
             tracked.Current,

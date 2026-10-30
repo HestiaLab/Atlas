@@ -38,11 +38,10 @@ public sealed class DocumentTabSwapTests : BunitContext
         cut.WaitForAssertion(
             () => Assert.Equal(2, cut.FindAll("[data-atlas-drag-kind='document-tab']").Count));
 
-        var reorder = await workspace.ExecuteAsync(
-            new ReorderItemOperation(
+        var reorder = await workspace.ExecuteAsync(new ReorderItemOperation(
                 first.Id,
                 new LayoutNodeId("documents"),
-                targetIndex: 1));
+                targetIndex: 1), Xunit.TestContext.Current.CancellationToken);
         Assert.True(reorder.Succeeded, reorder.Error?.DiagnosticId ?? reorder.Error?.MessageKey);
 
         cut.WaitForAssertion(

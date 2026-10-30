@@ -14,7 +14,16 @@ Atlas 的正确性跨越 Core、Blazor、TypeScript、真实浏览器和 NuGet c
 | Browser fixture | `tests/browser` | 真实 DOM、pointer、sandbox、hardening 和跨层行为 | NuGet 包边界、consumer restore |
 | NuGet consumer | `HestiaLab/DbcView`（独立仓库） | PackageReference、RCL assets、public API、可迁移性 | 框架内部所有边界场景 |
 | 教学演示 | `samples/Atlas.Showcase`（在 `Atlas.sln` 内）；`tests/Atlas.Showcase.Tests` | public API 用法、元数据一致性、目录/面板管理器、渲染与交互 | NuGet 包边界、真实浏览器 CSS/pointer |
-| Build/format/pack | solution、CI | 编译、analyzer、style、包内容 | 用户交互行为本身 |
+| Build/format/pack/coverage | solution、CI | 编译、analyzer、style、包内容、覆盖率收集 | 用户交互行为本身 |
+
+测试项目使用 xUnit v3 + Microsoft.Testing.Platform（ADR-0042）。`dotnet test Atlas.sln`
+仍是统一入口；MTP 参数放在 `--` 之后：
+
+```sh
+dotnet test Atlas.sln --no-build --no-restore -- --coverage --coverage-output-format cobertura
+```
+
+覆盖率文件默认写入仓库根 `TestResults/`，CI 会将其作为 artifact 上传，不设置阈值。
 
 ## 2. Core 测试
 
