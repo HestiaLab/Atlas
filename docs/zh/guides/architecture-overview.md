@@ -6,7 +6,7 @@
 
 ## 1. Atlas 是什么
 
-Atlas 是一个面向 Blazor 应用的 Dock Layout 组件库，提供工具面板、编辑器标签页、分屏、拖放、Splitter、布局历史和持久化能力。仓库定义两个独立的 .NET 6 项目，只发布一个 NuGet 包（ADR-0019）：
+Atlas 是一个面向 Blazor 应用的 Dock Layout 组件库，提供工具面板、编辑器标签页、分屏、拖放、Splitter、布局历史和持久化能力。仓库定义两个独立的 .NET 10 项目，只发布一个 NuGet 包（ADR-0019、ADR-0041）：
 
 - `Atlas.Core`：与 UI 无关的领域模型、操作引擎、历史和持久化。它仍是独立、可打包的项目。
 - `Atlas.Blazor`：Blazor 渲染、内容承载、CSS 和浏览器交互；依赖 `Atlas.Core`，并将其嵌入已发布的 `Atlas.Blazor` 包。只有 `Atlas.Blazor` 会发布。

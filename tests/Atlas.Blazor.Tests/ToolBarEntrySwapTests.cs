@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ToolBarEntrySwapTests : TestContext
+public sealed class ToolBarEntrySwapTests : BunitContext
 {
     public ToolBarEntrySwapTests()
     {
@@ -33,7 +33,7 @@ public sealed class ToolBarEntrySwapTests : TestContext
         // 拖拽元数据。通过增量序列（渲染 -> 移动 -> 渲染 -> 重排 -> 渲染）
         // 验证，因为真实浏览器失败只在增量 DOM 应用中显现。
         var (workspace, tree, property) = CreateWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters.Add(component => component.Workspace, workspace));
 
         cut.WaitForAssertion(

@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ContentErrorDiagnosticTests : TestContext
+public sealed class ContentErrorDiagnosticTests : BunitContext
 {
     public ContentErrorDiagnosticTests()
     {
@@ -36,7 +36,7 @@ public sealed class ContentErrorDiagnosticTests : TestContext
         Console.SetError(captured);
         try
         {
-            var cut = RenderComponent<AtlasWorkspaceHost>(
+            var cut = Render<AtlasWorkspaceHost>(
                 parameters => parameters
                     .Add(component => component.Workspace, workspace)
                     .Add(

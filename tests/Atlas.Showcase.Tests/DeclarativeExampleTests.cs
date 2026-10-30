@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Atlas.Showcase.Tests;
 
-public sealed class DeclarativeExampleTests : TestContext
+public sealed class DeclarativeExampleTests : BunitContext
 {
     public DeclarativeExampleTests()
     {
@@ -19,7 +19,7 @@ public sealed class DeclarativeExampleTests : TestContext
     [Fact]
     public void Declarative_example_renders_declared_workspace()
     {
-        var cut = RenderComponent<DeclarativeExample>();
+        var cut = Render<DeclarativeExample>();
 
         cut.WaitForAssertion(
             () => Assert.Single(cut.FindAll(".atlas-v2-workspace")));

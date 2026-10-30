@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class SandboxedFrameTests : TestContext
+public sealed class SandboxedFrameTests : BunitContext
 {
     public SandboxedFrameTests()
     {
@@ -28,7 +28,7 @@ public sealed class SandboxedFrameTests : TestContext
     {
         Services.AddAtlasContent<TrustedFallbackContent>("sandbox");
         await using var workspace = CreateWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(parameters => parameters
+        var cut = Render<AtlasWorkspaceHost>(parameters => parameters
             .Add(component => component.Workspace, workspace)
             .Add(
                 component => component.SandboxedFrameResolver,

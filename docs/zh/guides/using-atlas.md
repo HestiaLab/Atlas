@@ -2,7 +2,7 @@
 
 > 简体中文（权威）；本文为唯一维护版本（ADR-0036）。
 
-本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例以 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 的实现为准；声明式片段是等价写法，必填参数与 0.3.0 公共 API 一致。
+本指南逐步演示如何用 Atlas 构建一个真实的 IDE 风格工作区。它与[架构概览](./architecture-overview.md)和[开发指南](./development-guide.md)互补：那些文档解释 Atlas 如何工作，本文展示消费者实际编写什么。示例以 [`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/) 的实现为准；声明式片段是等价写法，必填参数与 0.4.0 公共 API 一致。
 
 ## 1. 引用包
 
@@ -11,10 +11,10 @@ Atlas 提供一个 NuGet 包：`Atlas.Blazor`。把它加入你的 Blazor 项目
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Atlas.Blazor" Version="0.3.0" />
+    <PackageReference Include="Atlas.Blazor" Version="0.4.0" />
   </ItemGroup>
 </Project>
 ```

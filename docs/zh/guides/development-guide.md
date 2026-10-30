@@ -8,12 +8,12 @@
 
 ### 工具链
 
-- .NET SDK 6.0
+- .NET SDK 10.0（`global.json` 固定 10.0.401 并允许 latestFeature 前滚）
 - Node.js 24 LTS
 - npm
 - Git
 
-仓库启用了 nullable、.NET analyzers、warnings-as-errors、C# 10 和 central package management。Target Framework、包拓扑、Node/npm baseline 或公共 API 兼容策略不能在普通改动中调整；此类变化需要维护者批准和 ADR。
+仓库启用了 nullable、.NET analyzers、warnings-as-errors、C# 14、AnalysisLevel 10.0 和 central package management。Target Framework、包拓扑、Node/npm baseline 或公共 API 兼容策略不能在普通改动中调整；此类变化需要维护者批准和 ADR。
 
 ### 首次准备
 

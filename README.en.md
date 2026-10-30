@@ -50,7 +50,7 @@ This README is the English entry point; it does not mirror the specifications.
 
 ## Build
 
-Requirements: .NET 6 SDK, Node.js 24 LTS, npm.
+Requirements: .NET 10 SDK (the repository pins 10.0.401 with `latestFeature` roll-forward), Node.js 24 LTS, npm.
 
 ```sh
 dotnet restore Atlas.sln

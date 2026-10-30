@@ -19,7 +19,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class ContentStateScopeTests : TestContext
+public sealed class ContentStateScopeTests : BunitContext
 {
     public ContentStateScopeTests()
     {
@@ -128,7 +128,7 @@ public sealed class ContentStateScopeTests : TestContext
     [Fact]
     public void Context_GetState_returns_null_when_state_not_created()
     {
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.WorkspaceId, new WorkspaceId("query-only"))
                 .Add(component => component.ChildContent, QueryingContentDeclaration()));
@@ -141,7 +141,7 @@ public sealed class ContentStateScopeTests : TestContext
     public async Task Host_renders_two_same_kind_items_with_independent_state()
     {
         var workspace = CreateTwoItemWorkspace();
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(component => component.Workspace, workspace)
                 .Add(

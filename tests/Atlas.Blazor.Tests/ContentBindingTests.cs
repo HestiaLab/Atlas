@@ -22,7 +22,7 @@ namespace Atlas.Blazor.Tests;
 ///     选择器验证、标识保留、结构重挂载，以及
 ///     生效 Catalog 中确定性的 Map/Route/DI 冲突。
 /// </summary>
-public sealed class ContentBindingTests : TestContext
+public sealed class ContentBindingTests : BunitContext
 {
     public ContentBindingTests()
     {
@@ -41,7 +41,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Items, _ => items)));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map));
@@ -89,7 +89,7 @@ public sealed class ContentBindingTests : TestContext
                             builder.AddContent(0, $"frag-{value}")))));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map));
@@ -125,7 +125,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Items, _ => state)));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map));
@@ -135,7 +135,7 @@ public sealed class ContentBindingTests : TestContext
 
         state.Add("two");
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map));
@@ -160,7 +160,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Label, _ => "first")));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, first));
@@ -174,7 +174,7 @@ public sealed class ContentBindingTests : TestContext
                 "map-kind",
                 component => component.Bind(x => x.Label, _ => "second")));
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, second));
@@ -197,7 +197,7 @@ public sealed class ContentBindingTests : TestContext
                     .Bind(x => x.Items, _ => new List<string> { "stale-item" })));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, withItems));
@@ -211,7 +211,7 @@ public sealed class ContentBindingTests : TestContext
                 "map-kind",
                 component => component.Bind(x => x.Label, _ => "label")));
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, withoutItems));
@@ -237,7 +237,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Label, _ => "original")));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, first));
@@ -251,7 +251,7 @@ public sealed class ContentBindingTests : TestContext
                 "map-kind",
                 component => component.Bind(x => x.Label, _ => "replacement")));
 
-        cut.SetParametersAndRender(
+        cut.Render(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, replaced));
@@ -366,7 +366,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Label, _ => "bound")));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map));
@@ -390,7 +390,7 @@ public sealed class ContentBindingTests : TestContext
                     _ => throw new InvalidOperationException("factory boom"))));
 
         var workspace = CreateWorkspace(Item("doc", "map-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map)
@@ -420,7 +420,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Label, _ => "map")));
 
         var workspace = CreateWorkspace(Item("doc", "shared-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map)
@@ -455,7 +455,7 @@ public sealed class ContentBindingTests : TestContext
                 component => component.Bind(x => x.Label, _ => "map")));
 
         var workspace = CreateWorkspace(Item("doc", "shared-kind"));
-        var cut = RenderComponent<AtlasWorkspaceHost>(
+        var cut = Render<AtlasWorkspaceHost>(
             parameters => parameters
                 .Add(host => host.Workspace, workspace)
                 .Add(host => host.ContentMap, map)

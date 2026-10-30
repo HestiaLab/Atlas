@@ -24,7 +24,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 
 | ADR | 状态 | 决策 |
 |-----|------|------|
-| [ADR-0001](./0001-runtime-and-package-baseline.md) | Accepted | .NET 6.0、双包、Node 24 LTS 与 npm；Demo 条款由 ADR-0016 取代 |
+| [ADR-0001](./0001-runtime-and-package-baseline.md) | Superseded | 原 .NET 6.0、双包、Node 24 LTS 与 npm 基线；Demo 条款由 ADR-0016、单包条款由 ADR-0019、运行时与工具链由 ADR-0041 取代 |
 | [ADR-0002](./0002-core-operation-api-freeze.md) | Accepted | P2 operation、factory、guard、command/query、lifecycle 与错误码 API freeze |
 | [ADR-0003](./0003-domain-events-and-reconciliation.md) | Accepted | typed domain events、placement payload 与 definition reconciliation API |
 | [ADR-0004](./0004-blazor-projection-api-and-reconciliation.md) | Accepted | P3 Blazor public API、Host ownership、content contracts 与 runtime Item reconciliation |
@@ -64,6 +64,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0038](./0038-reset-operation-and-serious-error-recovery.md) | Accepted | `ResetWorkspaceOperation` 解除保留状态；严重错误检测、稳定诊断日志与原子回退初始布局（REQ-F-047/127） |
 | [ADR-0039](./0039-opt-in-ide-theme.md) | Accepted | 第一方可选 IDE 主题 `themes/ide.css`：链接即生效、OS 明暗、完整 chrome 覆盖、混合 token/结构规则与 AA 对比度合同（REQ-NF-010） |
 | [ADR-0040](./0040-svg-chrome-icons.md) | Accepted | 公开 `AtlasIcon`/`AtlasIconName`；chrome 文本字形改为默认 SVG 图标并刷新 REQ-NF-009 AC3 基线（REQ-F-157） |
+| [ADR-0041](./0041-dotnet-10-runtime-baseline.md) | Accepted | .NET 10 LTS 运行时与工具链基线：net10.0 单目标、C# 14、AnalysisLevel 10.0、ASP.NET Core 10.0.x、bunit 2.x；取代 ADR-0001 的运行时与工具链条款 |
 
 ## 编写约定
 

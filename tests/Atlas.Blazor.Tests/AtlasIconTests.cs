@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Atlas.Blazor.Tests;
 
-public sealed class AtlasIconTests : TestContext
+public sealed class AtlasIconTests : BunitContext
 {
     [Theory]
     [InlineData(AtlasIconName.Close, "m4 4 8 8M12 4 4 12")]
@@ -15,7 +15,7 @@ public sealed class AtlasIconTests : TestContext
     [InlineData(AtlasIconName.ChevronRight, "m6 4 4 4-4 4")]
     public void Renders_the_requested_icon_path(AtlasIconName name, string path)
     {
-        var cut = RenderComponent<AtlasIcon>(
+        var cut = Render<AtlasIcon>(
             parameters => parameters.Add(icon => icon.Name, name));
 
         var svg = cut.Find("svg");
@@ -31,7 +31,7 @@ public sealed class AtlasIconTests : TestContext
     [Fact]
     public void Icon_is_decorative_and_focusable_false()
     {
-        var cut = RenderComponent<AtlasIcon>(
+        var cut = Render<AtlasIcon>(
             parameters => parameters.Add(icon => icon.Name, AtlasIconName.Close));
 
         var svg = cut.Find("svg");
@@ -43,7 +43,7 @@ public sealed class AtlasIconTests : TestContext
     [Fact]
     public void Size_and_css_class_are_applied()
     {
-        var cut = RenderComponent<AtlasIcon>(
+        var cut = Render<AtlasIcon>(
             parameters => parameters
                 .Add(icon => icon.Name, AtlasIconName.ChevronDown)
                 .Add(icon => icon.Size, 12)
