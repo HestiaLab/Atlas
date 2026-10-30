@@ -24,11 +24,10 @@ public sealed class WorkspaceRecoveryTests
         await using var workspace = (AtlasWorkspace)result.Value!;
         var changed = new TaskCompletionSource<LayoutChangeSet>(
             TaskCreationOptions.RunContinuationsAsynchronously);
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "Changed", iconKey: null));
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Changed", iconKey: null), TestContext.Current.CancellationToken);
         workspace.Changed += (_, args) => changed.TrySetResult(args.ChangeSet);
-        var reset = await workspace.ExecuteAsync(new ResetWorkspaceOperation());
-        var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var reset = await workspace.ExecuteAsync(new ResetWorkspaceOperation(), TestContext.Current.CancellationToken);
+        var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, reset.Status);
         Assert.Equal(LayoutChangeKind.Reset, reset.Value!.ChangeKind);
@@ -41,7 +40,7 @@ public sealed class WorkspaceRecoveryTests
         Assert.False(workspace.CanRedo);
         Assert.Equal(
             WorkspaceResultStatus.NoChange,
-            (await workspace.UndoAsync()).Status);
+            (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
     }
 
     [Fact]
@@ -57,14 +56,12 @@ public sealed class WorkspaceRecoveryTests
         Trace.Listeners.Add(listener);
         try
         {
-            await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(item.Id, "Changed", iconKey: null));
+            await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Changed", iconKey: null), TestContext.Current.CancellationToken);
             workspace.Changed += (_, args) => changed.TrySetResult(args.ChangeSet);
             InjectRootCorruption(workspace);
 
-            var blocked = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(item.Id, "Blocked", iconKey: null));
-            var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            var blocked = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Blocked", iconKey: null), TestContext.Current.CancellationToken);
+            var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, blocked.Status);
             Assert.Equal(WorkspaceErrorCode.WorkspaceFaulted, blocked.Error!.Code);
@@ -82,8 +79,7 @@ public sealed class WorkspaceRecoveryTests
             Assert.Contains(workspaceId, log);
             Assert.Contains("RootMissing", log);
 
-            var recovered = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(item.Id, "After", iconKey: null));
+            var recovered = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "After", iconKey: null), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, recovered.Status);
             Assert.Equal(3, workspace.Current.Revision);
@@ -115,8 +111,7 @@ public sealed class WorkspaceRecoveryTests
         {
             InjectRootCorruption(workspace);
 
-            var blocked = await workspace.ExecuteAsync(
-                new SelectItemOperation(item.Id));
+            var blocked = await workspace.ExecuteAsync(new SelectItemOperation(item.Id), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, blocked.Status);
             Assert.Equal(WorkspaceErrorCode.WorkspaceFaulted, blocked.Error!.Code);
@@ -138,7 +133,7 @@ public sealed class WorkspaceRecoveryTests
         var created = new AtlasWorkspaceFactory().Create(definition);
         await using var workspace = created.Value!;
 
-        var reset = await workspace.ExecuteAsync(new ResetWorkspaceOperation());
+        var reset = await workspace.ExecuteAsync(new ResetWorkspaceOperation(), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, reset.Status);
         Assert.Equal(0, workspace.Current.Revision);

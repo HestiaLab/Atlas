@@ -8,7 +8,7 @@ namespace Atlas.Showcase.Components;
 internal static class ShowcaseSnippets
 {
     internal const string Install = @"// csproj
-<PackageReference Include=""Atlas.Blazor"" Version=""0.3.0"" />
+<PackageReference Include=""Atlas.Blazor"" Version=""0.4.0"" />
 
 // Program.cs（Blazor WASM）
 builder.Services.AddAtlasWorkspace();";

@@ -48,7 +48,15 @@ jobs:
         run: dotnet build Atlas.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Atlas.sln --no-build --no-restore --configuration Release --verbosity normal
+        run: dotnet test Atlas.sln --no-build --no-restore --configuration Release -- --coverage --coverage-output-format cobertura
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}
+          path: TestResults/**/*.cobertura.xml
+          if-no-files-found: warn
 
   format:
     runs-on: ubuntu-latest

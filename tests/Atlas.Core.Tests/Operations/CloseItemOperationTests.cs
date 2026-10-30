@@ -23,7 +23,7 @@ public sealed class CloseItemOperationTests
             second.Id);
         await using var workspace = CreateWorkspace(group, first, second, third);
 
-        var result = await workspace.ExecuteAsync(new CloseItemOperation(second.Id));
+        var result = await workspace.ExecuteAsync(new CloseItemOperation(second.Id), TestContext.Current.CancellationToken);
 
         var current = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
@@ -51,7 +51,7 @@ public sealed class CloseItemOperationTests
                 recentlyVisitedIds: new[] { second.Id, first.Id, third.Id }));
         await using var workspace = CreateWorkspace(group, first, second, third);
 
-        await workspace.ExecuteAsync(new CloseItemOperation(second.Id));
+        await workspace.ExecuteAsync(new CloseItemOperation(second.Id), TestContext.Current.CancellationToken);
 
         var current = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
         Assert.Equal(first.Id, current.SelectedItemId);
@@ -88,7 +88,7 @@ public sealed class CloseItemOperationTests
             snapshot,
             new DefaultWorkspaceOperationPlanner());
 
-        await workspace.ExecuteAsync(new CloseItemOperation(removedItem.Id));
+        await workspace.ExecuteAsync(new CloseItemOperation(removedItem.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(retained.Id, workspace.Current.RootNodeId);
         Assert.DoesNotContain(dynamic.Id, workspace.Current.Nodes);
@@ -111,9 +111,8 @@ public sealed class CloseItemOperationTests
             item.Id);
         await using var workspace = CreateWorkspace(group, item);
 
-        var missing = await workspace.ExecuteAsync(
-            new CloseItemOperation(new DockItemId("missing")));
-        var rejected = await workspace.ExecuteAsync(new CloseItemOperation(item.Id));
+        var missing = await workspace.ExecuteAsync(new CloseItemOperation(new DockItemId("missing")), TestContext.Current.CancellationToken);
+        var rejected = await workspace.ExecuteAsync(new CloseItemOperation(item.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.ItemNotFound, missing.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.CapabilityRejected, rejected.Error!.Code);
@@ -132,7 +131,7 @@ public sealed class CloseItemOperationTests
         var guard = new StubGuard(_ => Task.FromResult(false));
         await using var workspace = CreateWorkspace(group, guard, item);
 
-        var result = await workspace.ExecuteAsync(new CloseItemOperation(item.Id));
+        var result = await workspace.ExecuteAsync(new CloseItemOperation(item.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.CloseCancelledByGuard, result.Error!.Code);
         Assert.Contains(item.Id, workspace.Current.Items);
@@ -163,8 +162,8 @@ public sealed class CloseItemOperationTests
         await using var workspace = CreateWorkspace(group, guard, item);
         var operation = new CloseItemOperation(item.Id);
 
-        var failed = await workspace.ExecuteAsync(operation);
-        var retried = await workspace.ExecuteAsync(operation);
+        var failed = await workspace.ExecuteAsync(operation, TestContext.Current.CancellationToken);
+        var retried = await workspace.ExecuteAsync(operation, TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Failure, failed.Status);
         Assert.Equal(WorkspaceErrorCode.WorkspaceFaulted, failed.Error!.Code);
@@ -195,12 +194,11 @@ public sealed class CloseItemOperationTests
             });
         await using var workspace = CreateWorkspace(group, guard, first, second);
         var operation = new CloseItemOperation(first.Id);
-        var one = workspace.ExecuteAsync(operation).AsTask();
-        var two = workspace.ExecuteAsync(operation).AsTask();
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var one = workspace.ExecuteAsync(operation, TestContext.Current.CancellationToken).AsTask();
+        var two = workspace.ExecuteAsync(operation, TestContext.Current.CancellationToken).AsTask();
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
-        var selection = await workspace.ExecuteAsync(
-            new SelectItemOperation(second.Id));
+        var selection = await workspace.ExecuteAsync(new SelectItemOperation(second.Id), TestContext.Current.CancellationToken);
         release.TrySetResult(true);
         var closeResults = await Task.WhenAll(one, two);
 

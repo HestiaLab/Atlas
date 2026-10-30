@@ -19,11 +19,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     opened,
                     group.Id,
-                    ContentDeduplicationMode.AllowMultiple));
+                    ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
             var current = CurrentGroup(workspace, group.Id);
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
@@ -45,11 +44,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(first, duplicate);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.ActivateExisting));
+                    ContentDeduplicationMode.ActivateExisting), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(duplicate.Id, CurrentGroup(workspace, group.Id).SelectedItemId);
@@ -66,11 +64,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.RejectDuplicate));
+                    ContentDeduplicationMode.RejectDuplicate), TestContext.Current.CancellationToken);
 
             Assert.Equal(
                 WorkspaceErrorCode.DuplicateContentIdentity,
@@ -88,11 +85,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.AllowMultiple));
+                    ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
             Assert.Contains(existing.Id, workspace.Current.Items);
             Assert.Contains(request.Id, workspace.Current.Items);
@@ -107,11 +103,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.ReplaceExisting));
+                    ContentDeduplicationMode.ReplaceExisting), TestContext.Current.CancellationToken);
 
             Assert.Contains(existing.Id, workspace.Current.Items);
             Assert.DoesNotContain(request.Id, workspace.Current.Items);
@@ -128,11 +123,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.AllowMultiple));
+                    ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.DuplicateTabId, result.Error!.Code);
             Assert.Equal(0, workspace.Current.Revision);
@@ -153,11 +147,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(first, second);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.ReplaceExisting));
+                    ContentDeduplicationMode.ReplaceExisting), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
             Assert.Equal(
@@ -179,11 +172,10 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(zeta, alpha);
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var result = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     group.Id,
-                    ContentDeduplicationMode.ActivateExisting));
+                    ContentDeduplicationMode.ActivateExisting), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(alpha.Id, CurrentGroup(workspace, group.Id).SelectedItemId);
@@ -199,17 +191,15 @@ public sealed class OpenItemOperationTests
         var (workspace, group) = CreateDocumentWorkspace(existing);
         await using (workspace)
         {
-            var missing = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var missing = await workspace.ExecuteAsync(new OpenItemOperation(
                     request,
                     new LayoutNodeId("missing"),
-                    ContentDeduplicationMode.AllowMultiple));
+                    ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
             var tool = CreateTool("tool");
-            var incompatible = await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            var incompatible = await workspace.ExecuteAsync(new OpenItemOperation(
                     tool,
                     group.Id,
-                    ContentDeduplicationMode.AllowMultiple));
+                    ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.TargetNotFound, missing.Error!.Code);
             Assert.Equal(
@@ -226,11 +216,10 @@ public sealed class OpenItemOperationTests
         var group = CreateEmptyToolGroup();
         await using var workspace = CreateEmptyToolWorkspace(group);
 
-        var result = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var result = await workspace.ExecuteAsync(new OpenItemOperation(
                 opened,
                 group.Id,
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         var current = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
@@ -240,13 +229,13 @@ public sealed class OpenItemOperationTests
             new[] { opened.Id },
             workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
 
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.DoesNotContain(
             LogicalRegion.InlineStartUpper,
             workspace.Current.ToolBarOrders.Keys);
         Assert.Empty(Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]).ItemIds);
 
-        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.Success, (await workspace.RedoAsync(TestContext.Current.CancellationToken)).Status);
         Assert.Equal(
             new[] { opened.Id },
             workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
@@ -260,10 +249,7 @@ public sealed class OpenItemOperationTests
         await using var workspace = CreateEmptyToolWorkspace(group);
         var commands = new AtlasWorkspaceCommands(workspace);
 
-        var result = await commands.OpenItemAsync(
-            opened,
-            group.Id,
-            ContentDeduplicationMode.AllowMultiple);
+        var result = await commands.OpenItemAsync(opened, group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(

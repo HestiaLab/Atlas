@@ -16,8 +16,7 @@ public sealed class ReconcileDefinitionOperationTests
     {
         var initial = Definition("Original");
         await using var workspace = CreateWorkspace(initial);
-        var result = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(Definition("Changed")));
+        var result = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(Definition("Changed")), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(LayoutChangeKind.ReconcileDefinition, result.Value!.ChangeKind);
@@ -29,7 +28,7 @@ public sealed class ReconcileDefinitionOperationTests
         Assert.Empty(result.Value.UpdatedNodes);
         Assert.Equal("Changed", workspace.Current.Items[new DockItemId("document")].Title);
 
-        var undo = await workspace.UndoAsync();
+        var undo = await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(LayoutChangeKind.Undo, undo.Value!.ChangeKind);
         Assert.Equal("Original", workspace.Current.Items[new DockItemId("document")].Title);
@@ -41,8 +40,7 @@ public sealed class ReconcileDefinitionOperationTests
     {
         await using var workspace = CreateWorkspace(Definition("Original"));
 
-        var result = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(Definition("Original")));
+        var result = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(Definition("Original")), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
         Assert.Equal(LayoutChangeKind.ReconcileDefinition, result.Value!.ChangeKind);
@@ -55,10 +53,9 @@ public sealed class ReconcileDefinitionOperationTests
     {
         await using var workspace = CreateWorkspace(Definition("Original"));
 
-        var result = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(
+        var result = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(
                 Definition("Changed"),
-                baseRevision: 3));
+                baseRevision: 3), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.StaleOperation, result.Error!.Code);
         Assert.Equal(0, workspace.Current.Revision);
@@ -87,12 +84,9 @@ public sealed class ReconcileDefinitionOperationTests
             Array.Empty<LayoutNode>(),
             Array.Empty<DockItem>());
 
-        var wrongResult = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(wrongWorkspace));
-        var duplicateResult = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(duplicate));
-        var topologyResult = await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(invalidTopology));
+        var wrongResult = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(wrongWorkspace), TestContext.Current.CancellationToken);
+        var duplicateResult = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(duplicate), TestContext.Current.CancellationToken);
+        var topologyResult = await workspace.ExecuteAsync(new ReconcileDefinitionOperation(invalidTopology), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, wrongResult.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, duplicateResult.Error!.Code);

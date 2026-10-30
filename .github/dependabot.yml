@@ -13,9 +13,9 @@ updates:
           - "Microsoft.Extensions.*"
       test:
         patterns:
-          - "Microsoft.NET.Test.Sdk"
+          - "bunit*"
+          - "Microsoft.Testing.*"
           - "xunit*"
-          - "coverlet*"
 
   - package-ecosystem: npm
     directory: /src/Atlas.Blazor

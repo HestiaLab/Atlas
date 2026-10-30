@@ -17,24 +17,18 @@ public sealed class WorkspaceFacadeTests
         var workspace = new RecordingWorkspace(CreateSnapshot());
         var commands = new AtlasWorkspaceCommands(workspace);
 
-        await commands.CloseItemAsync(new DockItemId("one"), baseRevision: 7);
+        await commands.CloseItemAsync(new DockItemId("one"), baseRevision: 7, cancellationToken: TestContext.Current.CancellationToken);
         Assert.IsType<CloseItemOperation>(workspace.LastOperation);
 
-        await commands.ActivateItemAsync(new DockItemId("one"), baseRevision: 7);
+        await commands.ActivateItemAsync(new DockItemId("one"), baseRevision: 7, cancellationToken: TestContext.Current.CancellationToken);
         Assert.IsType<SelectItemOperation>(workspace.LastOperation);
 
-        await commands.SetToolVisibilityAsync(
-            new LayoutNodeId("tools"),
-            visible: false,
-            baseRevision: 7);
+        await commands.SetToolVisibilityAsync(new LayoutNodeId("tools"), visible: false, baseRevision: 7, cancellationToken: TestContext.Current.CancellationToken);
         var visibility = Assert.IsType<SetGroupVisibilityOperation>(
             workspace.LastOperation);
         Assert.Equal(GroupVisibility.Collapsed, visibility.Visibility);
 
-        await commands.SetToolBarVisibilityAsync(
-            LogicalSide.InlineStart,
-            ToolBarVisibility.Collapsed,
-            baseRevision: 7);
+        await commands.SetToolBarVisibilityAsync(LogicalSide.InlineStart, ToolBarVisibility.Collapsed, baseRevision: 7, cancellationToken: TestContext.Current.CancellationToken);
         Assert.IsType<SetToolBarVisibilityOperation>(workspace.LastOperation);
     }
 
@@ -44,7 +38,7 @@ public sealed class WorkspaceFacadeTests
         var workspace = new RecordingWorkspace(CreateSnapshot());
         var commands = new AtlasWorkspaceCommands(workspace);
 
-        await commands.ActivateFirstAsync(item => item.Id == new DockItemId("two"));
+        await commands.ActivateFirstAsync(item => item.Id == new DockItemId("two"), TestContext.Current.CancellationToken);
 
         var operation = Assert.IsType<SelectItemOperation>(workspace.LastOperation);
         Assert.Equal(new DockItemId("two"), operation.ItemId);
@@ -58,7 +52,7 @@ public sealed class WorkspaceFacadeTests
         var workspace = new RecordingWorkspace(CreateSnapshot());
         var commands = new AtlasWorkspaceCommands(workspace);
 
-        var result = await commands.ActivateFirstAsync(_ => false);
+        var result = await commands.ActivateFirstAsync(_ => false, TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
         Assert.Null(workspace.LastOperation);

@@ -112,7 +112,7 @@ public sealed class OptionalFieldCompatibilityTests
             store,
             diagnosticSink: diagnostics.Add);
 
-        var result = await persistence.RestoreIfAvailableAsync();
+        var result = await persistence.RestoreIfAvailableAsync(TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Same(before, workspace.Current);

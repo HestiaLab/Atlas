@@ -65,6 +65,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0039](./0039-opt-in-ide-theme.md) | Accepted | 第一方可选 IDE 主题 `themes/ide.css`：链接即生效、OS 明暗、完整 chrome 覆盖、混合 token/结构规则与 AA 对比度合同（REQ-NF-010） |
 | [ADR-0040](./0040-svg-chrome-icons.md) | Accepted | 公开 `AtlasIcon`/`AtlasIconName`；chrome 文本字形改为默认 SVG 图标并刷新 REQ-NF-009 AC3 基线（REQ-F-157） |
 | [ADR-0041](./0041-dotnet-10-runtime-baseline.md) | Accepted | .NET 10 LTS 运行时与工具链基线：net10.0 单目标、C# 14、AnalysisLevel 10.0、ASP.NET Core 10.0.x、bunit 2.x；取代 ADR-0001 的运行时与工具链条款 |
+| [ADR-0042](./0042-xunit-v3-microsoft-testing-platform.md) | Accepted | 测试平台迁移到 xUnit v3 + Microsoft.Testing.Platform；移除 VSTest/Test SDK/coverlet，CI 收集并上传 Cobertura 覆盖率 |
 
 ## 编写约定
 

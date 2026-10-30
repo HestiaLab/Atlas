@@ -36,10 +36,9 @@ public sealed class ContentLifetimeSpikeTests : BunitContext
         Assert.True(StatefulToolContent.Created == 1, cut.Markup);
         StatefulToolContent.BusinessState["resource"] = 42;
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(
                 new DockItemId("tool"),
-                new LayoutNodeId("target")));
+                new LayoutNodeId("target")), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         cut.WaitForAssertion(

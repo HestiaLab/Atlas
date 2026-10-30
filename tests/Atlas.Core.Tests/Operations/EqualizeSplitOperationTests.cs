@@ -16,8 +16,7 @@ public sealed class EqualizeSplitOperationTests
         var (workspace, split) = CreateWorkspace(SplitBasis.Proportional(0.3));
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new EqualizeSplitOperation(split.Id));
+            var result = await workspace.ExecuteAsync(new EqualizeSplitOperation(split.Id), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(
@@ -25,12 +24,12 @@ public sealed class EqualizeSplitOperationTests
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
             Assert.Equal(new[] { split.Id }, result.Value!.UpdatedNodes);
 
-            await workspace.UndoAsync();
+            await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 split.Basis,
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
 
-            await workspace.RedoAsync();
+            await workspace.RedoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 SplitBasis.Proportional(0.5),
                 Assert.IsType<SplitNode>(workspace.Current.Nodes[split.Id]).Basis);
@@ -43,8 +42,7 @@ public sealed class EqualizeSplitOperationTests
         var (workspace, split) = CreateWorkspace(SplitBasis.Proportional(0.5));
         await using (workspace)
         {
-            var result = await workspace.ExecuteAsync(
-                new EqualizeSplitOperation(split.Id));
+            var result = await workspace.ExecuteAsync(new EqualizeSplitOperation(split.Id), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
             Assert.Equal(0, workspace.Current.Revision);
@@ -57,10 +55,8 @@ public sealed class EqualizeSplitOperationTests
         var (workspace, split) = CreateWorkspace(SplitBasis.Proportional(0.3));
         await using (workspace)
         {
-            var missing = await workspace.ExecuteAsync(
-                new EqualizeSplitOperation(new LayoutNodeId("missing")));
-            var rejected = await workspace.ExecuteAsync(
-                new EqualizeSplitOperation(split.FirstId));
+            var missing = await workspace.ExecuteAsync(new EqualizeSplitOperation(new LayoutNodeId("missing")), TestContext.Current.CancellationToken);
+            var rejected = await workspace.ExecuteAsync(new EqualizeSplitOperation(split.FirstId), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceErrorCode.TargetNotFound, missing.Error!.Code);
             Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, rejected.Error!.Code);

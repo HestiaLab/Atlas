@@ -24,10 +24,7 @@ public sealed class OpenItemRequestTests
         {
             var commands = new AtlasWorkspaceCommands(workspace);
 
-            var result = await commands.OpenItemFromRequestAsync(
-                DocumentRequest("generated", "Generated"),
-                group.Id,
-                ContentDeduplicationMode.AllowMultiple);
+            var result = await commands.OpenItemFromRequestAsync(DocumentRequest("generated", "Generated"), group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             var itemId = result.Value!.ItemId;
@@ -37,7 +34,7 @@ public sealed class OpenItemRequestTests
             Assert.Contains(itemId, workspace.Current.Items.Keys);
             Assert.Equal("Generated", workspace.Current.Items[itemId].Title);
 
-            var published = await openedEvent.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            var published = await openedEvent.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
             Assert.Equal(itemId, published.ItemId);
         }
     }
@@ -49,14 +46,11 @@ public sealed class OpenItemRequestTests
         await using (workspace)
         {
             var commands = new AtlasWorkspaceCommands(workspace);
-            var opened = await commands.OpenItemFromRequestAsync(
-                DocumentRequest("closable", "Closable"),
-                group.Id,
-                ContentDeduplicationMode.AllowMultiple);
+            var opened = await commands.OpenItemFromRequestAsync(DocumentRequest("closable", "Closable"), group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
             var itemId = opened.Value!.ItemId;
 
-            var activated = await commands.ActivateItemAsync(itemId);
-            var closed = await commands.CloseItemAsync(itemId);
+            var activated = await commands.ActivateItemAsync(itemId, cancellationToken: TestContext.Current.CancellationToken);
+            var closed = await commands.CloseItemAsync(itemId, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.True(activated.Succeeded);
             Assert.True(closed.Succeeded);
@@ -107,14 +101,8 @@ public sealed class OpenItemRequestTests
         {
             var commands = new AtlasWorkspaceCommands(workspace);
 
-            var first = await commands.OpenItemFromRequestAsync(
-                DocumentRequest("shared", "Shared"),
-                group.Id,
-                ContentDeduplicationMode.AllowMultiple);
-            var second = await commands.OpenItemFromRequestAsync(
-                DocumentRequest("shared", "Shared"),
-                group.Id,
-                ContentDeduplicationMode.AllowMultiple);
+            var first = await commands.OpenItemFromRequestAsync(DocumentRequest("shared", "Shared"), group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
+            var second = await commands.OpenItemFromRequestAsync(DocumentRequest("shared", "Shared"), group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.True(first.Value!.Created);
             Assert.True(second.Value!.Created);
@@ -137,10 +125,7 @@ public sealed class OpenItemRequestTests
                 "Explicit",
                 new DockItemId("explicit-id"));
 
-            var result = await commands.OpenItemFromRequestAsync(
-                request,
-                group.Id,
-                ContentDeduplicationMode.AllowMultiple);
+            var result = await commands.OpenItemFromRequestAsync(request, group.Id, ContentDeduplicationMode.AllowMultiple, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.Equal(new DockItemId("explicit-id"), result.Value!.ItemId);
             Assert.True(result.Value.Created);
@@ -159,10 +144,7 @@ public sealed class OpenItemRequestTests
         {
             var commands = new AtlasWorkspaceCommands(workspace);
 
-            var result = await commands.OpenItemFromRequestAsync(
-                DocumentRequest("shared", "Shared"),
-                group.Id,
-                ContentDeduplicationMode.ActivateExisting);
+            var result = await commands.OpenItemFromRequestAsync(DocumentRequest("shared", "Shared"), group.Id, ContentDeduplicationMode.ActivateExisting, cancellationToken: TestContext.Current.CancellationToken);
 
             Assert.True(result.Succeeded);
             Assert.Equal(existing.Id, result.Value!.ItemId);

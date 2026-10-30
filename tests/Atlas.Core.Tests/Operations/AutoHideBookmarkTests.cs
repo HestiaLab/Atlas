@@ -61,10 +61,8 @@ public sealed class AutoHideBookmarkTests
             snapshot,
             new DefaultWorkspaceOperationPlanner());
 
-        var closeThird = await workspace.ExecuteAsync(
-            new CloseItemOperation(third.Id));
-        var closeSecond = await workspace.ExecuteAsync(
-            new CloseItemOperation(second.Id));
+        var closeThird = await workspace.ExecuteAsync(new CloseItemOperation(third.Id), TestContext.Current.CancellationToken);
+        var closeSecond = await workspace.ExecuteAsync(new CloseItemOperation(second.Id), TestContext.Current.CancellationToken);
 
         Assert.True(closeThird.Succeeded);
         Assert.True(closeSecond.Succeeded);

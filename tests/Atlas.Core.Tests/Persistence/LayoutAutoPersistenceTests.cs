@@ -23,15 +23,13 @@ public sealed class LayoutAutoPersistenceTests
             store,
             TimeSpan.FromMilliseconds(30));
 
-        await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+        await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Collapsed));
-        await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Expanded));
-        await persistence.FlushAsync();
+                GroupVisibility.Expanded), TestContext.Current.CancellationToken);
+        await persistence.FlushAsync(TestContext.Current.CancellationToken);
 
         Assert.Single(store.Documents);
         var restored = new AtlasXmlLayoutSerializer().Deserialize(
@@ -49,10 +47,9 @@ public sealed class LayoutAutoPersistenceTests
         await using var workspace = CreateWorkspace();
         var serializer = new AtlasXmlLayoutSerializer();
         var original = serializer.Serialize(workspace.Current);
-        await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+        await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Collapsed));
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
         var store = new RecordingWorkspaceStore
         {
             Current = new WorkspaceLayoutDocument("2.0", 0, original),
@@ -63,7 +60,7 @@ public sealed class LayoutAutoPersistenceTests
             store,
             TimeSpan.FromMilliseconds(10));
 
-        var result = await persistence.RestoreIfAvailableAsync();
+        var result = await persistence.RestoreIfAvailableAsync(TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(
@@ -88,7 +85,7 @@ public sealed class LayoutAutoPersistenceTests
             store,
             diagnosticSink: diagnostics.Add);
 
-        var result = await persistence.RestoreIfAvailableAsync();
+        var result = await persistence.RestoreIfAvailableAsync(TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, result.Error!.Code);
@@ -109,14 +106,14 @@ public sealed class LayoutAutoPersistenceTests
             store,
             TimeSpan.FromSeconds(10));
 
-        var flush = persistence.FlushAsync().AsTask();
-        await store.SaveEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var flush = persistence.FlushAsync(TestContext.Current.CancellationToken).AsTask();
+        await store.SaveEntered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var dispose = persistence.DisposeAsync().AsTask();
 
         Assert.False(dispose.IsCompleted);
         store.ReleaseSave.TrySetResult(null);
         Assert.True((await flush).Succeeded);
-        await dispose.WaitAsync(TimeSpan.FromSeconds(2));
+        await dispose.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -137,14 +134,13 @@ public sealed class LayoutAutoPersistenceTests
             store,
             TimeSpan.FromMilliseconds(1));
 
-        var restore = persistence.RestoreIfAvailableAsync().AsTask();
-        await store.LoadEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(
+        var restore = persistence.RestoreIfAvailableAsync(TestContext.Current.CancellationToken).AsTask();
+        await store.LoadEntered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(
                 new DockItemId("tool"),
                 "changed",
-                iconKey: null));
-        await Task.Delay(100);
+                iconKey: null), TestContext.Current.CancellationToken);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         Assert.Equal(0, store.SaveCount);
 
@@ -163,7 +159,7 @@ public sealed class LayoutAutoPersistenceTests
             new RecordingWorkspaceStore(),
             diagnosticSink: diagnostics.Add);
 
-        var result = await persistence.FlushAsync();
+        var result = await persistence.FlushAsync(TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(
@@ -186,7 +182,7 @@ public sealed class LayoutAutoPersistenceTests
             new ThrowingWorkspaceStore(),
             diagnosticSink: diagnostics.Add);
 
-        var result = await persistence.FlushAsync();
+        var result = await persistence.FlushAsync(TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(
@@ -210,16 +206,14 @@ public sealed class LayoutAutoPersistenceTests
             TimeSpan.FromMilliseconds(1),
             diagnostics.Add);
 
-        var collapse = await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+        var collapse = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Collapsed));
-        await Task.Delay(50);
-        var expand = await workspace.ExecuteAsync(
-            new SetGroupVisibilityOperation(
+                GroupVisibility.Collapsed), TestContext.Current.CancellationToken);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+        var expand = await workspace.ExecuteAsync(new SetGroupVisibilityOperation(
                 new LayoutNodeId("tools"),
-                GroupVisibility.Expanded));
-        await Task.Delay(50);
+                GroupVisibility.Expanded), TestContext.Current.CancellationToken);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
 
         Assert.True(collapse.Succeeded);
         Assert.True(expand.Succeeded);
@@ -249,7 +243,7 @@ public sealed class LayoutAutoPersistenceTests
             new ThrowingLoadStore(),
             diagnosticSink: diagnostics.Add);
 
-        var result = await persistence.RestoreIfAvailableAsync();
+        var result = await persistence.RestoreIfAvailableAsync(TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(

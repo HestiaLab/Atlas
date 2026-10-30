@@ -75,12 +75,10 @@ public sealed class WorkspaceFactoryTests
                 new WorkspaceHistoryOptions(maxEntries: 1)));
         await using var workspace = result.Value!;
 
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "Two", iconKey: null));
-        await workspace.UndoAsync();
-        var exhausted = await workspace.UndoAsync();
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "One", iconKey: null), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Two", iconKey: null), TestContext.Current.CancellationToken);
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
+        var exhausted = await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal("One", workspace.Current.Items[item.Id].Title);
         Assert.Equal(WorkspaceResultStatus.NoChange, exhausted.Status);
@@ -96,15 +94,12 @@ public sealed class WorkspaceFactoryTests
                 new WorkspaceHistoryOptions(approximateMaxBytes: 1000)));
         await using var workspace = result.Value!;
 
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "Two", iconKey: null));
-        await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "Three", iconKey: null));
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "One", iconKey: null), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Two", iconKey: null), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "Three", iconKey: null), TestContext.Current.CancellationToken);
 
         var undoCount = 0;
-        while ((await workspace.UndoAsync()).Status == WorkspaceResultStatus.Success)
+        while ((await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status == WorkspaceResultStatus.Success)
         {
             undoCount++;
         }
@@ -119,8 +114,7 @@ public sealed class WorkspaceFactoryTests
         var result = new AtlasWorkspaceFactory().Create(definition);
         await using var workspace = result.Value!;
 
-        var commit = await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
+        var commit = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "One", iconKey: null), TestContext.Current.CancellationToken);
 
         Assert.True(commit.Succeeded);
         Assert.True(commit.Value!.HistoryRecorded);
@@ -137,13 +131,12 @@ public sealed class WorkspaceFactoryTests
                 new WorkspaceHistoryOptions(approximateMaxBytes: 1)));
         await using var workspace = result.Value!;
 
-        var commit = await workspace.ExecuteAsync(
-            new UpdateItemPresentationOperation(item.Id, "One", iconKey: null));
+        var commit = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(item.Id, "One", iconKey: null), TestContext.Current.CancellationToken);
 
         Assert.True(commit.Succeeded);
         Assert.False(commit.Value!.HistoryRecorded);
         Assert.True(commit.Value.IsHistoryBarrier);
-        Assert.Equal(WorkspaceResultStatus.NoChange, (await workspace.UndoAsync()).Status);
+        Assert.Equal(WorkspaceResultStatus.NoChange, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);
     }
 
     [Fact]
@@ -161,11 +154,10 @@ public sealed class WorkspaceFactoryTests
             new ContentReference("different-renderer", "resource"),
             DockItemCapabilityPresets.Document);
 
-        var open = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var open = await workspace.ExecuteAsync(new OpenItemOperation(
                 duplicate,
                 group.Id,
-                ContentDeduplicationMode.RejectDuplicate));
+                ContentDeduplicationMode.RejectDuplicate), TestContext.Current.CancellationToken);
 
         Assert.Equal(
             WorkspaceErrorCode.DuplicateContentIdentity,

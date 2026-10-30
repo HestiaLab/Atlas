@@ -93,11 +93,10 @@ public sealed class WorkspaceRestoreTests
             new ContentReference("document-editor", "temporary"),
             DockItemCapabilityPresets.Document);
         Assert.True(
-            (await workspace.ExecuteAsync(
-                new OpenItemOperation(
+            (await workspace.ExecuteAsync(new OpenItemOperation(
                     opened,
                     new LayoutNodeId("documents"),
-                    ContentDeduplicationMode.ActivateExisting))).Succeeded);
+                    ContentDeduplicationMode.ActivateExisting), TestContext.Current.CancellationToken)).Succeeded);
         Assert.True(workspace.CanUndo);
         var restoredEvents = 0;
         workspace.DomainEvents.WorkspaceRestored += (_, _) => restoredEvents++;
@@ -105,8 +104,7 @@ public sealed class WorkspaceRestoreTests
             File.ReadAllText(GoldenPath("workspace-v2.xml")),
             new WorkspaceId("main")).Value!;
 
-        var result = await workspace.ExecuteAsync(
-            new RestoreWorkspaceOperation(document, workspace.Current.Revision));
+        var result = await workspace.ExecuteAsync(new RestoreWorkspaceOperation(document, workspace.Current.Revision), TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(Atlas.Core.Changes.LayoutChangeKind.Restore, result.Value!.ChangeKind);
@@ -126,8 +124,7 @@ public sealed class WorkspaceRestoreTests
             new WorkspaceId("main")).Value!;
         var before = workspace.Current;
 
-        var result = await workspace.ExecuteAsync(
-            new RestoreWorkspaceOperation(document, before.Revision + 1));
+        var result = await workspace.ExecuteAsync(new RestoreWorkspaceOperation(document, before.Revision + 1), TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(WorkspaceErrorCode.StaleOperation, result.Error!.Code);
@@ -147,7 +144,7 @@ public sealed class WorkspaceRestoreTests
                 reservedItemIds: new[] { new DockItemId("document-42") })).Value!;
 
         var result = await new AtlasWorkspaceCommands(workspace)
-            .RestoreAsync(document);
+            .RestoreAsync(document, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(workspace.Current.Revision, result.Value!.TargetRevision);

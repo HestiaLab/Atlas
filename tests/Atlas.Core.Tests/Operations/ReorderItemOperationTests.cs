@@ -21,18 +21,17 @@ public sealed class ReorderItemOperationTests
         };
         await using var workspace = CreateDocumentWorkspace(items);
 
-        var result = await workspace.ExecuteAsync(
-            new ReorderItemOperation(items[0].Id, new LayoutNodeId("group"), targetIndex: 2));
+        var result = await workspace.ExecuteAsync(new ReorderItemOperation(items[0].Id, new LayoutNodeId("group"), targetIndex: 2), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
             new[] { items[1].Id, items[2].Id, items[0].Id },
             CurrentGroup(workspace).ItemIds);
 
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(items.Select(item => item.Id), CurrentGroup(workspace).ItemIds);
 
-        await workspace.RedoAsync();
+        await workspace.RedoAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             new[] { items[1].Id, items[2].Id, items[0].Id },
             CurrentGroup(workspace).ItemIds);
@@ -49,8 +48,7 @@ public sealed class ReorderItemOperationTests
         };
         await using var workspace = CreateToolWorkspace(items);
 
-        await workspace.ExecuteAsync(
-            new ReorderItemOperation(items[2].Id, new LayoutNodeId("group"), targetIndex: 0));
+        await workspace.ExecuteAsync(new ReorderItemOperation(items[2].Id, new LayoutNodeId("group"), targetIndex: 0), TestContext.Current.CancellationToken);
 
         var expected = new[] { items[2].Id, items[0].Id, items[1].Id };
         Assert.Equal(expected, CurrentGroup(workspace).ItemIds);
@@ -66,10 +64,8 @@ public sealed class ReorderItemOperationTests
         var unpinned = CreateDocument("unpinned");
         await using var workspace = CreateDocumentWorkspace(new[] { pinned, unpinned });
 
-        var prefix = await workspace.ExecuteAsync(
-            new ReorderItemOperation(unpinned.Id, new LayoutNodeId("group"), targetIndex: 0));
-        var range = await workspace.ExecuteAsync(
-            new ReorderItemOperation(pinned.Id, new LayoutNodeId("group"), targetIndex: 2));
+        var prefix = await workspace.ExecuteAsync(new ReorderItemOperation(unpinned.Id, new LayoutNodeId("group"), targetIndex: 0), TestContext.Current.CancellationToken);
+        var range = await workspace.ExecuteAsync(new ReorderItemOperation(pinned.Id, new LayoutNodeId("group"), targetIndex: 2), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, prefix.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, range.Error!.Code);
@@ -88,10 +84,8 @@ public sealed class ReorderItemOperationTests
             DockItemCapabilities.CanClose);
         await using var workspace = CreateDocumentWorkspace(new[] { movable, fixedItem });
 
-        var noChange = await workspace.ExecuteAsync(
-            new ReorderItemOperation(movable.Id, new LayoutNodeId("group"), targetIndex: 0));
-        var rejected = await workspace.ExecuteAsync(
-            new ReorderItemOperation(fixedItem.Id, new LayoutNodeId("group"), targetIndex: 0));
+        var noChange = await workspace.ExecuteAsync(new ReorderItemOperation(movable.Id, new LayoutNodeId("group"), targetIndex: 0), TestContext.Current.CancellationToken);
+        var rejected = await workspace.ExecuteAsync(new ReorderItemOperation(fixedItem.Id, new LayoutNodeId("group"), targetIndex: 0), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, noChange.Status);
         Assert.Equal(WorkspaceErrorCode.CapabilityRejected, rejected.Error!.Code);

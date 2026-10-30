@@ -21,9 +21,8 @@ public sealed class WorkspaceTransactionTests
             TaskCreationOptions.RunContinuationsAsynchronously);
         workspace.Changed += (_, args) => changed.TrySetResult(args.ChangeSet);
 
-        var result = await workspace.ExecuteAsync(
-            TestOperation.Commit(candidate, baseRevision: 0));
-        var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var result = await workspace.ExecuteAsync(TestOperation.Commit(candidate, baseRevision: 0), TestContext.Current.CancellationToken);
+        var published = await changed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(1, workspace.Current.Revision);
@@ -41,16 +40,14 @@ public sealed class WorkspaceTransactionTests
         var eventCount = 0;
         workspace.Changed += (_, _) => Interlocked.Increment(ref eventCount);
 
-        var noChange = await workspace.ExecuteAsync(TestOperation.NoChange());
-        var failure = await workspace.ExecuteAsync(
-            TestOperation.Failure(
+        var noChange = await workspace.ExecuteAsync(TestOperation.NoChange(), TestContext.Current.CancellationToken);
+        var failure = await workspace.ExecuteAsync(TestOperation.Failure(
                 new WorkspaceError(
                     WorkspaceErrorCode.ItemNotFound,
                     LayoutOperationKind.SelectItem,
                     "ATLAS-ITEM-MISSING",
-                    "Atlas.Item.NotFound")));
-        var stale = await workspace.ExecuteAsync(
-            TestOperation.NoChange(baseRevision: 4));
+                    "Atlas.Item.NotFound")), TestContext.Current.CancellationToken);
+        var stale = await workspace.ExecuteAsync(TestOperation.NoChange(baseRevision: 4), TestContext.Current.CancellationToken);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
@@ -75,15 +72,15 @@ public sealed class WorkspaceTransactionTests
         await using var workspace = CreateWorkspace();
         var candidate = WithTool(workspace.Current, "explorer");
 
-        await workspace.ExecuteAsync(TestOperation.Commit(candidate));
-        var undo = await workspace.UndoAsync();
+        await workspace.ExecuteAsync(TestOperation.Commit(candidate), TestContext.Current.CancellationToken);
+        var undo = await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, workspace.Current.Revision);
         Assert.Empty(workspace.Current.Items);
         Assert.True(workspace.CanRedo);
         Assert.Equal(LayoutChangeKind.Undo, undo.Value!.ChangeKind);
 
-        var redo = await workspace.RedoAsync();
+        var redo = await workspace.RedoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(3, workspace.Current.Revision);
         Assert.Contains(new DockItemId("explorer"), workspace.Current.Items);
@@ -96,12 +93,10 @@ public sealed class WorkspaceTransactionTests
     public async Task New_commit_after_undo_clears_redo_branch()
     {
         await using var workspace = CreateWorkspace();
-        await workspace.ExecuteAsync(
-            TestOperation.Commit(WithTool(workspace.Current, "explorer")));
-        await workspace.UndoAsync();
+        await workspace.ExecuteAsync(TestOperation.Commit(WithTool(workspace.Current, "explorer")), TestContext.Current.CancellationToken);
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
-        await workspace.ExecuteAsync(
-            TestOperation.Commit(WithTool(workspace.Current, "properties")));
+        await workspace.ExecuteAsync(TestOperation.Commit(WithTool(workspace.Current, "properties")), TestContext.Current.CancellationToken);
 
         Assert.False(workspace.CanRedo);
         Assert.Contains(new DockItemId("properties"), workspace.Current.Items);
@@ -116,15 +111,13 @@ public sealed class WorkspaceTransactionTests
             TaskCreationOptions.RunContinuationsAsynchronously);
         var entered = new TaskCompletionSource<object?>(
             TaskCreationOptions.RunContinuationsAsynchronously);
-        var delayed = workspace.ExecuteAsync(
-            TestOperation.Commit(
+        var delayed = workspace.ExecuteAsync(TestOperation.Commit(
                 WithTool(workspace.Current, "explorer"),
                 beforePlanReturns: release.Task,
-                planEntered: entered)).AsTask();
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+                planEntered: entered), TestContext.Current.CancellationToken).AsTask();
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
-        var winner = await workspace.ExecuteAsync(
-            TestOperation.Commit(WithTool(workspace.Current, "properties")));
+        var winner = await workspace.ExecuteAsync(TestOperation.Commit(WithTool(workspace.Current, "properties")), TestContext.Current.CancellationToken);
         release.TrySetResult(null);
         var loser = await delayed;
 
@@ -171,9 +164,8 @@ public sealed class WorkspaceTransactionTests
             }
         };
 
-        await workspace.ExecuteAsync(
-            TestOperation.Commit(WithTool(workspace.Current, "explorer")));
-        await completed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await workspace.ExecuteAsync(TestOperation.Commit(WithTool(workspace.Current, "explorer")), TestContext.Current.CancellationToken);
+        await completed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         lock (order)
         {
@@ -206,7 +198,7 @@ public sealed class WorkspaceTransactionTests
             Array.Empty<KeyValuePair<WorkspaceEdge, AutoHideStripState>>());
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => workspace.ExecuteAsync(TestOperation.Commit(invalid)).AsTask());
+            () => workspace.ExecuteAsync(TestOperation.Commit(invalid), TestContext.Current.CancellationToken).AsTask());
         Assert.Contains("RootMissing", exception.Message, StringComparison.Ordinal);
         Assert.Contains("node=missing", exception.Message, StringComparison.Ordinal);
 
@@ -222,7 +214,7 @@ public sealed class WorkspaceTransactionTests
         await workspace.DisposeAsync();
 
         await Assert.ThrowsAsync<ObjectDisposedException>(
-            () => workspace.ExecuteAsync(TestOperation.NoChange()).AsTask());
+            () => workspace.ExecuteAsync(TestOperation.NoChange(), TestContext.Current.CancellationToken).AsTask());
         await workspace.DisposeAsync();
     }
 
@@ -240,16 +232,15 @@ public sealed class WorkspaceTransactionTests
             releaseHandler.Task.GetAwaiter().GetResult();
         };
 
-        await workspace.ExecuteAsync(
-            TestOperation.Commit(WithTool(workspace.Current, "explorer")));
-        await handlerEntered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await workspace.ExecuteAsync(TestOperation.Commit(WithTool(workspace.Current, "explorer")), TestContext.Current.CancellationToken);
+        await handlerEntered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         var first = workspace.DisposeAsync().AsTask();
         var second = workspace.DisposeAsync().AsTask();
 
         Assert.False(second.IsCompleted);
         releaseHandler.TrySetResult(null);
-        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(2));
+        await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
     private static AtlasWorkspace CreateWorkspace()

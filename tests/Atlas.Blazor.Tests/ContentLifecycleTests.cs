@@ -40,7 +40,7 @@ public sealed class ContentLifecycleTests : BunitContext
             () => Assert.Equal("first-mount", cut.Find(".external-state").TextContent));
 
         // 第二个条目变为活动；在 Default 生命周期下第一个条目卸载。
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(2, tracker.Created);
@@ -52,7 +52,7 @@ public sealed class ContentLifecycleTests : BunitContext
 
         // 再次选中第一个条目会重新挂载它；新实例读取当前外部状态，
         // 而不是过期快照。
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("first")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(3, tracker.Created);
@@ -80,7 +80,7 @@ public sealed class ContentLifecycleTests : BunitContext
                         maxCachedItems: 2)));
 
         // 两个条目都保持挂载；每个实例恰好订阅一次。
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         cut.WaitForAssertion(() =>
         {
             Assert.Equal(2, tracker.Created);
@@ -125,8 +125,7 @@ public sealed class ContentLifecycleTests : BunitContext
 
         // 后续工作区变更不得调用已释放 Host 的回调，也不得暴露过期的渲染器
         // 异常。
-        var result = await workspace.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("second")));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("second")), Xunit.TestContext.Current.CancellationToken);
         Assert.True(result.Succeeded);
         Assert.Empty(errors);
     }

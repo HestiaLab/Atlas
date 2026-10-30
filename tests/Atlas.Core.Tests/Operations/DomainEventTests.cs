@@ -58,12 +58,11 @@ public sealed class DomainEventTests
         };
 
         var item = Document("document-1");
-        var result = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var result = await workspace.ExecuteAsync(new OpenItemOperation(
                 item,
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
-        await completed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
+        await completed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         lock (order)
@@ -92,13 +91,12 @@ public sealed class DomainEventTests
         };
 
         var item = Document("document-1");
-        await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        await workspace.ExecuteAsync(new OpenItemOperation(
                 item,
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
-        await workspace.ExecuteAsync(new CloseItemOperation(item.Id));
-        await closedSignal.Task.WaitAsync(TimeSpan.FromSeconds(2));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new CloseItemOperation(item.Id), TestContext.Current.CancellationToken);
+        await closedSignal.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.NotNull(opened);
         Assert.Equal(0, opened!.BeforeRevision);
@@ -133,13 +131,11 @@ public sealed class DomainEventTests
         };
         var tool = Tool("explorer");
 
-        await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(
-                Definition(tool)));
-        await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(
-                Definition(tool: null)));
-        await removedSignal.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await workspace.ExecuteAsync(new ReconcileDefinitionOperation(
+                Definition(tool)), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new ReconcileDefinitionOperation(
+                Definition(tool: null)), TestContext.Current.CancellationToken);
+        await removedSignal.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(tool.Id, created!.ItemId);
         Assert.Equal(new LayoutNodeId("tools"), created.CurrentPlacement!.GroupId);
@@ -176,8 +172,8 @@ public sealed class DomainEventTests
             signal.TrySetResult(null);
         };
 
-        await workspace.ExecuteAsync(new SelectItemOperation(second.Id));
-        await signal.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await workspace.ExecuteAsync(new SelectItemOperation(second.Id), TestContext.Current.CancellationToken);
+        await signal.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(second.Id, activated!.ItemId);
         Assert.Equal(first.Id, activated.PreviousItemId);
@@ -194,13 +190,10 @@ public sealed class DomainEventTests
         workspace.DomainEvents.ItemOpened += (_, _) => Interlocked.Increment(ref count);
         workspace.DomainEvents.ItemActivated += (_, _) => Interlocked.Increment(ref count);
 
-        await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(Definition()));
-        await workspace.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("missing")));
-        await workspace.ExecuteAsync(
-            new ReconcileDefinitionOperation(Definition(), baseRevision: 4));
-        await Task.Delay(20);
+        await workspace.ExecuteAsync(new ReconcileDefinitionOperation(Definition()), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("missing")), TestContext.Current.CancellationToken);
+        await workspace.ExecuteAsync(new ReconcileDefinitionOperation(Definition(), baseRevision: 4), TestContext.Current.CancellationToken);
+        await Task.Delay(20, TestContext.Current.CancellationToken);
 
         Assert.Equal(0, Volatile.Read(ref count));
     }
@@ -221,19 +214,18 @@ public sealed class DomainEventTests
             release.Task.GetAwaiter().GetResult();
         };
 
-        await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        await workspace.ExecuteAsync(new OpenItemOperation(
                 Document("document-1"),
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
-        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var dispose = workspace.DisposeAsync().AsTask();
         Assert.False(dispose.IsCompleted);
 
         release.TrySetResult(null);
-        await dispose.WaitAsync(TimeSpan.FromSeconds(2));
+        await dispose.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var countAtDispose = Volatile.Read(ref callbacks);
-        await Task.Delay(20);
+        await Task.Delay(20, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, countAtDispose);
         Assert.Equal(countAtDispose, Volatile.Read(ref callbacks));
@@ -254,17 +246,16 @@ public sealed class DomainEventTests
         workspace.DomainEvents.ItemOpened += (_, _) =>
             throw new InvalidOperationException("opened");
 
-        var result = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var result = await workspace.ExecuteAsync(new OpenItemOperation(
                 Document("document-1"),
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
         while (faults.Count < 2 && DateTime.UtcNow < deadline)
         {
-            await Task.Delay(10);
+            await Task.Delay(10, TestContext.Current.CancellationToken);
         }
 
         Assert.Contains(faults, exception => exception.Message == "changed");
@@ -285,18 +276,17 @@ public sealed class DomainEventTests
         workspace.Changed += (_, _) => Interlocked.Increment(ref changed);
         workspace.DomainEvents.ItemOpened += (_, _) => Interlocked.Increment(ref opened);
 
-        var result = await workspace.ExecuteAsync(
-            new OpenItemOperation(
+        var result = await workspace.ExecuteAsync(new OpenItemOperation(
                 Document("document-1"),
                 new LayoutNodeId("documents"),
-                ContentDeduplicationMode.AllowMultiple));
+                ContentDeduplicationMode.AllowMultiple), TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(2);
         while ((Volatile.Read(ref changed) < 1 || Volatile.Read(ref opened) < 1)
                && DateTime.UtcNow < deadline)
         {
-            await Task.Delay(10);
+            await Task.Delay(10, TestContext.Current.CancellationToken);
         }
 
         Assert.Equal(1, Volatile.Read(ref changed));

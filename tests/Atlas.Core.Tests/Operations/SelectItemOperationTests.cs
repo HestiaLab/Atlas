@@ -26,8 +26,7 @@ public sealed class SelectItemOperationTests
                 recentlyVisitedIds: new[] { first.Id, second.Id }));
         await using var workspace = CreateWorkspace(group, first, second);
 
-        var result = await workspace.ExecuteAsync(
-            new SelectItemOperation(second.Id, baseRevision: 0));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(second.Id, baseRevision: 0), TestContext.Current.CancellationToken);
 
         var currentGroup = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
@@ -52,7 +51,7 @@ public sealed class SelectItemOperationTests
             toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
-        await workspace.ExecuteAsync(new SelectItemOperation(item.Id));
+        await workspace.ExecuteAsync(new SelectItemOperation(item.Id), TestContext.Current.CancellationToken);
 
         var currentGroup = Assert.IsType<GroupNode>(workspace.Current.Nodes[group.Id]);
         Assert.Equal(GroupVisibility.Expanded, currentGroup.Visibility);
@@ -72,7 +71,7 @@ public sealed class SelectItemOperationTests
             toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
-        var result = await workspace.ExecuteAsync(new SelectItemOperation(item.Id));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(item.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
         Assert.Equal(0, workspace.Current.Revision);
@@ -93,8 +92,7 @@ public sealed class SelectItemOperationTests
             toolbarRegion: LogicalRegion.InlineStartUpper);
         await using var workspace = CreateWorkspace(group, item);
 
-        var result = await workspace.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("missing")));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("missing")), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.ItemNotFound, result.Error!.Code);
         Assert.Equal(new DockItemId("missing"), result.Error.ItemId);
@@ -149,7 +147,7 @@ public sealed class SelectItemOperationTests
             snapshot,
             new DefaultWorkspaceOperationPlanner());
 
-        var result = await workspace.ExecuteAsync(new SelectItemOperation(autoHidden.Id));
+        var result = await workspace.ExecuteAsync(new SelectItemOperation(autoHidden.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, result.Error!.Code);
         Assert.Equal(0, workspace.Current.Revision);

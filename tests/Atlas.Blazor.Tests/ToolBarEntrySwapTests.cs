@@ -40,8 +40,7 @@ public sealed class ToolBarEntrySwapTests : BunitContext
             () => Assert.Equal(2, cut.FindAll("[data-atlas-toolbar-entry]").Count));
 
         // 步骤 1：跨区域移动（right-upper -> left-upper，索引 1）。
-        var move = await workspace.ExecuteAsync(
-            new MoveToolOperation(property.Id, new LayoutNodeId("left-upper"), targetIndex: 1));
+        var move = await workspace.ExecuteAsync(new MoveToolOperation(property.Id, new LayoutNodeId("left-upper"), targetIndex: 1), Xunit.TestContext.Current.CancellationToken);
         Assert.True(move.Succeeded, move.Error?.DiagnosticId ?? move.Error?.MessageKey);
         cut.WaitForAssertion(
             () => Assert.Equal(
@@ -51,8 +50,7 @@ public sealed class ToolBarEntrySwapTests : BunitContext
                     .Count));
 
         // 步骤 2：同区域重排到末尾（交换）。
-        var reorder = await workspace.ExecuteAsync(
-            new ReorderToolBarEntryOperation(tree.Id, LogicalRegion.InlineStartUpper, targetIndex: 1));
+        var reorder = await workspace.ExecuteAsync(new ReorderToolBarEntryOperation(tree.Id, LogicalRegion.InlineStartUpper, targetIndex: 1), Xunit.TestContext.Current.CancellationToken);
         Assert.True(reorder.Succeeded, reorder.Error?.DiagnosticId ?? reorder.Error?.MessageKey);
 
         cut.WaitForAssertion(

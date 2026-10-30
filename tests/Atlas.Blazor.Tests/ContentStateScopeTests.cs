@@ -152,7 +152,7 @@ public sealed class ContentStateScopeTests : BunitContext
 
         // 选中第二个文档会保持第一个出口挂载，因此两个内容组件在同一渲染树中
         // 各自解析自己的状态。
-        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("doc-b")));
+        await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("doc-b")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () =>

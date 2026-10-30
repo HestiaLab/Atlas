@@ -118,8 +118,7 @@ public sealed class ShowcaseWorkspaceTests : BunitContext
         var workspace = cut.FindComponent<AtlasWorkspaceHost>().Instance.Workspace;
         Assert.NotNull(workspace);
 
-        await workspace!.ExecuteAsync(
-            new SelectItemOperation(new DockItemId("showcase-splitter")));
+        await workspace!.ExecuteAsync(new SelectItemOperation(new DockItemId("showcase-splitter")), Xunit.TestContext.Current.CancellationToken);
 
         cut.WaitForAssertion(
             () => Assert.Contains(

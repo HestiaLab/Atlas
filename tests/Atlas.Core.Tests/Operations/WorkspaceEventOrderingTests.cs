@@ -93,7 +93,7 @@ public sealed class WorkspaceEventOrderingTests
             }
         }
 
-        await allObserved.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await allObserved.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         long[] observed;
         lock (revisions)
         {

@@ -56,7 +56,7 @@ public sealed class WorkspaceMemoryTests : BunitContext
             });
         var nodesBefore = cut.FindAll("*").Count;
 
-        var close = await workspace.ExecuteAsync(new CloseItemOperation(first.Id));
+        var close = await workspace.ExecuteAsync(new CloseItemOperation(first.Id), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(close.Succeeded);
         cut.WaitForAssertion(
@@ -113,7 +113,7 @@ public sealed class WorkspaceMemoryTests : BunitContext
                 Assert.Single(cut.FindAll("[data-atlas-panel-header]"));
             });
 
-        var close = await workspace.ExecuteAsync(new CloseItemOperation(item.Id));
+        var close = await workspace.ExecuteAsync(new CloseItemOperation(item.Id), Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(close.Succeeded);
         cut.WaitForAssertion(

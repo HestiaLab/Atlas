@@ -31,8 +31,7 @@ public sealed class MoveToolOperationTests
             new LayoutNode[] { split, source, target },
             new[] { moved, targetItem });
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(moved.Id, target.Id, targetIndex: 0), TestContext.Current.CancellationToken);
 
         var currentTarget = Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]);
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
@@ -47,7 +46,7 @@ public sealed class MoveToolOperationTests
         Assert.Empty(
             workspace.Current.ToolBarOrders[LogicalRegion.InlineStartUpper].ItemIds);
 
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(split.Id, workspace.Current.RootNodeId);
         Assert.Contains(source.Id, workspace.Current.Nodes);
@@ -72,8 +71,7 @@ public sealed class MoveToolOperationTests
             new LayoutNode[] { group },
             new[] { first, second });
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(first.Id, group.Id, targetIndex: 0));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(first.Id, group.Id, targetIndex: 0), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.NoChange, result.Status);
         Assert.Equal(0, workspace.Current.Revision);
@@ -108,8 +106,7 @@ public sealed class MoveToolOperationTests
                 LogicalRegion.InlineEndUpper,
                 new[] { second.Id, first.Id }));
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(moved.Id, target.Id, targetIndex: 0), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
@@ -141,8 +138,7 @@ public sealed class MoveToolOperationTests
                 LogicalRegion.InlineStartUpper,
                 new[] { third.Id, first.Id, second.Id }));
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(first.Id, group.Id, targetIndex: 2));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(first.Id, group.Id, targetIndex: 2), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
@@ -177,15 +173,14 @@ public sealed class MoveToolOperationTests
             new[] { moved },
             omittedOrderRegion: LogicalRegion.InlineEndUpper);
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(moved.Id, target.Id));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(moved.Id, target.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         Assert.Equal(
             new[] { moved.Id },
             workspace.Current.ToolBarOrders[LogicalRegion.InlineEndUpper].ItemIds);
 
-        await workspace.UndoAsync();
+        await workspace.UndoAsync(TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(
             LogicalRegion.InlineEndUpper,
@@ -193,7 +188,7 @@ public sealed class MoveToolOperationTests
         Assert.Empty(
             Assert.IsType<GroupNode>(workspace.Current.Nodes[target.Id]).ItemIds);
 
-        await workspace.RedoAsync();
+        await workspace.RedoAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(
             new[] { moved.Id },
@@ -221,8 +216,7 @@ public sealed class MoveToolOperationTests
             new LayoutNode[] { split, source, target },
             new[] { moved, targetItem });
 
-        var result = await workspace.ExecuteAsync(
-            new MoveToolOperation(moved.Id, target.Id, targetIndex: 0));
+        var result = await workspace.ExecuteAsync(new MoveToolOperation(moved.Id, target.Id, targetIndex: 0), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceResultStatus.Success, result.Status);
         // Persistent 源 Group 会留在树中（不同于 Dynamic），但空的工具 Group
@@ -260,10 +254,8 @@ public sealed class MoveToolOperationTests
             new LayoutNode[] { split, toolGroup, documentGroup },
             new[] { tool, document });
 
-        var missing = await workspace.ExecuteAsync(
-            new MoveToolOperation(tool.Id, new LayoutNodeId("missing")));
-        var rejected = await workspace.ExecuteAsync(
-            new MoveToolOperation(tool.Id, documentGroup.Id));
+        var missing = await workspace.ExecuteAsync(new MoveToolOperation(tool.Id, new LayoutNodeId("missing")), TestContext.Current.CancellationToken);
+        var rejected = await workspace.ExecuteAsync(new MoveToolOperation(tool.Id, documentGroup.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.TargetNotFound, missing.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.TargetRejectedByPolicy, rejected.Error!.Code);
@@ -288,12 +280,10 @@ public sealed class MoveToolOperationTests
             new LayoutNode[] { group },
             new[] { fixedTool });
 
-        var missing = await workspace.ExecuteAsync(
-            new MoveToolOperation(
+        var missing = await workspace.ExecuteAsync(new MoveToolOperation(
                 new DockItemId("missing"),
-                group.Id));
-        var rejected = await workspace.ExecuteAsync(
-            new MoveToolOperation(fixedTool.Id, group.Id));
+                group.Id), TestContext.Current.CancellationToken);
+        var rejected = await workspace.ExecuteAsync(new MoveToolOperation(fixedTool.Id, group.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WorkspaceErrorCode.ItemNotFound, missing.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.CapabilityRejected, rejected.Error!.Code);

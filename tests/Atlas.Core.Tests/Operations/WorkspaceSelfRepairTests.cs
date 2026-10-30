@@ -42,14 +42,13 @@ public sealed class WorkspaceSelfRepairTests
                 }
             };
 
-            var result = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(
+            var result = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(
                     first.Id,
                     "After repair",
                     iconKey: null,
-                    baseRevision: corruptedRevision));
+                    baseRevision: corruptedRevision), TestContext.Current.CancellationToken);
 
-            await eventsArrived.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await eventsArrived.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(2, workspace.Current.Revision);
             var group = Assert.IsType<GroupNode>(
@@ -77,7 +76,7 @@ public sealed class WorkspaceSelfRepairTests
             Assert.Equal(1, CountOccurrences(listener.Text, repairLog));
 
             Assert.True(workspace.CanUndo);
-            var undo = await workspace.UndoAsync();
+            var undo = await workspace.UndoAsync(TestContext.Current.CancellationToken);
             Assert.Equal(WorkspaceResultStatus.Success, undo.Status);
             Assert.Equal("First", workspace.Current.Items[first.Id].Title);
             Assert.Equal(new[] { first.Id }, group.ItemIds);
@@ -115,10 +114,9 @@ public sealed class WorkspaceSelfRepairTests
                 }
             };
 
-            var result = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(first.Id, "After repair", iconKey: null));
+            var result = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(first.Id, "After repair", iconKey: null), TestContext.Current.CancellationToken);
 
-            await eventsArrived.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await eventsArrived.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
             Assert.Equal(WorkspaceResultStatus.Success, result.Status);
             Assert.Equal(2, workspace.Current.Revision);
             Assert.False(workspace.Current.Items.ContainsKey(second.Id));
@@ -157,8 +155,7 @@ public sealed class WorkspaceSelfRepairTests
         Trace.Listeners.Add(listener);
         try
         {
-            var result = await workspace.ExecuteAsync(
-                new SelectItemOperation(new DockItemId("missing")));
+            var result = await workspace.ExecuteAsync(new SelectItemOperation(new DockItemId("missing")), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
             Assert.Equal(WorkspaceErrorCode.ItemNotFound, result.Error!.Code);
@@ -195,8 +192,7 @@ public sealed class WorkspaceSelfRepairTests
                 current.AutoHideStrips);
             workspace.InjectCorruptedCommittedStateForTests(corrupted);
 
-            var result = await workspace.ExecuteAsync(
-                new UpdateItemPresentationOperation(first.Id, "Blocked", iconKey: null));
+            var result = await workspace.ExecuteAsync(new UpdateItemPresentationOperation(first.Id, "Blocked", iconKey: null), TestContext.Current.CancellationToken);
 
             Assert.Equal(WorkspaceResultStatus.Failure, result.Status);
             Assert.Equal(WorkspaceErrorCode.WorkspaceFaulted, result.Error!.Code);
