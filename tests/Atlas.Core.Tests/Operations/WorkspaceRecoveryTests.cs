@@ -88,7 +88,7 @@ public sealed class WorkspaceRecoveryTests
                 1,
                 CountOccurrences(
                     listener.Text,
-                    WorkspaceDiagnostics.Ids.WorkspaceReset));
+                    $"{WorkspaceDiagnostics.Ids.WorkspaceReset} workspace={workspaceId}"));
         }
         finally
         {
