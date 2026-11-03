@@ -82,4 +82,4 @@ Security and supported-version notes are in [`SECURITY.md`](SECURITY.md) (Chines
 
 ## License
 
-[MIT](LICENSE).
+[Apache-2.0](LICENSE).
