@@ -52,6 +52,13 @@ internal sealed class AtlasContentOutlet : ComponentBase
     public string PanelId { get; set; } = string.Empty;
 
     /// <summary>
+    ///     获取或设置内容面板的 ARIA 角色；Dock 组使用 tabpanel，
+    ///     浮动窗口使用 region。
+    /// </summary>
+    [Parameter]
+    public string PanelRole { get; set; } = "tabpanel";
+
+    /// <summary>
     ///     获取或设置引用此面板的标签页或标题 DOM id，作为 aria-labelledby 值。
     /// </summary>
     [Parameter]
@@ -97,7 +104,7 @@ internal sealed class AtlasContentOutlet : ComponentBase
         builder.OpenElement(0, "div");
         builder.AddAttribute(1, "class", "atlas-v2-content-outlet");
         builder.AddAttribute(2, "id", PanelId);
-        builder.AddAttribute(3, "role", "tabpanel");
+        builder.AddAttribute(3, "role", PanelRole);
         builder.AddAttribute(4, "aria-labelledby", LabelledById);
         builder.AddAttribute(5, "data-atlas-item-id", Content.ItemId.Value);
         builder.AddAttribute(

@@ -17,6 +17,7 @@
 | [P7 内容生命周期与安全](./p7-content-lifetime-security.md) | 内容生命周期、SandboxedFrame 和安全边界 |
 | [P8 正式需求审计](./p8-requirement-audit.md) | 正式需求实施状态审计 |
 | [P8 系统加固](./p8-system-hardening.md) | 系统级 hardening、可访问性和边界验证 |
+| [浮动窗口](./floating-window.md) | REQ-F-152、ADR-0043：committed placement、Schema V3、Blazor/TS 交互与 Chrome/Edge/Firefox 三浏览器证据 |
 
 ## 使用规则
 

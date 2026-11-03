@@ -9,4 +9,5 @@ internal static class LayoutPersistenceHardLimits
     internal const int MaxItemCount = 4096;
     internal const int MaxItemsPerGroup = 1024;
     internal const int MaxStringLength = 4096;
+    internal const int MaxFloatingWindows = 8;
 }

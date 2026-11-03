@@ -51,6 +51,13 @@ public sealed partial class AtlasXmlLayoutSerializer
                 nameof(snapshot));
         }
 
+        if (snapshot.FloatingWindows.Count > limits.MaxFloatingWindows)
+        {
+            throw new ArgumentException(
+                "The snapshot exceeds the persistence floating-window limit.",
+                nameof(snapshot));
+        }
+
         try
         {
             ValidateLimits(document.Root!, limits);
@@ -77,7 +84,7 @@ public sealed partial class AtlasXmlLayoutSerializer
 
     private static bool TryCompatibleVersion(string? value)
     {
-        // 版本注册表：只接受明确受支持的版本；未登记的 2.x 一律拒绝，
+        // 版本注册表：只接受明确受支持的版本；未登记的 3.x 一律拒绝，
         // 读取方不做前向猜测。
         return StringComparer.Ordinal.Equals(value, LayoutSchemaVersion.Current);
     }

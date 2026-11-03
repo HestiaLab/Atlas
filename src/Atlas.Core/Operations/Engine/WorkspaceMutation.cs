@@ -16,6 +16,7 @@ internal sealed class WorkspaceMutation
     private Dictionary<LogicalRegion, ToolBarOrderState>? orders;
     private Dictionary<WorkspaceEdge, AutoHideStripState>? strips;
     private Dictionary<LogicalSide, ToolBarState>? toolBars;
+    private Dictionary<DockItemId, FloatingWindowState>? floatingWindows;
     private LayoutNodeId? rootNodeId;
 
     private WorkspaceMutation(WorkspaceSnapshot source)
@@ -165,6 +166,18 @@ internal sealed class WorkspaceMutation
         return -1;
     }
 
+    internal void RemoveOrderItem(LogicalRegion region, DockItemId itemId)
+    {
+        var orders = EnsureOrders();
+        if (orders.TryGetValue(region, out var order)
+            && order.ItemIds.Contains(itemId))
+        {
+            orders[region] = new ToolBarOrderState(
+                region,
+                order.ItemIds.Where(id => id != itemId));
+        }
+    }
+
     internal void RemoveOrderItem(
         GroupNode source,
         DockItemId itemId,
@@ -182,6 +195,11 @@ internal sealed class WorkspaceMutation
         orders[region] = new ToolBarOrderState(region, order);
     }
 
+    internal void SetAutoHideStrip(AutoHideStripState strip)
+    {
+        EnsureStrips()[strip.Edge] = strip;
+    }
+
     internal void RemoveAutoHideItem(DockItemId itemId)
     {
         var strips = EnsureStrips();
@@ -190,6 +208,43 @@ internal sealed class WorkspaceMutation
         strips[strip.Key] = new AutoHideStripState(
             strip.Key,
             strip.Value.Entries.Where(entry => entry.ItemId != itemId));
+    }
+
+    internal void SetFloatingWindow(FloatingWindowState state)
+    {
+        EnsureFloatingWindows()[state.ItemId] = state;
+    }
+
+    internal void RemoveFloatingWindow(DockItemId itemId)
+    {
+        EnsureFloatingWindows().Remove(itemId);
+    }
+
+    /// <summary>
+    ///     浮窗离开锚点组（关闭或停靠到其他目标）时，移除其遗留的空 Dynamic 锚点组。
+    /// </summary>
+    internal void RemoveFloatingAnchorIfEmpty(DockItemId itemId)
+    {
+        var current = floatingWindows ?? source.FloatingWindows;
+        if (!current.TryGetValue(itemId, out var state)
+            || state is null)
+        {
+            return;
+        }
+
+        var currentNodes = nodes ?? source.Nodes;
+        if (!currentNodes.TryGetValue(
+                state.ReturnPlacement.DockBack.PreferredGroupId,
+                out var node)
+            || node is not GroupNode group
+            || group.ItemIds.Count != 0
+            || (group.RetentionPolicy != GroupRetentionPolicy.Dynamic
+                && !state.ReturnPlacement.ReturnGroupWasDynamic))
+        {
+            return;
+        }
+
+        RemoveDynamicGroup(group.Id);
     }
 
     /// <summary>
@@ -221,6 +276,8 @@ internal sealed class WorkspaceMutation
 
         RemoveOrderItemEverywhere(itemId);
         RemoveAutoHideItemEverywhere(itemId);
+        RemoveFloatingAnchorIfEmpty(itemId);
+        RemoveFloatingWindow(itemId);
         EnsureItems().Remove(itemId);
     }
 
@@ -276,7 +333,8 @@ internal sealed class WorkspaceMutation
                 orders ?? source.ToolBarOrders,
                 AutoHideBookmarkEditor.ClampToGroups(
                     strips ?? source.AutoHideStrips,
-                    finalNodes)));
+                    finalNodes),
+                floatingWindows ?? source.FloatingWindows));
     }
 
     private Dictionary<LayoutNodeId, LayoutNode> EnsureNodes()
@@ -303,6 +361,13 @@ internal sealed class WorkspaceMutation
     private Dictionary<WorkspaceEdge, AutoHideStripState> EnsureStrips()
     {
         return strips ??= source.AutoHideStrips.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value);
+    }
+
+    private Dictionary<DockItemId, FloatingWindowState> EnsureFloatingWindows()
+    {
+        return floatingWindows ??= source.FloatingWindows.ToDictionary(
             pair => pair.Key,
             pair => pair.Value);
     }

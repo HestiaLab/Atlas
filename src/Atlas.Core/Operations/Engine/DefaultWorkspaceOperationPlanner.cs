@@ -81,6 +81,11 @@ internal sealed class DefaultWorkspaceOperationPlanner : IWorkspaceOperationPlan
             ReorderItemOperation reorder => ReorderItemPlanner.Plan(snapshot, reorder),
             DockDocumentOperation dockDocument => DockDocumentPlanner.Plan(snapshot, dockDocument),
             MoveToolOperation move => MoveToolPlanner.Plan(snapshot, move),
+            FloatToolOperation floatTool => FloatToolPlanner.Plan(snapshot, floatTool),
+            SetFloatingWindowGeometryOperation floatingGeometry =>
+                SetFloatingWindowGeometryPlanner.Plan(snapshot, floatingGeometry),
+            DockFloatingToolOperation dockFloating =>
+                DockFloatingToolPlanner.Plan(snapshot, dockFloating),
             SetGroupVisibilityOperation visibility => GroupVisibilityPlanner.Plan(
                 snapshot,
                 visibility),

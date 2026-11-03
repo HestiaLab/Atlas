@@ -127,6 +127,50 @@ public sealed class AtlasWorkspaceCommands
     }
 
     /// <summary>
+    ///     把工具条目浮出为独立浮动窗口。
+    /// </summary>
+    /// <remarks>映射到 <c>FloatToolOperation</c>。</remarks>
+    public ValueTask<WorkspaceResult<LayoutChangeSet>> FloatToolAsync(
+        DockItemId itemId,
+        FloatingWindowGeometry geometry,
+        long? baseRevision = null,
+        CancellationToken cancellationToken = default)
+    {
+        return workspace.ExecuteAsync(
+            new FloatToolOperation(itemId, geometry, baseRevision),
+            cancellationToken);
+    }
+
+    /// <summary>
+    ///     提交浮动窗口的移动或缩放几何。
+    /// </summary>
+    /// <remarks>映射到 <c>SetFloatingWindowGeometryOperation</c>。</remarks>
+    public ValueTask<WorkspaceResult<LayoutChangeSet>> SetFloatingWindowGeometryAsync(
+        DockItemId itemId,
+        FloatingWindowGeometry geometry,
+        long? baseRevision = null,
+        CancellationToken cancellationToken = default)
+    {
+        return workspace.ExecuteAsync(
+            new SetFloatingWindowGeometryOperation(itemId, geometry, baseRevision),
+            cancellationToken);
+    }
+
+    /// <summary>
+    ///     取消浮动，并把工具条目还原到浮出前的 placement。
+    /// </summary>
+    /// <remarks>映射到 <c>DockFloatingToolOperation</c>。</remarks>
+    public ValueTask<WorkspaceResult<LayoutChangeSet>> DockFloatingToolAsync(
+        DockItemId itemId,
+        long? baseRevision = null,
+        CancellationToken cancellationToken = default)
+    {
+        return workspace.ExecuteAsync(
+            new DockFloatingToolOperation(itemId, baseRevision),
+            cancellationToken);
+    }
+
+    /// <summary>
     ///     切换工具 Group 的展开/折叠可见性。
     /// </summary>
     /// <remarks>映射到 <c>SetGroupVisibilityOperation</c>。</remarks>

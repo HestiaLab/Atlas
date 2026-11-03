@@ -3,6 +3,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Atlas.Core.Layout;
+using Atlas.Core.Placement;
 
 namespace Atlas.Core.Persistence;
 
@@ -144,6 +145,54 @@ public sealed partial class AtlasXmlLayoutSerializer
                                 new XAttribute(
                                     "fallbackEdge",
                                     entry.DockBack.FallbackEdge))))));
+    }
+
+    private static XElement WriteFloatingWindows(WorkspaceSnapshot snapshot)
+    {
+        // 按 ItemId 字典序写出，保证同一快照的浮窗集合字节级稳定。
+        return new XElement(
+            Namespace + "FloatingWindows",
+            snapshot.FloatingWindows.Values
+                .OrderBy(value => value.ItemId.Value, StringComparer.Ordinal)
+                .Select(
+                    state => new XElement(
+                        Namespace + "FloatingWindow",
+                        new XAttribute("itemId", state.ItemId.Value),
+                        new XAttribute(
+                            "x",
+                            state.Geometry.X.ToString("R", CultureInfo.InvariantCulture)),
+                        new XAttribute(
+                            "y",
+                            state.Geometry.Y.ToString("R", CultureInfo.InvariantCulture)),
+                        new XAttribute(
+                            "width",
+                            state.Geometry.Width.ToString("R", CultureInfo.InvariantCulture)),
+                        new XAttribute(
+                            "height",
+                            state.Geometry.Height.ToString("R", CultureInfo.InvariantCulture)),
+                        new XAttribute("returnKind", state.ReturnPlacement.Kind),
+                        new XAttribute("logicalRegion", state.ReturnPlacement.Region),
+                        new XAttribute(
+                            "preferredGroupId",
+                            state.ReturnPlacement.DockBack.PreferredGroupId.Value),
+                        new XAttribute(
+                            "preferredIndex",
+                            state.ReturnPlacement.DockBack.PreferredIndex),
+                        new XAttribute(
+                            "fallbackEdge",
+                            state.ReturnPlacement.DockBack.FallbackEdge),
+                        OptionalAttribute(
+                            "returnGroupWasDynamic",
+                            state.ReturnPlacement.ReturnGroupWasDynamic
+                                ? XmlConvert.ToString(true)
+                                : null),
+                        OptionalAttribute(
+                            "autoHideEdge",
+                            state.ReturnPlacement.AutoHideEdge?.ToString()),
+                        OptionalAttribute(
+                            "autoHideIndex",
+                            state.ReturnPlacement.AutoHideIndex?.ToString(
+                                CultureInfo.InvariantCulture)))));
     }
 
     private sealed class Utf8StringWriter : StringWriter

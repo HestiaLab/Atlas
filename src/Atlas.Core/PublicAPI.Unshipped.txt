@@ -23,3 +23,75 @@ Atlas.Core.Results.OpenItemResult
 Atlas.Core.Results.OpenItemResult.ChangeSet.get -> Atlas.Core.Changes.LayoutChangeSet!
 Atlas.Core.Results.OpenItemResult.Created.get -> bool
 Atlas.Core.Results.OpenItemResult.ItemId.get -> Atlas.Core.DockItemId
+
+Atlas.Core.AtlasWorkspaceCommands.DockFloatingToolAsync(Atlas.Core.DockItemId itemId, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.FloatToolAsync(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.FloatingWindowGeometry geometry, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.AtlasWorkspaceCommands.SetFloatingWindowGeometryAsync(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.FloatingWindowGeometry geometry, long? baseRevision = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Atlas.Core.Results.WorkspaceResult<Atlas.Core.Changes.LayoutChangeSet!>!>
+Atlas.Core.Changes.LayoutChangeSet.UpdatedFloatingWindows.get -> System.Collections.Generic.IReadOnlyList<Atlas.Core.DockItemId>!
+Atlas.Core.Events.DockItemPlacementKind.Floating = 2 -> Atlas.Core.Events.DockItemPlacementKind
+Atlas.Core.Operations.DockFloatingToolOperation
+Atlas.Core.Operations.DockFloatingToolOperation.DockFloatingToolOperation(Atlas.Core.DockItemId itemId, long? baseRevision = null) -> void
+Atlas.Core.Operations.DockFloatingToolOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.FloatToolOperation
+Atlas.Core.Operations.FloatToolOperation.FloatToolOperation(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.FloatingWindowGeometry geometry, long? baseRevision = null) -> void
+Atlas.Core.Operations.FloatToolOperation.Geometry.get -> Atlas.Core.Placement.FloatingWindowGeometry
+Atlas.Core.Operations.FloatToolOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.LayoutOperationKind.DockFloatingTool = 23 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.FloatTool = 18 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.LayoutOperationKind.SetFloatingWindowGeometry = 19 -> Atlas.Core.Operations.LayoutOperationKind
+Atlas.Core.Operations.SetFloatingWindowGeometryOperation
+Atlas.Core.Operations.SetFloatingWindowGeometryOperation.Geometry.get -> Atlas.Core.Placement.FloatingWindowGeometry
+Atlas.Core.Operations.SetFloatingWindowGeometryOperation.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Operations.SetFloatingWindowGeometryOperation.SetFloatingWindowGeometryOperation(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.FloatingWindowGeometry geometry, long? baseRevision = null) -> void
+Atlas.Core.Placement.FloatingReturnKind
+Atlas.Core.Placement.FloatingReturnKind.AutoHide = 1 -> Atlas.Core.Placement.FloatingReturnKind
+Atlas.Core.Placement.FloatingReturnKind.Group = 0 -> Atlas.Core.Placement.FloatingReturnKind
+Atlas.Core.Placement.FloatingReturnPlacement
+Atlas.Core.Placement.FloatingReturnPlacement.AutoHideEdge.get -> Atlas.Core.Placement.WorkspaceEdge?
+Atlas.Core.Placement.FloatingReturnPlacement.AutoHideIndex.get -> int?
+Atlas.Core.Placement.FloatingReturnPlacement.DockBack.get -> Atlas.Core.Placement.DockBack
+Atlas.Core.Placement.FloatingReturnPlacement.Equals(Atlas.Core.Placement.FloatingReturnPlacement other) -> bool
+Atlas.Core.Placement.FloatingReturnPlacement.FloatingReturnPlacement() -> void
+Atlas.Core.Placement.FloatingReturnPlacement.FloatingReturnPlacement(Atlas.Core.Placement.LogicalRegion region, Atlas.Core.Placement.DockBack dockBack) -> void
+Atlas.Core.Placement.FloatingReturnPlacement.FloatingReturnPlacement(Atlas.Core.Placement.LogicalRegion region, Atlas.Core.Placement.DockBack dockBack, bool returnGroupWasDynamic) -> void
+Atlas.Core.Placement.FloatingReturnPlacement.FloatingReturnPlacement(Atlas.Core.Placement.LogicalRegion region, Atlas.Core.Placement.DockBack dockBack, Atlas.Core.Placement.WorkspaceEdge autoHideEdge, int autoHideIndex) -> void
+Atlas.Core.Placement.FloatingReturnPlacement.IsDefault.get -> bool
+Atlas.Core.Placement.FloatingReturnPlacement.Kind.get -> Atlas.Core.Placement.FloatingReturnKind
+Atlas.Core.Placement.FloatingReturnPlacement.Region.get -> Atlas.Core.Placement.LogicalRegion
+Atlas.Core.Placement.FloatingReturnPlacement.ReturnGroupWasDynamic.get -> bool
+Atlas.Core.Placement.FloatingWindowGeometry
+Atlas.Core.Placement.FloatingWindowGeometry.Equals(Atlas.Core.Placement.FloatingWindowGeometry other) -> bool
+Atlas.Core.Placement.FloatingWindowGeometry.FloatingWindowGeometry() -> void
+Atlas.Core.Placement.FloatingWindowGeometry.FloatingWindowGeometry(double x, double y, double width, double height) -> void
+Atlas.Core.Placement.FloatingWindowGeometry.Height.get -> double
+Atlas.Core.Placement.FloatingWindowGeometry.IsDefault.get -> bool
+Atlas.Core.Placement.FloatingWindowGeometry.Width.get -> double
+Atlas.Core.Placement.FloatingWindowGeometry.X.get -> double
+Atlas.Core.Placement.FloatingWindowGeometry.Y.get -> double
+Atlas.Core.Placement.FloatingWindowLimits
+Atlas.Core.Placement.FloatingWindowState
+Atlas.Core.Placement.FloatingWindowState.Equals(Atlas.Core.Placement.FloatingWindowState? other) -> bool
+Atlas.Core.Placement.FloatingWindowState.FloatingWindowState(Atlas.Core.DockItemId itemId, Atlas.Core.Placement.FloatingWindowGeometry geometry, Atlas.Core.Placement.FloatingReturnPlacement returnPlacement) -> void
+Atlas.Core.Placement.FloatingWindowState.Geometry.get -> Atlas.Core.Placement.FloatingWindowGeometry
+Atlas.Core.Placement.FloatingWindowState.ItemId.get -> Atlas.Core.DockItemId
+Atlas.Core.Placement.FloatingWindowState.ReturnPlacement.get -> Atlas.Core.Placement.FloatingReturnPlacement
+Atlas.Core.Persistence.LayoutPersistenceLimits.LayoutPersistenceLimits(int maxDocumentBytes = 1048576, int maxDepth = 64, int maxNodeCount = 4096, int maxItemCount = 4096, int maxItemsPerGroup = 1024, int maxStringLength = 4096, int maxFloatingWindows = 8) -> void
+Atlas.Core.Persistence.LayoutPersistenceLimits.MaxFloatingWindows.get -> int
+Atlas.Core.Results.WorkspaceErrorCode.FloatingWindowLimit = 17 -> Atlas.Core.Results.WorkspaceErrorCode
+Atlas.Core.WorkspaceSnapshot.FloatingWindows.get -> System.Collections.Generic.IReadOnlyDictionary<Atlas.Core.DockItemId, Atlas.Core.Placement.FloatingWindowState!>!
+const Atlas.Core.Placement.FloatingWindowLimits.DefaultHeight = 480 -> double
+const Atlas.Core.Placement.FloatingWindowLimits.DefaultWidth = 360 -> double
+const Atlas.Core.Placement.FloatingWindowLimits.MaximumOpenWindows = 8 -> int
+const Atlas.Core.Placement.FloatingWindowLimits.MinimumHeight = 160 -> double
+const Atlas.Core.Placement.FloatingWindowLimits.MinimumWidth = 240 -> double
+override Atlas.Core.Placement.FloatingReturnPlacement.Equals(object? obj) -> bool
+override Atlas.Core.Placement.FloatingReturnPlacement.GetHashCode() -> int
+override Atlas.Core.Placement.FloatingWindowGeometry.Equals(object? obj) -> bool
+override Atlas.Core.Placement.FloatingWindowGeometry.GetHashCode() -> int
+override Atlas.Core.Placement.FloatingWindowState.Equals(object? obj) -> bool
+override Atlas.Core.Placement.FloatingWindowState.GetHashCode() -> int
+static Atlas.Core.Placement.FloatingReturnPlacement.operator !=(Atlas.Core.Placement.FloatingReturnPlacement left, Atlas.Core.Placement.FloatingReturnPlacement right) -> bool
+static Atlas.Core.Placement.FloatingReturnPlacement.operator ==(Atlas.Core.Placement.FloatingReturnPlacement left, Atlas.Core.Placement.FloatingReturnPlacement right) -> bool
+static Atlas.Core.Placement.FloatingWindowGeometry.Default.get -> Atlas.Core.Placement.FloatingWindowGeometry
+static Atlas.Core.Placement.FloatingWindowGeometry.operator !=(Atlas.Core.Placement.FloatingWindowGeometry left, Atlas.Core.Placement.FloatingWindowGeometry right) -> bool
+static Atlas.Core.Placement.FloatingWindowGeometry.operator ==(Atlas.Core.Placement.FloatingWindowGeometry left, Atlas.Core.Placement.FloatingWindowGeometry right) -> bool

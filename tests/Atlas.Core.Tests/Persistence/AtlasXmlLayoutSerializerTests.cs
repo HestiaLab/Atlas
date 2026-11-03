@@ -12,15 +12,15 @@ public sealed class AtlasXmlLayoutSerializerTests
     private readonly AtlasXmlLayoutSerializer serializer = new();
 
     [Fact]
-    public void Deserializes_every_committed_field_from_v2_golden()
+    public void Deserializes_every_committed_field_from_v3_golden()
     {
         var result = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"));
 
         Assert.True(result.Succeeded);
         var document = Assert.IsType<LayoutRestoreDocument>(result.Value);
-        Assert.Equal("2.0", document.SourceSchemaVersion);
+        Assert.Equal("3.0", document.SourceSchemaVersion);
         Assert.Empty(document.Warnings);
         Assert.Equal(3, document.Snapshot.Nodes.Count);
         Assert.Equal(2, document.Snapshot.Items.Count);
@@ -34,7 +34,7 @@ public sealed class AtlasXmlLayoutSerializerTests
     public void Serializes_canonically_and_round_trips_v2()
     {
         var first = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"));
 
         var xml = serializer.Serialize(first.Value!.Snapshot);
@@ -42,7 +42,7 @@ public sealed class AtlasXmlLayoutSerializerTests
 
         Assert.True(second.Succeeded);
         Assert.Equal(xml, serializer.Serialize(second.Value!.Snapshot));
-        Assert.Contains("schemaVersion=\"2.0\"", xml, StringComparison.Ordinal);
+        Assert.Contains("schemaVersion=\"3.0\"", xml, StringComparison.Ordinal);
         Assert.DoesNotContain("Revision", xml, StringComparison.Ordinal);
     }
 
@@ -88,8 +88,8 @@ public sealed class AtlasXmlLayoutSerializerTests
     public void Empty_workspace_uses_empty_layout_element()
     {
         const string xml =
-            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:2\" schemaVersion=\"2.0\" workspaceId=\"empty\">"
-            + "<Items/><Layout/><ToolBars/><AutoHide/></AtlasWorkspace>";
+            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:3\" schemaVersion=\"3.0\" workspaceId=\"empty\">"
+            + "<Items/><Layout/><ToolBars/><AutoHide/><FloatingWindows/></AtlasWorkspace>";
 
         var result = serializer.Deserialize(xml, new WorkspaceId("empty"));
 
@@ -100,18 +100,18 @@ public sealed class AtlasXmlLayoutSerializerTests
     }
 
     [Theory]
-    [InlineData("3.0", WorkspaceErrorCode.LayoutVersionIncompatible)]
-    [InlineData("2.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
-    [InlineData("2.0.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
+    [InlineData("2.0", WorkspaceErrorCode.LayoutVersionIncompatible)]
+    [InlineData("3.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
+    [InlineData("3.0.1", WorkspaceErrorCode.LayoutVersionIncompatible)]
     [InlineData("garbage", WorkspaceErrorCode.LayoutVersionIncompatible)]
     public void Rejects_incompatible_or_malformed_versions(
         string version,
         WorkspaceErrorCode expected)
     {
         var xml =
-            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:2\" schemaVersion=\""
+            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:3\" schemaVersion=\""
             + version
-            + "\" workspaceId=\"main\"><Items/><Layout/><ToolBars/><AutoHide/></AtlasWorkspace>";
+            + "\" workspaceId=\"main\"><Items/><Layout/><ToolBars/><AutoHide/><FloatingWindows/></AtlasWorkspace>";
 
         var result = serializer.Deserialize(xml, new WorkspaceId("main"));
 
@@ -123,7 +123,7 @@ public sealed class AtlasXmlLayoutSerializerTests
     public void Rejects_wrong_workspace_without_clone_semantics()
     {
         var result = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("other"));
 
         Assert.False(result.Succeeded);
@@ -135,8 +135,8 @@ public sealed class AtlasXmlLayoutSerializerTests
     {
         const string xml =
             "<!DOCTYPE AtlasWorkspace [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>"
-            + "<AtlasWorkspace xmlns=\"urn:atlas:workspace:2\" schemaVersion=\"2.0\" workspaceId=\"main\">"
-            + "<Items/><Layout/><ToolBars/><AutoHide/></AtlasWorkspace>";
+            + "<AtlasWorkspace xmlns=\"urn:atlas:workspace:3\" schemaVersion=\"3.0\" workspaceId=\"main\">"
+            + "<Items/><Layout/><ToolBars/><AutoHide/><FloatingWindows/></AtlasWorkspace>";
 
         var result = serializer.Deserialize(xml, new WorkspaceId("main"));
 
@@ -150,7 +150,7 @@ public sealed class AtlasXmlLayoutSerializerTests
         var limits = new LayoutPersistenceLimits(maxDocumentBytes: 32);
 
         var result = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"),
             limits);
 
@@ -165,7 +165,7 @@ public sealed class AtlasXmlLayoutSerializerTests
             reservedItemIds: new[] { new DockItemId("document-42") });
 
         var result = serializer.DeserializeWithOptions(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"),
             options);
 
@@ -187,7 +187,7 @@ public sealed class AtlasXmlLayoutSerializerTests
             isContentRegistered: reference => reference.Kind == "explorer");
 
         var result = serializer.DeserializeWithOptions(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"),
             options);
 
@@ -203,7 +203,7 @@ public sealed class AtlasXmlLayoutSerializerTests
     [Fact]
     public void Missing_content_can_fail_or_drop_deterministically()
     {
-        var xml = File.ReadAllText(GoldenPath("workspace-v2.xml"));
+        var xml = File.ReadAllText(GoldenPath("workspace-v3.xml"));
         var fail = serializer.DeserializeWithOptions(
             xml,
             new WorkspaceId("main"),
@@ -243,7 +243,7 @@ public sealed class AtlasXmlLayoutSerializerTests
         };
 
         var result = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3.xml")),
             new WorkspaceId("main"),
             limits);
 
@@ -256,9 +256,9 @@ public sealed class AtlasXmlLayoutSerializerTests
     public void Rejects_schema_invalid_document_with_schema_diagnostic()
     {
         const string xml =
-            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:2\" "
-            + "schemaVersion=\"2.0\" workspaceId=\"main\">"
-            + "<Items/><Layout/><ToolBars/><AutoHide/><Extra/></AtlasWorkspace>";
+            "<AtlasWorkspace xmlns=\"urn:atlas:workspace:3\" "
+            + "schemaVersion=\"3.0\" workspaceId=\"main\">"
+            + "<Items/><Layout/><ToolBars/><AutoHide/><FloatingWindows/><Extra/></AtlasWorkspace>";
 
         var result = serializer.Deserialize(xml, new WorkspaceId("main"));
 
@@ -270,7 +270,7 @@ public sealed class AtlasXmlLayoutSerializerTests
     [Fact]
     public void Rejects_non_finite_numbers_and_duplicate_ids()
     {
-        var golden = File.ReadAllText(GoldenPath("workspace-v2.xml"));
+        var golden = File.ReadAllText(GoldenPath("workspace-v3.xml"));
         var nonFinite = serializer.Deserialize(
             golden.Replace("basisValue=\"280\"", "basisValue=\"NaN\"", StringComparison.Ordinal),
             new WorkspaceId("main"));
@@ -282,6 +282,46 @@ public sealed class AtlasXmlLayoutSerializerTests
         Assert.False(duplicate.Succeeded);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, nonFinite.Error!.Code);
         Assert.Equal(WorkspaceErrorCode.InvalidLayoutData, duplicate.Error!.Code);
+    }
+
+    [Fact]
+    public void Deserializes_floating_window_golden_and_round_trips()
+    {
+        var result = serializer.Deserialize(
+            File.ReadAllText(GoldenPath("workspace-v3-floating.xml")),
+            new WorkspaceId("main"));
+
+        Assert.True(result.Succeeded);
+        var state = Assert.Single(result.Value!.Snapshot.FloatingWindows).Value;
+        Assert.Equal(new DockItemId("explorer"), state.ItemId);
+        Assert.Equal(
+            new FloatingWindowGeometry(120.5d, 80d, 360d, 480d),
+            state.Geometry);
+        Assert.Equal(FloatingReturnKind.Group, state.ReturnPlacement.Kind);
+        Assert.Equal(LogicalRegion.InlineStartUpper, state.ReturnPlacement.Region);
+        Assert.True(state.ReturnPlacement.ReturnGroupWasDynamic);
+
+        var xml = serializer.Serialize(result.Value.Snapshot);
+        var again = serializer.Deserialize(xml, new WorkspaceId("main"));
+
+        Assert.True(again.Succeeded);
+        Assert.Equal(xml, serializer.Serialize(again.Value!.Snapshot));
+    }
+
+    [Fact]
+    public void Rejects_v2_and_v1_documents_after_schema_v3()
+    {
+        var v2 = serializer.Deserialize(
+            File.ReadAllText(GoldenPath("workspace-v2.xml")),
+            new WorkspaceId("main"));
+        var v1 = serializer.Deserialize(
+            File.ReadAllText(GoldenPath("workspace-v1-narrow.xml")),
+            new WorkspaceId("main"));
+
+        Assert.False(v2.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.LayoutVersionIncompatible, v2.Error!.Code);
+        Assert.False(v1.Succeeded);
+        Assert.Equal(WorkspaceErrorCode.LayoutVersionIncompatible, v1.Error!.Code);
     }
 
     private static string GoldenPath(string fileName)

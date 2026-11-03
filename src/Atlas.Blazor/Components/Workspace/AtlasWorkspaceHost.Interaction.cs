@@ -63,9 +63,98 @@ public sealed partial class AtlasWorkspaceHost
             {
                 if (!disposed)
                 {
+                    SyncRaisedFloatingWindows(args.ChangeSet);
                     StateHasChanged();
                 }
             });
+    }
+
+    private void SyncRaisedFloatingWindows(LayoutChangeSet changeSet)
+    {
+        if (activeWorkspace is null)
+        {
+            return;
+        }
+
+        var floating = activeWorkspace.Current.FloatingWindows;
+        raisedFloatingItemIds.RemoveAll(itemId => !floating.ContainsKey(itemId));
+        foreach (var itemId in changeSet.UpdatedFloatingWindows)
+        {
+            if (!floating.ContainsKey(itemId)
+                || raisedFloatingItemIds.Contains(itemId))
+            {
+                continue;
+            }
+
+            raisedFloatingItemIds.Add(itemId);
+            focusCoordinator.Request(itemId, activeWorkspace.Current.Revision);
+        }
+    }
+
+    private async Task RaiseFloatingAsync(DockItemId itemId)
+    {
+        if (disposed || activeWorkspace is null)
+        {
+            return;
+        }
+
+        var snapshot = activeWorkspace.Current;
+        if (!snapshot.FloatingWindows.ContainsKey(itemId))
+        {
+            return;
+        }
+
+        raisedFloatingItemIds.Remove(itemId);
+        raisedFloatingItemIds.Add(itemId);
+        focusCoordinator.Request(itemId, snapshot.Revision);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DockFloatingAsync(DockItemId itemId)
+    {
+        if (disposed || activeWorkspace is null)
+        {
+            return;
+        }
+
+        var result = await activeWorkspace.ExecuteAsync(
+            new DockFloatingToolOperation(itemId));
+        if (result.Succeeded)
+        {
+            await FocusAfterDockAsync(itemId);
+        }
+    }
+
+    private async Task FocusAfterDockAsync(DockItemId itemId)
+    {
+        if (activeWorkspace is null)
+        {
+            return;
+        }
+
+        var snapshot = activeWorkspace.Current;
+        if (!snapshot.Items.TryGetValue(itemId, out var item)
+            || item.Kind != DockItemKind.Tool)
+        {
+            return;
+        }
+
+        var inExpandedGroup = snapshot.Nodes.Values
+            .OfType<GroupNode>()
+            .Any(
+                group => group.Kind == DockItemKind.Tool
+                    && group.Visibility == GroupVisibility.Expanded
+                    && group.SelectedItemId == itemId);
+        if (inExpandedGroup)
+        {
+            focusCoordinator.Request(itemId, snapshot.Revision);
+        }
+        else
+        {
+            pendingToolBarFocusItemId = itemId;
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnItemActivated(object? sender, ItemActivatedEventArgs args)
@@ -154,6 +243,85 @@ public sealed partial class AtlasWorkspaceHost
         {
             await ExecuteDockItemAsync(message);
         }
+        else if (string.Equals(message.Type, "float-item", StringComparison.Ordinal))
+        {
+            await ExecuteFloatItemAsync(message);
+        }
+        else if (string.Equals(message.Type, "set-floating-geometry", StringComparison.Ordinal))
+        {
+            await ExecuteSetFloatingGeometryAsync(message);
+        }
+    }
+
+    private async Task ExecuteFloatItemAsync(AtlasInteractionMessage message)
+    {
+        if (!TryCreateFloatingRequest(
+                message,
+                out var itemId,
+                out var geometry)
+            || message.SourceKind is not ("panel-header" or "toolbar-entry"))
+        {
+            return;
+        }
+
+        await activeWorkspace!.ExecuteAsync(
+            new FloatToolOperation(itemId, geometry, message.BaseRevision));
+    }
+
+    private async Task ExecuteSetFloatingGeometryAsync(AtlasInteractionMessage message)
+    {
+        if (!TryCreateFloatingRequest(
+                message,
+                out var itemId,
+                out var geometry))
+        {
+            return;
+        }
+
+        await activeWorkspace!.ExecuteAsync(
+            new SetFloatingWindowGeometryOperation(
+                itemId,
+                geometry,
+                message.BaseRevision));
+    }
+
+    private bool TryCreateFloatingRequest(
+        AtlasInteractionMessage message,
+        out DockItemId itemId,
+        out FloatingWindowGeometry geometry)
+    {
+        itemId = default;
+        geometry = default;
+        if (activeWorkspace is null
+            || message.ProtocolVersion != 1
+            || !string.Equals(message.HostId, hostId, StringComparison.Ordinal)
+            || !string.Equals(
+                message.WorkspaceId,
+                activeWorkspace.Id.Value,
+                StringComparison.Ordinal)
+            || message.Generation != interactionGeneration
+            || string.IsNullOrWhiteSpace(message.ItemId)
+            || message.BaseRevision is null
+            || message.BaseRevision < 0
+            || message.FloatingX is not double x
+            || message.FloatingY is not double y
+            || message.FloatingWidth is not double width
+            || message.FloatingHeight is not double height)
+        {
+            return false;
+        }
+
+        try
+        {
+            geometry = new FloatingWindowGeometry(x, y, width, height);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+
+        itemId = new DockItemId(message.ItemId);
+        return true;
     }
 
     private async ValueTask NotifySplitPreviewClearedAsync(string splitId)
@@ -251,7 +419,11 @@ public sealed partial class AtlasWorkspaceHost
             consumedDragSessions.Remove(oldestSession);
         }
 
-        await activeWorkspace.ExecuteAsync(operation);
+        var result = await activeWorkspace.ExecuteAsync(operation);
+        if (result.Succeeded)
+        {
+            await FocusAfterDockAsync(itemId);
+        }
     }
 
     private async Task ExecuteKeyboardCommandAsync(

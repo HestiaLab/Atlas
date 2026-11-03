@@ -30,7 +30,8 @@ internal static class ResetWorkspacePlanner
             initialSnapshot.Items,
             initialSnapshot.ToolBars,
             initialSnapshot.ToolBarOrders,
-            initialSnapshot.AutoHideStrips);
+            initialSnapshot.AutoHideStrips,
+            initialSnapshot.FloatingWindows);
         if (WorkspaceSemanticComparer.Equals(current, restored))
         {
             return WorkspacePlan.NoChange(LayoutChangeKind.Reset);

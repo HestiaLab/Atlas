@@ -32,6 +32,7 @@
 | 布局模板与区域定义     | §3.3 | 布局声明、Region 映射、前置概念、Dock Panel 状态与约束、LT/RT/Bottom Dock |
 | Editor Tab 管理 | §3.4 | 打开/关闭/激活/溢出/去重/固定/分屏/拖拽停靠                              |
 | Dock Panel 移动 | §3.5 | Dock Panel 跨区域移动、投放骨架（Drop Scaffold）、移动撤销              |
+| 浮动窗口        | §3.5 | Panel 浮出、自由移动与缩放、重新停靠、取消浮动、ToolBar Entry、上限与持久化      |
 | 分割条交互         | §3.6 | 拖拽调整、双击均分、尺寸约束、锁定、容器尺寸自适应                              |
 | 布局保存与恢复       | §3.7 | 导出/导入、持久化、预设管理、版本兼容                                    |
 | 开发者接口与事件      | §3.8 | 声明/编程 API、事件通知、快捷键                                     |
@@ -47,7 +48,7 @@
 - 服务端状态同步与多人协作
 - 具体框架（React / Vue / Angular 等）的绑定方案——由详细设计阶段确定
 - 运行时主题引擎、自定义主题编辑与国际化（i18n）——推迟至后续版本（静态第一方主题见 REQ-NF-010；RTL 镜像见附录 B 延期需求）
-- Floating Window（浮动窗口）——推迟至后续版本（见附录 B 延期需求）
+- 浏览器弹出窗口（`window.open`）与跨窗口状态同步——浮动窗口限定为宿主页面内的浮层（REQ-F-152）
 
 ### 设计参照
 
@@ -501,7 +502,8 @@ Dock 层级布局运行在浏览器环境中，为纯客户端组件，不依赖
 
 **Dock 区域支持多个 Dock Panel**：Left Dock Upper、Left Dock Lower、Right Dock Upper、Right Dock Lower、Bottom Left Dock、Bottom Right Dock。同一区域内同时只有一个 Active Panel（活跃面板）展开，其余 Dock Panel 通过 ToolBar Entry 切换。
 
-此层级模型支持后续扩展：Tool Window 拖拽停靠（Dock）、Auto Hide（自动隐藏）、Floating Window（浮动窗口）、Split Editor（编辑器分屏）等，均可在此模型上自然扩展。
+此层级模型支持 Tool Window 拖拽停靠（Dock）、Auto Hide（自动隐藏）与 Split Editor（编辑器分屏）；
+Floating Window（浮动窗口）作为独立于 Layout Tree 的 committed placement 实现（REQ-F-152）。
 
 **区域属性一览：**
 
@@ -1225,6 +1227,7 @@ Description
 系统应为 ToolBar 所属侧中的每个 面板渲染一个 ToolBar 条目，条目显示面板图标与标题；同一面板不创建重复条目。
 条目是面板的持久开关，不随面板展开或收起而创建或销毁。当面板经面板移动改变所属区域时，
 ToolBar 条目应同步迁移至目标侧 ToolBar；动态面板被移除时，对应条目同步移除。
+面板浮出为浮动窗口时，其 ToolBar Entry 仍保留在所属侧（REQ-F-152 AC5）。
 
 Acceptance Criteria
 
@@ -1430,29 +1433,92 @@ And Panel A 的 ToolBar Entry 出现在 Left Lower Dock 分组中
 ```
 
 ```
-REQ-F-152 🟢 [Actor: End User]
+REQ-F-152 🟢 [Actor: End User | Application Developer]
 
 Title
-Panel 拖拽到 EditorView 区域独立为浮动窗口（预留）
+Panel 拖拽到 EditorView 区域独立为浮动窗口
 
 Description
-未来版本中，用户可将 Panel 或 ToolBar Entry 拖拽到 EditorView 区域，
-Panel 将以浮动窗口（独立于 Dock Region 之外的可自由拖动窗口）形式显示。
+系统应支持终端用户将 Dock Panel（Dock 面板）或 ToolBar Entry（ToolBar 条目）拖拽到 Editor View（编辑器视图）
+区域，使该 Panel 以浮动窗口（独立于 Dock Region 之外、在 Work Area 内可自由移动的窗口）形式显示。
+浮动窗口复用 Panel Header（面板标题栏）作为标题栏，可移动、可调整大小，并可重新停靠回 Dock Region 或 ToolBar。
+浮出期间该 Panel 在所属侧 ToolBar 中保留恰好一个 ToolBar Entry；点击该 Entry 将浮窗置顶并激活。
+浮动窗口状态属于已提交布局，参与撤销/重做、持久化与恢复。本需求是 REQ-F-071 固定区域规则的明确例外：
+仅 Tool Panel 在 Editor View 区域释放会触发浮动，Document Tab 拖拽与固定区域规则不变。
 
-> 本需求仅写入 SRS，不在当前 Phase 实现。
+Acceptance Criteria
 
-AC1：拖拽到 EditorView 释放 → 浮动窗口
+AC1：拖拽到 Editor View 释放 → 浮动窗口
 
-Given 用户正在拖拽 Panel 的 Header 或 ToolBar Entry
-When 用户在 EditorView 区域释放
-Then Panel 以浮动窗口形式显示
-And 浮动窗口可独立于 Dock Region 自由拖动
+Given 终端用户正在拖拽 Dock Panel 的 Header 或 ToolBar Entry
+And 该 Panel 当前位于 Dock Group 或 Auto-hide（自动隐藏）
+When 终端用户在任意 Editor View 区域内释放
+Then Panel 应以浮动窗口形式显示在指针位置
+And 浮动窗口使用宿主相对坐标，初始尺寸为默认尺寸并在宿主内钳制
+And Panel 内容按 REQ-F-070 保持
+And 源 Group 清空时按 REQ-F-154 折叠，源 Auto-hide 条目被移除
 
-AC2：浮动窗口可重新停靠
+AC2：浮动窗口自由移动与尺寸调整
 
 Given 某 Panel 处于浮动窗口状态
-When 用户将其拖拽至 Dock Region 或 ToolBar
-Then Panel 恢复停靠到目标位置
+When 终端用户拖动窗口标题栏
+Then 窗口应在 Work Area 内移动
+And 释放时应提交一次位置变更
+When 终端用户拖动窗口的边缘或角手柄
+Then 窗口尺寸应随之调整
+And 释放时应提交一次尺寸变更
+And 窗口不得小于最小尺寸
+
+AC3：重新停靠
+
+Given 某 Panel 处于浮动窗口状态
+When 终端用户拖动窗口标题栏并将其释放到 Dock Region 的合法投放目标或 ToolBar 上
+Then Panel 应停靠到目标位置并退出浮动状态
+And 目标反馈应与 REQ-F-150 与 REQ-F-155 一致
+
+AC4：取消浮动
+
+Given 某 Panel 处于浮动窗口状态
+When 终端用户点击其 Header 关闭按钮
+Then Panel 应取消浮动并返回浮出前的 placement（原 Group 或原 Auto-hide）
+And Group 可见性与当前选择不变
+And ToolBar Entry 保留，Item 不被关闭
+
+AC5：ToolBar Entry 与置顶
+
+Given 某 Panel 处于浮动窗口状态
+Then 该 Panel 在所属侧 ToolBar 中保留恰好一个 ToolBar Entry
+When 终端用户点击该 Entry
+Then 浮动窗口应置顶并激活
+And 点击 Entry 不收起窗口、不改变 placement
+
+AC6：多窗口与上限
+
+Given 已存在 7 个浮动窗口
+When 终端用户再浮出第 8 个 Panel
+Then 系统应成功创建第 8 个浮动窗口
+When 终端用户或开发者再请求第 9 个浮动窗口
+Then 浮出不应发生，Panel 保持原 placement
+And 开发者 API 应以 typed failure 拒绝，工作区状态不变
+
+AC7：持久化与恢复
+
+Given 工作区存在浮动窗口
+When 布局被保存并随后恢复
+Then 浮动窗口的 Item、位置、尺寸与返回 placement 应恢复
+And 恢复后的浮动窗口仍可移动、调整大小、停靠与取消浮动
+When 工作区执行 Reset
+Then 所有浮动窗口应清除并恢复初始布局
+
+AC8：焦点与可访问性
+
+Given 某 Panel 浮出为浮动窗口
+When 浮动窗口出现
+Then 焦点应移至浮动窗口
+And 窗口应以非模态对话框语义暴露，并使用 Panel Header 作为可访问名称
+When 取消浮动或重新停靠
+Then 焦点应移至该 Panel 的 ToolBar Entry 或停靠后的 Panel Header
+And 窗口移动或缩放过程中按 Esc 应取消本次操作
 ```
 
 ```
@@ -2856,6 +2922,8 @@ And 系统不启动拖拽流程
 > 与 Editor Tab 的拖拽停靠（§3.4.1）不同，Dock Panel 的拖拽停靠**不区分方向**。可见 Region 通过
 > ToolBar 对应逻辑槽完成投放；因无展开 Panel 而隐藏的 Region 通过 Drop Scaffold 完成投放。
 > 可见 Dock Region Body 本身不是直接释放目标，无需方向判定区域。
+> REQ-F-152 定义 Tool Panel 浮出为页内浮动窗口的例外路径；浮窗是独立于 Layout Tree 的 placement，
+> 不属于 Dock Region 之间的移动。
 > 关于 Region、Dock Panel、Editor View（编辑器视图） 与 Editor Tab 的区别，参见 [§1.7 空间概念](#17-空间概念)。
 
 ```
@@ -2954,7 +3022,8 @@ Dock Panel 移动操作撤销
 Description
 系统应支持终端用户在 Dock Panel（Dock 面板）跨区域移动后撤销本次移动操作，
 将被移动 Dock Panel 恢复至源 Dock Region（Dock 区域）、原 DisplayState 与原 Active 状态。
-目标 Dock Region 的原 Active Panel 同步恢复。
+目标 Dock Region 的原 Active Panel 同步恢复。浮动窗口的浮出、移动、缩放、停靠与取消浮动
+同样进入撤销/重做历史（REQ-F-152）。
 
 Acceptance Criteria
 
@@ -3109,17 +3178,20 @@ Title
 Fixed Region（固定区域）不接受 Dock Panel（Dock 面板） 拖入
 
 Description
-系统应禁止将 Dock Panel 拖入 Editor Area、Top Toolbar 和 Status Bar 等固定区域。
+系统应禁止将 Dock Panel 停靠到 Editor Area、Top Toolbar 和 Status Bar 等固定区域。
+REQ-F-152 定义的工具面板浮动窗口是唯一例外：仅 Tool Panel 在 Editor View 区域释放会触发浮出，
+不构成向固定区域的停靠。
 
 Acceptance Criteria
 
-AC1：拖拽至 Editor Area 不触发移动
+AC1：拖拽至 Editor Area 不触发停靠
 
 Given 终端用户正在拖拽一个 Dock Panel
 When 终端用户将该 Dock Panel 拖拽至 Editor Area 并释放
-Then 系统不应执行 Dock Panel 移动
-And 系统应将拖拽 Dock Panel 返回原位置
-And Editor Area 不受影响
+Then 系统不应将 Dock Panel 停靠到 Editor Area
+And 若释放触发 REQ-F-152 的浮动窗口，则按该需求处理
+And 否则系统应将拖拽 Dock Panel 返回原位置
+And Editor Area 的既有布局不受影响
 
 AC2：拖拽至 Status Bar 不触发移动
 
@@ -3387,7 +3459,8 @@ Title
 Description
 系统应支持开发者导出完整 Dock 层级布局数据为可序列化的 XML 字符串。导出数据包含区域结
 构树、每个Dock Panel（Dock 面板）的标识/类型/位置/比例/Collapsed State（折叠状态）/Auto-hide（自动隐藏）状态、每个Editor Tab（编辑器标签页）的标识/Content Identifier（内容标识）/
-标题/参数/可关闭标记/Pinned（固定标记）/Active State（激活状态）、Bottom Dock 结构及面板位置，以及版本信息字段。
+标题/参数/可关闭标记/Pinned（固定标记）/Active State（激活状态）、Bottom Dock 结构及面板位置、
+浮动窗口的 Item/几何/返回 placement，以及版本信息字段。
 
 Acceptance Criteria
 
@@ -3396,7 +3469,7 @@ AC1：正常导出
 Given 当前布局存在至少一个面板
 When 开发者调用导出布局接口
 Then 系统应导出完整 Dock 层级布局数据为 XML 字符串
-And XML 字符串包含区域结构、面板比例、面板状态（折叠/自动隐藏）、标签页信息、版本信息
+And XML 字符串包含区域结构、面板比例、面板状态（折叠/自动隐藏）、标签页信息、浮动窗口状态、版本信息
 ```
 
 ```
@@ -3420,6 +3493,7 @@ And 面板移动后的位置一致
 And Bottom Dock 结构及面板位置一致
 And 面板折叠/展开状态一致
 And 面板Auto-hide（自动隐藏）状态一致
+And 浮动窗口的位置、尺寸与返回 placement 一致
 
 AC2：恢复Editor Tab（编辑器标签页）信息
 
@@ -4972,7 +5046,7 @@ Then 上述 Atlas 自有 chrome 均应使用主题视觉
 | REQ-F-149 | 🟡  | System            | ToolBar 空间分区布局                                |
 | REQ-F-150 | 🔴  | End User          | 拖拽目标区域悬浮层高亮指示器                                |
 | REQ-F-151 | 🟡  | End User          | Panel 拖拽到 ToolBar 区域进行排序                      |
-| REQ-F-152 | 🟢  | End User          | Panel 拖拽到 EditorView 区域独立为浮动窗口（预留）            |
+| REQ-F-152 | 🟢  | End User / Application Developer | Panel 拖拽到 EditorView 区域独立为浮动窗口      |
 | REQ-F-153 | 🔴  | End User / System | ToolBar 拖拽投放交互稳定性                             |
 | REQ-F-070 | 🔴  | System            | Dock Panel（Dock 面板） 移动后内容保持                   |
 | REQ-F-071 | 🔴  | System            | Fixed Region（固定区域） 不接受 Dock Panel（Dock 面板） 拖入 |
@@ -5111,11 +5185,10 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | 历史 F-136（非规范） | 🟢  | 高 DPI（Dots Per Inch，每英寸点数）显示适配 | DPI 感知需精细设计，非核心路径             |
 | REQ-F-024（含历史 F-135 场景） | 🟢  | RTL（Right-to-Left，从右到左）布局镜像 | 需 i18n 基础支持，当前版本仅 LTR |
 | —         | 🟢  | 运行时主题引擎、自定义主题编辑与国际化（i18n） | 需全局主题引擎和本地化框架支持；静态第一方主题见 REQ-NF-010 |
-| —         | 🟢  | Floating Window（浮动窗口）          | 需独立的窗口管理层，非核心路径，§3.1 已标注为后续扩展 |
 
 ## 附录 C：需求变更记录
 
-> 以下变更均发生于 **2026-07-17**。
+> 以下变更按时间追加；早期条目发生于 **2026-07-17**。
 
 | 编号            | 需求名称                                       | 变更类型   | 变更说明                                                                                                       |
 | ------------- | ------------------------------------------ |:------:| ---------------------------------------------------------------------------------------------------------- |
@@ -5162,3 +5235,9 @@ F-072、F-079、F-083、F-084、F-130 是附录 C 已明确删除的历史需求
 | REQ-NF-010 | 第一方可选 IDE 主题 | 新增 | 2026-10-29 依据 ADR-0039 新增可选 `themes/ide.css`：链接即生效、跟随 OS 明暗、完整覆盖 Atlas chrome、AA 对比度合同、无 `!important` |
 | REQ-F-157 | Chrome 图标组件（AtlasIcon） | 新增 | 2026-10-29 依据 ADR-0040 以公开 `AtlasIcon`/`AtlasIconName` 替换 chrome 文本字形；图标成为默认视觉并刷新 REQ-NF-009 AC3 基线 |
 | REQ-NF-009 | 通过 CSS 变量进行样式定制 | 修改 | 2026-10-29 扩展变量契约以覆盖组边框/圆角与 Tab 指示条；AC3 基线参照 ADR-0040 刷新 |
+| REQ-F-152 | Panel 拖拽到 EditorView 区域独立为浮动窗口 | 修改 | 2026-11-03 依据 ADR-0043 将预留需求转为正式实现：页内浮窗、committed Floating placement、几何与返回书签、专用 operation、ToolBar Entry 保留、上限 8 与 Schema V3；移除「预留」与「不在当前 Phase 实现」标注 |
+| REQ-F-071 | Fixed Region 不接受 Dock Panel 拖入 | 修改 | 2026-11-03 依据 REQ-F-152/ADR-0043 明确 Editor Area 释放触发浮窗是唯一例外；固定区域停靠规则不变 |
+| REQ-F-069 | Dock Panel 跨区域移动 | 修改 | 2026-11-03 增加与 REQ-F-152 的交叉引用；浮窗不属于 Dock Region 之间的移动 |
+| REQ-F-021 | ToolBar Entry 与 Dock Panel 同步 | 修改 | 2026-11-03 明确浮窗 Panel 仍保留恰好一个 ToolBar Entry（REQ-F-152 AC5） |
+| REQ-F-085~088 | 导出/导入布局与版本兼容 | 修改 | 2026-11-03 依据 ADR-0043 升级 Schema V3；浮窗状态进入导出/导入；仅接受 V3，V2/V1 返回 LayoutVersionIncompatible |
+| REQ-F-156 | Dock Panel 移动撤销 | 修改 | 2026-11-03 明确浮出、移动、缩放、停靠与取消浮动均进入撤销/重做历史（REQ-F-152） |

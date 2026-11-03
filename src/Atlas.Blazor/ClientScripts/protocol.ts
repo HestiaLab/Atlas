@@ -42,7 +42,8 @@ export interface KeyboardCommandIntent {
 export type AtlasDragSourceKind =
   | "document-tab"
   | "panel-header"
-  | "toolbar-entry";
+  | "toolbar-entry"
+  | "floating-window";
 
 export type AtlasDropTargetKind =
   | "document-center"
@@ -54,7 +55,8 @@ export type AtlasDropTargetKind =
   | "panel-region-center"
   | "toolbar-insertion"
   | "toolbar-region"
-  | "drop-scaffold";
+  | "drop-scaffold"
+  | "floating-window";
 
 export interface DockItemCommit {
   readonly type: "dock-item";
@@ -75,10 +77,43 @@ export interface DockItemCommit {
   readonly newSplitId?: string;
 }
 
+export interface FloatItemCommit {
+  readonly type: "float-item";
+  readonly protocolVersion: typeof ATLAS_PROTOCOL_VERSION;
+  readonly sessionId: string;
+  readonly hostId: string;
+  readonly workspaceId: string;
+  readonly generation: number;
+  readonly itemId: string;
+  readonly sourceKind: AtlasDragSourceKind;
+  readonly baseRevision: number;
+  readonly floatingX: number;
+  readonly floatingY: number;
+  readonly floatingWidth: number;
+  readonly floatingHeight: number;
+}
+
+export interface SetFloatingGeometryCommit {
+  readonly type: "set-floating-geometry";
+  readonly protocolVersion: typeof ATLAS_PROTOCOL_VERSION;
+  readonly sessionId: string;
+  readonly hostId: string;
+  readonly workspaceId: string;
+  readonly generation: number;
+  readonly itemId: string;
+  readonly baseRevision: number;
+  readonly floatingX: number;
+  readonly floatingY: number;
+  readonly floatingWidth: number;
+  readonly floatingHeight: number;
+}
+
 export type AtlasInteractionMessage =
   | ResizeSplitCommit
   | KeyboardCommandIntent
-  | DockItemCommit;
+  | DockItemCommit
+  | FloatItemCommit
+  | SetFloatingGeometryCommit;
 
 export interface AtlasDotNetReceiver {
   invokeMethodAsync(method: "OnInteraction", message: AtlasInteractionMessage): Promise<unknown>;

@@ -69,4 +69,9 @@ public enum WorkspaceErrorCode
     ///     请求的内容身份与现有工作区条目重复。
     /// </summary>
     DuplicateContentIdentity = 16,
+
+    /// <summary>
+    ///     同时打开的浮动窗口达到支持的上限。
+    /// </summary>
+    FloatingWindowLimit = 17,
 }

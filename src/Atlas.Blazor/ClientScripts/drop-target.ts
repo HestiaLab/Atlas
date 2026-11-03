@@ -79,9 +79,24 @@ export function resolveDropTarget(
     };
   }
 
+  if (drag.sourceKind !== "floating-window") {
+    // Tool Panel 拖到任意 Editor Group 区域即浮出；这是 REQ-F-071 固定区域
+    // 规则的唯一例外（REQ-F-152）。
+    const editorGroup = hit.closest<HTMLElement>(
+      "[data-atlas-group-kind=document][data-atlas-group-id]");
+    if (editorGroup?.dataset.atlasGroupId) {
+      return {
+        element: editorGroup,
+        kind: "floating-window",
+        groupId: editorGroup.dataset.atlasGroupId
+      };
+    }
+  }
+
   const panelHeader = hit.closest<HTMLElement>("[data-atlas-panel-header]");
   if (panelHeader?.dataset.atlasGroupId) {
-    if (panelHeader.dataset.atlasGroupId === drag.sourceGroupId) {
+    if (drag.sourceKind !== "floating-window"
+      && panelHeader.dataset.atlasGroupId === drag.sourceGroupId) {
       return undefined;
     }
 
@@ -108,9 +123,11 @@ export function resolveDropTarget(
   // ToolBar-first 启用集。
   const toolGroup = hit.closest<HTMLElement>(
     "[data-atlas-group-kind=tool][data-atlas-group-id]");
-  if (drag.sourceKind === "panel-header"
+  if ((drag.sourceKind === "panel-header"
+      || drag.sourceKind === "floating-window")
     && toolGroup?.dataset.atlasGroupId
-    && toolGroup.dataset.atlasGroupId !== drag.sourceGroupId) {
+    && (drag.sourceKind === "floating-window"
+      || toolGroup.dataset.atlasGroupId !== drag.sourceGroupId)) {
     return {
       element: toolGroup,
       kind: "panel-region-center",
@@ -171,6 +188,8 @@ export function resolveDropTarget(
       && toolbarRegion.dataset.atlasGroupId === drag.sourceGroupId) {
       return undefined;
     }
+
+    // 浮动窗口允许投回其锚点 Group 的 ToolBar 区域以重新停靠。
 
     return {
       element: toolbarRegion,

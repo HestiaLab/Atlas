@@ -31,8 +31,8 @@ public sealed partial class AtlasXmlLayoutSerializer
     {
         var assembly = typeof(AtlasXmlLayoutSerializer).Assembly;
         using var stream = assembly.GetManifestResourceStream(
-            "Atlas.Core.Persistence.Schema.atlas-workspace-v2.xsd")
-            ?? throw new InvalidOperationException("The embedded V2 persistence schema is missing.");
+            "Atlas.Core.Persistence.Schema.atlas-workspace-v3.xsd")
+            ?? throw new InvalidOperationException("The embedded V3 persistence schema is missing.");
         var schemas = new XmlSchemaSet
         {
             XmlResolver = null,
@@ -65,6 +65,7 @@ public sealed partial class AtlasXmlLayoutSerializer
         // 全部受 limits 约束，防止深嵌套或超量元素拖垮后续的递归解析（DoS 防护）。
         var nodes = 0;
         var items = 0;
+        var floatingWindows = 0;
         foreach (var element in root.DescendantsAndSelf())
         {
             // XDocument 不直接暴露深度，逐元素沿祖先链计数；该上限保护递归解析的栈深度。
@@ -90,6 +91,11 @@ public sealed partial class AtlasXmlLayoutSerializer
                 items++;
             }
 
+            if (element.Name == Namespace + "FloatingWindow")
+            {
+                floatingWindows++;
+            }
+
             if (element.Attributes().Any(attribute => attribute.Value.Length > limits.MaxStringLength))
             {
                 throw new PersistenceLimitException(
@@ -97,7 +103,9 @@ public sealed partial class AtlasXmlLayoutSerializer
             }
         }
 
-        if (nodes > limits.MaxNodeCount || items > limits.MaxItemCount)
+        if (nodes > limits.MaxNodeCount
+            || items > limits.MaxItemCount
+            || floatingWindows > limits.MaxFloatingWindows)
         {
             throw new PersistenceLimitException(
                 "The persistence document exceeds a collection limit.");
@@ -140,6 +148,10 @@ public sealed partial class AtlasXmlLayoutSerializer
             .Elements(Namespace + "Strip")
             .Select(ReadStrip)
             .ToDictionary(value => value.Edge);
+        var floating = root.Element(Namespace + "FloatingWindows")!
+            .Elements(Namespace + "FloatingWindow")
+            .Select(ReadFloatingWindow)
+            .ToDictionary(value => value.ItemId);
 
         // 恢复快照的修订号固定为 0，由恢复操作在提交时按当前工作区修订推进。
         return new WorkspaceSnapshot(
@@ -150,7 +162,38 @@ public sealed partial class AtlasXmlLayoutSerializer
             items,
             toolBars,
             orders,
-            strips);
+            strips,
+            floating);
+    }
+
+    private static FloatingWindowState ReadFloatingWindow(XElement element)
+    {
+        var dockBack = new DockBack(
+            new LayoutNodeId(Required(element, "preferredGroupId")),
+            ParseInt(Required(element, "preferredIndex")),
+            ParseEnum<WorkspaceEdge>(Required(element, "fallbackEdge")));
+        var kind = ParseEnum<FloatingReturnKind>(Required(element, "returnKind"));
+        var region = ParseEnum<LogicalRegion>(Required(element, "logicalRegion"));
+        var returnPlacement = kind == FloatingReturnKind.Group
+            ? new FloatingReturnPlacement(
+                region,
+                dockBack,
+                returnGroupWasDynamic: Optional(element, "returnGroupWasDynamic") is { } dynamicFlag
+                    && ParseBool(dynamicFlag))
+            : new FloatingReturnPlacement(
+                region,
+                dockBack,
+                ParseEnum<WorkspaceEdge>(Required(element, "autoHideEdge")),
+                ParseInt(Required(element, "autoHideIndex")));
+        var geometry = new FloatingWindowGeometry(
+            ParseFinite(Required(element, "x")),
+            ParseFinite(Required(element, "y")),
+            ParseFinite(Required(element, "width")),
+            ParseFinite(Required(element, "height")));
+        return new FloatingWindowState(
+            new DockItemId(Required(element, "itemId")),
+            geometry,
+            returnPlacement);
     }
 
     private static DockItem ReadItem(XElement element)
@@ -268,7 +311,7 @@ public sealed partial class AtlasXmlLayoutSerializer
     ///     为 XSD 中真正可缺省的字段填入领域默认值（REQ-F-126 AC2）。
     /// </summary>
     /// <remarks>
-    ///     可选字段盘点（V2 XSD）：
+    ///     可选字段盘点（V3 XSD）：
     ///     <list type="bullet">
     ///       <item>Item/DocumentState：文档默认未固定、非预览；工具条目不写状态。</item>
     ///       <item>Group/EditorState：文档组默认 Scroll + Adjacent + 空访问记录；

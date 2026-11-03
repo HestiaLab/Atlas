@@ -194,6 +194,7 @@ SRS 定义的产品概念在内部实现中按以下映射表达：
 | ToolBar Entry   | ToolBarProjectionEntry                    | 不独立存储，从 Tool Item placement 推导 |
 | LT / RT         | ToolBarState + ToolBarProjection          | 固定导航 Chrome；不是 Dock Region |
 | Auto-hide State | AutoHideStripState                        | Tool Item 的一种 committed placement |
+| Floating Window | FloatingWindowState                       | 独立于 Layout Tree 的 committed placement（REQ-F-152） |
 | Bottom Dock     | WorkArea 的子 SplitNode                     | 通过 Layout Tree 的子节点关系表达 |
 
 Dock Panel 和 Editor Tab 共享 DockItem 作为统一内容项模型。两者的差异由 DockItemKind、
@@ -227,14 +228,15 @@ WorkspaceSnapshot 是 committed state 的唯一公开快照，对 consumer 只�
       ToolBars,             // 按 LogicalSide 保存 ToolBar committed visibility
       ToolBarOrders,        // ToolBar-only 排序；不改变 Group 内 Panel 逻辑顺序
       AutoHideStrips,       // Auto-hide 停靠条状态（按 WorkspaceEdge）
+      FloatingWindows,      // 按 DockItemId 保存浮窗几何与返回 placement（REQ-F-152）
   }
 
 所有权规则：
 
-1. RootNodeId + Nodes、Items、ToolBars、ToolBarOrders 和 AutoHideStrips 是 committed authoritative state（F-002）
+1. RootNodeId + Nodes、Items、ToolBars、ToolBarOrders、AutoHideStrips 和 FloatingWindows 是 committed authoritative state（F-002）
 2. ToolBar Entry 列表、Item 排序索引等是派生投影，不持久化、不是第二真相源（F-021）
 3. RootNodeId = null 是唯一空布局表示，不增加 EmptyNode（F-003；历史边界场景 F-131）
-4. 每个打开 Item 必须恰有一个 placement：Group 或 Auto-hide Strip（F-069, F-017）
+4. 每个打开 Item 必须恰有一个 placement：Group、Auto-hide Strip 或 Floating Window（F-069, F-017, F-152）
 5. 新建 Workspace 的初始 Revision 为 0；第一次成功 mutation 发布 Revision 1
 6. Snapshot 对 consumer immutable；内部可使用 immutable collection 或 copy-on-write（F-133）
 
@@ -508,13 +510,14 @@ ToolBar Entry 不作为实体持久化。Renderer 通过纯投影函数构建：
       Title,
       Icon,
       IsActive,
-      DisplayState,         // Expanded | Collapsed | AutoHidden
+      IsFloating,           // placement = Floating（REQ-F-152）
+      DisplayState,         // Expanded | Collapsed | AutoHidden | Floating
   }
 
 投影规则：
 
 1. 每个 Tool Item 必须生成且只生成一个 Entry；Document Item 不生成 Entry
-2. Group placement 与 AutoHide placement 互斥，合并投影时按 ItemId 去重并把重复视为 invariant failure
+2. Group、AutoHide 与 Floating placement 互斥，合并投影时按 ItemId 去重并把重复视为 invariant failure
 3. Upper / Lower / Bottom 分区由 IDE preset 的 Group semantic slot 决定，不由 DOM 位置反推
 4. Group 内 ItemIds 表达 Panel 逻辑顺序；ToolBar-only presentation order 由独立
    `ToolBarOrderState` 保存，不修改 Group ItemIds（F-140 AC2 与 F-142）
@@ -522,6 +525,8 @@ ToolBar Entry 不作为实体持久化。Renderer 通过纯投影函数构建：
 6. 空逻辑分区在静止状态不生成虚拟 Entry；拖拽可达性由 transient PanelDropTarget 表达
 7. RTL 只交换 LogicalSide 到物理边缘的映射，不修改 persisted Side 和 ordering
 8. ToolBar 无任何 Entry 时不渲染；ToolBar Collapsed 时保留可恢复入口，不删除 Entry
+9. Floating Entry 的 `SourceGroupId`、`LogicalRegion` 从 `FloatingReturnPlacement` 投影；
+   点击只置顶并激活浮窗，不改变 placement，也不进入撤销历史
 
 ToolBarProjection 是 Core 中可纯函数测试的 read model；Atlas.Blazor 负责将其渲染为 button、
 separator 和分区容器。投影不得保存 DOM 引用、focus、hover、Flyout open state 或 drag placeholder。
@@ -629,6 +634,44 @@ Atlas 自有 chrome 控件使用公开的 `AtlasIcon` 组件与 `AtlasIconName` 
 必须追加，不得删除或重排。
 
 来源：F-157
+```
+
+---
+
+```
+DES-DOM-013
+浮动窗口 placement 与几何
+Tool Panel 可脱离 Layout Tree 进入 Floating placement（REQ-F-152）：
+
+  FloatingWindowState = {
+      ItemId,
+      Geometry: { X, Y, Width, Height },   // 宿主相对 CSS px；有限值，宽高 >= 240/160
+      ReturnPlacement: {
+          Kind: Group | AutoHide,
+          Region: LogicalRegion,
+          DockBack: { PreferredGroupId, PreferredIndex, FallbackEdge },
+          AutoHideEdge?,
+          AutoHideIndex?,
+      },
+  }
+
+规则：
+
+1. 浮窗是第三种 committed placement；与 Group、AutoHide 互斥，每个 Item 仍恰好一个 placement
+2. 仅 Tool Item 可浮出；Document Item 返回 TargetRejectedByPolicy
+3. 浮出时保留源工具 Group 作为返回锚点：空 Persistent 组折叠；源组为 Dynamic 且浮出后为空时，
+   在浮窗期间临时以 Persistent 形式保留（ReturnGroupWasDynamic），取消浮动时恢复 Dynamic，
+   停靠到其他目标或关闭时移除锚点
+4. 浮窗项从源 Group 的 ToolBarOrderState 移除；ToolBar Entry 由 ReturnPlacement.Region 投影
+5. 浮出、几何变更、停靠与取消浮动都是可撤销 operation；每次指针拖动恰好一条历史
+6. 同时浮窗上限 8；超出返回 FloatingWindowLimit
+7. 返回时首选 Group 不存在则返回 TargetNotFound，窗口保持浮动，不静默重挂
+8. 几何在渲染层按宿主尺寸 clamp；committed 值不因宿主缩放而改写
+9. 激活/置顶只改变瞬时 z-index 与焦点，不提交、不发域事件
+10. 定义对账保留仍可解析的浮窗：从新物化布局中摘除对应条目以避免第二 placement；
+    已移除条目或返回锚点无效的浮窗被丢弃
+
+来源：F-152, F-069, F-070, F-156
 ```
 
 ---
@@ -976,6 +1019,35 @@ NoChange、failed、cancelled operation 不发布领域事件。
 
 ---
 
+```
+DES-OP-010
+浮动窗口 operation
+Operation 集：
+
+  FloatToolOperation(itemId, geometry)             — Group/AutoHide -> Floating
+  SetFloatingWindowGeometryOperation(itemId, geo)  — 浮窗 move/resize 提交
+  DockFloatingToolOperation(itemId)                — 取消浮动，按 ReturnPlacement 精确还原
+  MoveToolOperation                                — 目标 Group；源可为 Group/AutoHide/Floating
+  ReorderToolBarEntryOperation                     — ToolBar 目标时的既有分流
+
+语义：
+
+1. Float：校验 Tool、未浮出、上限；捕获 ReturnPlacement；摘除源 placement；保留锚点 Group；
+   写入浮窗状态
+2. SetGeometry：校验已浮出与几何；值相等返回 NoChange
+3. DockFloating：校验已浮出；Group 返回按 DockBack 插入且不改变 Group 可见性与当前选择
+   （空组必须选中该 Item）；AutoHide 返回原 strip 与索引；首选 Group 缺失返回 TargetNotFound
+4. MoveTool 的 Floating 源：先移除浮窗状态，再按既有跨组迁移执行
+5. 所有成功提交走事务、Revision + 1、Changed 与 typed domain events；失败/NoChange 不改变状态
+6. 浮窗数量与几何在规划器与 invariant validator 双层校验
+7. LayoutOperationKind 追加 FloatTool = 18、SetFloatingWindowGeometry = 19、DockFloatingTool = 23；
+   现有值不得重排
+
+来源：F-152, F-069~071, F-140, F-156
+```
+
+---
+
 ## 5 交互架构
 
 ```
@@ -1136,7 +1208,7 @@ Primary pointer 移动超过 4px 后才进入 Dragging；阈值内 pointerup 仍
       HostId,
       PointerId,
       ItemId,
-      SourceKind,           // PanelHeader | ToolBarEntry
+      SourceKind,           // PanelHeader | ToolBarEntry | FloatingWindow
       SourceGroupId,
       SourceIndex,
       BaseRevision,
@@ -1161,6 +1233,10 @@ pointerup 命中合法目标时最多向 .NET 提交一次：
       InsertionIndex,
   }
 
+浮窗会话按提交目标分流：命中 Dock 目标时发送 `dock-item`；未命中时发送
+`set-floating-geometry`（宿主相对几何）；普通 Tool Panel 落在 Editor Group 时发送
+`float-item`。几何消息同样携带会话、代际与 BaseRevision，Host 重新校验。
+
 Intent 不携带 DOM reference、坐标、Panel 对象、DisplayState 结果或"目标已合法"标记。Host 先验证
 protocol/session/workspace，再转换为 DES-OP-007 的 operation；Core 必须重新验证 Revision、
 identity、capability、target 与 policy。STALE_OPERATION 或 policy reject 视为 rejected commit：
@@ -1184,7 +1260,7 @@ Target Resolver 是纯函数模块，输入 GeometrySnapshot + pointer position 
 
   PanelDropTarget = {
       Kind,                 // PanelHeaderInsertion | ToolBarInsertion | ToolBarRegion |
-                            // DropScaffold | RegionBody
+                            // DropScaffold | RegionBody | FloatingWindow
       LogicalSide,
       LogicalRegion,
       TargetGroupId,
@@ -1309,6 +1385,27 @@ Tab/ToolBar/ContextMenu 还必须支持标准 Tab/Shift+Tab、Enter、Space、Es
 全局快捷键。
 
 来源：F-035, F-041, F-116~118, NF-003, NF-007
+```
+
+---
+
+```
+DES-INT-009
+浮窗拖拽与几何协议
+按 ADR-0008 的 v1 additive 惯例扩展，不升协议版本：
+
+- 新 drag source kind `floating-window`：浮窗 Header 拖动。pointermove 只更新预览位置；
+  命中 Dock 目标时高亮；pointerup 在合法目标上提交 dock intent，否则提交几何 intent。
+- 新 drop target kind `floating-window`：Tool Panel 拖拽在 Document Group 区域命中；
+  优先级低于 PanelHeaderInsertion/ToolBar 目标，高于 RegionBody；Document Tab 拖拽不命中。
+- 新 resize session：8 向手柄，pointermove 预览，pointerup 提交一次几何 intent；
+  Esc/pointercancel/lostpointercapture/dispose 取消。
+- 几何 intent 携带宿主相对 X/Y/Width/Height；.NET 侧重新校验 item/identity/revision/limit。
+- pointermove 仍保持 0 次 JS→.NET 调用；session 单 terminal；generation/session 校验沿用
+  DES-INT-005；迟到 promise 丢弃。
+- protocol/DOM golden fixtures 更新；现有 `document-tab` / `panel-header` 消息与优先级不变。
+
+来源：F-152, F-150, F-153, NF-004
 ```
 
 ---
@@ -1684,6 +1781,24 @@ GetState 返回 null，GetOrCreateState 回退为每次调用 factory（向后�
 
 ---
 
+```
+DES-RND-011
+浮动窗口渲染、焦点与主题
+- Host 内专用 floating layer（不是 `aria-hidden` 的 overlay root），按 committed 顺序渲染；
+  瞬时置顶通过 Host 本地 raised 列表调整 z-index，不写快照。
+- 浮窗容器 absolute 定位，使用宿主相对几何与渲染 clamp；8 向 resize 手柄命中区不覆盖 Header 控件。
+- 复用 Panel Header：标题、图标、`HeaderTemplate`、关闭按钮与拖拽手柄保持同一套投影；
+  浮窗模式替换 drag kind 与关闭回调（取消浮动）。
+- `role="dialog"`、`aria-modal="false"`，可访问名称使用 Panel Header 的条目标题；
+  浮出聚焦窗口，取消/停靠后焦点回 ToolBar Entry 或目标 Panel Header；不困焦点。
+- 内容通过既有 content outlet 渲染；浮出/停靠允许 remount，业务状态按 ADR-0012 外置恢复。
+- chrome 使用 `--atlas-*` token，纳入 REQ-NF-009/010；reduced-motion 下无过渡。
+
+来源：F-152, F-070, NF-007, NF-008, NF-009, NF-010
+```
+
+---
+
 ## 7 持久化
 
 ```
@@ -1692,7 +1807,8 @@ DES-PER-001
 允许持久化：schema version、Workspace identity、Layout Tree topology（Node ID、Split
 axis/anchor/basis/constraints、Group kind/retention/visibility/item ordering/selected item）、
 ToolBar visibility 与 ToolBar-only ordering、Auto-hide edge/ordering 与 dock-back bookmark、
-DockItem ID/kind/ContentReference 和 kind-specific committed state（如 DocumentState.IsPinned）。
+浮动窗口的 Item、几何与返回 placement（REQ-F-152）、DockItem ID/kind/ContentReference 和
+kind-specific committed state（如 DocumentState.IsPinned）。
 
 禁止持久化：RenderFragment、EventCallback、Delegate、DI service、ViewModel、arbitrary object
 parameter、component instance、open flyout/hover/drag/focus 等 transient state、Workspace
@@ -1713,7 +1829,9 @@ current Revision 的下一个值发布新 Snapshot。持久化文档不携带可
 ```
 DES-PER-002
 XML Schema
-V2 持久化格式为 XML。空 Workspace 使用空 <Layout />，不引入隐式默认 Group 或 EmptyNode。
+当前持久化格式为 XML。ADR-0043 起 schema 为 V3（`urn:atlas:workspace:3`、`3.0`）；
+以下 V2 示例保留为历史字段参考，V3 增量（FloatingWindows）见 DES-PER-009。
+空 Workspace 使用空 <Layout />，不引入隐式默认 Group 或 EmptyNode。
 
   <AtlasWorkspace xmlns="urn:atlas:workspace:2"
                   schemaVersion="2.0" workspaceId="main">
@@ -1809,8 +1927,10 @@ ChangeSet。
 
 ```
 DES-PER-004
-V1 迁移
-迁移映射：
+V1/V2 compatibility（ADR-0043 起移除）
+ADR-0043 将当前 schema 升级为 V3，并只接受 V3；V1/V2 文档返回
+`LAYOUT_VERSION_INCOMPATIBLE`。以下 V1 映射仅保留为历史设计参考，不再实现。
+历史迁移映射：
 
   V1                       → V2
   Region + Panel list      → IDE preset 对应 Tool Group + Item ordering
@@ -1967,6 +2087,23 @@ reset 失败则 Workspace 进入 Faulted read-only 状态，保留安全错误 U
 violation，用户错误 UI 不显示 exception/stack。降级、repair 和 reset 均不得在失败路径暴露半状态。
 
 来源：F-093~095, F-123, F-125~127
+```
+
+---
+
+```
+DES-PER-009
+Schema V3 与浮窗持久化
+- namespace `urn:atlas:workspace:3`、schemaVersion `3.0`；`LayoutSchemaVersion.Current = 3.0`。
+- `<FloatingWindows>` 位于 workspace 根，按 itemId 确定性排序；每项包含 geometry
+  （x/y/width/height）与 return placement（kind/region/preferredGroupId/preferredIndex/
+  fallbackEdge/returnGroupWasDynamic/autoHideEdge/autoHideIndex）。
+- 严格解析：未知元素/属性拒绝；几何必须有限且满足最小尺寸；数量不超过 8。
+- 仅接受 V3；V2/V1 文档返回 `LAYOUT_VERSION_INCOMPATIBLE`，不提供读取迁移。
+- Reset 清空浮窗；Preset 与自动保存包含浮窗；缺失内容按 `MissingContentPolicy` 处理；
+  被移除 Item 的浮窗状态同步移除。
+
+来源：F-085~088, F-152
 ```
 
 ---
@@ -2766,6 +2903,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | `DRAG_SESSION_EXPIRED` | SessionId 已结束、Host generation 已变化或 callback 到达 disposed Host | DES-INT-005 |
 | `TARGET_NOT_FOUND` | Operation 指定的目标 Group、View 或 Layout Node 不存在 | F-101, DES-OP-006 |
 | `DUPLICATE_CONTENT_IDENTITY` | RejectDuplicate 去重模式检测到相同 ContentReference identity | F-046, DES-DOM-005 |
+| `FLOATING_WINDOW_LIMIT` | 同时打开的浮动窗口达到上限 8 | F-152, DES-DOM-013 |
 
 > F-030 与 F-121 统一返回 `ITEM_NOT_FOUND`；F-037 的不可关闭能力由 operation capability validation
 > 返回 `CAPABILITY_REJECTED`，不抛出异常。`TARGET_NOT_FOUND` 不用于缺失的 Dock Item。
@@ -2792,6 +2930,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-DOM-010 | 尺寸约束、折叠与空间重分配 | F-014~016, F-033, F-047, F-078, F-082, F-104, F-141, F-144, F-148 |
 | DES-DOM-011 | Editor Tab 顺序、选择与最近访问状态 | F-034, F-038~040, F-042~045, F-048, F-138 |
 | DES-DOM-012 | Chrome 图标组件（AtlasIcon） | F-157 |
+| DES-DOM-013 | 浮动窗口 placement 与几何 | F-152, F-069~070, F-156 |
 | DES-OP-001 | Operation 模型 | F-027~029, F-069, F-049 等 |
 | DES-OP-002 | Transaction Pipeline | F-133, F-041, F-110~115 |
 | DES-OP-003 | Async Guard | F-041, F-029 |
@@ -2801,6 +2940,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-OP-007 | Tool Panel 移动、排序与 ToolBar 操作合同 | F-022, F-069~071, F-140, F-142, F-151, F-156 |
 | DES-OP-008 | 声明式布局定义与原子 Reconciliation | F-001~005, F-010, F-047, F-099~100, F-144 |
 | DES-OP-009 | Command、Query 与领域事件接口 | F-030, F-101~104, F-106~115, F-121, F-141, F-146 |
+| DES-OP-010 | 浮动窗口 operation | F-152, F-069~071, F-140, F-156 |
 | DES-INT-001 | JS / .NET 边界划分 | NF-004, F-050~068, F-073~078 |
 | DES-INT-002 | 根级 Interaction Controller | NF-004, F-109 |
 | DES-INT-003 | 拖拽投放模型 | F-050~068, F-069, F-150~153, F-155, F-071 |
@@ -2809,6 +2949,7 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-INT-006 | Panel Target Resolver、投放骨架与预览 | F-069, F-071, F-148, F-150~155, NF-004~005 |
 | DES-INT-007 | Splitter 高级交互与控制 | F-073~078, F-080~082, F-104, F-148, NF-003~004, NF-007 |
 | DES-INT-008 | Keyboard Command、焦点导航与快捷键配置 | F-035, F-041, F-116~118, NF-003, NF-007 |
+| DES-INT-009 | 浮窗拖拽与几何协议 | F-152, F-150, F-153, NF-004 |
 | DES-RND-001 | 统一 Effective Content Catalog | F-006~008, F-119~120, F-122, NF-006 |
 | DES-RND-002 | 强类型运行时绑定 | F-006~008, F-122, F-128 |
 | DES-RND-003 | AtlasContentContext 与跨 Panel 协作 | F-007~008, F-035, F-070, F-109 |
@@ -2819,14 +2960,16 @@ Panel Drag Session 只管理 transient interaction state；只有 `Committing �
 | DES-RND-008 | Panel / Editor View Empty State | F-003, F-005, F-010~011, F-019, F-031~032, F-061~062, F-155 |
 | DES-RND-009 | Editor Tab Strip、溢出与上下文菜单 | F-009, F-035, F-038~045, F-048, F-105, F-138, NF-003, NF-007 |
 | DES-RND-010 | 按 Item 业务状态作用域 | F-006~008, F-070, ADR-0020 |
+| DES-RND-011 | 浮动窗口渲染、焦点与主题 | F-152, F-070, NF-007~010 |
 | DES-PER-001 | 序列化范围 | F-085~088, F-091~092 |
 | DES-PER-002 | XML Schema | F-021, F-085~088, F-140, F-149 |
 | DES-PER-003 | Restore Pipeline | F-086, F-088, F-094~095, F-123 |
-| DES-PER-004 | V1 迁移 | F-085~088 |
+| DES-PER-004 | V1/V2 compatibility（ADR-0043 起移除） | F-085~088 |
 | DES-PER-005 | 资源限制与安全 | F-088, F-123 |
 | DES-PER-006 | Layout Preset 生命周期 | F-096~098 |
 | DES-PER-007 | Restore Identity Remap 与报告 | F-086, F-089~090, F-123~124 |
 | DES-PER-008 | 存储降级、Allowlisted Repair 与严重错误回退 | F-093~095, F-123, F-125~127 |
+| DES-PER-009 | Schema V3 与浮窗持久化 | F-085~088, F-152 |
 | DES-ERR-001 | Typed Failure、Content Catalog 与诊断边界 | F-030, F-119~124, F-128 |
 | DES-NFR-001 | 所有权、释放与内存上限 | F-029, F-114, F-147, NF-001 |
 | DES-NFR-002 | Reduced Motion | NF-008 |
@@ -2864,9 +3007,9 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-022 | DES-NFR-003、DES-OP-007、DES-RND-006 | Core/Blazor/E2E | Designed |
 | REQ-F-023 | DES-DOM-006、DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Designed |
 | REQ-F-024 | DES-DOM-009、DES-RND-006 | Core/Blazor/E2E | Deferred，与 RTL 总体需求一致 |
-| REQ-F-069 | DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
-| REQ-F-070 | DES-RND-005、DES-RND-007 | Blazor/E2E | Designed，OI-002 已由 ADR-0012 关闭 |
-| REQ-F-071 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed |
+| REQ-F-069 | DES-DOM-013、DES-OP-007、DES-INT-003、DES-INT-005~006 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
+| REQ-F-070 | DES-DOM-013、DES-RND-005、DES-RND-007、DES-RND-011 | Blazor/E2E | Designed，OI-002 已由 ADR-0012 关闭 |
+| REQ-F-071 | DES-DOM-013、DES-INT-003、DES-INT-006、DES-INT-009 | Interop/E2E | Designed |
 | REQ-F-140 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-142 | DES-DOM-009、DES-OP-007、DES-INT-005 | Core/Interop/E2E | Designed |
 | REQ-F-147 | DES-INT-002、DES-INT-005、DES-PRJ-003 | Interop/Blazor | Designed |
@@ -2874,11 +3017,11 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-149 | DES-DOM-009、DES-RND-006 | Core/Blazor | Designed |
 | REQ-F-150 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
 | REQ-F-151 | DES-OP-007、DES-INT-006 | Core/Interop/E2E | Designed |
-| REQ-F-152 | — | — | Deferred，Floating Window 不在当前 Phase |
+| REQ-F-152 | DES-DOM-013、DES-OP-010、DES-INT-009、DES-RND-011、DES-PER-009 | Core/Blazor/Interop/Persistence/E2E | Designed |
 | REQ-F-153 | DES-INT-005~006、DES-PRJ-003 | Interop/E2E | Designed |
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006 | Core/Interop/E2E | Designed |
 | REQ-F-155 | DES-INT-003、DES-INT-006 | Interop/E2E | Designed，OI-001 已由 ADR-0007 关闭 |
-| REQ-F-156 | DES-OP-004~005、DES-OP-007 | Core/E2E | Designed |
+| REQ-F-156 | DES-DOM-013、DES-OP-004~005、DES-OP-007、DES-OP-010 | Core/E2E | Designed |
 | REQ-F-157 | DES-DOM-012 | Blazor/DOM | Designed；ADR-0040 已接受 |
 | REQ-NF-003 | DES-INT-007~008、DES-NFR-003 | Blazor/E2E | Designed |
 | REQ-NF-004 | DES-INT-001~006、DES-PRJ-003 | Interop/Performance | Designed |
@@ -2926,16 +3069,16 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-050~060、REQ-F-063~067 | DES-INT-001、DES-INT-003 | Designed |
 | REQ-F-061~062 | DES-INT-001、DES-INT-003、DES-RND-008 | Designed |
 | REQ-F-068 | DES-INT-001、DES-INT-003、DES-INT-005 | Designed |
-| REQ-F-069 | DES-DOM-008、DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-001、DES-OP-004、DES-OP-007、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
-| REQ-F-070 | DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007、DES-RND-010 | Designed |
-| REQ-F-071 | DES-INT-003、DES-INT-005、DES-INT-006、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-F-069 | DES-DOM-008、DES-DOM-013、DES-INT-003、DES-INT-005、DES-INT-006、DES-INT-009、DES-OP-001、DES-OP-004、DES-OP-007、DES-OP-010、DES-PRJ-003、DES-RND-005、DES-RND-007 | Designed |
+| REQ-F-070 | DES-DOM-013、DES-INT-005、DES-OP-007、DES-PRJ-003、DES-RND-003、DES-RND-005、DES-RND-007、DES-RND-010、DES-RND-011 | Designed |
+| REQ-F-071 | DES-DOM-013、DES-INT-003、DES-INT-005、DES-INT-006、DES-INT-009、DES-OP-007、DES-PRJ-003 | Designed |
 | REQ-F-073~077 | DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
 | REQ-F-078 | DES-DOM-010、DES-INT-001、DES-INT-007、DES-OP-001 | Designed |
 | REQ-F-080~081 | DES-INT-007 | Designed |
 | REQ-F-082 | DES-DOM-010、DES-INT-007 | Designed |
-| REQ-F-085、REQ-F-087 | DES-PER-001、DES-PER-002、DES-PER-004 | Designed |
-| REQ-F-086 | DES-OP-001、DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-007 | Designed |
-| REQ-F-088 | DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-005 | Designed |
+| REQ-F-085、REQ-F-087 | DES-PER-001、DES-PER-002、DES-PER-004、DES-PER-009 | Designed |
+| REQ-F-086 | DES-OP-001、DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-007、DES-PER-009 | Designed |
+| REQ-F-088 | DES-PER-001、DES-PER-002、DES-PER-003、DES-PER-004、DES-PER-005、DES-PER-009 | Designed |
 | REQ-F-089~090 | DES-PER-007 | Designed |
 | REQ-F-091~092 | DES-PER-001 | Designed |
 | REQ-F-093、REQ-F-125~127 | DES-PER-008 | Designed |
@@ -2968,11 +3111,11 @@ DEV-GATE 和 Phase Exit gate；不得把本表中的 `Designed` 直接解释为 
 | REQ-F-149 | DES-DOM-001、DES-DOM-009、DES-PER-002、DES-RND-006 | Designed |
 | REQ-F-150 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-151 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-OP-007、DES-PRJ-003、DES-RND-006 | Designed |
-| REQ-F-152 | DES-DOM-009、DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-006 | Deferred |
+| REQ-F-152 | DES-DOM-009、DES-DOM-013、DES-OP-010、DES-INT-003、DES-INT-006、DES-INT-009、DES-PRJ-003、DES-RND-006、DES-RND-011、DES-PER-009 | Designed |
 | REQ-F-153 | DES-DOM-009、DES-INT-003、DES-INT-005、DES-INT-006、DES-PRJ-003、DES-RND-006 | Designed |
 | REQ-F-154 | DES-DOM-003、DES-DOM-006、DES-INT-006、DES-PRJ-003 | Designed |
 | REQ-F-155 | DES-INT-003、DES-INT-006、DES-PRJ-003、DES-RND-008 | Designed |
-| REQ-F-156 | DES-OP-004、DES-OP-005、DES-OP-007、DES-PRJ-003 | Designed |
+| REQ-F-156 | DES-DOM-013、DES-OP-004、DES-OP-005、DES-OP-007、DES-OP-010、DES-PRJ-003 | Designed |
 | REQ-F-157 | DES-DOM-012 | Designed |
 | REQ-NF-001 | DES-NFR-001、DES-RND-005 | Designed |
 | REQ-NF-002 | DES-PRJ-001 | Designed |

@@ -173,6 +173,56 @@
       "aria-hidden"
     ]
   },
+  "floatingLayer": {
+    "selector": "[data-atlas-floating-layer=\"true\"]",
+    "requiredAttributes": [
+      "data-atlas-host-id"
+    ]
+  },
+  "floatingWindow": {
+    "selector": "[data-atlas-floating-window=\"true\"]",
+    "requiredAttributes": [
+      "role",
+      "aria-modal",
+      "aria-label",
+      "data-atlas-host-id",
+      "data-atlas-item-id",
+      "data-atlas-revision"
+    ]
+  },
+  "floatingHeader": {
+    "selector": "[data-atlas-drag-kind=floating-window]",
+    "requiredAttributes": [
+      "data-atlas-item-id",
+      "data-atlas-item-kind",
+      "data-atlas-floating-item-id",
+      "data-atlas-command-capabilities",
+      "role",
+      "aria-level",
+      "id"
+    ]
+  },
+  "floatingResizeHandle": {
+    "selector": "[data-atlas-floating-resize]",
+    "requiredAttributes": [
+      "data-atlas-floating-resize",
+      "aria-hidden"
+    ]
+  },
+  "floatingEntry": {
+    "selector": "[data-atlas-floating-entry=\"true\"]",
+    "requiredAttributes": [
+      "data-atlas-item-id",
+      "data-atlas-drag-kind",
+      "data-atlas-toolbar-entry"
+    ]
+  },
+  "floatingClose": {
+    "selector": "[data-atlas-close-floating=\"true\"]",
+    "requiredAttributes": [
+      "aria-label"
+    ]
+  },
   "sandboxFrame": {
     "selector": "iframe[data-atlas-sandbox-frame]",
     "requiredAttributes": [

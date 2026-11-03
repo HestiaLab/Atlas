@@ -20,6 +20,7 @@ public sealed class LayoutChangeSet
         IEnumerable<LogicalSide>? updatedToolBars = null,
         IEnumerable<LogicalRegion>? updatedToolBarOrders = null,
         IEnumerable<WorkspaceEdge>? updatedAutoHideStrips = null,
+        IEnumerable<DockItemId>? updatedFloatingWindows = null,
         bool historyRecorded = true,
         bool isHistoryBarrier = false)
     {
@@ -43,6 +44,7 @@ public sealed class LayoutChangeSet
         UpdatedToolBars = CopyDistinct(updatedToolBars);
         UpdatedToolBarOrders = CopyDistinct(updatedToolBarOrders);
         UpdatedAutoHideStrips = CopyDistinct(updatedAutoHideStrips);
+        UpdatedFloatingWindows = CopyDistinct(updatedFloatingWindows);
         HistoryRecorded = historyRecorded;
         IsHistoryBarrier = isHistoryBarrier;
     }
@@ -108,6 +110,11 @@ public sealed class LayoutChangeSet
     public IReadOnlyList<WorkspaceEdge> UpdatedAutoHideStrips { get; }
 
     /// <summary>
+    ///     获取新增、移除或几何/返回书签发生变化的浮动窗口条目。
+    /// </summary>
+    public IReadOnlyList<DockItemId> UpdatedFloatingWindows { get; }
+
+    /// <summary>
     ///     获取一个值，指示提交是否保留在撤销历史中。
     ///     <see langword="false"/> 表示提交成功但无法撤销。
     /// </summary>
@@ -147,6 +154,7 @@ public sealed class LayoutChangeSet
             UpdatedToolBars,
             UpdatedToolBarOrders,
             UpdatedAutoHideStrips,
+            UpdatedFloatingWindows,
             historyRecorded,
             isHistoryBarrier);
     }

@@ -18,7 +18,7 @@ public sealed class OptionalFieldCompatibilityTests
     public void Missing_optional_fields_load_with_documented_defaults()
     {
         var result = serializer.Deserialize(
-            File.ReadAllText(GoldenPath("workspace-v2-optional-fields.xml")),
+            File.ReadAllText(GoldenPath("workspace-v3-optional-fields.xml")),
             new WorkspaceId("main"));
 
         Assert.True(result.Succeeded, result.Error?.DiagnosticId);
@@ -65,7 +65,7 @@ public sealed class OptionalFieldCompatibilityTests
     [Fact]
     public void Missing_selected_item_id_on_a_non_empty_group_is_a_typed_failure()
     {
-        var xml = File.ReadAllText(GoldenPath("workspace-v2-optional-fields.xml"))
+        var xml = File.ReadAllText(GoldenPath("workspace-v3-optional-fields.xml"))
             .Replace(
                 "selectedItemId=\"document-42\"",
                 string.Empty,
@@ -81,7 +81,7 @@ public sealed class OptionalFieldCompatibilityTests
     [Fact]
     public void Missing_fixed_pixel_anchor_is_a_typed_failure()
     {
-        var xml = File.ReadAllText(GoldenPath("workspace-v2-optional-fields.xml"))
+        var xml = File.ReadAllText(GoldenPath("workspace-v3-optional-fields.xml"))
             .Replace(
                 " basisAnchor=\"First\"",
                 string.Empty,
@@ -98,13 +98,13 @@ public sealed class OptionalFieldCompatibilityTests
     {
         await using var workspace = CreateWorkspace();
         var before = workspace.Current;
-        var xml = File.ReadAllText(GoldenPath("workspace-v2-optional-fields.xml"))
+        var xml = File.ReadAllText(GoldenPath("workspace-v3-optional-fields.xml"))
             .Replace(
                 "selectedItemId=\"document-42\"",
                 string.Empty,
                 StringComparison.Ordinal);
         var store = new FixedStore(
-            new WorkspaceLayoutDocument("2.0", 0, xml));
+            new WorkspaceLayoutDocument("3.0", 0, xml));
         var diagnostics = new List<WorkspacePersistenceDiagnostic>();
         await using var persistence = new LayoutAutoPersistence(
             workspace,

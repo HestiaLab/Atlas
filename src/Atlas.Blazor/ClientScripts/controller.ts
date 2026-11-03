@@ -10,7 +10,7 @@ import {
   isValidControllerIdentity
 } from "./protocol";
 import domMetadata from "./dom-metadata-manifest.json";
-import { resolveDropTarget } from "./drop-target";
+import { resolveDropTarget, type DropTarget } from "./drop-target";
 import {
   captureDocumentGeometry,
   captureDocumentTabGeometry,
@@ -21,6 +21,15 @@ import {
   type DragSession
 } from "./drag-session";
 import { AtlasSandboxController } from "./sandbox";
+import {
+  ATLAS_FLOATING_DEFAULT_HEIGHT,
+  ATLAS_FLOATING_DEFAULT_WIDTH,
+  clampFloatingGeometry,
+  resizeFloatingGeometry,
+  rootRelativeGeometry,
+  type AtlasFloatingGeometry,
+  type AtlasHostSize
+} from "./floating-geometry";
 import {
   basisFor,
   clamp,
@@ -67,6 +76,8 @@ export class AtlasInteractionController {
   private readonly resizeSession: SplitResizeSession;
   private readonly dragPreview: DragPreview;
   private activeDrag: DragSession | undefined;
+  private floatingMove: FloatingMoveSession | undefined;
+  private floatingResize: FloatingResizeSession | undefined;
   private dragSequence = 0;
   private keyboardTimer: ReturnType<typeof setTimeout> | undefined;
   private keyboardSplit: HTMLElement | undefined;
@@ -156,6 +167,8 @@ export class AtlasInteractionController {
     validateOptions(options);
     if (identity.generation !== this.identity.generation) {
       this.cancelDrag();
+      this.cancelFloatingMove();
+      this.cancelFloatingResize();
       this.resizeSession.cancel();
       this.clearKeyboardCommit();
     }
@@ -169,6 +182,26 @@ export class AtlasInteractionController {
     this.keyboardBindings = options.keyboardBindings ?? this.keyboardBindings;
   }
 
+  /**
+   * 将键盘焦点移到指定条目的 ToolBar / 自动隐藏入口；用于浮窗停靠后的焦点回退。
+   */
+  public focusToolBarEntry(itemId: string): boolean {
+    if (this.disposed || !itemId) {
+      return false;
+    }
+
+    const escaped = CSS.escape(itemId);
+    const entry = this.root.querySelector<HTMLElement>(
+      `[data-atlas-toolbar-entry][data-atlas-item-id="${escaped}"], `
+      + `[data-atlas-auto-hide-entry][data-atlas-item-id="${escaped}"]`);
+    if (!entry) {
+      return false;
+    }
+
+    entry.focus();
+    return true;
+  }
+
   public dispose(): void {
     if (this.disposed) {
       return;
@@ -177,6 +210,8 @@ export class AtlasInteractionController {
     this.disposed = true;
     this.resizeSession.cancel();
     this.cancelDrag();
+    this.cancelFloatingMove();
+    this.cancelFloatingResize();
     this.suppressNextClick = false;
     this.pendingClickPointerId = undefined;
     this.clearClickSuppression();
@@ -227,7 +262,18 @@ export class AtlasInteractionController {
     }
 
     if (event.button !== 0 || !event.isPrimary
-      || this.isCollapseControl(event.target)) {
+      || this.isCollapseControl(event.target)
+      || this.isFloatingCloseControl(event.target)) {
+      return;
+    }
+
+    const resizeHandle = event.target instanceof Element
+      ? event.target.closest<HTMLElement>("[data-atlas-floating-resize]")
+      : null;
+    const resizeWindow = resizeHandle?.closest<HTMLElement>(
+      "[data-atlas-floating-window]");
+    if (!this.disposed && resizeHandle && resizeWindow) {
+      this.beginFloatingResize(resizeHandle, resizeWindow, event);
       return;
     }
 
@@ -236,6 +282,15 @@ export class AtlasInteractionController {
       const itemId = dragSource.dataset.atlasItemId;
       const sourceKind = dragSource.dataset.atlasDragKind as AtlasDragSourceKind;
       if (itemId && isDragSourceKind(sourceKind)) {
+        if (sourceKind === "floating-window") {
+          const floatingWindow = dragSource.closest<HTMLElement>(
+            "[data-atlas-floating-window]");
+          if (floatingWindow) {
+            this.beginFloatingMove(dragSource, floatingWindow, event);
+            return;
+          }
+        }
+
         const sourceGroupId = this.groupIdFrom(dragSource);
         this.resizeSession.cancel();
         globalDragSequence += 1;
@@ -270,6 +325,18 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
+    if (this.floatingMove
+      && event.pointerId === this.floatingMove.pointerId) {
+      this.updateFloatingMove(event);
+      return;
+    }
+
+    if (this.floatingResize
+      && event.pointerId === this.floatingResize.pointerId) {
+      this.updateFloatingResize(event);
+      return;
+    }
+
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
       let previewCreated = false;
@@ -309,6 +376,18 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
+    if (this.floatingMove
+      && event.pointerId === this.floatingMove.pointerId) {
+      this.finishFloatingMove(event);
+      return;
+    }
+
+    if (this.floatingResize
+      && event.pointerId === this.floatingResize.pointerId) {
+      this.finishFloatingResize(event);
+      return;
+    }
+
     const drag = this.activeDrag;
     if (drag && event.pointerId === drag.pointerId) {
       const target = drag.phase === "dragging"
@@ -321,6 +400,35 @@ export class AtlasInteractionController {
             drag)
         : undefined;
       this.finishDrag();
+      if (target?.kind === "floating-window"
+        && drag.generation === this.identity.generation) {
+        const rootRect = this.root.getBoundingClientRect();
+        const geometry = clampFloatingGeometry(
+          {
+            x: event.clientX - rootRect.left,
+            y: event.clientY - rootRect.top,
+            width: ATLAS_FLOATING_DEFAULT_WIDTH,
+            height: ATLAS_FLOATING_DEFAULT_HEIGHT
+          },
+          { width: rootRect.width, height: rootRect.height });
+        this.send({
+          type: "float-item",
+          protocolVersion: ATLAS_PROTOCOL_VERSION,
+          sessionId: drag.sessionId,
+          hostId: this.identity.hostId,
+          workspaceId: this.identity.workspaceId,
+          generation: drag.generation,
+          itemId: drag.itemId,
+          sourceKind: drag.sourceKind,
+          baseRevision: drag.baseRevision,
+          floatingX: geometry.x,
+          floatingY: geometry.y,
+          floatingWidth: geometry.width,
+          floatingHeight: geometry.height
+        });
+        return;
+      }
+
       if (target && drag.generation === this.identity.generation) {
         const directional = target.kind.startsWith("document-")
           && target.kind !== "document-center";
@@ -368,6 +476,16 @@ export class AtlasInteractionController {
   };
 
   private readonly onPointerCancel = (event: PointerEvent): void => {
+    if (this.floatingMove?.pointerId === event.pointerId) {
+      this.cancelFloatingMove();
+      return;
+    }
+
+    if (this.floatingResize?.pointerId === event.pointerId) {
+      this.cancelFloatingResize();
+      return;
+    }
+
     if (this.activeDrag?.pointerId === event.pointerId) {
       // pointercancel / lostpointercapture 是终止路径，立即安装兜底监听。
       this.cancelDrag(false);
@@ -666,6 +784,18 @@ export class AtlasInteractionController {
       return;
     }
 
+    if (this.floatingMove) {
+      event.preventDefault();
+      this.cancelFloatingMove();
+      return;
+    }
+
+    if (this.floatingResize) {
+      event.preventDefault();
+      this.cancelFloatingResize();
+      return;
+    }
+
     if (this.activeDrag) {
       event.preventDefault();
       this.cancelDrag();
@@ -688,6 +818,8 @@ export class AtlasInteractionController {
   private readonly onEnvironmentInvalidated = (): void => {
     this.resizeSession.cancel();
     this.cancelDrag();
+    this.cancelFloatingMove();
+    this.cancelFloatingResize();
     this.clearKeyboardCommit();
   };
 
@@ -933,6 +1065,297 @@ export class AtlasInteractionController {
     return undefined;
   }
 
+  private beginFloatingMove(
+    header: HTMLElement,
+    window: HTMLElement,
+    event: PointerEvent): void {
+    const itemId = header.dataset.atlasItemId;
+    if (!itemId) {
+      return;
+    }
+
+    this.cancelDrag();
+    this.cancelFloatingResize();
+    this.resizeSession.cancel();
+    globalDragSequence += 1;
+    const rootRect = this.root.getBoundingClientRect();
+    this.floatingMove = {
+      pointerId: event.pointerId,
+      sessionId: `${this.identity.hostId}:${globalDragSequence}`,
+      generation: this.identity.generation,
+      baseRevision: this.readRootRevision(),
+      itemId,
+      window,
+      startX: event.clientX,
+      startY: event.clientY,
+      startGeometry: rootRelativeGeometry(
+        rootRect,
+        window.getBoundingClientRect()),
+      hostSize: { width: rootRect.width, height: rootRect.height },
+      originalStyle: captureFloatingStyle(window),
+      moved: false
+    };
+    // Blazor 的 raise 会在指针按下后重新渲染并还原已提交几何；
+    // 拖动期间只由 TS 维护层级，避免预览样式被提交值覆盖。
+    window.style.zIndex = "90";
+    header.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  private updateFloatingMove(event: PointerEvent): void {
+    const session = this.floatingMove;
+    if (!session) {
+      return;
+    }
+
+    const deltaX = event.clientX - session.startX;
+    const deltaY = event.clientY - session.startY;
+    if (!session.moved && Math.hypot(deltaX, deltaY) < 4) {
+      return;
+    }
+
+    session.moved = true;
+    this.applyFloatingGeometry(
+      session.window,
+      clampFloatingGeometry(
+        {
+          x: session.startGeometry.x + deltaX,
+          y: session.startGeometry.y + deltaY,
+          width: session.startGeometry.width,
+          height: session.startGeometry.height
+        },
+        session.hostSize));
+
+    // 被拖动窗口位于指针下方；命中检测时临时让出指针事件，
+    // 才能看到其下方的 Dock 目标。
+    const previousPointerEvents = session.window.style.pointerEvents;
+    session.window.style.pointerEvents = "none";
+    try {
+      this.setFloatingTarget(
+        session,
+        resolveDropTarget(
+          this.root,
+          this.ownerDocument,
+          event.clientX,
+          event.clientY,
+          event.target,
+          {
+            sourceKind: "floating-window",
+            documentGeometry: new Map(),
+            documentTabGeometry: new Map()
+          }));
+    } finally {
+      session.window.style.pointerEvents = previousPointerEvents;
+    }
+  }
+
+  private finishFloatingMove(_event: PointerEvent): void {
+    const session = this.floatingMove;
+    if (!session) {
+      return;
+    }
+
+    const moved = session.moved;
+    const target = session.target;
+    const geometry = rootRelativeGeometry(
+      this.root.getBoundingClientRect(),
+      session.window.getBoundingClientRect());
+    this.clearFloatingTarget(session);
+    restoreFloatingStyle(session.window, session.originalStyle);
+    this.floatingMove = undefined;
+    if (!moved) {
+      return;
+    }
+
+    if (target
+      && target.kind !== "floating-window"
+      && session.generation === this.identity.generation) {
+      this.send({
+        type: "dock-item",
+        protocolVersion: ATLAS_PROTOCOL_VERSION,
+        sessionId: session.sessionId,
+        hostId: this.identity.hostId,
+        workspaceId: this.identity.workspaceId,
+        generation: session.generation,
+        itemId: session.itemId,
+        sourceKind: "floating-window",
+        baseRevision: session.baseRevision,
+        targetKind: target.kind,
+        targetGroupId: target.groupId,
+        ...(target.targetItemId === undefined
+          ? {}
+          : { targetItemId: target.targetItemId }),
+        ...(target.logicalRegion === undefined
+          ? {}
+          : { logicalRegion: target.logicalRegion }),
+        ...(target.insertionIndex === undefined
+          ? {}
+          : { insertionIndex: target.insertionIndex })
+      });
+      return;
+    }
+
+    this.sendFloatingGeometry("set-floating-geometry", session, geometry);
+  }
+
+  private cancelFloatingMove(): void {
+    const session = this.floatingMove;
+    if (!session) {
+      return;
+    }
+
+    this.clearFloatingTarget(session);
+    restoreFloatingStyle(session.window, session.originalStyle);
+    this.floatingMove = undefined;
+  }
+
+  private beginFloatingResize(
+    handle: HTMLElement,
+    window: HTMLElement,
+    event: PointerEvent): void {
+    const itemId = window.dataset.atlasItemId;
+    const direction = handle.dataset.atlasFloatingResize;
+    if (!itemId || !direction) {
+      return;
+    }
+
+    this.cancelDrag();
+    this.cancelFloatingMove();
+    this.resizeSession.cancel();
+    globalDragSequence += 1;
+    const rootRect = this.root.getBoundingClientRect();
+    this.floatingResize = {
+      pointerId: event.pointerId,
+      sessionId: `${this.identity.hostId}:${globalDragSequence}`,
+      generation: this.identity.generation,
+      baseRevision: this.readRootRevision(),
+      itemId,
+      window,
+      direction,
+      startX: event.clientX,
+      startY: event.clientY,
+      startGeometry: rootRelativeGeometry(
+        rootRect,
+        window.getBoundingClientRect()),
+      hostSize: { width: rootRect.width, height: rootRect.height },
+      originalStyle: captureFloatingStyle(window),
+      moved: false
+    };
+    window.style.zIndex = "90";
+    handle.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  private updateFloatingResize(event: PointerEvent): void {
+    const session = this.floatingResize;
+    if (!session) {
+      return;
+    }
+
+    const deltaX = event.clientX - session.startX;
+    const deltaY = event.clientY - session.startY;
+    if (!session.moved && Math.hypot(deltaX, deltaY) < 2) {
+      return;
+    }
+
+    session.moved = true;
+    this.applyFloatingGeometry(
+      session.window,
+      resizeFloatingGeometry(
+        session.startGeometry,
+        session.direction,
+        deltaX,
+        deltaY,
+        session.hostSize));
+  }
+
+  private finishFloatingResize(_event: PointerEvent): void {
+    const session = this.floatingResize;
+    if (!session) {
+      return;
+    }
+
+    const moved = session.moved;
+    const geometry = rootRelativeGeometry(
+      this.root.getBoundingClientRect(),
+      session.window.getBoundingClientRect());
+    restoreFloatingStyle(session.window, session.originalStyle);
+    this.floatingResize = undefined;
+    if (moved) {
+      this.sendFloatingGeometry("set-floating-geometry", session, geometry);
+    }
+  }
+
+  private cancelFloatingResize(): void {
+    const session = this.floatingResize;
+    if (!session) {
+      return;
+    }
+
+    restoreFloatingStyle(session.window, session.originalStyle);
+    this.floatingResize = undefined;
+  }
+
+  private setFloatingTarget(
+    session: FloatingMoveSession,
+    target: DropTarget | undefined): void {
+    if (session.target?.element === target?.element
+      && session.target?.kind === target?.kind) {
+      return;
+    }
+
+    this.clearFloatingTarget(session);
+    if (target) {
+      session.target = target;
+      target.element.dataset.atlasDropPreview = target.kind;
+    }
+  }
+
+  private clearFloatingTarget(session: FloatingMoveSession): void {
+    if (session.target) {
+      session.target.element.removeAttribute("data-atlas-drop-preview");
+      delete session.target;
+    }
+  }
+
+  private applyFloatingGeometry(
+    window: HTMLElement,
+    geometry: AtlasFloatingGeometry): void {
+    window.style.setProperty("left", `${geometry.x}px`);
+    window.style.setProperty("top", `${geometry.y}px`);
+    window.style.setProperty("width", `${geometry.width}px`);
+    window.style.setProperty("height", `${geometry.height}px`);
+  }
+
+  private sendFloatingGeometry(
+    type: "set-floating-geometry",
+    session: FloatingMoveSession | FloatingResizeSession,
+    geometry: AtlasFloatingGeometry): void {
+    if (session.generation !== this.identity.generation) {
+      return;
+    }
+
+    this.send({
+      type,
+      protocolVersion: ATLAS_PROTOCOL_VERSION,
+      sessionId: session.sessionId,
+      hostId: this.identity.hostId,
+      workspaceId: this.identity.workspaceId,
+      generation: session.generation,
+      itemId: session.itemId,
+      baseRevision: session.baseRevision,
+      floatingX: geometry.x,
+      floatingY: geometry.y,
+      floatingWidth: geometry.width,
+      floatingHeight: geometry.height
+    });
+  }
+
+  private isFloatingCloseControl(target: EventTarget | null): boolean {
+    return target instanceof Element
+      && target.closest("[data-atlas-close-floating]") !== null;
+  }
+
   private dragSourceFrom(target: EventTarget | null): HTMLElement | null {
     return target instanceof Element
       ? target.closest<HTMLElement>("[data-atlas-drag-kind]")
@@ -1090,10 +1513,74 @@ function validateOptions(options: AtlasControllerOptions): void {
   }
 }
 
+interface FloatingStyleSnapshot {
+  readonly left: string;
+  readonly top: string;
+  readonly width: string;
+  readonly height: string;
+  readonly zIndex: string;
+  readonly pointerEvents: string;
+}
+
+interface FloatingMoveSession {
+  readonly pointerId: number;
+  readonly sessionId: string;
+  readonly generation: number;
+  readonly baseRevision: number;
+  readonly itemId: string;
+  readonly window: HTMLElement;
+  readonly startX: number;
+  readonly startY: number;
+  readonly startGeometry: AtlasFloatingGeometry;
+  readonly hostSize: AtlasHostSize;
+  readonly originalStyle: FloatingStyleSnapshot;
+  moved: boolean;
+  target?: DropTarget;
+}
+
+interface FloatingResizeSession {
+  readonly pointerId: number;
+  readonly sessionId: string;
+  readonly generation: number;
+  readonly baseRevision: number;
+  readonly itemId: string;
+  readonly window: HTMLElement;
+  readonly direction: string;
+  readonly startX: number;
+  readonly startY: number;
+  readonly startGeometry: AtlasFloatingGeometry;
+  readonly hostSize: AtlasHostSize;
+  readonly originalStyle: FloatingStyleSnapshot;
+  moved: boolean;
+}
+
+function captureFloatingStyle(window: HTMLElement): FloatingStyleSnapshot {
+  return {
+    left: window.style.left,
+    top: window.style.top,
+    width: window.style.width,
+    height: window.style.height,
+    zIndex: window.style.zIndex,
+    pointerEvents: window.style.pointerEvents
+  };
+}
+
+function restoreFloatingStyle(
+  window: HTMLElement,
+  style: FloatingStyleSnapshot): void {
+  window.style.left = style.left;
+  window.style.top = style.top;
+  window.style.width = style.width;
+  window.style.height = style.height;
+  window.style.zIndex = style.zIndex;
+  window.style.pointerEvents = style.pointerEvents;
+}
+
 function isDragSourceKind(value: string): value is AtlasDragSourceKind {
   return value === "document-tab"
     || value === "panel-header"
-    || value === "toolbar-entry";
+    || value === "toolbar-entry"
+    || value === "floating-window";
 }
 
 export {

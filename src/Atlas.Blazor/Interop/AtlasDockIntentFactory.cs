@@ -142,7 +142,7 @@ internal static class AtlasDockIntentFactory
                     message.BaseRevision);
             }
         }
-        else if (message.SourceKind == "panel-header"
+        else if (message.SourceKind is "panel-header" or "floating-window"
             && item.Kind == DockItemKind.Tool
             && target.Kind == DockItemKind.Tool
             && message.TargetKind is "panel-header-insertion"

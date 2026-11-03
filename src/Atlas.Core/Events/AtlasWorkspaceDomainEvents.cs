@@ -213,8 +213,14 @@ internal sealed class AtlasWorkspaceDomainEvents : IAtlasWorkspaceDomainEvents
         WorkspaceSnapshot snapshot,
         DockItemId itemId)
     {
-        // 按确定性顺序查找：先组（按 ID 序）后自动隐藏条（按边序），
-        // 保证同一快照总是解析出相同位置；项不处于任何容器时返回 null。
+        // 按确定性顺序查找：先浮窗（按 ItemId 字典）再组（按 ID 序）后自动隐藏条
+        // （按边序），保证同一快照总是解析出相同位置；项不处于任何容器时返回 null。
+        if (snapshot.FloatingWindows.TryGetValue(itemId, out var floating)
+            && floating is not null)
+        {
+            return new DockItemPlacementSnapshot(floating);
+        }
+
         foreach (var group in snapshot.Nodes.Values
             .OfType<GroupNode>()
             .OrderBy(group => group.Id.Value, StringComparer.Ordinal))

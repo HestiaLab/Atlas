@@ -199,12 +199,10 @@ Atlas.Core.Persistence.LayoutPresetService.SaveAsync(string! name, System.Thread
 Atlas.Core.Persistence.LayoutPersistenceLimits
 Atlas.Core.Persistence.LayoutSchemaVersion
 static Atlas.Core.Persistence.LayoutSchemaVersion.Current.get -> string!
-Atlas.Core.Persistence.LayoutPersistenceLimits.LayoutPersistenceLimits(int maxDocumentBytes = 1048576, int maxDepth = 64, int maxNodeCount = 4096, int maxItemCount = 4096, int maxItemsPerGroup = 1024, int maxStringLength = 4096, int maxMigrationSteps = 1) -> void
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxDepth.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxDocumentBytes.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxItemCount.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxItemsPerGroup.get -> int
-Atlas.Core.Persistence.LayoutPersistenceLimits.MaxMigrationSteps.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxNodeCount.get -> int
 Atlas.Core.Persistence.LayoutPersistenceLimits.MaxStringLength.get -> int
 Atlas.Core.Persistence.LayoutRestoreDocument

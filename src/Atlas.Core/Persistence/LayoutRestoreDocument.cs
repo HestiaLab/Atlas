@@ -38,7 +38,7 @@ public sealed class LayoutRestoreDocument
     public string SourceSchemaVersion { get; }
 
     /// <summary>
-    ///     获取解析产生的非致命迁移警告；当前只有 V1 迁移会产生警告。
+    ///     获取解析产生的非致命警告。
     /// </summary>
     public IReadOnlyList<string> Warnings { get; }
 

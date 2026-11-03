@@ -25,7 +25,8 @@ internal sealed class WorkspacePatch
             + snapshot.Items.Count * 512L
             + snapshot.ToolBars.Count * 64L
             + snapshot.ToolBarOrders.Count * 128L
-            + snapshot.AutoHideStrips.Count * 128L;
+            + snapshot.AutoHideStrips.Count * 128L
+            + snapshot.FloatingWindows.Count * 128L;
     }
 
     /// <summary>
@@ -113,7 +114,8 @@ internal sealed class WorkspacePatch
             updatedItems: Updated(before.Items, after.Items),
             updatedToolBars: ChangedKeys(before.ToolBars, after.ToolBars),
             updatedToolBarOrders: ChangedKeys(before.ToolBarOrders, after.ToolBarOrders),
-            updatedAutoHideStrips: ChangedKeys(before.AutoHideStrips, after.AutoHideStrips));
+            updatedAutoHideStrips: ChangedKeys(before.AutoHideStrips, after.AutoHideStrips),
+            updatedFloatingWindows: ChangedKeys(before.FloatingWindows, after.FloatingWindows));
     }
 
     private static void EnsureExpected(
@@ -128,7 +130,8 @@ internal sealed class WorkspacePatch
             || !SameEntries(current.Items, expected.Items)
             || !SameEntries(current.ToolBars, expected.ToolBars)
             || !SameEntries(current.ToolBarOrders, expected.ToolBarOrders)
-            || !SameEntries(current.AutoHideStrips, expected.AutoHideStrips))
+            || !SameEntries(current.AutoHideStrips, expected.AutoHideStrips)
+            || !SameEntries(current.FloatingWindows, expected.FloatingWindows))
         {
             throw new InvalidOperationException(
                 "The current snapshot does not match the patch expected-before state.");

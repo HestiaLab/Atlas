@@ -10,14 +10,14 @@ using Atlas.Core.Validation;
 namespace Atlas.Core.Persistence;
 
 /// <summary>
-///     实现严格的 Atlas V2 XML 持久化契约：写出前校验快照的领域不变量；读取
-///     时先按根元素形状分派 V1/V2（含 V1 迁移），再依次执行 schema 校验、资源
-///     限制与领域不变量校验，所有失败都归一为诊断错误。
+///     实现严格的 Atlas V3 XML 持久化契约：写出前校验快照的领域不变量；读取
+///     时只接受 V3 命名空间与版本，再依次执行 schema 校验、资源限制与领域
+///     不变量校验，所有失败都归一为诊断错误。
 /// </summary>
 public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 {
-    // V2 文档的 XML 命名空间常量。
-    private const string NamespaceValue = "urn:atlas:workspace:2";
+    // V3 文档的 XML 命名空间常量。
+    private const string NamespaceValue = "urn:atlas:workspace:3";
 
     // 命名空间的 XNamespace 实例；构造与读取 XML 元素共用。
     private static readonly XNamespace Namespace = NamespaceValue;
@@ -38,7 +38,8 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             WriteItems(snapshot),
             WriteLayout(snapshot),
             WriteToolBars(snapshot),
-            WriteAutoHide(snapshot));
+            WriteAutoHide(snapshot),
+            WriteFloatingWindows(snapshot));
         var document = new XDocument(new XDeclaration("1.0", "utf-8", null), root);
         EnsureSnapshotWithinLimits(snapshot, document);
         using var writer = new Utf8StringWriter(CultureInfo.InvariantCulture);
@@ -79,21 +80,13 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
             }
 
             var version = (string?)root.Attribute("schemaVersion");
-            // 先按根元素形状分派版本：无命名空间的 AtlasLayout 是 V1 文档，走迁移路径；
-            // 其余必须精确匹配 V2 命名空间与根名，否则视为不支持的版本。
-            if (root.Name.NamespaceName.Length == 0
-                && root.Name.LocalName == "AtlasLayout")
-            {
-                return ReadLegacy(root, targetWorkspaceId, limits);
-            }
-
+            // ADR-0043 起只接受 V3；V1/V2 文档一律按版本不兼容拒绝，不做迁移。
             if (root.Name.NamespaceName != NamespaceValue
                 || root.Name.LocalName != "AtlasWorkspace")
             {
                 return InvalidVersion();
             }
 
-            // 版本兼容按主版本判定：任何 2.x 都视为可读，为同主版本的格式演进留出空间。
             if (!TryCompatibleVersion(version))
             {
                 return InvalidVersion();
@@ -101,7 +94,7 @@ public sealed partial class AtlasXmlLayoutSerializer : IAtlasLayoutSerializer
 
             // 先按嵌入式 XSD 校验结构，再做规模限制扫描，两者都通过才进入对象构建。
             ValidateSchema(document);
-            // V2 XSD 允许若干可缺省字段；在对象构建前显式填入领域默认值，
+            // V3 XSD 允许若干可缺省字段；在对象构建前显式填入领域默认值，
             // 而不是让每个读取分支各自猜测默认值。
             NormalizeOptionalFields(document);
             ValidateLimits(root, limits);

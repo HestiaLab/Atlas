@@ -14,4 +14,9 @@ public enum DockItemPlacementKind
     ///     条目放置在自动隐藏条中。
     /// </summary>
     AutoHide = 1,
+
+    /// <summary>
+    ///     条目放置为独立浮动窗口。
+    /// </summary>
+    Floating = 2,
 }

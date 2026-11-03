@@ -63,6 +63,21 @@ internal sealed class AtlasRootInteractionController : IAsyncDisposable
     }
 
     /// <summary>
+    ///     将键盘焦点移到指定条目的 ToolBar 或自动隐藏入口。
+    /// </summary>
+    /// <param name="itemId">目标条目标识。</param>
+    /// <returns>找到并聚焦入口时为 <see langword="true"/>。</returns>
+    internal async ValueTask<bool> FocusToolBarEntryAsync(string itemId)
+    {
+        if (controller is null)
+        {
+            return false;
+        }
+
+        return await controller.InvokeAsync<bool>("focusToolBarEntry", itemId);
+    }
+
+    /// <summary>
     ///     将控制器与当前宿主根元素、工作区绑定及交互选项同步；
     ///     工作区或根元素变化时重建控制器，禁用或无工作区时分离。
     /// </summary>
@@ -493,6 +508,26 @@ internal sealed class AtlasInteractionMessage
     ///     新建分割节点的标识；停靠到非中心区域时携带。
     /// </summary>
     public string? NewSplitId { get; set; }
+
+    /// <summary>
+    ///     浮窗几何的宿主相对 X 坐标；仅 float-item 与 set-floating-geometry 消息携带。
+    /// </summary>
+    public double? FloatingX { get; set; }
+
+    /// <summary>
+    ///     浮窗几何的宿主相对 Y 坐标；仅 float-item 与 set-floating-geometry 消息携带。
+    /// </summary>
+    public double? FloatingY { get; set; }
+
+    /// <summary>
+    ///     浮窗宽度；仅 float-item 与 set-floating-geometry 消息携带。
+    /// </summary>
+    public double? FloatingWidth { get; set; }
+
+    /// <summary>
+    ///     浮窗高度；仅 float-item 与 set-floating-geometry 消息携带。
+    /// </summary>
+    public double? FloatingHeight { get; set; }
 
     /// <summary>
     ///     宿主工作区绑定的代际；消息回带该值，宿主据此丢弃过期工作区产生的交互。
