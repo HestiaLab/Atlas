@@ -98,4 +98,4 @@ dotnet format Atlas.sln --verify-no-changes --no-restore
 
 ## 许可证
 
-[MIT](LICENSE)。
+[Apache-2.0](LICENSE)。

@@ -99,4 +99,4 @@ The theme follows the OS light/dark preference and styles Atlas chrome only; pan
 
 ## License
 
-Atlas is released under the [MIT License](https://github.com/HestiaLab/Atlas/blob/main/LICENSE).
+Atlas is released under the [Apache License 2.0](https://github.com/HestiaLab/Atlas/blob/main/LICENSE).
