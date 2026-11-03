@@ -144,7 +144,7 @@ public sealed class PersistenceContractTests
     [Fact]
     public void Preset_document_requires_a_descriptor_and_xml()
     {
-        var descriptor = new LayoutPresetDescriptor("focus", "2.0", 0);
+        var descriptor = new LayoutPresetDescriptor("focus", "3.0", 0);
 
         Assert.Throws<ArgumentNullException>(
             () => new LayoutPresetDocument(null!, "<AtlasWorkspace />"));
@@ -162,39 +162,44 @@ public sealed class PersistenceContractTests
     [Fact]
     public void Persistence_limits_are_clamped_to_the_schema_hard_caps()
     {
-        Assert.Equal("2.0", LayoutSchemaVersion.Current);
+        Assert.Equal("3.0", LayoutSchemaVersion.Current);
 
         var oversized = new LayoutPersistenceLimits(
             maxItemCount: 100_000,
             maxItemsPerGroup: 50_000,
-            maxStringLength: 50_000);
+            maxStringLength: 50_000,
+            maxFloatingWindows: 100);
 
         Assert.Equal(4096, oversized.MaxItemCount);
         Assert.Equal(1024, oversized.MaxItemsPerGroup);
         Assert.Equal(4096, oversized.MaxStringLength);
+        Assert.Equal(8, oversized.MaxFloatingWindows);
 
         var lowered = new LayoutPersistenceLimits(
             maxItemCount: 10,
             maxItemsPerGroup: 5,
-            maxStringLength: 20);
+            maxStringLength: 20,
+            maxFloatingWindows: 3);
 
         Assert.Equal(10, lowered.MaxItemCount);
         Assert.Equal(5, lowered.MaxItemsPerGroup);
         Assert.Equal(20, lowered.MaxStringLength);
+        Assert.Equal(3, lowered.MaxFloatingWindows);
     }
 
     [Fact]
     public void Xsd_hard_caps_match_the_clamped_limit_constants()
     {
         using var stream = typeof(AtlasXmlLayoutSerializer).Assembly.GetManifestResourceStream(
-            "Atlas.Core.Persistence.Schema.atlas-workspace-v2.xsd");
+            "Atlas.Core.Persistence.Schema.atlas-workspace-v3.xsd");
         Assert.NotNull(stream);
         using var reader = new StreamReader(stream!);
         var xsd = reader.ReadToEnd();
 
         Assert.Contains("maxOccurs=\"4096\"", xsd, StringComparison.Ordinal);
         Assert.Contains("maxOccurs=\"1024\"", xsd, StringComparison.Ordinal);
+        Assert.Contains("maxOccurs=\"8\"", xsd, StringComparison.Ordinal);
         Assert.Contains("maxLength value=\"4096\"", xsd, StringComparison.Ordinal);
-        Assert.Contains("pattern value=\"2\\.[0-9]+\"", xsd, StringComparison.Ordinal);
+        Assert.Contains("pattern value=\"3\\.[0-9]+\"", xsd, StringComparison.Ordinal);
     }
 }

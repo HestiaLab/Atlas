@@ -206,6 +206,41 @@ public sealed class AtlasDockIntentFactoryTests
     }
 
     [Fact]
+    public void Floating_window_cross_group_dock_maps_to_move()
+    {
+        var floatingItem = CreateTool("t1");
+        var anchorItem = CreateTool("anchor");
+        var targetItem = CreateTool("t2");
+        var anchor = CreateToolGroup(
+            "anchor",
+            LogicalRegion.InlineStartUpper,
+            anchorItem);
+        var target = CreateToolGroup(
+            "target",
+            LogicalRegion.InlineEndUpper,
+            targetItem);
+        var root = CreateSplit("root", anchor.Id, target.Id);
+        var snapshot = CreateToolSnapshot(
+            root,
+            new[] { anchor, target },
+            new[] { floatingItem, anchorItem, targetItem });
+
+        var operation = Create(
+            snapshot,
+            target,
+            floatingItem,
+            Message(
+                "floating-window",
+                "panel-region-center",
+                insertionIndex: 0,
+                logicalRegion: "InlineEndUpper"));
+
+        var move = Assert.IsType<MoveToolOperation>(operation);
+        Assert.Equal(floatingItem.Id, move.ItemId);
+        Assert.Equal(target.Id, move.TargetGroupId);
+    }
+
+    [Fact]
     public void Unknown_kinds_and_invalid_indexes_are_rejected()
     {
         var first = CreateDocument("d1");

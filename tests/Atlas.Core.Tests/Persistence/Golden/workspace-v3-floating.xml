@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AtlasWorkspace xmlns="urn:atlas:workspace:3" schemaVersion="3.0" workspaceId="main">
+  <Items>
+    <Item id="document-42" kind="Document" title="Document 42" capabilities="27">
+      <Content kind="document-editor" resourceId="42" />
+    </Item>
+    <Item id="explorer" kind="Tool" title="Explorer" capabilities="7">
+      <Content kind="explorer" resourceId="main-solution" />
+    </Item>
+  </Items>
+  <Layout>
+    <Split id="root" axis="InlineChildren" basisKind="FixedPixels" basisValue="280" basisAnchor="First" firstMinimum="160" secondMinimum="240">
+      <First>
+        <Group id="left-tools" kind="Tool" retentionPolicy="Persistent" visibility="Collapsed" logicalRegion="InlineStartUpper" />
+      </First>
+      <Second>
+        <Group id="documents" kind="Document" retentionPolicy="Persistent" visibility="Expanded" selectedItemId="document-42">
+          <ItemRef id="document-42" />
+        </Group>
+      </Second>
+    </Split>
+  </Layout>
+  <ToolBars>
+    <ToolBar side="InlineStart" visibility="Expanded" />
+    <RegionOrder region="InlineStartUpper" />
+  </ToolBars>
+  <AutoHide />
+  <FloatingWindows>
+    <FloatingWindow itemId="explorer" x="120.5" y="80" width="360" height="480" returnKind="Group" logicalRegion="InlineStartUpper" preferredGroupId="left-tools" preferredIndex="0" fallbackEdge="InlineStart" returnGroupWasDynamic="true" />
+  </FloatingWindows>
+</AtlasWorkspace>

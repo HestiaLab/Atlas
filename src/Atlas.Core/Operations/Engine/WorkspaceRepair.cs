@@ -86,7 +86,10 @@ internal static class WorkspaceRepair
                 }
             }
 
-            var placedItemIds = CollectPlacedItems(nodes, corrupted.AutoHideStrips);
+            var placedItemIds = CollectPlacedItems(
+                nodes,
+                corrupted.AutoHideStrips,
+                corrupted.FloatingWindows);
             foreach (var itemId in items.Keys
                 .Where(itemId => !placedItemIds.Contains(itemId))
                 .ToArray())
@@ -194,6 +197,11 @@ internal static class WorkspaceRepair
             Increment(counts, entry.ItemId);
         }
 
+        foreach (var itemId in snapshot.FloatingWindows.Keys)
+        {
+            Increment(counts, itemId);
+        }
+
         return counts;
     }
 
@@ -264,7 +272,8 @@ internal static class WorkspaceRepair
 
     private static HashSet<DockItemId> CollectPlacedItems(
         IReadOnlyDictionary<LayoutNodeId, LayoutNode> nodes,
-        IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> strips)
+        IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> strips,
+        IReadOnlyDictionary<DockItemId, FloatingWindowState> floatingWindows)
     {
         var placed = nodes.Values
             .OfType<GroupNode>()
@@ -275,6 +284,7 @@ internal static class WorkspaceRepair
             placed.Add(entry.ItemId);
         }
 
+        placed.UnionWith(floatingWindows.Keys);
         return placed;
     }
 

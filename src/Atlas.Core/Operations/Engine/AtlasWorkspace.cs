@@ -548,7 +548,8 @@ internal sealed class AtlasWorkspace : IAtlasWorkspace
                 initialSnapshot.Items,
                 initialSnapshot.ToolBars,
                 initialSnapshot.ToolBarOrders,
-                initialSnapshot.AutoHideStrips);
+                initialSnapshot.AutoHideStrips,
+                initialSnapshot.FloatingWindows);
             var committed = restored.WithRevision(
                 checked(corrupted.Revision + 1));
             EnsureValid(committed);

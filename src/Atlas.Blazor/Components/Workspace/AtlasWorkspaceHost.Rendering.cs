@@ -121,6 +121,61 @@ public sealed partial class AtlasWorkspaceHost
         builder.CloseRegion();
         builder.CloseElement();
         RenderFixedSlot(builder, "status-bar", StatusBarContent);
+        RenderFloatingLayer(builder, snapshot);
+        builder.CloseElement();
+    }
+
+    private void RenderFloatingLayer(
+        RenderTreeBuilder builder,
+        WorkspaceSnapshot snapshot)
+    {
+        if (snapshot.FloatingWindows.Count == 0 || activeWorkspace is null)
+        {
+            return;
+        }
+
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "atlas-v2-floating-layer");
+        builder.AddAttribute(2, "data-atlas-floating-layer", "true");
+        builder.AddAttribute(3, "data-atlas-host-id", hostId);
+        foreach (var state in snapshot.FloatingWindows.Values
+            .OrderBy(value => value.ItemId.Value, StringComparer.Ordinal))
+        {
+            if (!snapshot.Items.TryGetValue(state.ItemId, out var item))
+            {
+                continue;
+            }
+
+            var raisedIndex = raisedFloatingItemIds.IndexOf(state.ItemId);
+            builder.OpenComponent<AtlasFloatingWindow>(4);
+            builder.SetKey(state.ItemId);
+            builder.AddAttribute(5, "Workspace", activeWorkspace);
+            builder.AddAttribute(6, "Snapshot", snapshot);
+            builder.AddAttribute(7, "Item", item);
+            builder.AddAttribute(8, "State", state);
+            builder.AddAttribute(9, "Catalog", effectiveCatalog ?? AtlasContentCatalog.Empty);
+            builder.AddAttribute(10, "StateScope", effectiveStateScope);
+            builder.AddAttribute(11, "HeaderTemplate", ToolHeaderTemplate);
+            builder.AddAttribute(12, "OnError", OnError);
+            builder.AddAttribute(13, "SandboxedFrameResolver", SandboxedFrameResolver);
+            builder.AddAttribute(14, "Generation", interactionGeneration);
+            builder.AddAttribute(15, "HostId", hostId);
+            builder.AddAttribute(16, "FocusCoordinator", focusCoordinator);
+            builder.AddAttribute(
+                17,
+                "ZIndex",
+                raisedIndex >= 0 ? 40 + raisedIndex : 20);
+            builder.AddAttribute(
+                18,
+                "OnActivate",
+                EventCallback.Factory.Create<DockItemId>(this, RaiseFloatingAsync));
+            builder.AddAttribute(
+                19,
+                "OnDock",
+                EventCallback.Factory.Create<DockItemId>(this, DockFloatingAsync));
+            builder.CloseComponent();
+        }
+
         builder.CloseElement();
     }
 
@@ -355,8 +410,9 @@ public sealed partial class AtlasWorkspaceHost
                 group =>
                 {
                     var autoHidden = AutoHiddenItems(snapshot, group);
+                    var floating = FloatingItems(snapshot, group);
                     var items = OrderedItems(snapshot, group).ToList();
-                    foreach (var item in autoHidden)
+                    foreach (var item in autoHidden.Concat(floating))
                     {
                         if (items.All(existing => existing.Id != item.Id))
                         {
@@ -367,7 +423,8 @@ public sealed partial class AtlasWorkspaceHost
                     return (
                         Group: group,
                         Items: items.ToArray(),
-                        AutoHiddenIds: autoHidden.Select(item => item.Id).ToHashSet());
+                        AutoHiddenIds: autoHidden.Select(item => item.Id).ToHashSet(),
+                        FloatingIds: floating.Select(item => item.Id).ToHashSet());
                 })
             .ToArray();
         if (regions.Length == 0)
@@ -478,6 +535,31 @@ public sealed partial class AtlasWorkspaceHost
         builder.CloseElement();
     }
 
+    private static IReadOnlyList<DockItem> FloatingItems(
+        WorkspaceSnapshot snapshot,
+        GroupNode group)
+    {
+        // 浮窗项不是区域放置项，但仍需要恰好一个 ToolBar Entry；
+        // 条目锚定到浮出时的返回区域，与 Auto-hide 的 DockBack 投影一致。
+        if (group.ToolbarRegion is not { } region)
+        {
+            return Array.Empty<DockItem>();
+        }
+
+        return snapshot.FloatingWindows.Values
+            .Where(state => state.ReturnPlacement.Region == region)
+            .OrderBy(state => state.ItemId.Value, StringComparer.Ordinal)
+            .Select(
+                state => snapshot.Items.TryGetValue(state.ItemId, out var item)
+                    ? item
+                    : null)
+            .Where(item => item is not null)
+            .Cast<DockItem>()
+            .GroupBy(item => item.Id)
+            .Select(items => items.First())
+            .ToArray();
+    }
+
     private static IReadOnlyList<DockItem> AutoHiddenItems(
         WorkspaceSnapshot snapshot,
         GroupNode group)
@@ -492,6 +574,62 @@ public sealed partial class AtlasWorkspaceHost
             .GroupBy(item => item.Id)
             .Select(items => items.First())
             .ToArray();
+    }
+
+    private void RenderFloatingEntry(
+        RenderTreeBuilder builder,
+        DockItem item,
+        int itemIndex,
+        DockItemId rovingItemId)
+    {
+        builder.OpenElement(0, "button");
+        builder.SetKey((item.Id, "floating-entry"));
+        builder.AddAttribute(1, "type", "button");
+        builder.AddAttribute(2, "role", "tab");
+        builder.AddAttribute(
+            3,
+            "id",
+            AtlasDomIdentity.ControlId(hostId, item.Id, "tool-tab"));
+        builder.AddAttribute(4, "aria-label", item.Title);
+        builder.AddAttribute(5, "aria-selected", "false");
+        builder.AddAttribute(
+            6,
+            "aria-controls",
+            AtlasDomIdentity.PanelId(hostId, item.Id));
+        builder.AddAttribute(7, "tabindex", item.Id == rovingItemId ? "0" : "-1");
+        builder.AddAttribute(8, "class", "atlas-v2-toolbar-entry-floating");
+        builder.AddAttribute(9, "data-atlas-item-id", item.Id.Value);
+        builder.AddAttribute(10, "data-atlas-item-kind", "tool");
+        builder.AddAttribute(11, "data-atlas-drag-kind", "toolbar-entry");
+        builder.AddAttribute(12, "data-atlas-toolbar-entry", "true");
+        builder.AddAttribute(13, "data-atlas-floating-entry", "true");
+        builder.AddAttribute(
+            14,
+            "data-atlas-insertion-index",
+            itemIndex.ToString(CultureInfo.InvariantCulture));
+        builder.AddAttribute(
+            15,
+            "data-atlas-command-capabilities",
+            ((int)item.Capabilities).ToString(CultureInfo.InvariantCulture));
+        builder.AddAttribute(
+            16,
+            "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(
+                this,
+                () => RaiseFloatingAsync(item.Id)));
+        builder.OpenRegion(17);
+        if (item.IconKey is not null)
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "atlas-v2-item-icon");
+            builder.AddAttribute(2, "data-atlas-icon", item.IconKey);
+            builder.AddAttribute(3, "aria-hidden", "true");
+            builder.CloseElement();
+        }
+
+        builder.CloseRegion();
+        builder.AddContent(18, item.Title);
+        builder.CloseElement();
     }
 
     private void RenderAutoHideEntry(
@@ -625,7 +763,7 @@ public sealed partial class AtlasWorkspaceHost
 
     private void RenderToolBarRegion(
         RenderTreeBuilder builder,
-        (GroupNode Group, DockItem[] Items, HashSet<DockItemId> AutoHiddenIds) region,
+        (GroupNode Group, DockItem[] Items, HashSet<DockItemId> AutoHiddenIds, HashSet<DockItemId> FloatingIds) region,
         DockItemId rovingItemId)
     {
         builder.OpenElement(0, "section");
@@ -646,6 +784,12 @@ public sealed partial class AtlasWorkspaceHost
         for (var itemIndex = 0; itemIndex < region.Items.Length; itemIndex++)
         {
             var item = region.Items[itemIndex];
+            if (region.FloatingIds.Contains(item.Id))
+            {
+                RenderFloatingEntry(builder, item, itemIndex, rovingItemId);
+                continue;
+            }
+
             if (region.AutoHiddenIds.Contains(item.Id))
             {
                 RenderAutoHideEntry(

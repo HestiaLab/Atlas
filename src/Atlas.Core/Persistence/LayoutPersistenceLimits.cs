@@ -2,7 +2,7 @@ namespace Atlas.Core.Persistence;
 
 /// <summary>
 ///     在不可信持久化输入进入领域状态前应用的资源上限：文档字节数、嵌套深度、
-///     节点与条目数量、字符串长度以及旧版迁移步数。
+///     节点与条目数量、浮动窗口数量与字符串长度。
 /// </summary>
 public sealed class LayoutPersistenceLimits
 {
@@ -18,7 +18,7 @@ public sealed class LayoutPersistenceLimits
         int maxItemCount = 4096,
         int maxItemsPerGroup = 1024,
         int maxStringLength = 4096,
-        int maxMigrationSteps = 1)
+        int maxFloatingWindows = 8)
     {
         MaxDocumentBytes = RequirePositive(maxDocumentBytes, nameof(maxDocumentBytes));
         MaxDepth = RequirePositive(maxDepth, nameof(maxDepth));
@@ -32,7 +32,9 @@ public sealed class LayoutPersistenceLimits
         MaxStringLength = RequirePositive(
             Math.Min(maxStringLength, LayoutPersistenceHardLimits.MaxStringLength),
             nameof(maxStringLength));
-        MaxMigrationSteps = RequirePositive(maxMigrationSteps, nameof(maxMigrationSteps));
+        MaxFloatingWindows = RequirePositive(
+            Math.Min(maxFloatingWindows, LayoutPersistenceHardLimits.MaxFloatingWindows),
+            nameof(maxFloatingWindows));
     }
 
     /// <summary>
@@ -66,9 +68,9 @@ public sealed class LayoutPersistenceLimits
     public int MaxStringLength { get; }
 
     /// <summary>
-    ///     获取旧版迁移的最大步数。
+    ///     获取持久化文档允许的最大浮动窗口数量。
     /// </summary>
-    public int MaxMigrationSteps { get; }
+    public int MaxFloatingWindows { get; }
 
     private static int RequirePositive(int value, string parameterName)
     {

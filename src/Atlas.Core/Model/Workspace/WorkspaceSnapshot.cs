@@ -21,6 +21,7 @@ public sealed class WorkspaceSnapshot
         IReadOnlyDictionary<LogicalSide, ToolBarState> toolBars,
         IReadOnlyDictionary<LogicalRegion, ToolBarOrderState> toolBarOrders,
         IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> autoHideStrips,
+        IReadOnlyDictionary<DockItemId, FloatingWindowState> floatingWindows,
         bool trusted)
     {
         Id = id;
@@ -31,6 +32,7 @@ public sealed class WorkspaceSnapshot
         ToolBars = toolBars;
         ToolBarOrders = toolBarOrders;
         AutoHideStrips = autoHideStrips;
+        FloatingWindows = floatingWindows;
     }
 
     internal WorkspaceSnapshot(
@@ -41,7 +43,8 @@ public sealed class WorkspaceSnapshot
         IEnumerable<KeyValuePair<DockItemId, DockItem>> items,
         IEnumerable<KeyValuePair<LogicalSide, ToolBarState>> toolBars,
         IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> toolBarOrders,
-        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> autoHideStrips)
+        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> autoHideStrips,
+        IEnumerable<KeyValuePair<DockItemId, FloatingWindowState>>? floatingWindows = null)
     {
         if (id == default)
         {
@@ -69,6 +72,9 @@ public sealed class WorkspaceSnapshot
         ToolBars = Copy(toolBars, nameof(toolBars));
         ToolBarOrders = Copy(toolBarOrders, nameof(toolBarOrders));
         AutoHideStrips = Copy(autoHideStrips, nameof(autoHideStrips));
+        FloatingWindows = Copy(
+            floatingWindows ?? Array.Empty<KeyValuePair<DockItemId, FloatingWindowState>>(),
+            nameof(floatingWindows));
     }
 
     /// <summary>
@@ -113,6 +119,11 @@ public sealed class WorkspaceSnapshot
     public IReadOnlyDictionary<WorkspaceEdge, AutoHideStripState> AutoHideStrips { get; }
 
     /// <summary>
+    ///     按条目标识索引的已提交浮动窗口状态（只读）。
+    /// </summary>
+    public IReadOnlyDictionary<DockItemId, FloatingWindowState> FloatingWindows { get; }
+
+    /// <summary>
     ///     创建指定工作区的空快照：修订为 0 且无任何内容。
     /// </summary>
     /// <param name="id">工作区标识。</param>
@@ -141,7 +152,8 @@ public sealed class WorkspaceSnapshot
         IEnumerable<KeyValuePair<DockItemId, DockItem>> items,
         IEnumerable<KeyValuePair<LogicalSide, ToolBarState>> toolBars,
         IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> toolBarOrders,
-        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> autoHideStrips)
+        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> autoHideStrips,
+        IEnumerable<KeyValuePair<DockItemId, FloatingWindowState>>? floatingWindows = null)
     {
         return new WorkspaceSnapshot(
             Id,
@@ -151,11 +163,12 @@ public sealed class WorkspaceSnapshot
             items,
             toolBars,
             toolBarOrders,
-            autoHideStrips);
+            autoHideStrips,
+            floatingWindows ?? FloatingWindows);
     }
 
     /// <summary>
-    ///     复制快照并仅替换修订号；五个索引直接共享引用（快照不可变，共享安全）。
+    ///     复制快照并仅替换修订号；六个索引直接共享引用（快照不可变，共享安全）。
     /// </summary>
     /// <param name="revision">新修订号。</param>
     /// <returns>
@@ -172,6 +185,7 @@ public sealed class WorkspaceSnapshot
             ToolBars,
             ToolBarOrders,
             AutoHideStrips,
+            FloatingWindows,
             trusted: true);
     }
 

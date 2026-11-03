@@ -149,7 +149,21 @@ public sealed partial class AtlasXmlLayoutSerializer
                     strip.Entries.Select(
                         entry => new AutoHideEntry(Map(entry.ItemId), entry.DockBack))))
             .ToDictionary(strip => strip.Edge);
-        return CopySnapshot(snapshot, snapshot.RootNodeId, nodes, items, orders, strips);
+        var floating = snapshot.FloatingWindows.Values
+            .Select(
+                state => new FloatingWindowState(
+                    Map(state.ItemId),
+                    state.Geometry,
+                    state.ReturnPlacement))
+            .ToDictionary(state => state.ItemId);
+        return CopySnapshot(
+            snapshot,
+            snapshot.RootNodeId,
+            nodes,
+            items,
+            orders,
+            strips,
+            floating);
     }
 
     private static WorkspaceSnapshot ReplaceWithPlaceholders(
@@ -181,7 +195,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             snapshot.Nodes,
             items,
             snapshot.ToolBarOrders,
-            snapshot.AutoHideStrips);
+            snapshot.AutoHideStrips,
+            snapshot.FloatingWindows);
     }
 
     private static WorkspaceSnapshot DropItems(
@@ -196,6 +211,10 @@ public sealed partial class AtlasXmlLayoutSerializer
             .ToDictionary(pair => pair.Key, pair => pair.Value);
         var nodes = snapshot.Nodes.ToDictionary(pair => pair.Key, pair => pair.Value);
         var rootNodeId = snapshot.RootNodeId;
+        var floatingAnchorIds = snapshot.FloatingWindows.Values
+            .Where(state => droppedSet.Contains(state.ItemId))
+            .Select(state => state.ReturnPlacement.DockBack.PreferredGroupId)
+            .ToHashSet();
         foreach (var group in nodes.Values.OfType<GroupNode>().ToArray())
         {
             if (!nodes.ContainsKey(group.Id))
@@ -225,13 +244,30 @@ public sealed partial class AtlasXmlLayoutSerializer
                     strip.Edge,
                     strip.Entries.Where(entry => !droppedSet.Contains(entry.ItemId))))
             .ToDictionary(strip => strip.Edge);
+        foreach (var anchorId in floatingAnchorIds)
+        {
+            if (nodes.TryGetValue(anchorId, out var anchor)
+                && anchor is GroupNode
+                {
+                    RetentionPolicy: GroupRetentionPolicy.Dynamic,
+                } group
+                && group.ItemIds.Count == 0)
+            {
+                LayoutTreeEditor.RemoveDynamicGroup(nodes, anchorId, ref rootNodeId);
+            }
+        }
+
+        var floating = snapshot.FloatingWindows
+            .Where(pair => !droppedSet.Contains(pair.Key))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
         return CopySnapshot(
             snapshot,
             rootNodeId,
             nodes,
             items,
             orders,
-            AutoHideBookmarkEditor.ClampToGroups(strips, nodes));
+            AutoHideBookmarkEditor.ClampToGroups(strips, nodes),
+            floating);
     }
 
     private static WorkspaceSnapshot CopySnapshot(
@@ -240,7 +276,8 @@ public sealed partial class AtlasXmlLayoutSerializer
         IEnumerable<KeyValuePair<LayoutNodeId, LayoutNode>> nodes,
         IEnumerable<KeyValuePair<DockItemId, DockItem>> items,
         IEnumerable<KeyValuePair<LogicalRegion, ToolBarOrderState>> orders,
-        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> strips)
+        IEnumerable<KeyValuePair<WorkspaceEdge, AutoHideStripState>> strips,
+        IEnumerable<KeyValuePair<DockItemId, FloatingWindowState>> floatingWindows)
     {
         return source.WithState(
             rootNodeId,
@@ -248,7 +285,8 @@ public sealed partial class AtlasXmlLayoutSerializer
             items,
             source.ToolBars,
             orders,
-            strips);
+            strips,
+            floatingWindows);
     }
 
 }

@@ -399,6 +399,39 @@ autoHideStrips: new[]
 
 完整可运行示例见 [`TabsAutoHideExample.razor`](../../../samples/Atlas.Showcase/Pages/TabsAutoHideExample.razor)（Showcase 的 `/tabs-auto-hide` 路由）。
 
+## 11. 浮动窗口
+
+Tool Panel 可以拖到 Editor Group 区域浮出为窗口，也可以通过公共操作创建：
+
+```csharp
+var floated = await workspace.ExecuteAsync(
+    new FloatToolOperation(
+        tool.Id,
+        new FloatingWindowGeometry(360, 60, 360, 420)));
+
+// 提交移动或缩放后的宿主相对几何。
+await workspace.ExecuteAsync(
+    new SetFloatingWindowGeometryOperation(
+        tool.Id,
+        new FloatingWindowGeometry(400, 80, 420, 460)));
+
+// 取消浮动，按浮出前的 Group / Auto-hide 书签还原。
+await workspace.ExecuteAsync(new DockFloatingToolOperation(tool.Id));
+```
+
+- `FloatingWindowGeometry` 使用宿主相对 CSS px；宽高不得小于
+  `FloatingWindowLimits.MinimumWidth/MinimumHeight`，同时打开的浮窗数量上限为
+  `FloatingWindowLimits.MaximumOpenWindows`（8），超出时返回
+  `WorkspaceErrorCode.FloatingWindowLimit`。
+- 浮出、几何变更与取消浮动都是可撤销操作；浮窗状态参与持久化。
+- Tool Panel 仍保留恰好一个 ToolBar Entry；点击 Entry 置顶浮窗。
+- 浮窗标题栏复用 Panel Header；关闭按钮表示取消浮动。Document/Editor Tab 仍使用分屏语义。
+- 持久化 schema 为 V3（`urn:atlas:workspace:3`）；V2/V1 文档返回
+  `LayoutVersionIncompatible`，详见 [ADR-0043](../adr/0043-floating-window-placement-and-schema-v3.md)。
+
+完整可运行示例见 [`FloatingWindowExample.razor`](../../../samples/Atlas.Showcase/Pages/FloatingWindowExample.razor)
+（Showcase 的 `/floating-windows` 路由）。
+
 ## 接下来去哪里
 
 - 完整可运行示例：[`samples/Atlas.Showcase`](../../../samples/Atlas.Showcase/)

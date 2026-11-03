@@ -24,6 +24,10 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
     // 已呈现到的最新 revision；命令消息在事件之后设置并记录当前水位，
     // 避免同一批变更的后续事件把具体消息覆盖成通用提示。
     private long lastHandledRevision;
+    // 最近一次命令对应的修订与消息；同一提交的事件即使晚到也保留具体消息，
+    // 避免被通用的“布局已更新”覆盖。
+    private long lastCommandRevision = -1;
+    private string? lastCommandStatus;
     private bool isCompact;
     private bool disposed;
 
@@ -277,11 +281,12 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
             new MoveToolOperation(panel.ItemId, targetGroupId));
         var label = ShowcasePanels.Groups
             .FirstOrDefault(target => target.Id == targetGroupId)?.Label ?? targetGroupId.Value;
-        SetStatus(
+        SetCommandStatus(
             result.Succeeded
                 ? $"已将 {panel.Title} 移动到{label}"
                 : Failure($"移动 {panel.Title} 失败", result),
-            result.Succeeded ? "ok" : "warn");
+            result.Succeeded ? "ok" : "warn",
+            result.Value?.AfterRevision);
         await RefreshAsync();
     }
 
@@ -355,7 +360,10 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         persistenceEvent = result.Succeeded
             ? "布局已恢复"
             : $"恢复失败：{result.Error?.DiagnosticId ?? "未知错误"}";
-        SetStatus(persistenceEvent, result.Succeeded ? "ok" : "warn");
+        SetCommandStatus(
+            persistenceEvent,
+            result.Succeeded ? "ok" : "warn",
+            result.Value?.AfterRevision);
         await RefreshAsync();
     }
 
@@ -367,7 +375,10 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.UndoAsync();
-        SetStatus(result.Succeeded ? "已撤销上次更改" : "无可撤销", result.Succeeded ? "ok" : "warn");
+        SetCommandStatus(
+            result.Succeeded ? "已撤销上次更改" : "无可撤销",
+            result.Succeeded ? "ok" : "warn",
+            result.Value?.AfterRevision);
         await RefreshAsync();
     }
 
@@ -379,19 +390,38 @@ public sealed partial class ShowcaseWorkspace : IAsyncDisposable
         }
 
         var result = await workspace.RedoAsync();
-        SetStatus(result.Succeeded ? "已重做上次更改" : "无可重做", result.Succeeded ? "ok" : "warn");
+        SetCommandStatus(
+            result.Succeeded ? "已重做上次更改" : "无可重做",
+            result.Succeeded ? "ok" : "warn",
+            result.Value?.AfterRevision);
         await RefreshAsync();
     }
 
     private void OnWorkspaceChanged(object? sender, WorkspaceChangedEventArgs args)
     {
         revision = args.ChangeSet.AfterRevision;
-        if (revision > lastHandledRevision)
+        if (revision == lastCommandRevision && lastCommandStatus is not null)
         {
+            SetStatus(lastCommandStatus, "ok");
+            lastCommandStatus = null;
+        }
+        else if (revision > lastHandledRevision)
+        {
+            lastCommandStatus = null;
             SetStatus("布局已更新", "ok");
         }
 
         _ = RefreshAsync();
+    }
+
+    private void SetCommandStatus(
+        string message,
+        string tone,
+        long? afterRevision)
+    {
+        lastCommandRevision = afterRevision ?? -1;
+        lastCommandStatus = afterRevision is null ? null : message;
+        SetStatus(message, tone);
     }
 
     private async Task RefreshAsync()

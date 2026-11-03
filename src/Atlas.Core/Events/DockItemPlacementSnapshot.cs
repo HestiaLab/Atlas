@@ -40,6 +40,12 @@ public sealed class DockItemPlacementSnapshot
         Index = index;
     }
 
+    internal DockItemPlacementSnapshot(FloatingWindowState floatingWindow)
+    {
+        ArgumentNullException.ThrowIfNull(floatingWindow);
+        Kind = DockItemPlacementKind.Floating;
+    }
+
     /// <summary>
     ///     获取放置类型。
     /// </summary>
@@ -56,7 +62,7 @@ public sealed class DockItemPlacementSnapshot
     public WorkspaceEdge? AutoHideEdge { get; }
 
     /// <summary>
-    ///     获取放置位置内的从零开始索引。
+    ///     获取 Group 或自动隐藏放置内的从零开始索引；浮窗放置返回 0。
     /// </summary>
     public int Index { get; }
 

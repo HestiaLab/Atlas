@@ -14,8 +14,8 @@
     <ProjectReference Include="..\..\src\Atlas.Core\Atlas.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\Atlas.Core\Persistence\Schema\atlas-workspace-v2.xsd"
-          Link="Persistence\Schema\atlas-workspace-v2.xsd"
+    <None Include="..\..\src\Atlas.Core\Persistence\Schema\atlas-workspace-v3.xsd"
+          Link="Persistence\Schema\atlas-workspace-v3.xsd"
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\fixtures\split-geometry\*.json"
           Link="Fixtures\split-geometry\%(Filename)%(Extension)"

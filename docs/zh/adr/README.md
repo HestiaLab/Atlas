@@ -66,6 +66,7 @@ Agent 可以准备 Proposed ADR 和验证证据，但只有维护者可以将架
 | [ADR-0040](./0040-svg-chrome-icons.md) | Accepted | 公开 `AtlasIcon`/`AtlasIconName`；chrome 文本字形改为默认 SVG 图标并刷新 REQ-NF-009 AC3 基线（REQ-F-157） |
 | [ADR-0041](./0041-dotnet-10-runtime-baseline.md) | Accepted | .NET 10 LTS 运行时与工具链基线：net10.0 单目标、C# 14、AnalysisLevel 10.0、ASP.NET Core 10.0.x、bunit 2.x；取代 ADR-0001 的运行时与工具链条款 |
 | [ADR-0042](./0042-xunit-v3-microsoft-testing-platform.md) | Accepted | 测试平台迁移到 xUnit v3 + Microsoft.Testing.Platform；移除 VSTest/Test SDK/coverlet，CI 收集并上传 Cobertura 覆盖率 |
+| [ADR-0043](./0043-floating-window-placement-and-schema-v3.md) | Accepted | 页内浮动窗口：committed Floating placement、几何/返回书签、专用 operation、v1 additive 协议与 Schema V3（仅接受 V3） |
 
 ## 编写约定
 

@@ -792,6 +792,48 @@ button { font: inherit; }
     }
 }
 
+.showcase-floating-page {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+    min-block-size: 100vh;
+    box-sizing: border-box;
+}
+
+.showcase-floating-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.showcase-floating-actions button {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--showcase-border, #c9c9c9);
+    border-radius: 0.25rem;
+    background: var(--showcase-surface, #fff);
+    color: inherit;
+    cursor: pointer;
+}
+
+.showcase-floating-host {
+    min-block-size: 0;
+    block-size: 34rem;
+    border: 1px solid var(--showcase-border, #c9c9c9);
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.showcase-floating-host > .atlas-v2-workspace {
+    inline-size: 100%;
+    block-size: 100%;
+}
+
+.showcase-floating-error {
+    color: #b3261e;
+}
+
 @media (max-width: 620px) {
     .showcase-topbar { gap: 0.15rem; padding-inline: 0.25rem; }
     .showcase-menu button { padding-inline: 0.35rem; }

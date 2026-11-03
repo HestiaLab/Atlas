@@ -7,7 +7,7 @@ public abstract class LayoutOperation
 {
     private protected LayoutOperation(LayoutOperationKind kind, long? baseRevision)
     {
-        if (kind is < LayoutOperationKind.OpenItem or > LayoutOperationKind.EqualizeSplit)
+        if (!IsOperationKind(kind))
         {
             throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown operation kind.");
         }
@@ -34,4 +34,13 @@ public abstract class LayoutOperation
     ///     不一致时以 StaleOperation 失败，且不会覆盖其他提交。
     /// </summary>
     public long? BaseRevision { get; }
+
+    private static bool IsOperationKind(LayoutOperationKind kind)
+    {
+        return kind is (>= LayoutOperationKind.OpenItem
+                and <= LayoutOperationKind.EqualizeSplit)
+            or LayoutOperationKind.FloatTool
+            or LayoutOperationKind.SetFloatingWindowGeometry
+            or LayoutOperationKind.DockFloatingTool;
+    }
 }

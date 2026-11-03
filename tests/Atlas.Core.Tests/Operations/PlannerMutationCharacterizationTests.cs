@@ -118,7 +118,7 @@ public sealed class PlannerMutationCharacterizationTests
         var hash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
         Assert.True(
-            hash == "D444D5279455D8EAB9A88CA50F9CF99A41E6CDC795E6437D9574095056DCF952",
+            hash == "8B695835231A4704706F1C243D0528C2D94973D7A3D240378449EFA7B50D2761",
             $"Actual hash: {hash}\nLayout XML:\n{xml}");
 
         Assert.Equal(WorkspaceResultStatus.Success, (await workspace.UndoAsync(TestContext.Current.CancellationToken)).Status);

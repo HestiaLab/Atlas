@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="urn:atlas:workspace:2"
-           xmlns="urn:atlas:workspace:2"
+           targetNamespace="urn:atlas:workspace:3"
+           xmlns="urn:atlas:workspace:3"
            elementFormDefault="qualified"
            attributeFormDefault="unqualified">
   <xs:simpleType name="Identifier">
@@ -13,7 +13,7 @@
   </xs:simpleType>
   <xs:simpleType name="SchemaVersion">
     <xs:restriction base="xs:string">
-      <xs:pattern value="2\.[0-9]+" />
+      <xs:pattern value="3\.[0-9]+" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="FiniteNonNegative">
@@ -35,6 +35,7 @@
         <xs:element name="Layout" type="LayoutType" />
         <xs:element name="ToolBars" type="ToolBarsType" />
         <xs:element name="AutoHide" type="AutoHideType" />
+        <xs:element name="FloatingWindows" type="FloatingWindowsType" />
       </xs:sequence>
       <xs:attribute name="schemaVersion" type="SchemaVersion" use="required" />
       <xs:attribute name="workspaceId" type="Identifier" use="required" />
@@ -199,5 +200,36 @@
     <xs:attribute name="preferredGroupId" type="Identifier" use="required" />
     <xs:attribute name="preferredIndex" type="xs:nonNegativeInteger" use="required" />
     <xs:attribute name="fallbackEdge" type="Identifier" use="required" />
+  </xs:complexType>
+
+  <xs:complexType name="FloatingWindowsType">
+    <xs:sequence>
+      <xs:element name="FloatingWindow" type="FloatingWindowType" minOccurs="0" maxOccurs="8" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FloatingWindowType">
+    <xs:attribute name="itemId" type="Identifier" use="required" />
+    <xs:attribute name="x" type="xs:double" use="required" />
+    <xs:attribute name="y" type="xs:double" use="required" />
+    <xs:attribute name="width" type="FiniteNonNegative" use="required" />
+    <xs:attribute name="height" type="FiniteNonNegative" use="required" />
+    <xs:attribute name="returnKind" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="Group" /><xs:enumeration value="AutoHide" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="logicalRegion" use="required">
+      <xs:simpleType><xs:restriction base="xs:string">
+        <xs:enumeration value="InlineStartUpper" /><xs:enumeration value="InlineStartLower" />
+        <xs:enumeration value="InlineEndUpper" /><xs:enumeration value="InlineEndLower" />
+        <xs:enumeration value="BlockEndInlineStart" /><xs:enumeration value="BlockEndInlineEnd" />
+      </xs:restriction></xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="preferredGroupId" type="Identifier" use="required" />
+    <xs:attribute name="preferredIndex" type="xs:nonNegativeInteger" use="required" />
+    <xs:attribute name="fallbackEdge" type="Identifier" use="required" />
+    <xs:attribute name="returnGroupWasDynamic" type="xs:boolean" />
+    <xs:attribute name="autoHideEdge" type="Identifier" />
+    <xs:attribute name="autoHideIndex" type="xs:nonNegativeInteger" />
   </xs:complexType>
 </xs:schema>

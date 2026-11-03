@@ -16,7 +16,7 @@ public interface IAtlasLayoutSerializer
     string Serialize(WorkspaceSnapshot snapshot);
 
     /// <summary>
-    ///     把不可信的 V1 或 V2 文档解析为经验证的恢复候选。
+    ///     把不可信的 V3 文档解析为经验证的恢复候选。
     /// </summary>
     WorkspaceResult<LayoutRestoreDocument> Deserialize(
         string xml,

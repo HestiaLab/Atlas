@@ -1,5 +1,8 @@
 using Atlas.Core.Changes;
 using Atlas.Core.Diagnostics;
+using Atlas.Core.Items;
+using Atlas.Core.Layout;
+using Atlas.Core.Placement;
 using Atlas.Core.Results;
 using Atlas.Core.Validation;
 
@@ -39,6 +42,8 @@ internal static class ReconcileDefinitionPlanner
             return Invalid(operation);
         }
 
+        candidate = PreserveFloatingWindows(snapshot, candidate);
+
         if (WorkspaceInvariantValidator.Validate(candidate).Count != 0)
         {
             return Invalid(operation);
@@ -52,6 +57,74 @@ internal static class ReconcileDefinitionPlanner
         return WorkspacePlan.Commit(
             candidate,
             changeKind: LayoutChangeKind.ReconcileDefinition);
+    }
+
+    private static WorkspaceSnapshot PreserveFloatingWindows(
+        WorkspaceSnapshot current,
+        WorkspaceSnapshot candidate)
+    {
+        if (current.FloatingWindows.Count == 0)
+        {
+            return candidate;
+        }
+
+        // 浮窗是运行时状态而非声明内容：对账保留仍可解析的浮窗，
+        // 并从新布局中摘除对应条目，避免出现第二个 placement。
+        var mutation = WorkspaceMutation.From(candidate);
+        var preserved = new List<FloatingWindowState>();
+        foreach (var state in current.FloatingWindows.Values)
+        {
+            if (!candidate.Items.TryGetValue(state.ItemId, out var item)
+                || item.Kind != DockItemKind.Tool
+                || !candidate.Nodes.TryGetValue(
+                    state.ReturnPlacement.DockBack.PreferredGroupId,
+                    out var returnNode)
+                || returnNode is not GroupNode
+                {
+                    Kind: DockItemKind.Tool,
+                    ToolbarRegion: { } region,
+                }
+                || region != state.ReturnPlacement.Region)
+            {
+                continue;
+            }
+
+            var sourceGroup = FloatingPlacementEditor.FindSourceGroup(
+                candidate,
+                state.ItemId);
+            if (sourceGroup is not null)
+            {
+                var anchor = FloatingPlacementEditor.CreateRetainedAnchorGroup(
+                    sourceGroup,
+                    state.ItemId);
+                mutation.ReplaceNode(anchor);
+                mutation.RemoveOrderItem(
+                    sourceGroup,
+                    state.ItemId,
+                    anchor.ItemIds);
+            }
+            else if (FloatingPlacementEditor.TryFindAutoHideEntry(
+                candidate,
+                state.ItemId,
+                out _,
+                out _,
+                out _))
+            {
+                mutation.RemoveAutoHideItem(state.ItemId);
+                mutation.RemoveOrderItem(
+                    state.ReturnPlacement.Region,
+                    state.ItemId);
+            }
+
+            preserved.Add(state);
+        }
+
+        foreach (var state in preserved)
+        {
+            mutation.SetFloatingWindow(state);
+        }
+
+        return mutation.Commit().Candidate!;
     }
 
     private static WorkspacePlan Invalid(ReconcileDefinitionOperation operation)

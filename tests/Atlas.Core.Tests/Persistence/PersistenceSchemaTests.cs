@@ -7,17 +7,25 @@ namespace Atlas.Core.Tests.Persistence;
 public sealed class PersistenceSchemaTests
 {
     [Fact]
-    public void V2_schema_compiles_and_accepts_the_approved_golden_document()
+    public void V3_schema_compiles_and_accepts_the_approved_golden_document()
     {
-        var errors = Validate(GoldenPath("workspace-v2.xml"));
+        var errors = Validate(GoldenPath("workspace-v3.xml"));
 
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void V2_schema_rejects_unknown_attributes()
+    public void V3_schema_accepts_floating_window_golden_document()
     {
-        var xml = File.ReadAllText(GoldenPath("workspace-v2.xml"))
+        var errors = Validate(GoldenPath("workspace-v3-floating.xml"));
+
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void V3_schema_rejects_unknown_attributes()
+    {
+        var xml = File.ReadAllText(GoldenPath("workspace-v3.xml"))
             .Replace(
                 "workspaceId=\"main\"",
                 "workspaceId=\"main\" unknown=\"rejected\"",
@@ -29,27 +37,14 @@ public sealed class PersistenceSchemaTests
     }
 
     [Fact]
-    public void V2_schema_rejects_non_semantic_schema_version()
+    public void V3_schema_rejects_non_semantic_schema_version()
     {
-        var xml = File.ReadAllText(GoldenPath("workspace-v2.xml"))
-            .Replace("schemaVersion=\"2.0\"", "schemaVersion=\"2\"", StringComparison.Ordinal);
+        var xml = File.ReadAllText(GoldenPath("workspace-v3.xml"))
+            .Replace("schemaVersion=\"3.0\"", "schemaVersion=\"3\"", StringComparison.Ordinal);
 
         var errors = ValidateText(xml);
 
         Assert.NotEmpty(errors);
-    }
-
-    [Fact]
-    public void V1_golden_is_the_approved_narrow_root_and_version()
-    {
-        using var reader = XmlReader.Create(
-            GoldenPath("workspace-v1-narrow.xml"),
-            SecureReaderSettings());
-        reader.MoveToContent();
-
-        Assert.Equal("AtlasLayout", reader.LocalName);
-        Assert.Equal(string.Empty, reader.NamespaceURI);
-        Assert.Equal("1.0", reader.GetAttribute("schemaVersion"));
     }
 
     private static IReadOnlyList<string> Validate(string path)
@@ -71,7 +66,7 @@ public sealed class PersistenceSchemaTests
         {
             XmlResolver = null,
         };
-        schemas.Add("urn:atlas:workspace:2", SchemaPath());
+        schemas.Add("urn:atlas:workspace:3", SchemaPath());
 
         var errors = new List<string>();
         var settings = SecureReaderSettings();
@@ -102,7 +97,7 @@ public sealed class PersistenceSchemaTests
             AppContext.BaseDirectory,
             "Persistence",
             "Schema",
-            "atlas-workspace-v2.xsd");
+            "atlas-workspace-v3.xsd");
     }
 
     private static string GoldenPath(string fileName)

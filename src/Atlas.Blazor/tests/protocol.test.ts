@@ -1984,7 +1984,7 @@ function dropTargetRoot(
 }
 
 function dropContext(
-  sourceKind: "document-tab" | "panel-header" | "toolbar-entry",
+  sourceKind: "document-tab" | "panel-header" | "toolbar-entry" | "floating-window",
   sourceGroupId?: string,
   documentGeometry: ReadonlyMap<HTMLElement, DOMRect> = new Map(),
   documentTabGeometry: ReadonlyMap<HTMLElement, DOMRect> = new Map())
@@ -2107,6 +2107,46 @@ test("document tab drop on the group body uses cached geometry for all five zone
     "document-block-end");
   assert.equal(resolveAt(root, document, 200, 100, context)?.kind,
     "document-center");
+});
+
+test("tool panel drops on an editor group resolve the floating target", () => {
+  const editor = dropTargetRoot({
+    atlasGroupKind: "document",
+    atlasGroupId: "documents"
+  });
+
+  const panel = resolveAt(
+    editor.root,
+    editor.document,
+    50,
+    50,
+    dropContext("panel-header", "tools"));
+  assert.equal(panel?.kind, "floating-window");
+  assert.equal(panel?.groupId, "documents");
+
+  const entry = resolveAt(
+    editor.root,
+    editor.document,
+    50,
+    50,
+    dropContext("toolbar-entry", "left-upper"));
+  assert.equal(entry?.kind, "floating-window");
+
+  const floating = resolveAt(
+    editor.root,
+    editor.document,
+    50,
+    50,
+    dropContext("floating-window", "tools"));
+  assert.equal(floating, undefined);
+
+  const document = resolveAt(
+    editor.root,
+    editor.document,
+    50,
+    50,
+    dropContext("document-tab", "documents"));
+  assert.equal(document?.kind, "document-center");
 });
 
 test("panel and toolbar drop targets keep their priority order", () => {

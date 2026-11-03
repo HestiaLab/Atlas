@@ -96,6 +96,21 @@ public enum LayoutOperationKind
     EqualizeSplit = 17,
 
     /// <summary>
+    ///     将工具条目浮出为独立窗口。
+    /// </summary>
+    FloatTool = 18,
+
+    /// <summary>
+    ///     提交浮动窗口的移动或缩放几何。
+    /// </summary>
+    SetFloatingWindowGeometry = 19,
+
+    /// <summary>
+    ///     取消浮动并按返回书签还原原始放置。
+    /// </summary>
+    DockFloatingTool = 23,
+
+    /// <summary>
     ///     持久化失败的错误上下文；不是可调用操作。
     /// </summary>
     Persistence = 20,

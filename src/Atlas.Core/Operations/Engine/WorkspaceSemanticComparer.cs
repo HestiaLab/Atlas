@@ -25,7 +25,8 @@ internal static class WorkspaceSemanticComparer
             && SameEntries(left.Items, right.Items)
             && SameEntries(left.ToolBars, right.ToolBars)
             && SameEntries(left.ToolBarOrders, right.ToolBarOrders)
-            && SameEntries(left.AutoHideStrips, right.AutoHideStrips);
+            && SameEntries(left.AutoHideStrips, right.AutoHideStrips)
+            && SameEntries(left.FloatingWindows, right.FloatingWindows);
     }
 
     internal static bool ValueEquals<T>(T left, T right)
@@ -44,6 +45,8 @@ internal static class WorkspaceSemanticComparer
             (AutoHideStripState leftStrip, AutoHideStripState rightStrip) =>
                 leftStrip.Edge == rightStrip.Edge
                 && leftStrip.Entries.SequenceEqual(rightStrip.Entries),
+            (FloatingWindowState leftFloating, FloatingWindowState rightFloating) =>
+                leftFloating.Equals(rightFloating),
             _ => EqualityComparer<T>.Default.Equals(left, right),
         };
     }

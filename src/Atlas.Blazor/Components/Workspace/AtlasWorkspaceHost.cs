@@ -44,6 +44,11 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
     // 关闭浮层不卸载内容，避免新增 JS→C# 生命周期消息。
     private readonly HashSet<DockItemId> mountedAutoHideItemIds = new();
 
+    // 浮窗的瞬时叠放顺序：最近激活的排在末尾；不进入快照或撤销历史。
+    private readonly List<DockItemId> raisedFloatingItemIds = new();
+
+    private DockItemId? pendingToolBarFocusItemId;
+
     // 收集子组件声明的宿主本地内容路由。
     private AtlasContentRouteCollector routeCollector = new();
 
@@ -424,6 +429,31 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
                 await NotifySplitPreviewClearedAsync(splitId);
             }
         }
+
+        if (pendingToolBarFocusItemId is { } itemId)
+        {
+            pendingToolBarFocusItemId = null;
+            try
+            {
+                if (interactionController is not null)
+                {
+                    await interactionController.FocusToolBarEntryAsync(itemId.Value);
+                }
+            }
+            catch (Exception)
+            {
+                if (OnError.HasDelegate)
+                {
+                    await OnError.InvokeAsync(
+                        new AtlasHostError(
+                            AtlasHostErrorCode.FocusFailed,
+                            "ATLAS-FOCUS-FAILED",
+                            "Atlas.Focus.Failed",
+                            activeWorkspace?.Id,
+                            itemId));
+                }
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -470,6 +500,8 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         consumedDragSessions.Clear();
         consumedDragSessionOrder.Clear();
         mountedAutoHideItemIds.Clear();
+        raisedFloatingItemIds.Clear();
+        pendingToolBarFocusItemId = null;
         activeWorkspace.Changed += OnWorkspaceChanged;
         activeWorkspace.DomainEvents.ItemActivated += OnItemActivated;
     }
@@ -488,6 +520,8 @@ public sealed partial class AtlasWorkspaceHost : ComponentBase, IAsyncDisposable
         ownsActiveWorkspace = false;
         pendingSplitPreviewClears.Clear();
         mountedAutoHideItemIds.Clear();
+        raisedFloatingItemIds.Clear();
+        pendingToolBarFocusItemId = null;
     }
 
     private async Task UnbindWorkspaceAsync(bool disposeOwned)

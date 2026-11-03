@@ -22,7 +22,7 @@ Atlas.Blazor 还分发一个可选的紧凑 IDE 主题。链接即生效，无�
 ```
 
 - 主题作用于页面上所有 `.atlas-v2-workspace`；不链接时默认外观保持不变。
-- 只改变 Atlas 自有 chrome（组、标签页、面板标题栏、工具栏、分割条、弹出层、自动隐藏与拖拽反馈）。面板内容、顶部栏/状态栏内部内容与命令面板仍由应用负责。
+- 只改变 Atlas 自有 chrome（组、标签页、面板标题栏、工具栏、分割条、弹出层、自动隐藏、浮动窗口与拖拽反馈）。面板内容、顶部栏/状态栏内部内容与命令面板仍由应用负责。
 - 跟随操作系统 `prefers-color-scheme` 提供亮/暗调色板，无 JavaScript、无运行时主题 API。
 - 主题会在工作区上设置 `background`、文字颜色与 `color-scheme`。面板内容会继承这些值以保证暗色模式可读性；内容排版不改变。
 - 主题不使用 `!important`，只覆盖本文档列出的 `--atlas-*` 变量，并为结构性效果提供主题自有规则。不要依赖主题的内部选择器。
@@ -93,6 +93,10 @@ Atlas.Blazor 还分发一个可选的紧凑 IDE 主题。链接即生效，无�
 | `--atlas-popup-shadow` | `0 0.25rem 0.75rem rgb(0 0 0 / 28%)` | 弹出菜单阴影 |
 | `--atlas-popup-backdrop` | `transparent` | 弹出菜单外部点击遮罩 |
 | `--atlas-flyout-shadow` | `0 0.25rem 0.75rem rgb(0 0 0 / 28%)` | 自动隐藏 Flyout 阴影 |
+| `--atlas-floating-bg` | `var(--atlas-surface)` | 浮动窗口背景 |
+| `--atlas-floating-border` | `var(--atlas-border-color)` | 浮动窗口边框 |
+| `--atlas-floating-header-bg` | `var(--atlas-chrome-bg)` | 浮动窗口标题栏背景 |
+| `--atlas-floating-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 30%)` | 浮动窗口阴影 |
 
 ### 尺寸
 
@@ -125,6 +129,7 @@ Atlas.Blazor 还分发一个可选的紧凑 IDE 主题。链接即生效，无�
 | --- | --- |
 | `--atlas-layer-content` | `0` |
 | `--atlas-layer-chrome` | `10` |
+| `--atlas-layer-floating` | `20` |
 | `--atlas-layer-drag` | `30` |
 | `--atlas-layer-popup-backdrop` | `39` |
 | `--atlas-layer-popup` | `40` |

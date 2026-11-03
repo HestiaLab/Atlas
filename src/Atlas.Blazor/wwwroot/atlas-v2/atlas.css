@@ -31,6 +31,10 @@
   --atlas-popup-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 28%);
   --atlas-popup-backdrop: transparent;
   --atlas-flyout-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 28%);
+  --atlas-floating-bg: var(--atlas-surface);
+  --atlas-floating-border: var(--atlas-border-color);
+  --atlas-floating-header-bg: var(--atlas-chrome-bg);
+  --atlas-floating-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 30%);
   /* 界面框架颜色（ADR-0023 扩展） */
   --atlas-group-bg: transparent;
   --atlas-chrome-bg: transparent;
@@ -54,6 +58,7 @@
   /* 层级 */
   --atlas-layer-content: 0;
   --atlas-layer-chrome: 10;
+  --atlas-layer-floating: 20;
   --atlas-layer-drag: 30;
   --atlas-layer-popup-backdrop: 39;
   --atlas-layer-popup: 40;
@@ -525,6 +530,14 @@
   background: transparent;
 }
 
+/* Tool Panel 落在 Editor Group 上会浮出为窗口（REQ-F-152）；
+   与五个文档停靠区区分，使用虚线整组轮廓。 */
+[data-atlas-group-kind="document"][data-atlas-drop-preview="floating-window"] {
+  outline: var(--atlas-focus-ring-width) dashed var(--atlas-accent);
+  outline-offset: -4px;
+  background: color-mix(in srgb, var(--atlas-accent) var(--atlas-drop-highlight-alpha-soft), transparent);
+}
+
 [data-atlas-group-kind="document"][data-atlas-drop-preview^="document-"]::before {
   content: "";
   position: absolute;
@@ -642,4 +655,123 @@
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+/* 浮动窗口层：覆盖 Work Area 与固定槽位，但不拦截未命中窗口的指针。 */
+.atlas-v2-floating-layer {
+  position: absolute;
+  inset: 0;
+  z-index: var(--atlas-layer-floating);
+  pointer-events: none;
+}
+
+.atlas-v2-floating-window {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 240px;
+  min-block-size: 160px;
+  border: var(--atlas-border-width) solid var(--atlas-floating-border);
+  border-radius: var(--atlas-radius);
+  background: var(--atlas-floating-bg);
+  box-shadow: var(--atlas-floating-shadow);
+  overflow: hidden;
+  pointer-events: auto;
+  outline: none;
+}
+
+.atlas-v2-floating-window:focus-visible,
+.atlas-v2-floating-window:focus-within {
+  border-color: var(--atlas-accent);
+}
+
+.atlas-v2-floating-header {
+  flex: 0 0 auto;
+  cursor: move;
+  background: var(--atlas-floating-header-bg);
+  border-block-end: var(--atlas-border-width) solid var(--atlas-floating-border);
+}
+
+.atlas-v2-floating-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.atlas-v2-floating-content > .atlas-v2-content-outlet {
+  flex: 1 1 auto;
+}
+
+.atlas-v2-floating-resize {
+  position: absolute;
+  z-index: 1;
+}
+
+.atlas-v2-floating-resize-n,
+.atlas-v2-floating-resize-s {
+  inset-inline: 0;
+  block-size: 6px;
+  cursor: ns-resize;
+}
+
+.atlas-v2-floating-resize-n {
+  inset-block-start: -3px;
+}
+
+.atlas-v2-floating-resize-s {
+  inset-block-end: -3px;
+}
+
+.atlas-v2-floating-resize-e,
+.atlas-v2-floating-resize-w {
+  inset-block: 0;
+  inline-size: 6px;
+  cursor: ew-resize;
+}
+
+.atlas-v2-floating-resize-e {
+  inset-inline-end: -3px;
+}
+
+.atlas-v2-floating-resize-w {
+  inset-inline-start: -3px;
+}
+
+.atlas-v2-floating-resize-ne,
+.atlas-v2-floating-resize-nw,
+.atlas-v2-floating-resize-se,
+.atlas-v2-floating-resize-sw {
+  inline-size: 12px;
+  block-size: 12px;
+}
+
+.atlas-v2-floating-resize-ne {
+  inset-block-start: -3px;
+  inset-inline-end: -3px;
+  cursor: nesw-resize;
+}
+
+.atlas-v2-floating-resize-nw {
+  inset-block-start: -3px;
+  inset-inline-start: -3px;
+  cursor: nwse-resize;
+}
+
+.atlas-v2-floating-resize-se {
+  inset-block-end: -3px;
+  inset-inline-end: -3px;
+  cursor: nwse-resize;
+}
+
+.atlas-v2-floating-resize-sw {
+  inset-block-end: -3px;
+  inset-inline-start: -3px;
+  cursor: nesw-resize;
+}
+
+.atlas-v2-toolbar-entry-floating {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
 }

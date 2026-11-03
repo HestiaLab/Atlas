@@ -161,6 +161,11 @@ internal static class MoveToolPlanner
         {
             RemoveFromSourceGroup(mutation, source, item.Id);
         }
+        else if (snapshot.FloatingWindows.ContainsKey(item.Id))
+        {
+            mutation.RemoveFloatingAnchorIfEmpty(item.Id);
+            mutation.RemoveFloatingWindow(item.Id);
+        }
         else
         {
             mutation.RemoveAutoHideItem(item.Id);

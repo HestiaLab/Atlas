@@ -19,6 +19,10 @@ internal static class WorkspaceDiagnostics
         internal const string DockSourceRejected = "ATLAS-DOCK-SOURCE-REJECTED";
         internal const string DockTargetMissing = "ATLAS-DOCK-TARGET-MISSING";
         internal const string DockTargetRejected = "ATLAS-DOCK-TARGET-REJECTED";
+        internal const string FloatItemRejected = "ATLAS-FLOAT-ITEM-REJECTED";
+        internal const string FloatLimit = "ATLAS-FLOAT-LIMIT";
+        internal const string FloatNotFloating = "ATLAS-FLOAT-NOT-FLOATING";
+        internal const string FloatReturnMissing = "ATLAS-FLOAT-RETURN-MISSING";
         internal const string GroupMissing = "ATLAS-GROUP-MISSING";
         internal const string GroupVisibilityRejected = "ATLAS-GROUP-VISIBILITY-REJECTED";
         internal const string ItemMissing = "ATLAS-ITEM-MISSING";
@@ -62,11 +66,6 @@ internal static class WorkspaceDiagnostics
         internal const string ToolbarMissing = "ATLAS-TOOLBAR-MISSING";
         internal const string ToolbarRegionMissing = "ATLAS-TOOLBAR-REGION-MISSING";
         internal const string ToolbarTargetRejected = "ATLAS-TOOLBAR-TARGET-REJECTED";
-        internal const string V1Invariant = "ATLAS-V1-INVARIANT";
-        internal const string V1NarrowContract = "ATLAS-V1-NARROW-CONTRACT";
-        internal const string V1Shape = "ATLAS-V1-SHAPE";
-        internal const string V1SizeIgnored = "ATLAS-V1-SIZE-IGNORED";
-        internal const string V1TopologyFallback = "ATLAS-V1-TOPOLOGY-FALLBACK";
         internal const string WorkspaceRepair = "ATLAS-WORKSPACE-REPAIR";
         internal const string WorkspaceReset = "ATLAS-WORKSPACE-RESET";
     }
@@ -81,6 +80,10 @@ internal static class WorkspaceDiagnostics
         internal const string DockSourceRejected = "Atlas.Dock.SourceRejected";
         internal const string DockTargetNotFound = "Atlas.Dock.TargetNotFound";
         internal const string DockTargetRejected = "Atlas.Dock.TargetRejected";
+        internal const string FloatItemRejected = "Atlas.Float.ItemRejected";
+        internal const string FloatLimit = "Atlas.Float.Limit";
+        internal const string FloatNotFloating = "Atlas.Float.NotFloating";
+        internal const string FloatReturnMissing = "Atlas.Float.ReturnMissing";
         internal const string GroupNotFound = "Atlas.Group.NotFound";
         internal const string GroupVisibilityRejected = "Atlas.Group.VisibilityRejected";
         internal const string GroupVisibilityRejectedOnEmptyGroup = "Atlas.Group.VisibilityRejectedOnEmptyGroup";

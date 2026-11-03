@@ -863,29 +863,7 @@ internal sealed class AtlasGroupView : ComponentBase
         DockItem item,
         bool isSelected)
     {
-        if (HeaderTemplate is not null)
-        {
-            builder.AddContent(
-                0,
-                HeaderTemplate(new AtlasItemHeaderContext(item, isSelected)));
-            return;
-        }
-
-        // 标题 span 固定占用序列 (3..6)，无论图标分支是否渲染，
-        // 这样切换 IconKey 不会让标题在 diff 树中重新编号。
-        if (item.IconKey is not null)
-        {
-            builder.OpenElement(0, "span");
-            builder.AddAttribute(1, "class", "atlas-v2-item-icon");
-            builder.AddAttribute(2, "data-atlas-icon", item.IconKey);
-            builder.CloseElement();
-        }
-
-        builder.OpenElement(3, "span");
-        builder.AddAttribute(4, "class", "atlas-v2-item-title");
-        builder.AddAttribute(5, "title", item.Title);
-        builder.AddContent(6, item.Title);
-        builder.CloseElement();
+        AtlasItemHeaderRenderer.Render(builder, item, isSelected, HeaderTemplate);
     }
 
     private void RenderContentOutlets(RenderTreeBuilder builder)

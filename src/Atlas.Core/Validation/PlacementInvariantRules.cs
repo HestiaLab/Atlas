@@ -34,6 +34,7 @@ internal static class PlacementInvariantRules
         }
 
         ValidateAutoHide(snapshot, placementCounts, itemRegions, violations);
+        ValidateFloating(snapshot, placementCounts, violations);
         ValidatePlacementCounts(placementCounts, violations);
         ValidateToolBars(snapshot, violations);
         ValidateToolBarOrders(snapshot, itemRegions, violations);
@@ -175,6 +176,100 @@ internal static class PlacementInvariantRules
                 }
             }
         }
+    }
+
+    private static void ValidateFloating(
+        WorkspaceSnapshot snapshot,
+        IDictionary<DockItemId, int> placementCounts,
+        ICollection<InvariantViolation> violations)
+    {
+        if (snapshot.FloatingWindows.Count > FloatingWindowLimits.MaximumOpenWindows)
+        {
+            InvariantViolationSink.Add(
+                violations,
+                InvariantViolationCode.FloatingLimitExceeded,
+                "The number of floating windows exceeds the supported limit.");
+        }
+
+        // 浮窗是第三种放置点：条目必须是具备浮动能力的工具项，返回书签必须
+        // 可解析；首选 Group 缺失本身合法，由取消浮动的回退边缘承担。
+        foreach (var pair in snapshot.FloatingWindows)
+        {
+            var state = pair.Value;
+            if (state is null || pair.Key != state.ItemId)
+            {
+                InvariantViolationSink.Add(
+                    violations,
+                    InvariantViolationCode.FloatingKeyMismatch,
+                    "A floating-window key must equal its item identifier.",
+                    itemId: pair.Key);
+                continue;
+            }
+
+            if (!snapshot.Items.TryGetValue(state.ItemId, out var item)
+                || item is null
+                || item.Kind != DockItemKind.Tool)
+            {
+                InvariantViolationSink.Add(
+                    violations,
+                    InvariantViolationCode.FloatingItemInvalid,
+                    "A floating window requires an existing tool item.",
+                    itemId: state.ItemId);
+                continue;
+            }
+
+            Increment(placementCounts, state.ItemId);
+            if (!IsReturnPlacementValid(snapshot, state.ReturnPlacement))
+            {
+                InvariantViolationSink.Add(
+                    violations,
+                    InvariantViolationCode.FloatingReturnInvalid,
+                    "A floating-window return placement must resolve to a tool region.",
+                    itemId: state.ItemId);
+            }
+        }
+    }
+
+    private static bool IsReturnPlacementValid(
+        WorkspaceSnapshot snapshot,
+        FloatingReturnPlacement returnPlacement)
+    {
+        if (returnPlacement.IsDefault
+            || !LogicalRegionEdge.IsDefined(returnPlacement.Region))
+        {
+            return false;
+        }
+
+        if (snapshot.Nodes.TryGetValue(
+                returnPlacement.DockBack.PreferredGroupId,
+                out var node))
+        {
+            if (node is not GroupNode
+                {
+                    Kind: DockItemKind.Tool,
+                    ToolbarRegion: { } region,
+                } group
+                || region != returnPlacement.Region
+                || returnPlacement.DockBack.PreferredIndex > group.ItemIds.Count)
+            {
+                return false;
+            }
+        }
+
+        return returnPlacement.Kind switch
+        {
+            FloatingReturnKind.Group =>
+                returnPlacement.AutoHideEdge is null
+                && returnPlacement.AutoHideIndex is null,
+            FloatingReturnKind.AutoHide =>
+                returnPlacement.AutoHideEdge is { } edge
+                && (edge is WorkspaceEdge.InlineStart
+                    or WorkspaceEdge.InlineEnd
+                    or WorkspaceEdge.BlockEnd)
+                && edge == LogicalRegionEdge.ToEdge(returnPlacement.Region)
+                && returnPlacement.AutoHideIndex is >= 0,
+            _ => false,
+        };
     }
 
     private static bool TryResolveDockBackRegion(

@@ -44,6 +44,10 @@
 - 2026-10-29 IDE 主题与 chrome 图标：361 Core + 175 Blazor + 11 Showcase + 79 JS
   全绿；Release build/test/format/pack 通过；Showcase 与 `tests/browser/ide-theme-fixture.html`
   的亮/暗计算样式、public token 覆盖与图标已在真实浏览器验证。
+- 2026-11-03 浮动窗口（ADR-0043 Accepted）：REQ-F-152 正式化并扩写 AC；Schema V3
+  （仅接受 V3，V2/V1 返回 `LayoutVersionIncompatible`）；当前实测基线 382 Core + 181 Blazor
+  + 13 Showcase + 80 JS 全绿，Chrome/Edge/Firefox 真实浏览器矩阵通过；F-152 标记 Verified；
+  未改变需求计数。
 
 在首个功能 work package 合并前，所有 153 个正式需求默认继承 `Not Started`。开始实施后，只在
 下方登记状态发生变化的 Requirement；没有显式记录的 Requirement 仍为 `Not Started`。
@@ -167,7 +171,6 @@ P8 的逐项审计见 [153 条正式需求状态表](./evidence/p8-requirement-a
 | REQ-NF-002 | DES-NFR-002、DES-PRJ-002 | P1 | `Atlas.Blazor`、浏览器夹具 | Chrome 155.0.8059.85 / Edge 156.0.4314.42 / Firefox 157.0：Showcase 点击/Ctrl+Tab/Ctrl+W/分割条拖拽/RTL；overflow menu、auto-hide、P5 drag、P7 sandbox、P8 hardening；console error 0 | Blocked | AC1–AC3 Verified；AC4 Safari 15+ 未验证（本机 Windows 无 Safari），需 macOS/云浏览器发布前补验，不伪造通过 |
 | REQ-NF-009 | DES-NFR-005 | P1 | `wwwroot/atlas-v2/atlas.css`、`docs/zh/theming.md` | `CssTokenContractTests`（2）：文档化 token 与 CSS 定义/使用双向一致、无 `!important`、示例仅声明 `--atlas-*`；真实浏览器：默认 focus `rgb(0,120,215)`、splitter 4px/0.18；仅覆盖 token 后 focus 红、splitter 8px/0.9、拖拽预览边框与放置形状变红 | Verified | AC2 焦点环改由 `--atlas-accent` 表达；新增 popup/flyout token 并登记 theming.md；未要求内部选择器覆盖 |
 | REQ-F-024 | DES-INT-008、DES-NFR-002 | P2 | `atlas.css`、`ClientScripts/drop-target.ts` | Node：`documentTargetKind`/`documentTabInsertionIndex` LTR/RTL 镜像；真实浏览器三浏览器：Showcase `dir=rtl` 下 inline-start ToolBar 位于右侧、inline-end 位于左侧、激活标签在右侧；RTL 内联分割条拖拽 Rev 2→3；RTL 右侧拖拽释放得到 `document-inline-start`、预览 `right:0px`、Rev 3→4；LTR 分割条拖拽 5→6 | Verified | 使用 CSS Grid direction + logical properties；document 放置区按写入方向镜像，修正了预览与提交侧不一致；未使用 left/right 布局绕过 |
-| REQ-F-152 | DES-INT-005 | P2 | — | — | Deferred | SRS 明示预留；本阶段不实现，不作为本阶段失败项 |
 
 ## 2026-10-24 P1/P2 后续增强
 
@@ -186,6 +189,12 @@ P8 的逐项审计见 [153 条正式需求状态表](./evidence/p8-requirement-a
 |-------------|-----|-------|-------|---------------|--------|-------|
 | REQ-NF-010 | DES-NFR-005 | P10 | `wwwroot/atlas-v2/themes/ide.css`、`samples/Atlas.Showcase`、`docs/zh/theming.md` | `CssTokenContractTests`：主题只使用文档化 token、亮/暗块存在、无 `!important`；`ThemeContrastTests`：亮/暗 AA 对比度；`tests/browser/ide-theme-fixture.html`：亮/暗工作区 chrome 视觉夹具 | Implemented | ADR-0039；真实浏览器亮/暗计算样式、主题后 `--atlas-*` 覆盖与 fixture 已验证；主题链接即生效、跟随 OS 明暗；内容排版仍由应用负责 |
 | REQ-F-157 | DES-NFR-005 | P10 | `Atlas.Blazor/Components/AtlasIcon.cs`、`AtlasGroupView`、`AtlasWorkspaceHost.Rendering` | `AtlasIconTests`：五个枚举、SVG 属性、装饰性 aria；`AtlasWorkspaceHostTests`/`TabOverflowTests`：溢出/关闭/折叠图标与方向感知、可访问名称保留 | Implemented | ADR-0040；默认 chrome 由文本字形切换为 SVG；公共 API 已进入 `PublicAPI.Unshipped`；真实浏览器 close/overflow/collapse 图标与 bUnit 方向测试已检查 |
+
+## 2026-11-03 浮动窗口（ADR-0043）
+
+| Requirement | DES | Phase | Owner | Test evidence | Status | Notes |
+|-------------|-----|-------|-------|---------------|--------|-------|
+| REQ-F-152 | DES-DOM-013、DES-OP-010、DES-INT-009、DES-RND-011、DES-PER-009 | P11 | `Atlas.Core`、`Atlas.Blazor`、`ClientScripts`、`Persistence`、`samples/Atlas.Showcase` | 382 Core + 181 Blazor + 13 Showcase + 80 JS 全绿（576 total）；Chrome / Edge / Firefox 真实浏览器：ToolBar Entry/Panel Header 拖出、移动、八向缩放、拖回 Dock 目标、关闭取消浮动；Edge/Firefox console error/exception 为空，Chrome 最终交互无产品级异常（合成夹具限制见证据）；Debug/Release build/test、format、pack 通过 | Verified | ADR-0043 Accepted；证据与截图见 [floating window 证据](./evidence/floating-window.md) |
 
 ## 更新规则
 

@@ -42,7 +42,8 @@ internal static class RestoreWorkspacePlanner
                 restored.Items,
                 restored.ToolBars,
                 restored.ToolBarOrders,
-                restored.AutoHideStrips),
+                restored.AutoHideStrips,
+                restored.FloatingWindows),
             isHistoryBarrier: true,
             changeKind: LayoutChangeKind.Restore);
     }

@@ -14,9 +14,9 @@
     <InternalsVisibleTo Include="Atlas.Core.Tests" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Persistence\Schema\atlas-workspace-v2.xsd"
+    <None Include="Persistence\Schema\atlas-workspace-v3.xsd"
           Pack="true"
           PackagePath="contentFiles\any\any\Persistence\Schema" />
-    <EmbeddedResource Include="Persistence\Schema\atlas-workspace-v2.xsd" />
+    <EmbeddedResource Include="Persistence\Schema\atlas-workspace-v3.xsd" />
   </ItemGroup>
 </Project>
